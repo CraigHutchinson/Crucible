@@ -1,0 +1,2 @@
+{"workload":"ecs_integration","entities":100000,"ticks":600,"median_us":25.487,"p95_us":48.612,"min_us":19.729,"max_us":34507.6,"checksum":1.65e+06}
+{"workload":"ecs_integration","entities":150000,"ticks":600,"median_us":39.228,"p95_us":54.601,"min_us":28.282,"max_us":32122.5,"checksum":2.475e+06}

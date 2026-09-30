@@ -1,0 +1,5 @@
+build/
+.cpm-cache/
+bench-results/
+CMakeUserPresets.json
+__pycache__/
