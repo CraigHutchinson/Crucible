@@ -57,3 +57,16 @@ rectangular grid remains the verified baseline until a replacement passes its or
 Do not duplicate all grid/steering work for two backends or promise a hex migration
 within the phase's quota. A recorded specification/decision can be a useful increment
 even if library implementation is scheduled next.
+
+## Phase 2 disposition and feedback
+
+Base 65bb8c4; delivery in [phase 2 evidence](../workstreams/integration/phase2-validation.md).
+R05 is retained as a standalone H1 library; H2 regions/radius candidates remain the
+next reusable increment. No geometry copy, second backend, new pin or upstream edit
+was required. R06 stays local: stable-ID queries now have a real steering consumer
+checked against an independent all-pairs oracle. R07 stays local: startup-owned state
+copy and bounded clock are consumed by main/replay/SVG; no generic exchange is extracted.
+R04 remains deferred because summary values do not require a logger adapter. R08's
+separation rule is game policy, so it is deliberately retained in Crucible. R01's fixed
+population and 24-bit guard remain relevant before any future structural resource work.
+No measurement or upstream optimization is claimed from the functional fixtures.

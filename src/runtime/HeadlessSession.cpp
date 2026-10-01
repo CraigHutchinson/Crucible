@@ -30,6 +30,7 @@ HeadlessSession::HeadlessSession(Simulation& simulation, ValidatedLimits limits)
       boundary_(limits.value.commands), trace_(limits.value.trace) {}
 
 CommandIngress& HeadlessSession::GetIngress() noexcept { return ingress_; }
+std::uint64_t HeadlessSession::GetCompletedTick() const noexcept { return tick_; }
 void HeadlessSession::Pause() noexcept { paused_ = true; }
 void HeadlessSession::Resume() noexcept { paused_ = false; }
 

@@ -4,4 +4,5 @@ Own explicit source registration in CMakeLists.txt. See [workstream brief](../..
 
 Sources implement the compatibility runner, mutex-protected owned command ring
 and bounded sequential session/replay. See stream validation for integration gates;
-wall-clock and Pipeline orchestration remain pending.
+`ClockDriver` supplies bounded injected-time orchestration; architect production
+wiring and combined verification remain gates. Pipeline orchestration is pending.

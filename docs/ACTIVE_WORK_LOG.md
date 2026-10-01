@@ -16,6 +16,9 @@ an uncontended host even when files do not overlap.
 | Game intent and concepts / architect | Complete | README, game-design, concepts, central links; no builds | 2026-10-01 / 16670fb / workstream-groundwork | [Game design](game-design.md), [three concepts](concepts/README.md); next sprint not started |
 | Phase close and next plan / architect | Complete planning | PR merge, phases docs, workflow links; no local builds | 2026-10-01 / 722e7b3 / phase2-plan | Phase 1 merged by PR 1 at ab708a7; [phase 2 plan](phases/phase2.md), no workers dispatched |
 | Hex reuse and world direction / architect | Complete docs | Reuse/game/phase docs; no Crucible code/builds | 2026-10-01 / b1a556b / hexgrid-and-terrain-handoff | Sub0HexGrid H0/H1 delivered separately; [terrain direction](decisions/terrain-and-world-extension.md) preserved; no application migration |
+| Phase 2 architect | Complete increment | Contracts, Simulation/main, state copy/presentation, FieldSet observation, integration/docs/root wiring; CPU released | 2026-10-01 / 65bb8c4 / phase2-steer-inspect | [Phase 2 evidence](workstreams/integration/phase2-validation.md); shared gates passed |
+| Phase 2 swarm / Sol 6.1 low | Complete increment | .worktrees/phase2-swarm: swarm headers/source/tests/docs | 2026-10-01 / 65bb8c4 / phase2-swarm | 18dfe8e integrated as e605903; bounded rule verified |
+| Phase 2 runtime / Sol 6.1 low | Complete increment | .worktrees/phase2-runtime: runtime and telemetry headers/source/tests/docs | 2026-10-01 / 65bb8c4 / phase2-runtime | ad269ce integrated as 88b8a1e; clock/summary verified |
 
 New claims include agent, branch/worktree, package, exact paths, host/CPU reservation,
 base SHA and dependencies. Completed rows link evidence or say documentation-only.

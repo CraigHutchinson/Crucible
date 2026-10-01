@@ -8,19 +8,20 @@ Hex spatial topology is likely but unresolved; [Sub0HexGrid](reuse/Sub0HexGrid.m
 has standalone scalar groundwork. The current rectangular implementation remains the verified baseline;
 swarm indexing and Blight adjacency require separate migration decisions.
 
-Status: first integrated headless increment, 2026-10-01. Bounded command admission,
-tick trace replay, stable spatial queries, radial field forces and cellular spread
-exist in a sequential optional scenario; full gameplay/concurrency remain planned. See
+Status: second integrated headless increment, 2026-10-01. Bounded command admission,
+tick trace replay, stable spatial queries, bounded separation/radial steering, clock
+driving, owned state copies and cellular spread exist in a sequential optional scenario; full gameplay/concurrency remain planned. See
 [workstream map](workstreams/README.md) for paths/status and
 [work-breakdown.md](work-breakdown.md) for implementation gates.
 
-The [wave 1 handoff](workstreams/integration/wave1-validation.md) is the authority
+The [phase 2 handoff](workstreams/integration/phase2-validation.md) is the authority
 for implemented scope and evidence. HeadlessSession borrows an exclusively owned
 Simulation; main owns both. The broader Runtime composition below is the target
 architecture. The legacy Simulation constructor retains the ECS-only workload;
 ScenarioOptions selects startup-owned grids, fields, scratch and stable sample IDs.
-Scenario ticks spread Blight, integrate radial acceleration with finite clamping,
-then rebuild the spatial grid. There is no consumption, flocking or structural mutation.
+Scenario ticks spread Blight, optionally compute immutable-input bounded steering
+(the prior radial-only path remains the absent-option behavior),
+then rebuild the spatial grid. Consumption, alignment/cohesion and structural mutation remain pending.
 
 ## Goal and existing foundation
 

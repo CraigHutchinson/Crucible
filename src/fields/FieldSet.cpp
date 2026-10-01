@@ -33,3 +33,16 @@ Acceleration FieldSet::Sample(Position position) const noexcept {
             static_cast<float>(std::clamp(y, -limit, limit))};
 }
 }
+
+namespace crucible::fields {
+bool FieldSet::TryCopyEdits(std::span<FieldEdit> destination) const noexcept {
+    if (destination.size() < m_Slots.size()) return false;
+    for (std::size_t i = 0; i < m_Slots.size(); ++i) {
+        const auto& slot = m_Slots[i];
+        destination[i] = slot.occupied
+            ? FieldEdit{FieldEditKind::set, i, slot.center, slot.radius, slot.strength}
+            : FieldEdit{FieldEditKind::remove, i};
+    }
+    return true;
+}
+}

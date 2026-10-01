@@ -1,5 +1,5 @@
-# Presentation implementation
+# Presentation
 
-Own explicit source registration in CMakeLists.txt. See [workstream brief](../../docs/workstreams/presentation/README.md).
-
-Reserved build boundary (INTERFACE target); algorithms and public APIs are pending.
+`ScenarioSnapshot` owns the sequential phase-2 read model. See
+[design](../../docs/workstreams/presentation/design.md) for ownership, capacity and
+borrowed span lifetimes. A graphics backend and concurrent exchange remain pending.

@@ -46,3 +46,9 @@ Text labels were visually checked and the images inspected for the intended worl
 units, palette and UI composition. Numbers such as 680 and 42% are illustrative and
 do not define a scenario. The chasms and tall structures are visual exploration;
 production geometry and movement rules must agree before such terrain becomes playable.
+
+## Actual implemented state
+
+[Phase 2 SVG and rendered preview](phase2-state.md) show a real owned tick-20
+simulation frame, with reproduction and visual validation. Keep it distinct from
+the generated concepts above: resource/fusion/mission behavior is still pending.

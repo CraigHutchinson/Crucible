@@ -4,6 +4,7 @@
 #include <crucible/contracts/Position.hpp>
 #include <cstddef>
 #include <vector>
+#include <span>
 
 namespace crucible::fields {
 /// Acceleration in world units per second squared, integrated by Simulation using tick duration.
@@ -28,6 +29,9 @@ public:
      */
     [[nodiscard]] Acceleration Sample(Position position) const noexcept;
 
+    /// Copies slots in index order: active set payloads or canonical remove commands.
+    /// Insufficient capacity leaves destination unchanged; storage remains caller-owned.
+    [[nodiscard]] bool TryCopyEdits(std::span<FieldEdit> destination) const noexcept;
 private:
     /// An occupied owned slot retains only the set payload.
     struct Slot { bool occupied{}; Position center{}; float radius{}, strength{}; };

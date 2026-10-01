@@ -2,8 +2,9 @@
 
 The compatibility `run_ticks` path remains. Bounded ingress and sequential
 pause/boundary/trace/replay are integrated and validated; see [combined evidence](../integration/wave1-validation.md),
-[design](design.md) and [validation](validation.md). Clock/Pipeline orchestration
-remain pending.
+[design](design.md) and [validation](validation.md). The bounded clock and owned
+summary increment is [review-ready](phase2-clock.md); combined verification and
+production wiring are architect-owned. Pipeline orchestration remains pending.
 
 ## Scope and first task
 

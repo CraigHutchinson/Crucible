@@ -53,16 +53,17 @@ Blight material studies, with the exact generation prompts recorded.
 
 ## Project status
 
-**Status: first integrated headless increment.** Bounded field commands, tick trace
+**Status: second integrated headless increment.** Bounded field commands, tick trace
 replay, a stable spatial grid, radial forces and double-buffered Blight spread are
-implemented alongside the original ECS workload and stack round-trip test. Full
+implemented alongside bounded separation steering, a fixed-step clock and owned
+state snapshots. The original ECS workload and stack round-trip test remain. Full
 swarm gameplay and rendering remain planned. The design
 target is 100,000–150,000 entities at 60 FPS; this is not a measured game result.
 
 The sub0 ecosystem supplies the simulation foundation. Scale is useful when it makes
 the swarm feel continuous and alive; a clear, playable small scenario comes first.
-The next simulation packages lead toward steering, resource interactions and owned
-display snapshots. [Architecture](docs/architecture.md) describes how those systems
+The next simulation packages lead toward resource interactions and a usable
+input/presentation loop. [Architecture](docs/architecture.md) describes how those systems
 fit together; [work breakdown](docs/work-breakdown.md) assigns their implementation gates.
 
 Crucible also forges stronger reusable sub0 libraries: real application increments
@@ -109,9 +110,26 @@ the four agents' deliverables, review, validation and remaining gates.
 Development proceeds through [reviewed phases](docs/phases/README.md), reassessing
 and consolidating workstreams at each phase start. The [phase 2 plan](docs/phases/phase2.md)
 prioritizes bounded steering, runtime observation and owned state inspection, with
-an actual-state visual export as stretch. Implementation has not been dispatched.
+an actual-state visual export, now delivered. See the [phase 2 handoff](docs/workstreams/integration/phase2-validation.md)
+and [next phase proposal](docs/phases/phase3.md).
 
 Source layout: include/crucible and src for simulation, tests for behavior and
 stack integration, benchmarks for opt-in timing, cmake for dependencies, scripts
 for evidence capture. Dependency licenses remain with their projects; Crucible's
 own license has not yet been selected.
+
+## Inspect the implemented scenario
+
+```sh
+./build/release/crucible --export-svg docs/concepts/phase2-state.svg
+```
+
+On Windows use `build/release/crucible.exe`. The file is an owned tick-20 snapshot
+of the actual 2,048-sample scenario. It shows bounded movement, the remaining repulsive
+field and Blight spread. Exact full-state replay is covered by the integration fixture;
+the CLI prints checksum/count replay diagnostics. This is a diagnostic view; the
+playable input loop, resource consumption and mission rules remain pending.
+
+![Actual phase 2 state](docs/concepts/phase2-state.png)
+
+[Open the SVG](docs/concepts/phase2-state.svg) or read [reproduction and visual evidence](docs/concepts/phase2-state.md).

@@ -13,3 +13,8 @@ add_executable(crucible_scenario_test scenario.cpp)
 target_link_libraries(crucible_scenario_test PRIVATE Crucible::Core)
 add_test(NAME scenario_integration COMMAND crucible_scenario_test)
 set_tests_properties(scenario_integration PROPERTIES LABELS integration)
+
+add_executable(crucible_phase2_test phase2.cpp)
+target_link_libraries(crucible_phase2_test PRIVATE Crucible::Runtime Crucible::Presentation)
+add_test(NAME phase2_full_state COMMAND crucible_phase2_test)
+set_tests_properties(phase2_full_state PROPERTIES LABELS "integration;presentation")
