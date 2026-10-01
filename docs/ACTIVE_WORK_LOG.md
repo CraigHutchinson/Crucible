@@ -13,6 +13,7 @@ an uncontended host even when files do not overlap.
 | wave1_runtime / GPT-6.1 Sol low | Complete increment | .worktrees/runtime: runtime headers/source/tests/docs only | 2026-10-01 / wave1-runtime | 6141c5b integrated; clock/adapters and full W2 gates open |
 | wave1_spatial / GPT-6.1 Sol low | Complete increment | .worktrees/spatial: spatial and fields headers/source/tests/docs only | 2026-10-01 / wave1-spatial | 3175301 integrated; full steering/painted flow open |
 | wave1_blight / GPT-6.1 Sol low | Complete increment | .worktrees/blight: blight headers/source/tests/docs only | 2026-10-01 / wave1-blight | defa7f2 integrated; full W4 resource rules open |
+| Game intent and concepts / architect | Complete | README, game-design, concepts, central links; no builds | 2026-10-01 / 16670fb / workstream-groundwork | [Game design](game-design.md), [three concepts](concepts/README.md); next sprint not started |
 
 New claims include agent, branch/worktree, package, exact paths, host/CPU reservation,
 base SHA and dependencies. Completed rows link evidence or say documentation-only.
