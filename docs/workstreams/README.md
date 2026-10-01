@@ -8,11 +8,11 @@ authority. A reserved folder/target does not mean its gameplay package is implem
 | Stream | Package | Brief | Target / current foundation |
 |---|---|---|---|
 | Integration | W0 | [Integration](integration/README.md) | Core; ECS world and shared wiring |
-| Contracts | W1 | [Contracts](contracts/README.md) | Contracts; existing values/timestep |
-| Runtime | W2 | [Runtime](runtime/README.md) | Runtime; exact headless tick runner |
-| Spatial | W3 | [Spatial](spatial/README.md) | Spatial; reserved |
-| Fields | W3 | [Fields](fields/README.md) | Fields; reserved |
-| Blight | W4 | [Blight](blight/README.md) | Blight; reserved |
+| Contracts | W1 | [Contracts](contracts/README.md) | Contracts; geometry, field edits, stable sample IDs, timing |
+| Runtime | W2 | [Runtime](runtime/README.md) | Runtime; bounded ingress, cutoff, pause/close, tick trace replay |
+| Spatial | W3 | [Spatial](spatial/README.md) | Spatial; reusable stable-ID bins and complete radius queries |
+| Fields | W3 | [Fields](fields/README.md) | Fields; bounded radial attractor/repulsor slots |
+| Blight | W4 | [Blight](blight/README.md) | Blight; double-buffered cardinal spread |
 | Swarm | W5 | [Swarm](swarm/README.md) | Swarm; fixed integration only |
 | Interactions | W6 | [Interactions](interactions/README.md) | Interactions; reserved |
 | Scheduling | W7 | [Scheduling](scheduling/README.md) | Scheduling; reserved |
@@ -23,6 +23,11 @@ authority. A reserved folder/target does not mean its gameplay package is implem
 CMake aliases use the Crucible:: prefix. Spatial/Fields split W3 into distinct path
 owners. Presentation owns snapshots before rendering. Scheduling is a separate
 path owner from Runtime; changing runtime files requires a handoff.
+
+The first four dispatch streams were Integration/Contracts, Runtime, Spatial/Fields
+and Blight. Their [combined handoff](integration/wave1-validation.md) records current
+evidence and remaining package gates. Dedicated branches/worktrees are retained at
+.worktrees/{integration,runtime,spatial,blight}; inspect status and claims before reuse.
 
 ## Folder pattern and shared ownership
 
@@ -101,6 +106,7 @@ CPU before heavy work; timings run alone per benchmarking.md.
 
 Load cpp-write before substantive C++ and cpp-review before integration. Add owned
 values/APIs only with a named caller, never stub success or framework scaffolding.
-Foundation is separate from package completion: queues/replay/steering/Blight/workers/
-snapshot leases/rendering still require gates. Handoff records SHAs/paths, consumer
+Foundation is separate from package completion: clock/catch-up, full steering,
+resource interactions, workers, snapshot leases and rendering still require gates.
+Handoff records SHAs/paths, consumer
 wiring, actual test results, evidence, shared patches and limits. Update claims.

@@ -26,3 +26,10 @@ out-of-line implementation preserves a small header.
 Remaining gaps: aggregate scenario memory admission belongs to the caller; no
 allocation counter measurement, worker/partition execution, resource consumption,
 field-dependent evolution or W6 interactions. No performance conclusion is claimed.
+
+## Architect integration result
+
+The first increment is now wired and passes the combined Debug/Release and
+ASan/UBSan suites. See [central wave 1 evidence](../integration/wave1-validation.md)
+for actual commands, review findings and remaining package gates. The worker-only
+execution status above records the original handoff.

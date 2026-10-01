@@ -42,7 +42,7 @@ add_library(crucible_core src/simulation.cpp)
 add_library(Crucible::Core ALIAS crucible_core)
 target_include_directories(crucible_core PUBLIC include)
 target_link_libraries(crucible_core PUBLIC crucible_options Crucible::Contracts Sub0ECS::Sub0ECS
-    PRIVATE Crucible::Swarm)
+    PRIVATE Crucible::Swarm Crucible::Spatial Crucible::Fields Crucible::Blight)
 set_target_properties(crucible_core PROPERTIES CXX_EXTENSIONS OFF)
 add_subdirectory(src/runtime)
 

@@ -1,7 +1,8 @@
 # Crucible work breakdown for collaborative agents
 
-Status: workstream groundwork present, 2026-10-01. This does not complete any implementation
-package. Read [architecture.md](architecture.md) for binding proposed contracts and
+Status: first increments of W0/W1, W2, W3 and W4 integrated, 2026-10-01. Full package
+gates below remain open. The [wave 1 handoff](workstreams/integration/wave1-validation.md)
+records delivered scope and remaining work. Read [architecture.md](architecture.md) for binding proposed contracts and
 [validation.md](validation.md) for prior integration evidence. Use the [workstream map](workstreams/README.md) for actual folders, build targets and session ownership.
 
 ## Milestones and dependencies
