@@ -27,7 +27,8 @@ increment, shared contracts, core gates and bounded stretch in the phase plan.
 Phase 2 is planned in docs/phases/phase2.md; do not infer dispatch from a backlog.
 Review docs/reuse/README.md at phase start/close. Feed concrete findings, fixtures
 and measured improvements into existing sub0 projects; propose extraction only
-around consumed product-neutral boundaries. Sub0HexGrid is a proposal, not a pin.
+around consumed product-neutral boundaries. Sub0HexGrid has standalone groundwork;
+Crucible adoption is gated on complete candidates and query/replay evidence, not pinned yet.
 Respect quota: architect plus at most two workers, minimal repeated reviews/builds,
 and core correctness/refinement before stretch. Close each completed phase with a
 reviewable pushed PR, exact-head CI, merge to main and a verified baseline.

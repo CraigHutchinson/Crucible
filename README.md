@@ -68,9 +68,13 @@ fit together; [work breakdown](docs/work-breakdown.md) assigns their implementat
 Crucible also forges stronger reusable sub0 libraries: real application increments
 feed back clearer contracts, fixtures, integration examples and measured improvements.
 The [reuse catalog](docs/reuse/README.md) tracks existing libraries and extraction
-candidates, including a [proposed Sub0HexGrid](docs/reuse/Sub0HexGrid.md) for the likely
+candidates, including [Sub0HexGrid groundwork](docs/reuse/Sub0HexGrid.md) for the likely
 hexagonal spatial direction. Gameplay policy stays in Crucible; extraction and
 upstream changes follow concrete consumer and validation gates.
+
+The visible world is a local patch. [Future terrain direction](docs/decisions/terrain-and-world-extension.md)
+preserves varying height, mining that forms depressions and permanent fused bridges,
+with possible spherical subdivision later. These remain future gameplay increments.
 
 ## Build
 

@@ -1,8 +1,22 @@
-# Sub0HexGrid: proposed standalone project specification
+# Sub0HexGrid: standalone groundwork and adoption specification
 
-Status: proposal, 2026-10-01. No repository, code, package target or dependency pin
-has been created. Origin: the user's likely hexagonal-grid direction for Crucible.
-Catalog entry: [R05](README.md). Review the scope before authoring public C++ APIs.
+Status: standalone initialization, 2026-10-01. The user supplied the existing empty
+[Sub0HexGrid repository](https://github.com/CraigHutchinson/Sub0HexGrid) and authorized
+requirements, architecture and initial code groundwork. H0 architecture is 9a4e604;
+H1 kernel is e9d4231, reviewed/validated locally and delivered through
+[PR 1](https://github.com/CraigHutchinson/Sub0HexGrid/pull/1). No Crucible dependency pin
+or migration has been added. Catalog entry: [R05](README.md).
+
+The first library increment supplies checked axial neighbors, wide distance,
+validated pointy-top world mapping, an example, independent numeric fixtures and
+a relocated CMake package consumer. MSVC Debug/Release and WSL GCC 15 ASan/UBSan
+each pass 3/3 tests. Detailed requirements/architecture and evidence now live in
+the standalone project. Finite regions and complete radius candidates remain its
+next gate before replacing Crucible's spatial backend.
+
+The user's [terrain/world extension](../decisions/terrain-and-world-extension.md)
+is also preserved in the library's future-surfaces requirements: planar height
+first, possible near-uniform spherical subdivision later. Neither is implemented.
 
 ## Purpose and receiving consumer
 
@@ -81,10 +95,11 @@ nothing about the cost of a point-radius query.
 2. Verify the first receiving caller and any genuine second consumer; compare existing
    reusable options before choosing a new project. A second consumer strengthens the
    extraction case but should not be invented for paperwork.
-3. Agree the standalone scope and repository/delivery task. This proposal does not
-   authorize installs, upstream changes or automatic creation of a sibling repository.
-4. Implement the smallest library increment and independent consumer, then integrate
-   the pinned result into Crucible through an explicit spatial migration package.
+3. Standalone H0/H1 initialization is authorized and delivered separately. Agree the
+   next region/candidate facet and its receiving caller; no new generic surface API
+   or application migration is implied by the initialized repository.
+4. Validate that facet and independent consumer, then integrate the pinned result
+   into Crucible through an explicit spatial migration package.
 5. Re-record query/replay evidence and catalog links. Remove duplicated geometry only
    after equivalence/adopted semantics are verified. Update Blight separately if chosen.
 

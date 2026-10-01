@@ -15,6 +15,7 @@ an uncontended host even when files do not overlap.
 | wave1_blight / GPT-6.1 Sol low | Complete increment | .worktrees/blight: blight headers/source/tests/docs only | 2026-10-01 / wave1-blight | defa7f2 integrated; full W4 resource rules open |
 | Game intent and concepts / architect | Complete | README, game-design, concepts, central links; no builds | 2026-10-01 / 16670fb / workstream-groundwork | [Game design](game-design.md), [three concepts](concepts/README.md); next sprint not started |
 | Phase close and next plan / architect | Complete planning | PR merge, phases docs, workflow links; no local builds | 2026-10-01 / 722e7b3 / phase2-plan | Phase 1 merged by PR 1 at ab708a7; [phase 2 plan](phases/phase2.md), no workers dispatched |
+| Hex reuse and world direction / architect | Complete docs | Reuse/game/phase docs; no Crucible code/builds | 2026-10-01 / b1a556b / hexgrid-and-terrain-handoff | Sub0HexGrid H0/H1 delivered separately; [terrain direction](decisions/terrain-and-world-extension.md) preserved; no application migration |
 
 New claims include agent, branch/worktree, package, exact paths, host/CPU reservation,
 base SHA and dependencies. Completed rows link evidence or say documentation-only.

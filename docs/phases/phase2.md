@@ -43,7 +43,9 @@ before widening spatial contracts. Architect/stream A records a bounded topology
 chosen layout/boundaries/query semantics, geometry reuse boundary and migration scope.
 Keep Blight adjacency a separate gameplay choice. The verified rectangular baseline
 continues if the decision/extraction is unresolved; clock and inspection work can proceed.
-No automatic new repository or dual-backend implementation is part of this plan.
+Sub0HexGrid's standalone kernel was initialized in its user-designated repository;
+region/candidate completeness and actual migration remain gated. No dual-backend
+implementation or terrain/spherical work is required for this phase.
 
 Architect and affected owners agree the dense input/output shape, stable SampleId
 ordering, borrowed lifetimes, scenario limits and summary/read-model fields. Name

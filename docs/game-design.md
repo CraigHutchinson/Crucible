@@ -46,6 +46,12 @@ bins does not automatically change Blight's cardinal spread; cellular adjacency,
 finite world boundaries and visual mapping need an explicit decision and fixtures.
 The current rectangular grid is the verified implementation, not a final product constraint.
 
+The visible arena is a local patch of a larger world. The user's future direction
+adds terrain height for appearance and movement cost, mining that forms depressions,
+and permanent fused terrain such as bridges. See [world/terrain direction](decisions/terrain-and-world-extension.md)
+for resource and traversal gates and the preserved later spherical-world extension.
+The current slice is still flat; terrain dynamics are subsequent consumed increments.
+
 ## Design pillars
 
 1. **Shape behavior in space.** A current or field must have a visible, understandable
