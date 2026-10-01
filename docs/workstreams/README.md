@@ -13,16 +13,16 @@ consolidating small coupled packages under a single phase owner when useful.
 | Stream | Package | Brief | Target / current foundation |
 |---|---|---|---|
 | Integration | W0 | [Integration](integration/README.md) | Core; ECS world and shared wiring |
-| Contracts | W1 | [Contracts](contracts/README.md) | Contracts; geometry, field edits, stable sample IDs, timing |
-| Runtime | W2 | [Runtime](runtime/README.md) | Runtime; bounded ingress, cutoff, pause/close, tick trace replay |
+| Contracts | W1 | [Contracts](contracts/README.md) | Contracts; geometry, field edits, stable sample/state values, steering settings, copy destinations, timing |
+| Runtime | W2 | [Runtime](runtime/README.md) | Runtime; bounded ingress, cutoff, pause/close, tick trace replay, bounded fixed-step clock and summary |
 | Spatial | W3 | [Spatial](spatial/README.md) | Spatial; reusable stable-ID bins and complete radius queries |
 | Fields | W3 | [Fields](fields/README.md) | Fields; bounded radial attractor/repulsor slots |
 | Blight | W4 | [Blight](blight/README.md) | Blight; double-buffered cardinal spread |
-| Swarm | W5 | [Swarm](swarm/README.md) | Swarm; fixed integration only |
+| Swarm | W5 | [Swarm](swarm/README.md) | Swarm; fixed integration and bounded immutable-input separation/radial steering |
 | Interactions | W6 | [Interactions](interactions/README.md) | Interactions; reserved |
 | Scheduling | W7 | [Scheduling](scheduling/README.md) | Scheduling; reserved |
-| Telemetry | W8a | [Telemetry](telemetry/README.md) | Telemetry; reserved |
-| Presentation | W8b/W9 | [Presentation](presentation/README.md) | Presentation; reserved |
+| Telemetry | W8a | [Telemetry](telemetry/README.md) | Telemetry; adapter target reserved; current owned summary lives with ClockDriver |
+| Presentation | W8b/W9 | [Presentation](presentation/README.md) | Presentation; sequential owned snapshots, CLI SVG consumer; graphics/exchange deferred |
 | Validation | W10 | [Validation](validation/README.md) | Opt-in crucible_bench; ECS microbenchmark |
 
 CMake aliases use the Crucible:: prefix. Spatial/Fields split W3 into distinct path
@@ -111,7 +111,7 @@ CPU before heavy work; timings run alone per benchmarking.md.
 
 Load cpp-write before substantive C++ and cpp-review before integration. Add owned
 values/APIs only with a named caller, never stub success or framework scaffolding.
-Foundation is separate from package completion: clock/catch-up, full steering,
+Foundation is separate from package completion: richer steering,
 resource interactions, workers, snapshot leases and rendering still require gates.
 Handoff records SHAs/paths, consumer
 wiring, actual test results, evidence, shared patches and limits. Update claims.

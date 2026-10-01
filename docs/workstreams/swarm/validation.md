@@ -35,3 +35,11 @@ Static checks: `git diff --check` passed for tracked edits. New source/header/te
 files were read directly during the review because they are intentionally untracked
 until root performs the Git handoff. Git status emitted an inaccessible global-ignore
 warning; it did not prevent worktree status inspection.
+
+## Integrated root verification
+
+The REQUESTED handoff checks above are now fulfilled: combined unfiltered MSVC
+Debug/Release and GCC ASan/UBSan each passed 13/13. Full-state schedule/replay
+checks run at populations 0/8/2048. See [phase 2 evidence](../integration/phase2-validation.md)
+for commits, root review fixes, CLI/export consumer and remaining gates. No performance
+claim follows from these functional checks.

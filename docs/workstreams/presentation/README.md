@@ -1,12 +1,13 @@
 # Presentation workstream — W8b/W9
 
-Reserved build boundary (INTERFACE target); algorithms and public APIs are pending.
+Phase 2 provides startup-sized owned snapshots consumed by main, replay checks and SVG export.
+See [design and lifetimes](design.md) and [combined evidence](../integration/phase2-validation.md).
 
 ## Scope and first task
 
 Owned snapshots, drawing and input mapping. Prerequisites: W2/W8a; rendering W6/W8b.
 
-Implement snapshot leases first; record backend ADR before graphics dependencies.
+Retain sequential capture now; add leases only with a concurrent reader. Record a backend ADR before graphics dependencies.
 
 ## Exclusive ownership
 
@@ -24,8 +25,7 @@ for explicit source registration and local test commands.
 
 Target: Crucible::Presentation. The [architecture](../../architecture.md) names its
 production consumer and input/output, capacity and lifetime contracts. Build links
-control dependency visibility, not tick scheduling. A reserved target is not an
-implemented capability. Add no stub-success API or worker execution without gates.
+control dependency visibility, not tick scheduling. The owned copy is implemented; concurrent exchange and graphics are pending.
 
 ## Acceptance and handoff
 

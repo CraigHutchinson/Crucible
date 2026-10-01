@@ -8,7 +8,9 @@ package is not a permanent agent assignment.
 | Phase | Increment | Record |
 |---|---|---|
 | 1 | Headless foundations, bounded commands/replay, spatial/fields/Blight and game intent | [Handoff](../workstreams/integration/wave1-validation.md), [PR 1](https://github.com/CraigHutchinson/Crucible/pull/1) |
-| 2 | Bounded local steering, clock/observability and owned state inspection; visual export as stretch | [Plan](phase2.md); implementation not started |
+| 2 | Bounded local steering, clock/observability, owned state inspection and actual-state SVG | [Delivery](../workstreams/integration/phase2-validation.md), [plan](phase2.md) |
+
+| 3 | Proposed resource consequence, with reusable hex H2 work bounded separately | [Proposal](phase3.md); not dispatched |
 
 Phase 1 merged to main at `ab708a7` after exact-head Linux/Windows Debug/Release and
 sanitizer CI passed. Agent worktrees remain retained with their prior artifacts;

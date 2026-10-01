@@ -1,6 +1,6 @@
 # Phase 2: make the sequential simulation steerable and inspectable
 
-Status: active. Date: 2026-10-01. Dispatch baseline: main 65bb8c4; see
+Status: delivered; see [handoff and evidence](../workstreams/integration/phase2-validation.md). Date: 2026-10-01. Dispatch baseline: main 65bb8c4; see
 [execution contracts](../decisions/phase2-execution.md). Source baseline: phase 1 head
 `722e7b3`, merged at `ab708a7` through [PR 1](https://github.com/CraigHutchinson/Crucible/pull/1).
 Dispatch from the verified current main commit and record that SHA in each claim.

@@ -74,3 +74,11 @@ Debug/Release preset configure/build, `ctest --preset debug -L runtime
 --no-tests=error`, unfiltered combined Debug/Release suites and supported
 ASan/UBSan suite. Full-state clock/trace oracle is architect-owned. This is a
 review-ready bounded increment, not a completed W2/W8a or throughput claim.
+
+## Integrated root verification
+
+The REQUESTED handoff checks above are now fulfilled: combined unfiltered MSVC
+Debug/Release and GCC ASan/UBSan each passed 13/13. Full-state schedule/replay
+checks run at populations 0/8/2048. See [phase 2 evidence](../integration/phase2-validation.md)
+for commits, root review fixes, CLI/export consumer and remaining gates. No performance
+claim follows from these functional checks.
