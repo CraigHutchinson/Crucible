@@ -31,6 +31,12 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for Debug, Release and sanitizer workflow
 [architecture](docs/architecture.md) for the design and integration boundaries.
 Functional CI runs on Linux and Windows; benchmark CI is manual and advisory.
 
+The [workstream map and session guide](docs/workstreams/README.md) is the entry point
+for parallel development, with dedicated docs, source and test areas for each stream.
+The [agent work breakdown](docs/work-breakdown.md) maps the proposed architecture
+to implementation gates, ownership boundaries and team dispatch waves. Claim paths
+and long CPU runs in [the active work log](docs/ACTIVE_WORK_LOG.md).
+
 Source layout: include/crucible and src for simulation, tests for behavior and
 stack integration, benchmarks for opt-in timing, cmake for dependencies, scripts
 for evidence capture. Dependency licenses remain with their projects; Crucible's

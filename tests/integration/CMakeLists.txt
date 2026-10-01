@@ -1,0 +1,10 @@
+add_executable(crucible_tests simulation.cpp)
+target_link_libraries(crucible_tests PRIVATE Crucible::Core)
+add_test(NAME simulation COMMAND crucible_tests)
+set_tests_properties(simulation PROPERTIES LABELS integration)
+
+add_executable(crucible_stack_test stack.cpp)
+target_link_libraries(crucible_stack_test PRIVATE Crucible::Core Sub0Pipeline::Sub0Pipeline
+    Sub0Pipeline::Headless Sub0Pub::Sub0Pub Sub0Log::Sub0Log)
+add_test(NAME stack_round_trip COMMAND crucible_stack_test)
+set_tests_properties(stack_round_trip PROPERTIES LABELS integration)

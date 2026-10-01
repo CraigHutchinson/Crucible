@@ -1,12 +1,11 @@
 #pragma once
+#include <crucible/contracts/Position.hpp>
+#include <crucible/contracts/Velocity.hpp>
 #include <sub0ecs/sub0ecs.hpp>
 #include <cstddef>
 #include <tuple>
 
 namespace crucible {
-struct Position { float x{}, y{}; };
-struct Velocity { float x{}, y{}; };
-
 // Initial ECS integration workload; flocking, fields and Blight are future systems.
 class Simulation {
 public:

@@ -1,0 +1,2 @@
+crucible_add_workstream(crucible_telemetry Telemetry)
+target_link_libraries(crucible_telemetry INTERFACE Crucible::Contracts)

@@ -1,0 +1,2 @@
+crucible_add_workstream(crucible_blight Blight)
+target_link_libraries(crucible_blight INTERFACE Crucible::Contracts)

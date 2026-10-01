@@ -1,4 +1,5 @@
 #include <crucible/simulation.hpp>
+#include <crucible/swarm/integration.hpp>
 
 namespace crucible {
 Simulation::Simulation(std::size_t count) {
@@ -7,10 +8,8 @@ Simulation::Simulation(std::size_t count) {
     }
 }
 void Simulation::tick() {
-    world_.each<Position, Velocity>([](Position& position, Velocity& velocity) {
-        constexpr float step = 1.0F / 60.0F;
-        position.x += velocity.x * step;
-        position.y += velocity.y * step;
+    world_.each<Position, Velocity>([](Position& position, const Velocity& velocity) {
+        swarm::integrate_position(position, velocity);
     });
 }
 double Simulation::checksum() {

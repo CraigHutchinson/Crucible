@@ -18,3 +18,19 @@ Follow CONTRIBUTING.md and docs/benchmarking.md. Keep performance measurements a
 Add meaningful behavior and lifetime tests for integration changes; run Debug, Release,
 and ASan/UBSan on supported platforms. Document what actually passed and limitations.
 Do not claim 100K+ entities at 60 FPS from an isolated integration loop.
+
+## Parallel workstream sessions
+
+Read docs/workstreams/README.md and the stream brief. Claim paths and heavy CPU runs
+in docs/ACTIVE_WORK_LOG.md before work. Streams own include/crucible/<stream>,
+src/<stream>, tests/<stream> and docs/workstreams/<stream>. Scheduling and Runtime
+are separate owners. Contract changes require Contracts owner and affected callers.
+
+Integrator owns Simulation, ECS queries, main, root inventories, pins, presets, CI
+and central docs. Submit shared edits as patch requests. Use local CMakeLists.txt
+with explicit sources and stream CTest labels; no globs, dummy objects or stub APIs.
+INTERFACE reservations are boundaries, not completed gameplay. Prefer per-session
+worktrees/build trees and preserve other sessions' files/artifacts.
+
+Load cpp-write before substantive C++ and cpp-review before integration. Completion
+requires a production caller and actual acceptance evidence.

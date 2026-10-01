@@ -1,0 +1,4 @@
+add_executable(crucible_runtime_tests headless.cpp)
+target_link_libraries(crucible_runtime_tests PRIVATE Crucible::Runtime)
+add_test(NAME runtime_headless COMMAND crucible_runtime_tests)
+set_tests_properties(runtime_headless PROPERTIES LABELS runtime)

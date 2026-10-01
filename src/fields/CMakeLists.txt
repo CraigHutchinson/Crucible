@@ -1,0 +1,2 @@
+crucible_add_workstream(crucible_fields Fields)
+target_link_libraries(crucible_fields INTERFACE Crucible::Contracts)
