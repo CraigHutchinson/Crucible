@@ -1,6 +1,8 @@
 # Phase 3 proposal: give steering a gameplay consequence
 
-Status: proposed, not dispatched. Reassess against merged phase-2 main and remaining
+Status: proposed, not dispatched. Read the [phase 2 review](../sprint-reviews/phase-02.md)
+and carry its open IDs into this plan at dispatch; create phase-03.md from the review
+template when work starts. Reassess against merged phase-2 main and remaining
 quota before execution. Phase 2 already supplies movement, bounded clock, exact replay
 and owned snapshots; keeping the same stream split would create artificial tasks.
 

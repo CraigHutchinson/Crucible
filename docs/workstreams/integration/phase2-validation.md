@@ -3,7 +3,7 @@
 Date: 2026-10-01. Baseline main `65bb8c4`. Delivery branch `phase2-steer-inspect`.
 [Phase plan](../../phases/phase2.md), [frozen contracts](../../decisions/phase2-execution.md).
 [PR 4](https://github.com/CraigHutchinson/Crucible/pull/4) is the review/merge record;
-its merge commit defines the next main baseline. Do not use isolated worker heads
+merged at `cdc603472f32a5d8a3204a30e4e6f7e84a0a195f`, defining the next main baseline. Do not use isolated worker heads
 as a complete application baseline.
 
 ## Delivered increment
@@ -37,7 +37,8 @@ The headless CLI and combined replay test are real consumers. The actual-state
 
 Root reviewed actual worktree diffs before integration and committed exact owned
 paths. Artifacts and older wave-1 worktrees were preserved. Completed worker branches
-remain historical isolated handoffs; start future work from merged main.
+were later cleaned up under explicit user authorization. Their tips are preserved
+by remote archive tags and detached worktrees; start future work from merged main.
 
 ## Verification
 
@@ -97,3 +98,9 @@ and architect integration/inspection. Freeze the material/consumption ledger bef
 resource code. Window/input backend, concurrent snapshot exchange, fusion/shatter,
 relay objective, height/deformation/sphere, changing population and measured scale
 remain open. See [phase 3 proposal](../../phases/phase3.md); it is not dispatched.
+
+## Sprint review
+
+[Phase 2 sprint review](../../sprint-reviews/phase-02.md) records the retrospective,
+carry-forward IDs and cleanup disposition. Exact reviewed-head Linux/Windows
+Debug/Release and sanitizer CI passed before PR 4 merged; local main matched origin.
