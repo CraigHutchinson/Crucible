@@ -65,6 +65,13 @@ The next simulation packages lead toward steering, resource interactions and own
 display snapshots. [Architecture](docs/architecture.md) describes how those systems
 fit together; [work breakdown](docs/work-breakdown.md) assigns their implementation gates.
 
+Crucible also forges stronger reusable sub0 libraries: real application increments
+feed back clearer contracts, fixtures, integration examples and measured improvements.
+The [reuse catalog](docs/reuse/README.md) tracks existing libraries and extraction
+candidates, including a [proposed Sub0HexGrid](docs/reuse/Sub0HexGrid.md) for the likely
+hexagonal spatial direction. Gameplay policy stays in Crucible; extraction and
+upstream changes follow concrete consumer and validation gates.
+
 ## Build
 
 Requires CMake 3.25+, Ninja, Git and a C++23 toolchain (GCC 13+ or current MSVC).

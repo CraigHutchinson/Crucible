@@ -38,6 +38,13 @@ architect until its state contract is useful; a full graphics stream is not just
 
 ## Contract gate before parallel edits
 
+Review the likely hexagonal spatial direction and [Sub0HexGrid proposal](../reuse/Sub0HexGrid.md)
+before widening spatial contracts. Architect/stream A records a bounded topology ADR:
+chosen layout/boundaries/query semantics, geometry reuse boundary and migration scope.
+Keep Blight adjacency a separate gameplay choice. The verified rectangular baseline
+continues if the decision/extraction is unresolved; clock and inspection work can proceed.
+No automatic new repository or dual-backend implementation is part of this plan.
+
 Architect and affected owners agree the dense input/output shape, stable SampleId
 ordering, borrowed lifetimes, scenario limits and summary/read-model fields. Name
 each consumer before adding an API. Simulation gathers immutable tick-start values;
@@ -153,3 +160,6 @@ reviewed maintainable code and honest validation. It does not require the stretc
 100K-scale timing, fusion/shatter, victory/defeat, a threaded executor or a playable UI.
 Retrospective must reconsider these priorities and workstream consolidation before
 phase 3; the eventual resource phase must freeze the game-design ledger first.
+Update the [reuse catalog](../reuse/README.md) with concrete upstream findings,
+extraction decisions and validated receiving callers. Strengthening reusable sub0
+libraries is a project outcome; proposed changes are not recorded as delivered work.

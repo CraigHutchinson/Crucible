@@ -40,6 +40,12 @@ motion, territory and structures carry the information. The first map is a bound
 2D arena. Height in concept art communicates material and depth; it does not commit
 the simulation to 3D traversal.
 
+Hexagonal spatial topology is a likely direction. The [Sub0HexGrid proposal](reuse/Sub0HexGrid.md)
+separates reusable geometry from swarm binning and game rules. Choosing hex swarm
+bins does not automatically change Blight's cardinal spread; cellular adjacency,
+finite world boundaries and visual mapping need an explicit decision and fixtures.
+The current rectangular grid is the verified implementation, not a final product constraint.
+
 ## Design pillars
 
 1. **Shape behavior in space.** A current or field must have a visible, understandable

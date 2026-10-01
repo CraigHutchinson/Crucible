@@ -26,6 +26,9 @@ acceptance. Reconsider the active streams before dispatch:
 - Split a stream only around stable contracts and disjoint ownership, not to fill slots.
 - Defer a stream when it lacks a consumer or an unmet prerequisite blocks meaningful work.
 - Identify shared surfaces, contract gates, integration order and a bounded stretch.
+- Review the [reuse catalog](../reuse/README.md): retain domain policy locally,
+  reuse or improve existing sub0 libraries, and propose extraction where a consumed
+  product-neutral boundary is demonstrated. Record upstream evidence and disposition.
 
 The phase plan records the resulting ownership table and reasons for every change
 from the preceding phase. Revise it when evidence changes scope. Keep durable module
