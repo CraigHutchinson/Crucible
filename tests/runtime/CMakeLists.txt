@@ -12,3 +12,8 @@ add_executable(crucible_runtime_session_tests HeadlessSession.cpp)
 target_link_libraries(crucible_runtime_session_tests PRIVATE Crucible::Runtime)
 add_test(NAME runtime_session COMMAND crucible_runtime_session_tests)
 set_tests_properties(runtime_session PROPERTIES LABELS runtime)
+
+add_executable(crucible_runtime_clock_tests ClockDriver.cpp)
+target_link_libraries(crucible_runtime_clock_tests PRIVATE Crucible::Runtime)
+add_test(NAME runtime_clock COMMAND crucible_runtime_clock_tests)
+set_tests_properties(runtime_clock PROPERTIES LABELS runtime)
