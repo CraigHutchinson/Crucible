@@ -42,6 +42,7 @@ public:
     HeadlessSession& operator=(const HeadlessSession&) = delete;
 
     [[nodiscard]] CommandIngress& GetIngress() noexcept;
+    [[nodiscard]] std::uint64_t GetCompletedTick() const noexcept;
     /// Suppresses boundaries while leaving bounded admission open.
     void Pause() noexcept;
     /// Queued edits become eligible at the next boundary.
