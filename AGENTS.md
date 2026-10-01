@@ -21,6 +21,11 @@ Do not claim 100K+ entities at 60 FPS from an isolated integration loop.
 
 ## Parallel workstream sessions
 
+Read docs/game-design.md for product intent and first-playable scope before choosing
+implementation behavior. docs/concepts contains visual proposals, not working game
+screenshots or simulation rules. Freeze numerical/resource rules with fixtures and
+record consequential gameplay decisions before dependent streams implement them.
+
 Read docs/workstreams/README.md and the stream brief. Claim paths and heavy CPU runs
 in docs/ACTIVE_WORK_LOG.md before work. Streams own include/crucible/<stream>,
 src/<stream>, tests/<stream> and docs/workstreams/<stream>. Scheduling and Runtime

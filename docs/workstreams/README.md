@@ -2,6 +2,8 @@
 
 This is the entry point for parallel Crucible sessions. Architecture is the contract
 authority. A reserved folder/target does not mean its gameplay package is implemented.
+Read [game design](../game-design.md) for player intent and the first playable slice;
+use [concepts](../concepts/README.md) as visual exploration rather than game rules.
 
 ## Ownership map
 
