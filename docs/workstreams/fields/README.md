@@ -1,6 +1,6 @@
 # Fields workstream — W3
 
-Reserved build boundary (INTERFACE target); algorithms and public APIs are pending.
+Compiled bounded radial fields and analytic fixtures are review-ready. Combined production wiring and acceptance are pending architect verification. Painted flow is outside this first radial slice.
 
 ## Scope and first task
 

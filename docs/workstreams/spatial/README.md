@@ -1,6 +1,6 @@
 # Spatial workstream — W3
 
-Reserved build boundary (INTERFACE target); algorithms and public APIs are pending.
+Compiled bounded grid and brute-force fixtures are review-ready. Combined production wiring and acceptance are pending architect verification.
 
 ## Scope and first task
 
