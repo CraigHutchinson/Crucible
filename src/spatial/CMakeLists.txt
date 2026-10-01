@@ -1,2 +1,2 @@
-crucible_add_workstream(crucible_spatial Spatial)
-target_link_libraries(crucible_spatial INTERFACE Crucible::Contracts)
+crucible_add_workstream(crucible_spatial Spatial Grid.cpp)
+target_link_libraries(crucible_spatial PUBLIC Crucible::Contracts)
