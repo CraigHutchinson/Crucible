@@ -1,6 +1,10 @@
 # Blight workstream — W4
 
-Reserved build boundary (INTERFACE target); algorithms and public APIs are pending.
+Wave 1 supplies a bounded cardinal-spread prototype through `blight::Grid`.
+Production integration and build acceptance are owned by the architect and pending
+at this worker handoff; complete W4 and interactions remain open.
+
+See [rule](decisions.md), [ownership/design](design.md) and [validation](validation.md).
 
 ## Scope and first task
 
