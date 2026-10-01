@@ -19,11 +19,12 @@ the guarantees actually checked. No upstream edits were made during this catalog
 | R02: typed delivery | Sub0Pub v2, stack round-trip consumer | Improve callback lifetime examples and bounded ingress integration when a real input adapter arrives | Preserve explicit disconnect/drain ownership; the pinned audit is evidence, not a claim that every finding remains at current HEAD |
 | R03: execution and joining | Sub0Pipeline, sequential stack consumer | Feed concrete bounded executor/join/cancellation requirements upstream during W7; retain game phase policy locally | Exact-version join/failure fixtures before changing pins; no new concurrency work in phase 2 |
 | R04: compact observation | Sub0Log, stack decoded-record consumer | Use consumed runtime summaries to improve logging adapters, teardown examples and round-trip tests | Phase 2 summary first; logger adapter follows an actual caller and bounded storage/lifecycle evidence |
-| R05: hex topology and geometry | [Sub0HexGrid proposal](Sub0HexGrid.md); no project/dependency created | Candidate standalone product-neutral grid library; phase 2 reviews topology before spatial expansion | Named Crucible consumer, specified topology/numeric/boundary contracts, independent geometry fixtures and package consumer; extraction/migration is separately gated |
+| R05: hex topology and geometry | [Sub0HexGrid groundwork](Sub0HexGrid.md), standalone kernel initialized; Crucible adoption pending | Reuse checked geometry, then add bounded regions/candidates; phase 2 reviews topology before spatial expansion | Kernel numeric/installed-package fixtures pass; complete radius candidates and integrated Crucible query/replay evidence required before a pin/migration |
 | R06: spatial bins and radius traversal | Crucible::Spatial, integrated rectangular implementation | Keep entity binning local for now; identify whether a geometry library can support it without owning SampleId/ECS or gameplay | Compare complete queries to brute force for the chosen topology; second demonstrated consumer before extracting a generic binning library |
 | R07: bounded input/trace/state exchange | Crucible::Runtime and planned owned read model | Record patterns that may improve Pub/Pipeline or justify later extraction; avoid a generic runtime framework | Concrete consumers and bounded lifetime/capacity tests; phase 2 only adds the owned copy it uses, not an unconsumed exchange |
 | R08: steering, Blight and resource rules | Crucible domain modules | Keep gameplay policy local; feed any general storage/math defect upstream with a minimal reproduction | Product-neutral boundary and independent reusable consumer required before extraction; game tuning remains in Crucible |
 | R09: paging/cache foundations | Sub0MemPage/Sub0TieredCache, future evaluation | Reuse existing libraries if a measured world/data residency requirement appears; simulation can supply real workloads and feedback | No current Crucible consumer or demonstrated residency bottleneck; postpone integration until measured need |
+| R10: surface height and terrain transitions | [Future world direction](../decisions/terrain-and-world-extension.md) | Preserve planar height/deformation and later spherical geometry; keep mining/material/fusion policy in Crucible until a reusable boundary has real consumers | Finite height/storage, traversal and material conservation fixtures; sourced spherical adjacency/metric specification before code |
 
 Status vocabulary: **consumed** means an actual caller exists, **proposed** means a
 design candidate, **upstream finding** requires exact-version evidence, and **deferred**
@@ -48,7 +49,8 @@ platforms. Follow its own contribution/review workflow before editing upstream.
 
 ## Phase 2 decision
 
-Hexagonal spatial topology is a likely direction raised by the user. Treat R05 as
+Hexagonal spatial topology is a likely direction raised by the user. Its standalone
+kernel has been initialized in the user-designated repository. Treat adoption R05 as
 an early design gate; reserve the minimal bounded investigation in the existing
 architect/stream A ownership instead of adding another permanent agent. The current
 rectangular grid remains the verified baseline until a replacement passes its oracle.

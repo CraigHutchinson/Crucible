@@ -5,7 +5,7 @@ document owns technical boundaries; [visual concepts](concepts/README.md) illust
 the proposed experience without selecting a renderer or changing current physics.
 The [reuse catalog](reuse/README.md) records upstream/extraction opportunities.
 Hex spatial topology is likely but unresolved; [Sub0HexGrid](reuse/Sub0HexGrid.md)
-is proposed. The current rectangular implementation remains the verified baseline;
+has standalone scalar groundwork. The current rectangular implementation remains the verified baseline;
 swarm indexing and Blight adjacency require separate migration decisions.
 
 Status: first integrated headless increment, 2026-10-01. Bounded command admission,
