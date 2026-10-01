@@ -65,6 +65,13 @@ The next simulation packages lead toward steering, resource interactions and own
 display snapshots. [Architecture](docs/architecture.md) describes how those systems
 fit together; [work breakdown](docs/work-breakdown.md) assigns their implementation gates.
 
+Crucible also forges stronger reusable sub0 libraries: real application increments
+feed back clearer contracts, fixtures, integration examples and measured improvements.
+The [reuse catalog](docs/reuse/README.md) tracks existing libraries and extraction
+candidates, including a [proposed Sub0HexGrid](docs/reuse/Sub0HexGrid.md) for the likely
+hexagonal spatial direction. Gameplay policy stays in Crucible; extraction and
+upstream changes follow concrete consumer and validation gates.
+
 ## Build
 
 Requires CMake 3.25+, Ninja, Git and a C++23 toolchain (GCC 13+ or current MSVC).
@@ -95,6 +102,10 @@ to implementation gates, ownership boundaries and team dispatch waves. Claim pat
 and long CPU runs in [the active work log](docs/ACTIVE_WORK_LOG.md).
 The [first-wave handoff](docs/workstreams/integration/wave1-validation.md) records
 the four agents' deliverables, review, validation and remaining gates.
+Development proceeds through [reviewed phases](docs/phases/README.md), reassessing
+and consolidating workstreams at each phase start. The [phase 2 plan](docs/phases/phase2.md)
+prioritizes bounded steering, runtime observation and owned state inspection, with
+an actual-state visual export as stretch. Implementation has not been dispatched.
 
 Source layout: include/crucible and src for simulation, tests for behavior and
 stack integration, benchmarks for opt-in timing, cmake for dependencies, scripts
