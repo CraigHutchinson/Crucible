@@ -2,4 +2,5 @@
 
 Owned public header area. See [workstream brief](../../../docs/workstreams/blight/README.md).
 
-Reserved build boundary (INTERFACE target); algorithms and public APIs are pending.
+Grid.hpp provides the owned bounded cardinal-spread prototype; see the brief for
+production integration and acceptance status.
