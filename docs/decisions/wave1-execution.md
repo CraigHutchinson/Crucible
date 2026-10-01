@@ -4,6 +4,9 @@ Date: 2026-10-01. Architect: primary agent. Workers: GPT-6.1 Sol, low reasoning,
 as requested. At most three workers run alongside the architect in this session;
 Blight follows the initial contract handoff. Four dedicated worktrees are reserved.
 
+Execution complete for this first increment. [Combined handoff and verification](../workstreams/integration/wave1-validation.md)
+record integrated commits, findings, test results and the next dispatch boundaries.
+
 ## Ownership and communication
 
 Root owns central docs, Simulation, main and shared/root build wiring. The integration
