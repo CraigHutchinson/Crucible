@@ -21,7 +21,7 @@ architecture. The legacy Simulation constructor retains the ECS-only workload;
 ScenarioOptions selects startup-owned grids, fields, scratch and stable sample IDs.
 Scenario ticks spread Blight, optionally compute immutable-input bounded steering
 (the prior radial-only path remains the absent-option behavior),
-then rebuild the spatial grid. There is no consumption, flocking or structural mutation.
+then rebuild the spatial grid. Consumption, alignment/cohesion and structural mutation remain pending.
 
 ## Goal and existing foundation
 
