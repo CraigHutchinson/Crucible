@@ -1,6 +1,8 @@
 # Swarm workstream — W5
 
-Groundwork: fixed integration is consumed by Simulation; steering and buffered next-state computation are pending.
+Phase 2 review-ready provider: bounded separation/radial steering and transactional
+next-state scratch. Root integration and executable validation remain pending.
+See [rule](design.md), [handoff](validation.md) and [cpp-review](review.md).
 
 ## Scope and first task
 
