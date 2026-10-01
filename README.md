@@ -95,6 +95,10 @@ to implementation gates, ownership boundaries and team dispatch waves. Claim pat
 and long CPU runs in [the active work log](docs/ACTIVE_WORK_LOG.md).
 The [first-wave handoff](docs/workstreams/integration/wave1-validation.md) records
 the four agents' deliverables, review, validation and remaining gates.
+Development proceeds through [reviewed phases](docs/phases/README.md), reassessing
+and consolidating workstreams at each phase start. The [phase 2 plan](docs/phases/phase2.md)
+prioritizes bounded steering, runtime observation and owned state inspection, with
+an actual-state visual export as stretch. Implementation has not been dispatched.
 
 Source layout: include/crucible and src for simulation, tests for behavior and
 stack integration, benchmarks for opt-in timing, cmake for dependencies, scripts

@@ -14,6 +14,7 @@ an uncontended host even when files do not overlap.
 | wave1_spatial / GPT-6.1 Sol low | Complete increment | .worktrees/spatial: spatial and fields headers/source/tests/docs only | 2026-10-01 / wave1-spatial | 3175301 integrated; full steering/painted flow open |
 | wave1_blight / GPT-6.1 Sol low | Complete increment | .worktrees/blight: blight headers/source/tests/docs only | 2026-10-01 / wave1-blight | defa7f2 integrated; full W4 resource rules open |
 | Game intent and concepts / architect | Complete | README, game-design, concepts, central links; no builds | 2026-10-01 / 16670fb / workstream-groundwork | [Game design](game-design.md), [three concepts](concepts/README.md); next sprint not started |
+| Phase close and next plan / architect | Complete planning | PR merge, phases docs, workflow links; no local builds | 2026-10-01 / 722e7b3 / phase2-plan | Phase 1 merged by PR 1 at ab708a7; [phase 2 plan](phases/phase2.md), no workers dispatched |
 
 New claims include agent, branch/worktree, package, exact paths, host/CPU reservation,
 base SHA and dependencies. Completed rows link evidence or say documentation-only.

@@ -9,6 +9,11 @@ gates below remain open. The [wave 1 handoff](workstreams/integration/wave1-vali
 records delivered scope and remaining work. Read [architecture.md](architecture.md) for binding proposed contracts and
 [validation.md](validation.md) for prior integration evidence. Use the [workstream map](workstreams/README.md) for actual folders, build targets and session ownership.
 
+This is the capability backlog, not a fixed sprint allocation. Follow the
+[phase workflow](phases/README.md) and current [phase 2 plan](phases/phase2.md) for
+active scope and revised ownership. Each phase reviews retain/consolidate/split/defer
+choices before dispatch; package completion claims still require their full gates.
+
 ## Milestones and dependencies
 
 | Milestone | Packages | Exit |
@@ -50,7 +55,8 @@ W10 reports missed targets honestly; an isolated integration loop is not 60 FPS.
 ## Team waves and shared ownership
 
 For four agents reserve one integrator slot. After W0/W1, dispatch W2, W3 and W4
-against frozen contracts. Next wave combines W5, W8a/W8b and integration/correctness.
+against frozen contracts. The next phase consolidates bounded W5 steering,
+W2/minimal W8a and architect-owned inspection/integration; see the phase plan.
 W6 follows W4/W5; W7 and W9 can overlap when prerequisites pass. Benchmark timing
 runs alone on its reserved host. With fewer agents combine roles, preserving gates.
 An unmet prerequisite permits fixture/design preparation, not a completed integration.
