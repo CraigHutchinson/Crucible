@@ -28,3 +28,10 @@ slot invariant and uses no interface hierarchy; L2 acceleration units, sample in
 capacity and rejection semantics documented; L3 nodiscard/noexcept/span-free owned values,
 matching class filenames and double finite accumulation checked. No open MUST/SHOULD
 findings in worker surface; review real callers and admission/application handling.
+
+## Architect integration result
+
+The first increment is now wired and passes the combined Debug/Release and
+ASan/UBSan suites. See [central wave 1 evidence](../integration/wave1-validation.md)
+for actual commands, review findings and remaining package gates. The worker-only
+execution status above records the original handoff.

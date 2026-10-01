@@ -1,9 +1,18 @@
 # Crucible architecture
 
-Status: baseline with build/folder groundwork, 2026-10-01. Shared values, headless
-running and fixed integration exist; gameplay/concurrency remain planned. See
+Status: first integrated headless increment, 2026-10-01. Bounded command admission,
+tick trace replay, stable spatial queries, radial field forces and cellular spread
+exist in a sequential optional scenario; full gameplay/concurrency remain planned. See
 [workstream map](workstreams/README.md) for paths/status and
 [work-breakdown.md](work-breakdown.md) for implementation gates.
+
+The [wave 1 handoff](workstreams/integration/wave1-validation.md) is the authority
+for implemented scope and evidence. HeadlessSession borrows an exclusively owned
+Simulation; main owns both. The broader Runtime composition below is the target
+architecture. The legacy Simulation constructor retains the ECS-only workload;
+ScenarioOptions selects startup-owned grids, fields, scratch and stable sample IDs.
+Scenario ticks spread Blight, integrate radial acceleration with finite clamping,
+then rebuild the spatial grid. There is no consumption, flocking or structural mutation.
 
 ## Goal and existing foundation
 
@@ -46,7 +55,7 @@ pool and telemetry. Simulation owns its grids, fields and reusable scratch. Doma
 modules receive scoped immutable input and exclusive output views; they retain no
 world pointers. Rendering receives copied values, never ECS views. Simulation has
 no platform/render, Pub callback or Log-global dependencies. Core now exposes only
-ECS/Contracts plus project requirements; Swarm is private. Runtime currently links
+ECS/Contracts plus project requirements; Swarm, Spatial, Fields and Blight are private. Runtime currently links
 Core for headless running. Its future adapters will link Pub/Pipeline/Log explicitly.
 Local workstream targets/source lists isolate parallel-session build edits. Reserved
 targets contain no dummy objects and do not claim implemented gameplay.

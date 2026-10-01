@@ -1,6 +1,8 @@
 # Contracts workstream — W1
 
-Groundwork: shared Position/Velocity values and fixed tick interval exist; scenario/command contracts are pending.
+Grid geometry, owned field edits and stable sample IDs join Position/Velocity and
+fixed timing. The consumed first contracts are integrated and validated; broader
+snapshot/resource contracts remain pending. See [combined evidence](../integration/wave1-validation.md).
 
 ## Scope and first task
 

@@ -1,8 +1,8 @@
 # Blight workstream — W4
 
 Wave 1 supplies a bounded cardinal-spread prototype through `blight::Grid`.
-Production integration and build acceptance are owned by the architect and pending
-at this worker handoff; complete W4 and interactions remain open.
+Production integration and build acceptance passed; see [combined evidence](../integration/wave1-validation.md).
+Complete W4 and resource interactions remain open.
 
 See [rule](decisions.md), [ownership/design](design.md) and [validation](validation.md).
 

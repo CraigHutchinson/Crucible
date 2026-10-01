@@ -40,3 +40,10 @@ has no injected-fault fixture: valid admitted edits against the unchanged borrow
 scenario are expected to apply. There is no test-only callback or invalid lifetime
 seam to force that failure. Threaded simulation, Pub delivery/unsubscription,
 wall-clock catch-up and display snapshots remain outside this bounded increment.
+
+## Architect integration result
+
+The first increment is now wired and passes the combined Debug/Release and
+ASan/UBSan suites. See [central wave 1 evidence](../integration/wave1-validation.md)
+for actual commands, review findings and remaining package gates. The worker-only
+execution status above records the original handoff.

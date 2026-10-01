@@ -4,8 +4,10 @@ Macro-RTS / swarm simulator powered by the sub0 ecosystem. Direct a nanite swarm
 with attractors, repulsors and painted flow fields, consume a cellular Blight,
 and fuse density into macro-structures.
 
-**Status: integration groundwork.** A headless ECS workload and a complete stack
-round-trip test are implemented. Gameplay and rendering are planned. The design
+**Status: first integrated headless increment.** Bounded field commands, tick trace
+replay, a stable spatial grid, radial forces and double-buffered Blight spread are
+implemented alongside the original ECS workload and stack round-trip test. Full
+swarm gameplay and rendering remain planned. The design
 target is 100,000–150,000 entities at 60 FPS; this is not a measured game result.
 
 ## Build
@@ -36,6 +38,8 @@ for parallel development, with dedicated docs, source and test areas for each st
 The [agent work breakdown](docs/work-breakdown.md) maps the proposed architecture
 to implementation gates, ownership boundaries and team dispatch waves. Claim paths
 and long CPU runs in [the active work log](docs/ACTIVE_WORK_LOG.md).
+The [first-wave handoff](docs/workstreams/integration/wave1-validation.md) records
+the four agents' deliverables, review, validation and remaining gates.
 
 Source layout: include/crucible and src for simulation, tests for behavior and
 stack integration, benchmarks for opt-in timing, cmake for dependencies, scripts

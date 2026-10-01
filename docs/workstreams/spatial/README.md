@@ -1,6 +1,8 @@
 # Spatial workstream — W3
 
-Compiled bounded grid and brute-force fixtures are review-ready. Combined production wiring and acceptance are pending architect verification.
+Bounded grid and brute-force fixtures are integrated and validated. Simulation
+rebuilds after movement and main consumes radius diagnostics. Full steering remains
+pending. See [combined evidence](../integration/wave1-validation.md).
 
 ## Scope and first task
 

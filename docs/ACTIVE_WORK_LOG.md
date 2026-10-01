@@ -8,11 +8,11 @@ an uncontended host even when files do not overlap.
 |---|---|---|---|---|
 | Architecture planning | Complete | Architecture, work breakdown, README links; no builds | 2026-10-01 / f835fe9 | Proposed design; implementation packages unstarted |
 | Workstream groundwork / primary | Complete | Workstream docs, module CMake/header/source/test areas, root wiring; CPU released | 2026-10-01 / f835fe9 / workstream-groundwork | [Validation](workstreams/integration/validation.md); independent review clean; gameplay packages pending |
-| Architect / root | Active | Central docs, shared Simulation/main/root wiring; serialized build reservations | 2026-10-01 / 1db546e / workstream-groundwork | Review and integrate wave 1; no parallel benchmarks |
-| wave1_integration / GPT-6.1 Sol low | Active | .worktrees/integration: contracts, contract tests, integration audit docs | 2026-10-01 / wave1-integration | W0 audit and minimal W1 handoff first |
-| wave1_runtime / GPT-6.1 Sol low | Active | .worktrees/runtime: runtime headers/source/tests/docs only | 2026-10-01 / wave1-runtime | Prepare fixtures until contract gate; builds by architect |
-| wave1_spatial / GPT-6.1 Sol low | Active | .worktrees/spatial: spatial and fields headers/source/tests/docs only | 2026-10-01 / wave1-spatial | Prepare fixtures until contract gate; builds by architect |
-| wave1_blight / GPT-6.1 Sol low | Queued | .worktrees/blight: blight headers/source/tests/docs only | 2026-10-01 / wave1-blight | Starts when integration handoff frees worker slot |
+| Architect / root | Complete increment | Central docs, shared Simulation/main/root wiring; CPU released | 2026-10-01 / ab9583b / workstream-groundwork | [Wave 1 evidence](workstreams/integration/wave1-validation.md); all combined gates passed |
+| wave1_integration / GPT-6.1 Sol low | Complete increment | .worktrees/integration: contracts, contract tests, integration audit docs | 2026-10-01 / wave1-integration | a62ef63 integrated; independent review complete; broader W1 contracts deferred |
+| wave1_runtime / GPT-6.1 Sol low | Complete increment | .worktrees/runtime: runtime headers/source/tests/docs only | 2026-10-01 / wave1-runtime | 6141c5b integrated; clock/adapters and full W2 gates open |
+| wave1_spatial / GPT-6.1 Sol low | Complete increment | .worktrees/spatial: spatial and fields headers/source/tests/docs only | 2026-10-01 / wave1-spatial | 3175301 integrated; full steering/painted flow open |
+| wave1_blight / GPT-6.1 Sol low | Complete increment | .worktrees/blight: blight headers/source/tests/docs only | 2026-10-01 / wave1-blight | defa7f2 integrated; full W4 resource rules open |
 
 New claims include agent, branch/worktree, package, exact paths, host/CPU reservation,
 base SHA and dependencies. Completed rows link evidence or say documentation-only.
