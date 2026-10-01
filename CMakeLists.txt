@@ -47,7 +47,7 @@ set_target_properties(crucible_core PROPERTIES CXX_EXTENSIONS OFF)
 add_subdirectory(src/runtime)
 
 add_executable(crucible src/main.cpp)
-target_link_libraries(crucible PRIVATE Crucible::Runtime)
+target_link_libraries(crucible PRIVATE Crucible::Runtime Crucible::Presentation)
 if(BUILD_TESTING)
     add_subdirectory(tests/integration)
     add_subdirectory(tests/workstreams)

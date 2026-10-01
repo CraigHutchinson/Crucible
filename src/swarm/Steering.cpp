@@ -4,7 +4,7 @@
 #include <cmath>
 #include <stdexcept>
 
-#include <crucible/contracts/Tick.hpp>
+#include <crucible/contracts/timing.hpp>
 #include <crucible/fields/FieldSet.hpp>
 #include <crucible/spatial/Grid.hpp>
 

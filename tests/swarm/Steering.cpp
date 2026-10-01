@@ -10,7 +10,7 @@
 #include <vector>
 
 #include <crucible/contracts/FieldEdit.hpp>
-#include <crucible/contracts/Tick.hpp>
+#include <crucible/contracts/timing.hpp>
 #include <crucible/fields/FieldSet.hpp>
 #include <crucible/spatial/Grid.hpp>
 
