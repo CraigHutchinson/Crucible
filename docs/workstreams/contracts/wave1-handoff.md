@@ -40,3 +40,10 @@ integration work, pending root wiring; L1 standard-only owned contracts and no n
 module cycles; L2 nodiscard/noexcept failure signals and explicit bounds semantics;
 L3 no allocating contract validation or borrowed payloads. No MUST findings remain
 in this bounded diff. Build/run evidence remains pending, not inferred from review.
+
+## Architect integration result
+
+The first increment is now wired and passes the combined Debug/Release and
+ASan/UBSan suites. See [central wave 1 evidence](../integration/wave1-validation.md)
+for actual commands, review findings and remaining package gates. The worker-only
+execution status above records the original handoff.

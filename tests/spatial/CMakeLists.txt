@@ -1,2 +1,4 @@
-# Own spatial test sources, executables and add_test registrations here.
-# Apply LABELS spatial; this file is included only with BUILD_TESTING enabled.
+add_executable(crucible_spatial_tests Grid.cpp)
+target_link_libraries(crucible_spatial_tests PRIVATE Crucible::Spatial)
+add_test(NAME spatial_grid COMMAND crucible_spatial_tests)
+set_tests_properties(spatial_grid PROPERTIES LABELS spatial)

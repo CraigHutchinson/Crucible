@@ -1,6 +1,8 @@
 # Spatial workstream — W3
 
-Reserved build boundary (INTERFACE target); algorithms and public APIs are pending.
+Bounded grid and brute-force fixtures are integrated and validated. Simulation
+rebuilds after movement and main consumes radius diagnostics. Full steering remains
+pending. See [combined evidence](../integration/wave1-validation.md).
 
 ## Scope and first task
 

@@ -1,6 +1,7 @@
 # Fields workstream — W3
 
-Reserved build boundary (INTERFACE target); algorithms and public APIs are pending.
+Radial attractor/repulsor slots are integrated into scenario movement and validated.
+Painted flows remain open. See [combined evidence](../integration/wave1-validation.md).
 
 ## Scope and first task
 
