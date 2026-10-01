@@ -71,6 +71,10 @@ W8a telemetry, with the architect continuing integration/review. W8b snapshot wo
 follows the consumed telemetry/runtime contracts. Freeze numerical steering rules
 and its sequential oracle before scheduling or resource interactions begin.
 
+Before that dispatch, the [game-design baseline](../../game-design.md) now defines
+the intended playable loop and proposed first mission. Its gameplay decision gates
+take priority over treating the package list as sufficient product direction.
+
 Preserve bounded startup storage, borrowed-view lifetimes and exclusive ECS access.
 Cross-stream changes go through the architect with affected peers notified; record
 decisions in stream docs and central ADRs. Do not share writable build trees or run

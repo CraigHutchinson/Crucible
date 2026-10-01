@@ -1,5 +1,9 @@
 # Crucible work breakdown for collaborative agents
 
+Read [game design and project intent](game-design.md) before dispatch. Workstreams
+serve its playable loop; numerical/resource and presentation decisions must close
+at the listed gates before implementation. Concept art is illustrative.
+
 Status: first increments of W0/W1, W2, W3 and W4 integrated, 2026-10-01. Full package
 gates below remain open. The [wave 1 handoff](workstreams/integration/wave1-validation.md)
 records delivered scope and remaining work. Read [architecture.md](architecture.md) for binding proposed contracts and

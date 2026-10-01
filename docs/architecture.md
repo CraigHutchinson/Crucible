@@ -1,5 +1,9 @@
 # Crucible architecture
 
+Product intent and gameplay scope live in [game-design.md](game-design.md). This
+document owns technical boundaries; [visual concepts](concepts/README.md) illustrate
+the proposed experience without selecting a renderer or changing current physics.
+
 Status: first integrated headless increment, 2026-10-01. Bounded command admission,
 tick trace replay, stable spatial queries, radial field forces and cellular spread
 exist in a sequential optional scenario; full gameplay/concurrency remain planned. See
