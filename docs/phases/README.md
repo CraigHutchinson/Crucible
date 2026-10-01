@@ -7,10 +7,12 @@ package is not a permanent agent assignment.
 
 | Phase | Increment | Record |
 |---|---|---|
-| 1 | Headless foundations, bounded commands/replay, spatial/fields/Blight and game intent | [Handoff](../workstreams/integration/wave1-validation.md), [PR 1](https://github.com/CraigHutchinson/Crucible/pull/1) |
-| 2 | Bounded local steering, clock/observability, owned state inspection and actual-state SVG | [Delivery](../workstreams/integration/phase2-validation.md), [plan](phase2.md) |
-
+| 1 | Headless foundations, bounded commands/replay, spatial/fields/Blight and game intent | [Review](../sprint-reviews/phase-01.md), [handoff](../workstreams/integration/wave1-validation.md), [PR 1](https://github.com/CraigHutchinson/Crucible/pull/1) |
+| 2 | Bounded local steering, clock/observability, owned state inspection and actual-state SVG | [Review](../sprint-reviews/phase-02.md), [delivery](../workstreams/integration/phase2-validation.md), [plan](phase2.md) |
 | 3 | Proposed resource consequence, with reusable hex H2 work bounded separately | [Proposal](phase3.md); not dispatched |
+
+The [sprint-review archive](../sprint-reviews/README.md) tracks findings, follow-ups
+and delegation lessons for every completed increment.
 
 Phase 1 merged to main at `ab708a7` after exact-head Linux/Windows Debug/Release and
 sanitizer CI passed. Agent worktrees remain retained with their prior artifacts;
@@ -18,6 +20,8 @@ they are not active phase 2 claims.
 
 ## Phase start: review the division of work
 
+Read the latest [sprint review](../sprint-reviews/README.md), carry unresolved follow-up
+IDs into the new plan and create its in-progress review from the template.
 Start from current main and inspect the completed increment, open findings, product
 intent and remaining quota. Record one player-facing or foundation outcome and its
 acceptance. Reconsider the active streams before dispatch:
@@ -72,6 +76,11 @@ Retain worktrees with live work or useful artifacts. Mark old claims complete;
 refresh or create phase worktrees from the merged baseline only after inspecting
 status. Delete only branches/worktrees proven unused and safe to remove. Closing a
 phase does not authorize deleting someone else's work or artifacts.
+
+Complete `docs/sprint-reviews/phase-NN.md` using the [review template](../sprint-reviews/template.md),
+link it from the phase plan/index and active work log, and record the merge baseline.
+Include delivered scope, findings/resolutions, evidence and limits, stable follow-up
+IDs with owner/gate, reuse feedback, next split and cleanup/artifact disposition.
 
 End with a short retrospective: what was delivered, what was consolidated/deferred,
 what review found, which uncertainty remains and how that changes the next division.

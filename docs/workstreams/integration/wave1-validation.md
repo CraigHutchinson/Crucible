@@ -79,3 +79,10 @@ Preserve bounded startup storage, borrowed-view lifetimes and exclusive ECS acce
 Cross-stream changes go through the architect with affected peers notified; record
 decisions in stream docs and central ADRs. Do not share writable build trees or run
 performance measurements alongside builds.
+
+## Sprint review and later cleanup
+
+[Phase 1 sprint review](../../sprint-reviews/phase-01.md) consolidates findings and
+follow-up disposition. The branch names above describe the original handoff. Following
+phase 2, authorized cleanup detached retained worktrees and archived worker tips;
+see the [archive record](../../sprint-reviews/README.md#branch-cleanup-2026-10-01).
