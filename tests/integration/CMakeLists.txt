@@ -8,3 +8,8 @@ target_link_libraries(crucible_stack_test PRIVATE Crucible::Core Sub0Pipeline::S
     Sub0Pipeline::Headless Sub0Pub::Sub0Pub Sub0Log::Sub0Log)
 add_test(NAME stack_round_trip COMMAND crucible_stack_test)
 set_tests_properties(stack_round_trip PROPERTIES LABELS integration)
+
+add_executable(crucible_scenario_test scenario.cpp)
+target_link_libraries(crucible_scenario_test PRIVATE Crucible::Core)
+add_test(NAME scenario_integration COMMAND crucible_scenario_test)
+set_tests_properties(scenario_integration PROPERTIES LABELS integration)

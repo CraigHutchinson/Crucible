@@ -1,6 +1,7 @@
 # Fields workstream — W3
 
-Compiled bounded radial fields and analytic fixtures are review-ready. Combined production wiring and acceptance are pending architect verification. Painted flow is outside this first radial slice.
+Radial attractor/repulsor slots are integrated into scenario movement and validated.
+Painted flows remain open. See [combined evidence](../integration/wave1-validation.md).
 
 ## Scope and first task
 

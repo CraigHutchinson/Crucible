@@ -1,6 +1,9 @@
 # Runtime workstream — W2
 
-Groundwork: headless run_ticks is consumed by main; ingress/clock/Pipeline orchestration are pending.
+The compatibility `run_ticks` path remains. Bounded ingress and sequential
+pause/boundary/trace/replay are integrated and validated; see [combined evidence](../integration/wave1-validation.md),
+[design](design.md) and [validation](validation.md). Clock/Pipeline orchestration
+remain pending.
 
 ## Scope and first task
 

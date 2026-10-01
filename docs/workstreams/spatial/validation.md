@@ -29,3 +29,10 @@ pending architect integration; L1 concrete owning Grid has no speculative interf
 L2 complete result/lifetime/rejection contracts are documented; L3 nodiscard/noexcept,
 std::span, ranges, owned startup scratch and matching class filenames checked. No open
 MUST/SHOULD findings in the worker surface. Review integration callers before landing.
+
+## Architect integration result
+
+The first increment is now wired and passes the combined Debug/Release and
+ASan/UBSan suites. See [central wave 1 evidence](../integration/wave1-validation.md)
+for actual commands, review findings and remaining package gates. The worker-only
+execution status above records the original handoff.
