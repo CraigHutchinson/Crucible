@@ -1,0 +1,4 @@
+add_executable(crucible_fields_tests FieldSet.cpp)
+target_link_libraries(crucible_fields_tests PRIVATE Crucible::Fields)
+add_test(NAME fields_sampling COMMAND crucible_fields_tests)
+set_tests_properties(fields_sampling PROPERTIES LABELS fields)

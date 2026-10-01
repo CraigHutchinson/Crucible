@@ -6,10 +6,8 @@
 #include <filesystem>
 #include <fstream>
 #include <iterator>
+#include <iostream>
 #include <vector>
-
-// The pinned executor factory is defined by the platform target, without a public header.
-namespace sub0pipeline { std::unique_ptr<IExecutor> makeSequentialExecutor(); }
 
 namespace {
 struct TickCommand {};
@@ -30,7 +28,10 @@ int main() {
     bool valid = false;
     {
         auto logger = sub0log::Logger::create({.directory_ = directory.string(), .stem_ = "stack"});
-        if (!logger.valid()) return 1;
+        if (!logger.valid()) {
+            std::cerr << "Logger creation failed\n";
+            return 1;
+        }
         sub0log::Logger::ScopedBind bind{logger};
         crucible::Simulation simulation{1000};
         Inbox inbox;
@@ -49,22 +50,39 @@ int main() {
             sub0log_info(sub0log::SubsystemId{1}, "tick checksum={}", simulation.checksum());
         }).name("telemetry").succeed(integrate);
         auto executor = sub0pipeline::makeSequentialExecutor();
-        if (!pipeline.run(*executor) || inbox.pending) return 1;
-
-        for (const auto& entry : std::filesystem::directory_iterator{directory}) {
-            if (entry.path().extension() != ".s0l") continue;
-            std::ifstream input{entry.path(), std::ios::binary};
-            std::vector<char> bytes{std::istreambuf_iterator<char>{input}, {}};
-            const auto* first = reinterpret_cast<const std::byte*>(bytes.data());
-            std::vector<std::byte> image{first, first + bytes.size()};
-            auto reader = sub0log::SegmentReader::open(image);
-            sub0log::Decoder decoder;
-            if (!reader.valid()) return 1;
-            const auto records = decoder.decodeAll(reader);
-            valid = records.size() == 1 && reader.unreadableBytes() == 0
-                && decoder.undecodableRecords() == 0
-                && sub0log::Decoder::format(records.front()).find("25") != std::string::npos;
+        if (!pipeline.run(*executor) || inbox.pending) {
+            std::cerr << "Pipeline did not complete the admitted tick\n";
+            return 1;
         }
+
+    }
+    // Release the writer mapping before opening an independent file reader;
+    // mapped writes and file reads need not be coherent on mounted filesystems.
+
+    for (const auto& entry : std::filesystem::directory_iterator{directory}) {
+        if (entry.path().extension() != ".s0l") continue;
+        std::ifstream input{entry.path(), std::ios::binary};
+        if (!input) {
+            std::cerr << "Telemetry file could not be read\n";
+            return 1;
+        }
+        std::vector<char> bytes{std::istreambuf_iterator<char>{input}, {}};
+        if (bytes.empty() || input.bad()) {
+            std::cerr << "Telemetry file is empty or incomplete\n";
+            return 1;
+        }
+        const auto* first = reinterpret_cast<const std::byte*>(bytes.data());
+        std::vector<std::byte> image{first, first + bytes.size()};
+        auto reader = sub0log::SegmentReader::open(image);
+        sub0log::Decoder decoder;
+        if (!reader.valid()) {
+            std::cerr << "Telemetry segment could not be opened\n";
+            return 1;
+        }
+        const auto records = decoder.decodeAll(reader);
+        valid = records.size() == 1 && reader.unreadableBytes() == 0
+            && decoder.undecodableRecords() == 0
+            && sub0log::Decoder::format(records.front()).find("25") != std::string::npos;
     }
     std::filesystem::remove_all(directory);
     return valid ? 0 : 1;

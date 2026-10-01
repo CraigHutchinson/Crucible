@@ -1,0 +1,1 @@
+crucible_add_workstream(crucible_contracts Contracts GridConfig.cpp FieldEdit.cpp)

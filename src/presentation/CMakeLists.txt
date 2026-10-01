@@ -1,0 +1,2 @@
+crucible_add_workstream(crucible_presentation Presentation)
+target_link_libraries(crucible_presentation INTERFACE Crucible::Contracts)

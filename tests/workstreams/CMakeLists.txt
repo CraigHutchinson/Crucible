@@ -1,0 +1,11 @@
+# Central inventory; each stream owns its source lists and test registration.
+add_subdirectory(../contracts ${CMAKE_CURRENT_BINARY_DIR}/contracts)
+add_subdirectory(../runtime ${CMAKE_CURRENT_BINARY_DIR}/runtime)
+add_subdirectory(../spatial ${CMAKE_CURRENT_BINARY_DIR}/spatial)
+add_subdirectory(../fields ${CMAKE_CURRENT_BINARY_DIR}/fields)
+add_subdirectory(../blight ${CMAKE_CURRENT_BINARY_DIR}/blight)
+add_subdirectory(../swarm ${CMAKE_CURRENT_BINARY_DIR}/swarm)
+add_subdirectory(../interactions ${CMAKE_CURRENT_BINARY_DIR}/interactions)
+add_subdirectory(../scheduling ${CMAKE_CURRENT_BINARY_DIR}/scheduling)
+add_subdirectory(../telemetry ${CMAKE_CURRENT_BINARY_DIR}/telemetry)
+add_subdirectory(../presentation ${CMAKE_CURRENT_BINARY_DIR}/presentation)

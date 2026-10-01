@@ -1,7 +1,4 @@
 #include <crucible/simulation.hpp>
-#include <sub0pipeline/sub0pipeline.hpp>
-#include <sub0pub/sub0pub.hpp>
-#include <sub0log/log.hpp>
 #include <cmath>
 #include <iostream>
 

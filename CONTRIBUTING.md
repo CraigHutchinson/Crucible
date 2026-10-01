@@ -1,5 +1,8 @@
 # Development workflow
 
+For parallel sessions, start with [the workstream map](docs/workstreams/README.md).
+Each stream owns local source/test manifests; shared wiring goes through the integrator.
+
 Requirements: CMake 3.25+, Ninja, Git, Python 3.10+ and a C++23 toolchain with
 std::expected (GCC 13+ or current MSVC). Use a VS developer prompt on Windows.
 Clang requires a C++ standard library implementing std::expected.

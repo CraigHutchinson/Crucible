@@ -1,0 +1,4 @@
+add_executable(crucible_contracts_test values.cpp)
+target_link_libraries(crucible_contracts_test PRIVATE Crucible::Contracts)
+add_test(NAME contracts_values COMMAND crucible_contracts_test)
+set_tests_properties(contracts_values PROPERTIES LABELS contracts)

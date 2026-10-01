@@ -3,3 +3,4 @@ build/
 bench-results/
 CMakeUserPresets.json
 __pycache__/
+.worktrees/

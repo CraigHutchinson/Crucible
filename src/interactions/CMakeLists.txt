@@ -1,0 +1,2 @@
+crucible_add_workstream(crucible_interactions Interactions)
+target_link_libraries(crucible_interactions INTERFACE Crucible::Contracts)

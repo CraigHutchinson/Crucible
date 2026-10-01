@@ -1,0 +1,2 @@
+crucible_add_workstream(crucible_scheduling Scheduling)
+target_link_libraries(crucible_scheduling INTERFACE Crucible::Contracts)

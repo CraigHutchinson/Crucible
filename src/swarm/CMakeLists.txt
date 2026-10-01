@@ -1,0 +1,2 @@
+crucible_add_workstream(crucible_swarm Swarm)
+target_link_libraries(crucible_swarm INTERFACE Crucible::Contracts)

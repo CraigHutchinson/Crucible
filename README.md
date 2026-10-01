@@ -1,12 +1,69 @@
 # Crucible
 
-Macro-RTS / swarm simulator powered by the sub0 ecosystem. Direct a nanite swarm
-with attractors, repulsors and painted flow fields, consume a cellular Blight,
-and fuse density into macro-structures.
+Crucible is a macro RTS about directing a vast machine swarm to reclaim an industrial
+surface overtaken by cellular Blight. You paint currents, place attractors and
+repulsors, and concentrate thousands of autonomous nanites where they are needed.
+Gathered swarm mass can fuse into a stationary lattice, then shatter back into a
+smaller mobile swarm when the front shifts.
 
-**Status: integration groundwork.** A headless ECS workload and a complete stack
-round-trip test are implemented. Gameplay and rendering are planned. The design
+![Crucible world concept: flowing nanite swarms reclaim a cellular frontier](docs/concepts/world-v1.png)
+
+*Generated world concept: a proposed visual direction, not a capture of the current executable.*
+
+## What playing Crucible should feel like
+
+You command a moving material. Silver ribbons stream across the map, gather around
+your fields, clear infected cells and harden into amber structures. Strategy comes
+from shaping routes and deciding where limited mass should remain mobile or become
+anchored. Blight keeps spreading while you plan; abandoning a front has consequences.
+
+The core loop is **observe -> direct -> reclaim -> concentrate -> fuse or redeploy**.
+Spatial tools express your intent, and autonomous local behavior turns it into
+large formations. A readable top-down/high-oblique RTS view lets you pan, zoom,
+pause and inspect the frontier. Nanites, infected cells and structures must remain
+distinct when thousands of them fill the screen.
+
+## The first playable slice
+
+The proposed first mission, **Secure the relay**, uses one bounded arena, one swarm,
+one Blight rule and one fused structure type. Guide the swarm through the infected
+frontier, reclaim a foothold and concentrate enough mass to form a lattice at the
+relay. Hold that objective while sustaining enough mobile mass to finish reclamation.
+Shattering lets you reposition a lattice's surviving mass, at a resource cost.
+
+Victory combines reclamation progress and holding the relay; defeat comes from
+losing the viable swarm before the objective is secured. Exact thresholds, spread
+cadence, consumption/attrition and conversion ratios need reference fixtures and
+playtesting. These are proposed design rules, not implemented outcomes.
+
+![Crucible concept screen with spatial tools, objective and minimap](docs/concepts/screen-v1.png)
+
+*Concept HUD: spatial tools, a legible frontier, objective feedback and a tactical
+minimap. Terrain, values and effects are illustrative.*
+
+The initial slice is single-player and focuses on reclamation, concentration and
+redeployment. Campaign progression, multiplayer, a broad unit roster and planetary
+worlds are deferred. The first playable build needs usable input, display, pause,
+restart and visible win/loss feedback as well as a correct simulation.
+
+Read the [game design and project intent](docs/game-design.md) for the player role,
+design pillars, commands, biomass economy, scenario, scope and open decisions.
+The [concept gallery](docs/concepts/README.md) also shows nanite, fused-lattice and
+Blight material studies, with the exact generation prompts recorded.
+
+## Project status
+
+**Status: first integrated headless increment.** Bounded field commands, tick trace
+replay, a stable spatial grid, radial forces and double-buffered Blight spread are
+implemented alongside the original ECS workload and stack round-trip test. Full
+swarm gameplay and rendering remain planned. The design
 target is 100,000–150,000 entities at 60 FPS; this is not a measured game result.
+
+The sub0 ecosystem supplies the simulation foundation. Scale is useful when it makes
+the swarm feel continuous and alive; a clear, playable small scenario comes first.
+The next simulation packages lead toward steering, resource interactions and owned
+display snapshots. [Architecture](docs/architecture.md) describes how those systems
+fit together; [work breakdown](docs/work-breakdown.md) assigns their implementation gates.
 
 ## Build
 
@@ -30,6 +87,14 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for Debug, Release and sanitizer workflow
 [benchmarking](docs/benchmarking.md) for reproducible evidence capture, and
 [architecture](docs/architecture.md) for the design and integration boundaries.
 Functional CI runs on Linux and Windows; benchmark CI is manual and advisory.
+
+The [workstream map and session guide](docs/workstreams/README.md) is the entry point
+for parallel development, with dedicated docs, source and test areas for each stream.
+The [agent work breakdown](docs/work-breakdown.md) maps the proposed architecture
+to implementation gates, ownership boundaries and team dispatch waves. Claim paths
+and long CPU runs in [the active work log](docs/ACTIVE_WORK_LOG.md).
+The [first-wave handoff](docs/workstreams/integration/wave1-validation.md) records
+the four agents' deliverables, review, validation and remaining gates.
 
 Source layout: include/crucible and src for simulation, tests for behavior and
 stack integration, benchmarks for opt-in timing, cmake for dependencies, scripts

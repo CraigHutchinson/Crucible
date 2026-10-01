@@ -1,5 +1,8 @@
 # Initial integration validation
 
+This section records the original Linux validation. Current workstream groundwork
+and Windows/WSL checks are recorded in [2026-10-01 validation](workstreams/integration/validation.md).
+
 Validated on 2026-09-30 with GCC 14.2.0, CMake 4.4.3 and Ninja 1.13.2,
 Linux x86_64, AMD EPYC 9V74 (three logical CPUs visible to the container).
 
