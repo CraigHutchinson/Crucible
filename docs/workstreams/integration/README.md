@@ -1,5 +1,12 @@
 # Integration workstream — W0 and composition ownership
 
+## Hierarchy and acceleration boundary
+
+Own frozen ECS gathering, exact-pin capability audit, publication/structural commit and cross-module wiring. Appoint the navigation research owner before HN spikes; coordinate semantics with their defining modules rather than absorbing them.
+
+See the [application responsibility map](../hierarchy-boundaries.md) for defining owners,
+read/write sets, lifetimes, bounded progress and cross-project handoffs.
+
 Current groundwork evidence: [2026-10-01 validation](validation.md).
 Current implementation evidence: [first collaborative wave](wave1-validation.md).
 

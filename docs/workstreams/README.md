@@ -7,6 +7,11 @@ use [concepts](../concepts/README.md) as visual exploration rather than game rul
 Active assignments are phase-specific: see the [phase workflow](../phases/README.md)
 and [phase 2 ownership review](../phases/phase2.md). Retain these module folders while
 consolidating small coupled packages under a single phase owner when useful.
+Read the [hierarchy/acceleration responsibility map](hierarchy-boundaries.md) with
+every brief. Spatial owns occupied traversal; upstream H geometric grouping/coverage;
+Presentation view caches/policy; phase-assigned navigation owns route research.
+Runtime chooses scheduling policy, Scheduling executes/joins, Integration publishes.
+Experiment ownership does not transfer production module ownership.
 
 ## Ownership map
 

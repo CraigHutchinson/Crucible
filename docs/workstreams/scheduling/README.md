@@ -1,5 +1,12 @@
 # Scheduling workstream — W7
 
+## Hierarchy and acceleration boundary
+
+Own executor adaptation, phase access sets, work partitioning and CPU/device completion/failure joins. Execute Runtime policy; do not choose index semantics, view approximation, navigation rules or publication freshness. Native resources belong to the named adapter.
+
+See the [application responsibility map](../hierarchy-boundaries.md) for defining owners,
+read/write sets, lifetimes, bounded progress and cross-project handoffs.
+
 Reserved build boundary (INTERFACE target); algorithms and public APIs are pending.
 
 ## Scope and first task

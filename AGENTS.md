@@ -46,6 +46,14 @@ Read docs/workstreams/README.md and the stream brief. Claim paths and heavy CPU 
 in docs/ACTIVE_WORK_LOG.md before work. Streams own include/crucible/<stream>,
 src/<stream>, tests/<stream> and docs/workstreams/<stream>. Scheduling and Runtime
 are separate owners. Contract changes require Contracts owner and affected callers.
+For hierarchy/acceleration, read docs/workstreams/hierarchy-boundaries.md.
+Require one defining owner per contract and one edit owner per artifact. Private
+spikes do not absorb another module; Integration assigns navigation research until
+an evidence-backed ADR defines a production home. Preserve frozen gather epochs,
+coherent publication and separate view/gameplay semantics.
+Any added cross-cutting axis requires an all-stream responsibility audit before
+dispatch: one defining owner/caller, disjoint paths, lifetimes and handoff gates.
+Update the affected briefs, responsibility map and phase record together.
 
 Integrator owns Simulation, ECS queries, main, root inventories, pins, presets, CI
 and central docs. Submit shared edits as patch requests. Use local CMakeLists.txt

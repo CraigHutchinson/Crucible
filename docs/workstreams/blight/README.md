@@ -1,5 +1,12 @@
 # Blight workstream — W4
 
+## Hierarchy and acceleration boundary
+
+Own authoritative cellular state, spread adjacency and domain/resource summaries. Supply immutable observations for display/reductions; neither hierarchy grouping nor visual LOD changes spread rules or resource authority.
+
+See the [application responsibility map](../hierarchy-boundaries.md) for defining owners,
+read/write sets, lifetimes, bounded progress and cross-project handoffs.
+
 Wave 1 supplies a bounded cardinal-spread prototype through `blight::Grid`.
 Production integration and build acceptance passed; see [combined evidence](../integration/wave1-validation.md).
 Complete W4 and resource interactions remain open.

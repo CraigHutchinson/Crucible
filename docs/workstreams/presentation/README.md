@@ -1,5 +1,12 @@
 # Presentation workstream — W8b/W9
 
+## Hierarchy and acceleration boundary
+
+Own copied/leased view snapshots, mini-map/zoom caches, visual reducers/quality/freshness, camera transforms, exact picking fallback and graphics upload lifetime. Read authoritative state and emit commands through Runtime; do not update simulation indexes or navigation state.
+
+See the [application responsibility map](../hierarchy-boundaries.md) for defining owners,
+read/write sets, lifetimes, bounded progress and cross-project handoffs.
+
 Phase 2 provides startup-sized owned snapshots consumed by main, replay checks and SVG export.
 See [design and lifetimes](design.md) and [combined evidence](../integration/phase2-validation.md).
 

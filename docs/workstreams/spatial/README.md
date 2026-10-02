@@ -1,8 +1,17 @@
 # Spatial workstream — W3
 
+## Hierarchy and acceleration boundary
+
+Own occupied indexes, bins, bounds caches, base occupancy/count summaries and bounded build/update/query frontiers. Consume reviewed upstream geometry/coverage; domain owners define reducer meaning, Presentation view policy, and navigation connectivity/costs.
+
+See the [application responsibility map](../hierarchy-boundaries.md) for defining owners,
+read/write sets, lifetimes, bounded progress and cross-project handoffs.
+
 Bounded grid and brute-force fixtures are integrated and validated. Simulation
-rebuilds after movement and main consumes radius diagnostics. Full steering remains
-pending. See [combined evidence](../integration/wave1-validation.md).
+rebuilds after movement and main consumes radius diagnostics. Broader steering remains
+pending. See [initial combined evidence](../integration/wave1-validation.md).
+Phase 2 added bounded immutable-input steering as a real query consumer; broader
+swarm/navigation behavior remains gated. See [phase 2 evidence](../integration/phase2-validation.md).
 
 ## Scope and first task
 

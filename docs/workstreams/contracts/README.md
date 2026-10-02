@@ -1,5 +1,12 @@
 # Contracts workstream — W1
 
+## Hierarchy and acceleration boundary
+
+Own consumed shared snapshot/request/result values and failure/capacity compatibility. Keep epochs, snapshot rows, SampleId and ECS handles distinct; geometry, reducer algorithms and tree storage stay with their providers.
+
+See the [application responsibility map](../hierarchy-boundaries.md) for defining owners,
+read/write sets, lifetimes, bounded progress and cross-project handoffs.
+
 Grid geometry, owned field edits and stable sample IDs join Position/Velocity and
 fixed timing. The consumed first contracts are integrated and validated; broader
 snapshot/resource contracts remain pending. See [combined evidence](../integration/wave1-validation.md).

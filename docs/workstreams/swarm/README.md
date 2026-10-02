@@ -1,7 +1,14 @@
 # Swarm workstream — W5
 
-Phase 2 review-ready provider: bounded separation/radial steering and transactional
-next-state scratch. Root integration and executable validation remain pending.
+## Hierarchy and acceleration boundary
+
+Own motion/steering math and deterministic neighbor consumption over immutable Spatial/Fields input. Propose next-state outputs; do not build occupied trees, mutate ECS or adopt visual LOD as simulation behavior. Navigation is a separately assigned research role.
+
+See the [application responsibility map](../hierarchy-boundaries.md) for defining owners,
+read/write sets, lifetimes, bounded progress and cross-project handoffs.
+
+Phase 2 delivered bounded separation/radial steering and transactional next-state
+scratch; [integrated evidence](../integration/phase2-validation.md) records wiring.
 See [rule](design.md), [handoff](validation.md) and [cpp-review](review.md).
 
 ## Scope and first task

@@ -13,6 +13,10 @@ tick trace replay, stable spatial queries, bounded separation/radial steering, c
 driving, owned state copies and cellular spread exist in a sequential optional scenario; full gameplay/concurrency remain planned. See
 [workstream map](workstreams/README.md) for paths/status and
 [work-breakdown.md](work-breakdown.md) for implementation gates.
+The [hierarchy responsibility map](workstreams/hierarchy-boundaries.md) supplements
+every module for the competing acceleration programme. It separates upstream geometry,
+application occupied indexes, domain reducers, view/nav policy and executor lifetime;
+no representation, new module, backend or dependency adoption is selected here.
 
 The [phase 2 handoff](workstreams/integration/phase2-validation.md) is the authority
 for implemented scope and evidence. HeadlessSession borrows an exclusively owned
