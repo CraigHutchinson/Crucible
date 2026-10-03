@@ -48,6 +48,13 @@ workers load the full skills and four shared references before C++ authoring.
 
 | Owner | State | Branch / exclusive paths / CPU | Handoff |
 |---|---|---|---|
-| Architect | Implementation complete; publication gates | phase3-reclamation-hex; contracts, Simulation/main/presentation, integration tests, root wiring/pins/CI and central docs; configure/build CPU reserved | [Combined delivery](workstreams/integration/phase3-validation.md); Debug/Release 18/18, local adjusted sanitizer 18 tests pass; CPU released |
+| Architect | Complete and merged | phase3-reclamation-hex (retained); contracts, Simulation/main/presentation, integration tests, root wiring/pins/CI and central docs; configure/build CPU reserved | [Combined delivery](workstreams/integration/phase3-validation.md); Debug/Release 18/18, local adjusted sanitizer 18 tests pass; CPU released |
 | resource_package / P3-01 | Complete handoff and peer review | phase3-resource worktree, base 71c14c0 + contracts 7f0e75c; blight/interactions include/src/tests/docs; no CPU claim | 399e945 integrated b4c3dff; [provider](workstreams/interactions/validation.md) |
 | hex_adoption_package / P3-02 | Complete handoff and consumer review | phase3-spatial worktree, base 71c14c0; spatial include/src/tests/docs; no CPU claim | 22a77d8 integrated ef1e877; [spatial](workstreams/spatial/validation.md), focused GCC 3/3 |
+
+Phase 3 closed through [PR 7](https://github.com/CraigHutchinson/Crucible/pull/7)
+at `21f37867bebec46f215cf489d77eee4db63b0165`; exact-head Linux/Windows
+Debug/Release plus Linux sanitizer CI passed all five jobs / 18 tests each.
+Local main matched origin/main cleanly. Worker handoffs and local integration
+branch/worktrees/build/comparison artifacts are retained; no active worker or CPU claim remains.
+This documentation-only closure records the merge and carries the next-phase recommendation.

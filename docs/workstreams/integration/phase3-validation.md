@@ -5,7 +5,7 @@ Planning PR 6 merged at `837a38002bbc189e7fe319b069a1a6cbba9f28c4`.
 Local worker starting commit `71c14c0` is an ancestor of that merge; resource received
 shared contracts as `7f0e75c`. Architect integrated main before combined execution.
 Worker/integration SHAs below identify retained local handoffs. Connector publication
-consolidates the verified tree in a new commit; PR/head and merge follow at closure.
+consolidates the verified tree in a new commit; PR/head and merge are recorded at closure.
 
 ## Delivered callers and ownership
 
@@ -164,5 +164,14 @@ rectangles and one active field. It shows 2048 sample positions,
 The separate default legacy phase2 scenario retains 800 infected cells at tick 20.
 Fusion, growth, attrition, mission outcome and playable input/rendering remain deferred.
 
-Implementation publication/CI/merge pending. Worker branches/worktrees and local
-comparison artifacts are retained; this phase does not authorize their deletion.
+[Implementation PR 7](https://github.com/CraigHutchinson/Crucible/pull/7) merged
+at `21f37867bebec46f215cf489d77eee4db63b0165` after [exact-head CI](https://github.com/CraigHutchinson/Crucible/actions/runs/37089809757)
+passed at `31fb1e49c3eae2652867009f8083d5688ab2e4dd`. Linux and Windows Debug/Release and normal
+Linux ASan/UBSan each passed all 18 registered tests (five successful jobs). Hosted
+sanitizer coverage includes normal leak detection; no local workaround was committed.
+The local checkout was fast-forwarded to origin/main and verified clean at that merge.
+
+Worker branches/worktrees, local source handoffs and comparison/build artifacts are
+retained. Connector publication consolidated the identical verified local tree
+`b32e3289a783316173f9247a40bad27da4776099`; no files were omitted. This closure
+update is documentation only and does not authorize branch/artifact deletion.

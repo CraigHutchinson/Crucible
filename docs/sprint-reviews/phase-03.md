@@ -1,6 +1,6 @@
 # Phase 3 sprint review: finite reclamation and hex receiving proof
 
-Status: implementation complete; final CI and merge pending. Date: 2026-10-03.
+Status: complete and merged. Date: 2026-10-03.
 Accountable reviewer: architect. [Plan](../phases/phase3.md),
 [resource rule](../decisions/phase3-resource-rules.md),
 [execution evidence](../workstreams/integration/phase3-validation.md).
@@ -52,8 +52,8 @@ complemented architect review without adding agents.
 [Detailed commands, counts and limits](../workstreams/integration/phase3-validation.md)
 record the actual receiving caller and ownership proof. Debug rectangular baseline
 passed 16/16; combined Debug and Release passed 18/18. Local ASan/UBSan passed all 18 tests with leak detection disabled (17 in the
-unfiltered run plus one permission-repaired targeted rerun). Exact-head hosted
-Linux/Windows Debug/Release plus normal Linux sanitizer results are recorded at closure. No historic result is substituted for a new run.
+unfiltered run plus one permission-repaired targeted rerun). Exact-head hosted Linux/Windows Debug/Release and normal Linux ASan/UBSan each
+passed 18/18 tests in five successful jobs. Hosted leak detection required no workaround. No historic result is substituted for a new run.
 
 Rectangular and hex builds emitted byte-identical complete state for 0/8/2048
 populations, initial frame and every third tick through tick 60. Independent checks
@@ -100,7 +100,12 @@ concrete need. This is a next-phase recommendation, not another dispatched sprin
 
 ## Closure
 
-Implementation publication/CI/merge pending. Worker branches/worktrees and useful
-local comparison/build artifacts are retained. No unrelated branch or artifact was
-deleted; no upstream code or hierarchy programme was changed. Record the exact
-implementation PR/head and merge baseline after hosted validation.
+[PR 7](https://github.com/CraigHutchinson/Crucible/pull/7) merged at
+`21f37867bebec46f215cf489d77eee4db63b0165`, from implementation head
+`31fb1e49c3eae2652867009f8083d5688ab2e4dd`, after [CI](https://github.com/CraigHutchinson/Crucible/actions/runs/37089809757) passed all five jobs.
+The local main checkout was verified clean and equal to origin/main at that merge.
+This small documentation follow-up records the known merge SHA without changing code.
+
+Worker branches/worktrees and useful local comparison/build artifacts are retained.
+No unrelated branch or artifact was deleted; no upstream code or hierarchy programme
+was changed. Start the next phase from merged main, not an archived worker handoff.

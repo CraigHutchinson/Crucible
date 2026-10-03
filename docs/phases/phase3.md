@@ -1,6 +1,6 @@
 # Phase 3: finite reclamation and a verified hex receiving contract
 
-Status: implemented and under final publication gates. See [delivery](../workstreams/integration/phase3-validation.md).
+Status: complete; [PR 7](https://github.com/CraigHutchinson/Crucible/pull/7) merged at `21f3786`. See [delivery](../workstreams/integration/phase3-validation.md).
 Date: 2026-10-03. Architect plus two cooperative workers maximum. This replaces
 the resource-plus-upstream-H2 proposal: H2 has shipped, so do not repeat its work.
 
