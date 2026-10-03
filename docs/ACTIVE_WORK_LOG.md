@@ -170,9 +170,19 @@ run remains live; its interrupted sanitizer outcome stays unconfirmed.
 | Owner | Claim | Exclusive paths / CPU | Handoff |
 |---|---|---|---|
 | Architect / P7-I | Active | Shared manifests/CI, central docs, scripts/evidence; all configure/build/test CPU | [Plan](phases/phase7.md), [review](sprint-reviews/phase-07.md) |
-| hex_adoption_package / P7-R | Active authoring | tests/presentation/gpu and phase7-faults.md; no heavy CPU | Same production receiver via Linux link wrappers; controlled failures/retirement |
-| resource_package / P7-M | Active authoring | tests/integration/mission_sensitivity.cpp; runtime phase7 investigation and human playtest docs; no heavy CPU | Frozen command-timing shootout and short schedule fixtures |
+| hex_adoption_package / P7-R | Authored/reviewed | tests/presentation/gpu and phase7-faults.md; no heavy CPU | Same production receiver via Linux link wrappers; controlled failures/retirement |
+| resource_package / P7-M | Authored/reviewed | tests/integration/mission_sensitivity.cpp; runtime phase7 investigation and human playtest docs; no heavy CPU | Frozen command-timing shootout and short schedule fixtures |
 
 Both read-only planning audits consumed. Root stages/publishes coherent checkpoints
 before long acceptance; workers do not commit/push. Pins/rules/default renderer stay
 unchanged. Actual hardware loss, physical platform and human playtest remain open.
+
+P7-R/P7-M authored and reciprocally reviewed; root owns final hosted receiving.
+Local full GPU Debug34, corrected Release GPU receiving and SDL-free Release28
+passed. Local LSan /proc namespace blocks sanitizer acceptance; hosted leak-enabled
+checks mandatory. All three frozen timing studies won with full-state replay; root
+inspected nine state exports/two plots. Original local evidence copying completed,
+but final reads/writes stalled and environment_offline prevents hash review/local
+reconciliation. Preserve all files/branches/builds, do not regenerate source.
+PR17 receives remotely checkpointed source. The reviewed workflow retains fresh
+mission/GPU evidence; Phase 8 proposal remains not dispatched pending closure/gates.

@@ -1,6 +1,6 @@
 # Phase 7: failure receiving and mission timing investigation
 
-Status: dispatched, 2026-10-03. Baseline `0767a3033a84417c19bde9a4ff46dca0ce118f99`.
+Status: implementation received; hosted acceptance/publication pending, 2026-10-03. Baseline `0767a3033a84417c19bde9a4ff46dca0ce118f99`.
 User authorizes collaborative execution, push and merge. Consume the
 [Phase 6 review](../sprint-reviews/phase-06.md),
 [GPU contract](../decisions/phase6-gpu.md),
@@ -100,3 +100,14 @@ Restricted SDK information stays outside the public repository and evidence.
 After this sprint, consolidate remaining receiver/device evidence or split platform
 owners only after reviewing these limits and actual results. Mission playtest owner
 remains independent; architect retains common wiring/CI. No automatic next dispatch.
+
+## Delivery and recovery gate
+
+[Receiving](../workstreams/integration/phase7-validation.md) records actual local
+results and inspected visuals, including blocked local LSan and required hosted
+leak-enabled gates. The execution service disconnected at final documentation;
+P07-F01 retains local evidence recovery/hash review and baseline reconciliation.
+Hosted GPU CI now retains one fresh explicit Release timing study plus retirement
+captures for 90 days, without multiplying the study across desktop jobs.
+[Phase 8 proposal](phase8.md) reserves shader/device shootouts and field inspection;
+no automatic dispatch or unsupported platform winner. See the final review.

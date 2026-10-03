@@ -94,10 +94,14 @@ jobs:
         run: python -m pip install Pillow matplotlib
       - name: Actual controlled-retirement captures
         run: xvfb-run -a python scripts/capture_phase7_examples.py gpu --executable build/gpu-release/tests/presentation/gpu/crucible_gpu_fault_test --vertex build/gpu-release/gpu-shaders/world.vert.spv --fragment build/gpu-release/gpu-shaders/world.frag.spv --output ${{ runner.temp }}/phase7-retirement
+      - name: Frozen mission study and actual painter captures
+        run: python scripts/capture_phase7_examples.py mission --executable build/gpu-release/tests/integration/crucible_mission_sensitivity --output ${{ runner.temp }}/phase7-mission
       - uses: actions/upload-artifact@v4
         with:
           name: gpu-readback-evidence
+          retention-days: 90
           path: |
             ${{ runner.temp }}/gpu-captures/
             ${{ runner.temp }}/phase7-retirement/
+            ${{ runner.temp }}/phase7-mission/
             build/gpu-release/gpu-shader-toolchain.txt

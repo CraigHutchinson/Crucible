@@ -120,3 +120,6 @@ IDs with owner/gate, reuse feedback, next split and cleanup/artifact disposition
 End with a short retrospective: what was delivered, what was consolidated/deferred,
 what review found, which uncertainty remains and how that changes the next division.
 The next phase begins by reassessing these facts rather than repeating the old team map.
+
+[Phase 8 proposal](phase8.md) reserves shader portability and field inspection;
+it is proposed, not dispatched, pending Phase 7 receiving/recovery and actual device gates.

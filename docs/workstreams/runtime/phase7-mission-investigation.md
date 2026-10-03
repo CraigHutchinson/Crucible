@@ -1,6 +1,7 @@
 # Phase 7 mission timing investigation
 
-Status: authored; architect-run build, study, capture inspection and hosted validation pending.
+Status: local study/capture inspection complete; hosted receiving and original evidence
+publication pending after execution disconnect. See [receiving](../integration/phase7-validation.md).
 This is deterministic timing evidence and preparation for human observation, not
 human validation, difficulty tuning or a random-seed experiment.
 
@@ -74,3 +75,12 @@ physical devices, accessibility and balance remain P05-F01/P04-F02 receiving wor
 Current colors do not encode faction relationships. Three-plus faction identity,
 relations and command authorization remain separate future consumers under
 [faction groundwork](../../decisions/faction-extensibility.md).
+
+## Observed results
+
+The frozen 30/0, 120/0 and 60/60 cases won at ticks 297, 271 and 449 with 10, 3
+and 7 applied edits respectively. All reclaimed1780 with full-state terminal replay
+and conservation. No quota/rule tuning or globally best cadence follows. The
+late-start tick60 capture has no field until first application at61. Original
+local raw outputs are preserved pending recovery; hosted GPU CI retains a fresh
+explicit Release study/capture artifact rather than claiming those files recovered.

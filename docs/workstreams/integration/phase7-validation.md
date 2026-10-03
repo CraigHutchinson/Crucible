@@ -1,7 +1,7 @@
 # Phase 7 receiving evidence
 
 Dispatch `0767a303`, 2026-10-03; [plan](../../phases/phase7.md),
-[review](../../sprint-reviews/phase-07.md). Receiving in progress.
+[review](../../sprint-reviews/phase-07.md). Implementation received locally; hosted exact-head acceptance and durable capture publication pending.
 
 ## Source and review
 
@@ -50,7 +50,10 @@ configured and built, but the execution namespace prevents LeakSanitizer from
 opening /proc/<process>/task; even small existing numeric/simulation fixtures
 report the same fatal environment error. This is blocked acceptance, not green.
 Leak checks remain enabled, and hosted normal/GPU sanitizer checks remain mandatory.
-Headless completion and hosted exact-head counts are pending.
+SDL-free Release passed 28/28 (10.639 seconds). Full local GPU sanitizer returned
+CTest exit 8: 32/34 cases report the same LSan /proc fatal error. No ASan error
+report or UBSan runtime error was observed, but this is blocked acceptance,
+not a passing sanitizer suite. Hosted exact-head counts remain pending.
 All runs use scripts/run_tests.py; the sanitizer retains ASan/UBSan, leak checking,
 scoped -O1, assertions and direct X11 linkage only in gpu-sanitize.
 
@@ -62,7 +65,17 @@ small coordinator runs. The explicit Release study freezes three perturbations:
 cadence30/start0, cadence120/start0, cadence60/start60, all consuming the same
 canonical route positions and unchanged 1780/900/2048 settings. Every terminal
 state requires independent full-state replay, conservation and stopped admission.
-Measured results and actual painter exports remain pending.
+Explicit Release study and export completed successfully:
+
+| Frozen case | Outcome / terminal tick | Reclaimed | Applied edits |
+|---|---|---:|---:|
+| cadence30-start0 | WON / 297 | 1780 | 10 |
+| cadence120-start0 | WON / 271 | 1780 | 3 |
+| cadence60-start60 | WON / 449 | 1780 | 7 |
+
+All three cases pass conservation, independent full-state terminal replay and
+stopped admission. The slowest cadence finishing earliest on this fixed world
+does not establish optimal timing, difficulty or scenario robustness.
 
 The [human protocol](../../playtests/reclamation-phase7.md) is preparation only;
 it does not close human comprehension, physical input or balance acceptance.
@@ -81,7 +94,34 @@ source/shaders, raw outputs and converted images; records source commit/tree/dir
 state, OS, build cache, capture tool versions and GPU shader/device inventory.
 Mission plots connect actual checkpoints; the GPU event table uses actual receipt
 order without fabricated timing. Outputs live outside checkout during capture.
-Inspected retained examples and hosted artifact identity will be linked at closure.
+Local capture source was 1712c89a3be156eadd824c4008b3472c71ebf9a5,
+tree 106e12febc58714ba81a0c05242b469a231ac803. Mission metadata reported clean;
+GPU metadata reported dirty because only the proposed Phase 8 document had been
+added. Receiving sources/shaders were unchanged and capture input hashes recorded.
+
+Root visually inspected six production-painter states (tick 60 and terminal for
+each case), the full/magnified checkpoint plot, three retained GPU colors and
+the receipt-order table. Mission HUD/state labels and field positions were readable.
+The delayed-start tick-60 state has no committed field: its first edit applies at
+61. Actual GPU outputs show distinct red/green/blue interiors with unchanged
+background. Event order records busy, pending, selective completion, reuse, expiry
+and drain without inventing GPU time. The first mission attempt forced X11
+against the fixture's dummy hint and exited before the study; only the successful
+dummy-driver study counts. GPU exports use Vulkan llvmpipe/Xvfb.
+
+After copying PNGs, raw results/events, metadata and logs into local Git-backed
+evidence paths, the execution service disconnected (409 environment_offline).
+Final on-disk review/hash verification and publication are therefore unconfirmed.
+Do not guess or regenerate those original bytes. Preserve the local files and
+recover/compare them when execution returns (P07-F01).
+
+To avoid losing all capture evidence with that workspace, the reviewed workflow
+now performs one explicit three-case Release study in the GPU job, alongside the
+actual retirement export, and retains both in gpu-readback-evidence for 90 days.
+This does not multiply the study across the six desktop jobs or reduce any CTest
+checks. Hosted captures are fresh evidence, not claimed copies of the local files.
+Exact artifact identity, run/source SHA and downloadable receipt will be recorded
+at closure. A future recovered original capture may coexist with these receipts.
 
 ## Retained gates
 
