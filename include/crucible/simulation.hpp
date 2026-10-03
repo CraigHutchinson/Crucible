@@ -5,6 +5,7 @@
 #include <crucible/contracts/GridConfig.hpp>
 #include <crucible/contracts/StateCopy.hpp>
 #include <crucible/contracts/SteeringSettings.hpp>
+#include <crucible/contracts/ResourceSettings.hpp>
 #include <sub0ecs/sub0ecs.hpp>
 #include <cstddef>
 #include <memory>
@@ -21,12 +22,14 @@ public:
         GridConfig grid;
         std::size_t field_capacity{};
         std::optional<SteeringSettings> steering{};
+        std::optional<ResourceSettings> resources{}; ///< Enables finite reclamation; absent preserves legacy spread.
     };
 
     /// Legacy ECS-only workload; no fields, grid or Blight state is constructed.
     explicit Simulation(std::size_t count);
-    /// Allocate the bounded scenario at startup. Invalid geometry/count or allocation
-    /// failure throws before a usable Simulation exists. Population never grows.
+    /// Allocate the bounded scenario at startup. Invalid geometry/count/settings,
+    /// unrepresentable biomass or allocation failure throws before a usable Simulation
+    /// exists. Population never grows.
     Simulation(std::size_t count, ScenarioOptions options);
     ~Simulation();
     Simulation(const Simulation&) = delete;
@@ -46,9 +49,12 @@ public:
     /// Consume an immediate radius query without exposing the grid's borrowed buffer.
     /// Invalid input or the legacy workload returns nullopt.
     [[nodiscard]] std::optional<std::size_t> TryCountNeighbors(Position center, float radius) noexcept;
-    /// Copies sorted samples, all field slots and row-major Blight into owned caller storage.
-    /// Requires exclusive coordinator access. Capacity failure or legacy mode writes nothing.
-    /// Boundary edits already applied are visible; capture after a completed boundary for replay.
+    /** Copies sorted samples, all field slots, row-major infection and resource stock.
+     * @param[out] destination Mutually disjoint caller-owned spans; stocks required only when resources are enabled.
+     * @return Geometry, used lengths, completed tick and optional biomass ledger; nullopt on capacity failure or ECS-only mode.
+     * @note Requires exclusive coordinator access. Rejection writes nothing. Boundary edits
+     * already applied are visible; capture after a completed boundary for replay.
+     */
     [[nodiscard]] std::optional<ScenarioStateInfo> TryCopyState(StateCopyDestination destination) noexcept;
 private:
     struct ScenarioState;

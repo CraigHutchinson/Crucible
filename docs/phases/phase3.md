@@ -1,6 +1,6 @@
 # Phase 3: finite reclamation and a verified hex receiving contract
 
-Status: architecture preparation started; implementation has not been dispatched.
+Status: implemented and under final publication gates. See [delivery](../workstreams/integration/phase3-validation.md).
 Date: 2026-10-03. Architect plus two cooperative workers maximum. This replaces
 the resource-plus-upstream-H2 proposal: H2 has shipped, so do not repeat its work.
 
@@ -57,9 +57,15 @@ padding; merely mapping the four corners is insufficient without coverage proof.
 Validate int32 bounds, uint64 counts, host conversions, C+1 and byte products before
 allocation. Retain GridConfig's closed physical rectangle and cardinal Blight.
 
-Required cpp-write/cpp-review skills were not present in this execution workspace.
-This manual architecture review makes no skill-execution claim. Resolve that authoring/
-review prerequisite before substantive C++, preserving the repository's existing rule.
+cpp-write/cpp-review were recovered from CraigHutchinson/Agentic-CPP before C++
+authoring. Both workers and architect loaded the full skills and shared references.
+
+Execution refinement: H2 has a narrower startup mapping domain, and a dense axial
+cover of a tall thin world can grow quadratically. Preserve the existing domain via
+a private rectangular compatibility path in the same concrete Grid. Cap accepted
+hex storage at checked 4*physical_cells+64; this guard is not a measured optimum.
+This supersedes the original no-dual-backend wording below only for internal
+compatibility. No public backend abstraction or selectable implementation was added.
 
 ## P3-01: finite reclamation
 

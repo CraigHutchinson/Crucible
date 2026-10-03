@@ -1,38 +1,50 @@
-# Spatial handoff and validation
+# P3-02 spatial handoff and validation
 
-Changed owned files: include/crucible/spatial/Grid.hpp, src/spatial/Grid.cpp,
-src/spatial/CMakeLists.txt, tests/spatial/Grid.cpp, tests/spatial/CMakeLists.txt,
-and this stream README/design/validation. Base 978190c; worker made no Git mutations.
+Base: 71c14c0; branch phase3-spatial. Changes own spatial include/src/tests/docs and
+local manifests only. Architect owns dependency/root wiring and integrated replay.
+Sub0HexGrid receiving pin: aaae5c2fc5731a23db94fa947bbb0182d0ea69fd.
+No new public APIs or shared contract changes. Local spatial target links the package
+publicly because Grid's private value storage requires its geometry headers.
 
-The architect-owned Simulation optional scenario is the planned production caller:
-construct Grid once, gather stable samples into reused storage, check TryRebuild,
-immediately consume TryQuery results and GetOccupiedCellCount for headless diagnostics.
-Contracts required: GridConfig::TryValidate(), SampleId comparison/value, Position.
-The caller owns a scenario memory budget; Grid checks individual container size limits
-and allocating construction can fail. No heap allocations occur in the written rebuild
-or query paths; this is source review, not an instrumented allocation measurement.
+Existing spatial tests retain invalid input/startup, shuffled IDs, dense/coincident,
+border/clamp, maximal finite radius and unchanged-on-rebuild-failure coverage.
+Occupancy assertion now uses actual layout-specific expected cells; query oracle
+remains independent. Added spatial_hex_queries exhaustively scans small worlds and
+hex edge/vertex/adjacent-float fixtures at ordinary/tiny/large scales, checks inclusive
+zero/world-wide/max-finite radii, sample-order independence and unique IDs. Independent
+long-double nearest-center lattice search verifies normal-domain mappings without
+production conversion/candidate helpers. Physical extremes include denorm_min,
+min and max float cell scale; elongated world covers private startup memory guard.
+Rounding changes cover startup/rebuild/query/restored-environment compatibility.
 
-Fixtures register spatial_grid with CTest label spatial. They compare complete sorted
-results against brute force for 1540 samples including 1024 coincident samples, every
-cell of a 7x5 rectangle, four boundaries, clamped external positions, shuffled IDs,
-zero and arbitrary/multi-cell radii including maximal finite radius. Rejection preserves
-committed state for duplicate IDs/nonfinite positions/excess capacity. Startup overflow,
-empty, single-cell and query validation are covered.
+spatial_allocation_reuse intercepts ordinary global C++ new/new[] in a standalone
+single-threaded executable and scopes recording around actual Grid rebuild/query/
+rejection loops for hex and rectangular compatibility. It checks zero allocations;
+it does not claim OS residency, every C library allocation, aligned allocation or
+full-tick allocator behavior.
 
-No compilation or tests were run by this worker; root owns CPU reservations. Request
-Debug and Release spatial_grid, then supported ASan/UBSan and unfiltered combined suites.
-No throughput/performance conclusion is offered. Query result spans expire on next
-query/rebuild and require immediate consumption; access is externally synchronized.
+Focused execution under the architect's CPU reservation: GCC g++ -std=c++23 -O0
+-g -Wall -Wextra -Wpedantic, with Crucible and pinned Sub0HexGrid include roots,
+compiled Grid.cpp/GridHexTests.cpp/GridAllocationTests.cpp as three independent
+executables. Each linked src/spatial/Grid.cpp, src/contracts/GridConfig.cpp and
+upstream PointyLayout.cpp/regions/AxialRegion.cpp/candidates/CandidateCells.cpp.
+All **3/3** executables passed with no compiler warnings; allocation interception
+reported no allocation failure (zero recorded allocations). Temporary outputs live
+in build/spatial-focused. No timing or cross-compiler bitwise identity is claimed.
+Architect still runs registered spatial labels and supported unfiltered
+Debug/Release/sanitizers plus integrated baseline/candidate full-state replay.
 
-cpp-review self-review against base-owned changes: L0 production wiring is explicitly
-pending architect integration; L1 concrete owning Grid has no speculative interface;
-L2 complete result/lifetime/rejection contracts are documented; L3 nodiscard/noexcept,
-std::span, ranges, owned startup scratch and matching class filenames checked. No open
-MUST/SHOULD findings in the worker surface. Review integration callers before landing.
+## cpp-write / cpp-review
 
-## Architect integration result
+Loaded both skills and all four generic C++ references; no unity overlay exists.
+Project C++23/.hpp/standard-library conventions take precedence. Plan review retained
+one owning concrete Grid and existing APIs; numerical/failure/payload contracts live
+in decisions.md. Self-review L0: existing Simulation/Steering are actual consumers;
+L1: geometry dependency is acyclic and no new abstraction; L2: unchanged bounded
+ownership/ID/query surface; L3: standard algorithms, preallocated vectors, optional
+checked geometry and explicit environment fallback. No outstanding MUST/SHOULD
+finding in the authored surface. Independent architect code/numeric review and
+execution remain separate gates; this is not an independent self-review claim.
 
-The first increment is now wired and passes the combined Debug/Release and
-ASan/UBSan suites. See [central wave 1 evidence](../integration/wave1-validation.md)
-for actual commands, review findings and remaining package gates. The worker-only
-execution status above records the original handoff.
+Architecture/promotion judgment hands off to architect review. No concurrency change
+is introduced; the existing exclusive synchronous owner remains required.

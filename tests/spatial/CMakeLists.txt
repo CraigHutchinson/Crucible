@@ -2,3 +2,13 @@ add_executable(crucible_spatial_tests Grid.cpp)
 target_link_libraries(crucible_spatial_tests PRIVATE Crucible::Spatial)
 add_test(NAME spatial_grid COMMAND crucible_spatial_tests)
 set_tests_properties(spatial_grid PROPERTIES LABELS spatial)
+
+add_executable(crucible_spatial_hex_tests GridHexTests.cpp)
+target_link_libraries(crucible_spatial_hex_tests PRIVATE Crucible::Spatial)
+add_test(NAME spatial_hex_queries COMMAND crucible_spatial_hex_tests)
+set_tests_properties(spatial_hex_queries PROPERTIES LABELS spatial)
+
+add_executable(crucible_spatial_allocation_tests GridAllocationTests.cpp)
+target_link_libraries(crucible_spatial_allocation_tests PRIVATE Crucible::Spatial)
+add_test(NAME spatial_allocation_reuse COMMAND crucible_spatial_allocation_tests)
+set_tests_properties(spatial_allocation_reuse PROPERTIES LABELS spatial)

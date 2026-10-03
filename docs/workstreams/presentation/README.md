@@ -1,6 +1,8 @@
 # Presentation workstream — W8b/W9
 
 Phase 2 provides startup-sized owned snapshots consumed by main, replay checks and SVG export.
+Phase 3 extends owned frames with row-major stock and an optional conserved ledger.
+See [phase 3 evidence](../integration/phase3-validation.md).
 See [design and lifetimes](design.md) and [combined evidence](../integration/phase2-validation.md).
 
 ## Scope and first task

@@ -8,24 +8,38 @@
 #include <span>
 #include <vector>
 
+#include <sub0hexgrid/PointyLayout.hpp>
+#include <sub0hexgrid/regions/AxialRegion.hpp>
+
 namespace crucible::spatial {
 /// Owned stable identity and position gathered by Simulation at a tick boundary.
 struct SpatialSample { SampleId id{}; Position position{}; };
 
-/** Rectangular bins with complete, ID-sorted radius results; see docs/workstreams/spatial/design.md.
+/** Bounded spatial bins with complete, ID-sorted radius results.
  * Simulation owns this object. Rebuild and query require exclusive access; no input borrows persist.
  */
 class Grid {
 public:
-    /// Validates geometry/capacity and allocates all scratch; invalid startup input throws.
+    /** Validates physical geometry/capacity and allocates all scratch at startup.
+     * @param[in] config Closed rectangular physical world and bin scale.
+     * @param[in] sample_capacity Maximum committed samples and complete query results.
+     * @throws std::invalid_argument Invalid geometry.
+     * @throws std::length_error Unrepresentable storage; allocation can also fail.
+     */
     Grid(GridConfig config, std::size_t sample_capacity);
 
-    /// Rejects excess capacity, nonfinite positions or duplicate IDs without changing committed bins.
+    /** Replaces bins after validating and clamping every sample to the physical world.
+     * @param[in] samples Borrowed only during this call; arbitrary identity order is accepted.
+     * @return False for excess capacity, nonfinite positions or duplicate IDs, preserving committed state.
+     */
     [[nodiscard]] bool TryRebuild(std::span<const SpatialSample> samples) noexcept;
 
     /** Returns complete ascending IDs within inclusive radius of the clamped center.
      * Nonfinite center/radius or negative radius returns nullopt. Radius zero includes coincidence.
      * The owned result span expires on the next query or rebuild; consume it immediately.
+     * @param[in] center Finite world position, clamped consistently with samples.
+     * @param[in] radius Finite nonnegative world radius; every such float value is supported.
+     * @return Complete IDs in owned scratch, or nullopt for invalid query input.
      */
     [[nodiscard]] std::optional<std::span<const SampleId>> TryQuery(Position center, float radius) noexcept;
 
@@ -34,13 +48,20 @@ public:
 
 private:
     [[nodiscard]] Position ClampPosition(Position position) const noexcept;
-    [[nodiscard]] std::size_t CellIndex(Position position) const noexcept;
+    [[nodiscard]] std::size_t RectangularCellIndex(Position position) const noexcept;
+    [[nodiscard]] std::optional<std::size_t> TryHexCellIndex(Position position) const noexcept;
+    void PrepareCellIndices(std::span<const SpatialSample> pending) noexcept;
     [[nodiscard]] std::size_t AxisCell(double coordinate, std::size_t cells) const noexcept;
 
     GridConfig m_Config;
     GridExtent m_Extent;
+    std::optional<sub0hexgrid::PointyLayout> m_Layout;
+    std::optional<sub0hexgrid::AxialRegion> m_Region;
+    std::size_t m_CellCount{};
+    bool m_HexBins{};
     std::vector<SpatialSample> m_Samples;
     std::vector<SpatialSample> m_Pending;
+    std::vector<std::size_t> m_SampleCells;
     std::vector<std::size_t> m_Counts;
     std::vector<std::size_t> m_Offsets;
     std::vector<std::size_t> m_Cursors;

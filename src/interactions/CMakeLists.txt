@@ -1,2 +1,2 @@
-crucible_add_workstream(crucible_interactions Interactions)
-target_link_libraries(crucible_interactions INTERFACE Crucible::Contracts)
+crucible_add_workstream(crucible_interactions Interactions Reclamation.cpp)
+target_link_libraries(crucible_interactions PUBLIC Crucible::Contracts PRIVATE Crucible::Blight)

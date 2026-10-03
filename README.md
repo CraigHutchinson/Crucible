@@ -53,16 +53,19 @@ Blight material studies, with the exact generation prompts recorded.
 
 ## Project status
 
-**Status: second integrated headless increment.** Bounded field commands, tick trace
+**Status: third integrated headless increment.** Bounded field commands, tick trace
 replay, a stable spatial grid, radial forces and double-buffered Blight spread are
 implemented alongside bounded separation steering, a fixed-step clock and owned
-state snapshots. The original ECS workload and stack round-trip test remain. Full
+state snapshots. Opt-in finite reclamation now transfers substrate stock into a
+conserved reserve ledger, with staged Blight clearing and exact full-state replay.
+Spatial bins consume pinned Sub0HexGrid H2 geometry with bounded compatibility
+fallbacks. The original ECS workload and stack round-trip test remain. Full
 swarm gameplay and rendering remain planned. The design
 target is 100,000–150,000 entities at 60 FPS; this is not a measured game result.
 
 The sub0 ecosystem supplies the simulation foundation. Scale is useful when it makes
 the swarm feel continuous and alive; a clear, playable small scenario comes first.
-The next simulation packages lead toward resource interactions and a usable
+The next simulation packages lead toward reserve deployment and a usable
 input/presentation loop. [Architecture](docs/architecture.md) describes how those systems
 fit together; [work breakdown](docs/work-breakdown.md) assigns their implementation gates.
 
@@ -92,7 +95,7 @@ On Windows use a VS developer prompt and build/debug/crucible.exe.
 
 Dependencies use one verified CPM 0.42.1 bootstrap, namespaced targets and full
 commit pins in [cmake/DependencyPins.cmake](cmake/DependencyPins.cmake):
-Sub0ECS **v2**, Sub0Pub **v2**, Sub0Pipeline main, Sub0Log main. Dependency developer
+Sub0ECS **v2**, Sub0Pub **v2**, Sub0Pipeline main, Sub0Log main and Sub0HexGrid H2. Dependency developer
 tools are disabled. Set CPM_SOURCE_CACHE for a reusable dependency source cache.
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for Debug, Release and sanitizer workflows,
@@ -113,7 +116,7 @@ Development proceeds through [reviewed phases](docs/phases/README.md), reassessi
 and consolidating workstreams at each phase start. The [phase 2 plan](docs/phases/phase2.md)
 prioritizes bounded steering, runtime observation and owned state inspection, with
 an actual-state visual export, now delivered. See the [phase 2 handoff](docs/workstreams/integration/phase2-validation.md)
-and [next phase proposal](docs/phases/phase3.md).
+and [phase 3 delivery](docs/workstreams/integration/phase3-validation.md).
 
 Source layout: include/crucible and src for simulation, tests for behavior and
 stack integration, benchmarks for opt-in timing, cmake for dependencies, scripts
@@ -129,9 +132,26 @@ own license has not yet been selected.
 On Windows use `build/release/crucible.exe`. The file is an owned tick-20 snapshot
 of the actual 2,048-sample scenario. It shows bounded movement, the remaining repulsive
 field and Blight spread. Exact full-state replay is covered by the integration fixture;
-the CLI prints checksum/count replay diagnostics. This is a diagnostic view; the
-playable input loop, resource consumption and mission rules remain pending.
+the CLI checks complete state equality and prints replay diagnostics. This is a
+diagnostic view; the playable input loop and mission rules remain pending.
 
 ![Actual phase 2 state](docs/concepts/phase2-state.png)
 
 [Open the SVG](docs/concepts/phase2-state.svg) or read [reproduction and visual evidence](docs/concepts/phase2-state.md).
+
+## Inspect finite reclamation
+
+```sh
+./build/release/crucible --reclamation --export-svg docs/concepts/phase3-state.svg
+```
+
+The reference scenario starts with four substrate quanta per rectangular Blight cell,
+one mass quantum per mobile sample, zero reserve and at most 64 successful actions
+per tick. Harvest removes stock and adds exactly the same amount to reserve; exhausted
+cells clear infection. Reinfection of exhausted material yields no extra mass.
+The CLI checks complete replay and prints the conservation equation.
+[Resource rules](docs/decisions/phase3-resource-rules.md) specify order and boundaries;
+[phase 3 evidence](docs/workstreams/integration/phase3-validation.md) records review,
+query parity and supported validation. Growth, attrition and fusion/shatter remain future work.
+
+[Open the actual tick-20 SVG](docs/concepts/phase3-state.svg).

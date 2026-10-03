@@ -13,13 +13,13 @@ consolidating small coupled packages under a single phase owner when useful.
 | Stream | Package | Brief | Target / current foundation |
 |---|---|---|---|
 | Integration | W0 | [Integration](integration/README.md) | Core; ECS world and shared wiring |
-| Contracts | W1 | [Contracts](contracts/README.md) | Contracts; geometry, field edits, stable sample/state values, steering settings, copy destinations, timing |
+| Contracts | W1 | [Contracts](contracts/README.md) | Contracts; geometry, field edits, stable sample/state values, steering/resource settings, biomass ledger, copy destinations, timing |
 | Runtime | W2 | [Runtime](runtime/README.md) | Runtime; bounded ingress, cutoff, pause/close, tick trace replay, bounded fixed-step clock and summary |
-| Spatial | W3 | [Spatial](spatial/README.md) | Spatial; reusable stable-ID bins and complete radius queries |
+| Spatial | W3 | [Spatial](spatial/README.md) | Spatial; stable-ID bins, pinned H2 geometry and complete exact radius queries |
 | Fields | W3 | [Fields](fields/README.md) | Fields; bounded radial attractor/repulsor slots |
-| Blight | W4 | [Blight](blight/README.md) | Blight; double-buffered cardinal spread |
+| Blight | W4 | [Blight](blight/README.md) | Blight; double-buffered cardinal spread and exclusive prepared-step lease |
 | Swarm | W5 | [Swarm](swarm/README.md) | Swarm; fixed integration and bounded immutable-input separation/radial steering |
-| Interactions | W6 | [Interactions](interactions/README.md) | Interactions; reserved |
+| Interactions | W6 | [Interactions](interactions/README.md) | Interactions; finite stock-to-reserve reclamation; structural work deferred |
 | Scheduling | W7 | [Scheduling](scheduling/README.md) | Scheduling; reserved |
 | Telemetry | W8a | [Telemetry](telemetry/README.md) | Telemetry; adapter target reserved; current owned summary lives with ClockDriver |
 | Presentation | W8b/W9 | [Presentation](presentation/README.md) | Presentation; sequential owned snapshots, CLI SVG consumer; graphics/exchange deferred |

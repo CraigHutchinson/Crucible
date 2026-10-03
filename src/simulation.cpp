@@ -9,6 +9,7 @@
 #include <crucible/contracts/timing.hpp>
 #include <crucible/contracts/SampleId.hpp>
 #include <crucible/fields/FieldSet.hpp>
+#include <crucible/interactions/Reclamation.hpp>
 #include <crucible/spatial/Grid.hpp>
 #include <crucible/swarm/integration.hpp>
 #include <crucible/swarm/Steering.hpp>
@@ -33,8 +34,9 @@ struct Simulation::ScenarioState {
     ScenarioState(ScenarioOptions options, std::size_t count)
         : options(options), extent(RequireExtent(options.grid)), grid(options.grid, count),
           fields(options.field_capacity), blight(options.grid), samples(count),
-          tick_input(options.steering ? count : 0), next_state(options.steering ? count : 0) {
+          tick_input(options.steering || options.resources ? count : 0), next_state(options.steering ? count : 0) {
         if (options.steering) steering.emplace(options.grid, *options.steering, count);
+        if (options.resources) reclamation.emplace(options.grid, count, *options.resources);
         if (!blight.TrySeed(options.grid.columns / 2, options.grid.rows / 2))
             throw std::logic_error("Validated scenario seed was out of bounds");
     }
@@ -47,6 +49,7 @@ struct Simulation::ScenarioState {
     std::vector<spatial::SpatialSample> samples;
     std::vector<SampleState> tick_input, next_state;
     std::optional<swarm::Steering> steering;
+    std::optional<interactions::Reclamation> reclamation;
     sub0ecs::store::World<Queries> world;
 };
 
@@ -107,25 +110,31 @@ void Simulation::tick() {
                 position = sample->position;
                 velocity = sample->velocity;
             });
-            state.blight.Step();
-            RebuildSpatial();
-            ++completed_ticks_;
-            return;
+        } else {
+            state.world.each<Position, Velocity, SampleId>([&](Position& position, Velocity& velocity, const SampleId&) {
+                const auto acceleration = state.fields.Sample(position);
+                constexpr double limit = std::numeric_limits<float>::max();
+                velocity.x = static_cast<float>(std::clamp(static_cast<double>(velocity.x) +
+                    static_cast<double>(acceleration.x) * tick_seconds, -limit, limit));
+                velocity.y = static_cast<float>(std::clamp(static_cast<double>(velocity.y) +
+                    static_cast<double>(acceleration.y) * tick_seconds, -limit, limit));
+                // Double intermediates avoid overflow before clipping to finite world bounds.
+                position.x = static_cast<float>(std::clamp(static_cast<double>(position.x) +
+                    static_cast<double>(velocity.x) * tick_seconds, 0.0, static_cast<double>(state.extent.width)));
+                position.y = static_cast<float>(std::clamp(static_cast<double>(position.y) +
+                    static_cast<double>(velocity.y) * tick_seconds, 0.0, static_cast<double>(state.extent.height)));
+            });
         }
-        state.blight.Step();
-        state.world.each<Position, Velocity, SampleId>([&](Position& position, Velocity& velocity, const SampleId&) {
-            const auto acceleration = state.fields.Sample(position);
-            constexpr double limit = std::numeric_limits<float>::max();
-            velocity.x = static_cast<float>(std::clamp(static_cast<double>(velocity.x) +
-                static_cast<double>(acceleration.x) * tick_seconds, -limit, limit));
-            velocity.y = static_cast<float>(std::clamp(static_cast<double>(velocity.y) +
-                static_cast<double>(acceleration.y) * tick_seconds, -limit, limit));
-            // Double intermediates avoid overflow before clipping to finite world bounds.
-            position.x = static_cast<float>(std::clamp(static_cast<double>(position.x) +
-                static_cast<double>(velocity.x) * tick_seconds, 0.0, static_cast<double>(state.extent.width)));
-            position.y = static_cast<float>(std::clamp(static_cast<double>(position.y) +
-                static_cast<double>(velocity.y) * tick_seconds, 0.0, static_cast<double>(state.extent.height)));
-        });
+        if (state.reclamation) {
+            std::size_t index = 0;
+            state.world.each<Position, Velocity, SampleId>([&](const Position& position, const Velocity& velocity, const SampleId& id) {
+                state.tick_input[index++] = {id, position, velocity};
+            });
+            if (index != state.tick_input.size() || !state.reclamation->TryStep(state.blight, state.tick_input))
+                throw std::logic_error("Scenario reclamation rejected post-move state");
+        } else {
+            state.blight.Step();
+        }
         RebuildSpatial();
         ++completed_ticks_;
         return;
@@ -177,7 +186,8 @@ std::optional<ScenarioStateInfo> Simulation::TryCopyState(StateCopyDestination d
     auto& state = *scenario_;
     const auto count = state.samples.size();
     if (destination.samples.size() < count || destination.fields.size() < state.options.field_capacity ||
-        destination.blight.size() < state.extent.cells) return std::nullopt;
+        destination.blight.size() < state.extent.cells ||
+        (state.reclamation && destination.stocks.size() < state.extent.cells)) return std::nullopt;
     std::size_t index = 0;
     state.world.each<Position, Velocity, SampleId>([&](const Position& position, const Velocity& velocity, const SampleId& id) {
         destination.samples[index++] = {id, position, velocity};
@@ -188,6 +198,11 @@ std::optional<ScenarioStateInfo> Simulation::TryCopyState(StateCopyDestination d
     for (std::size_t row = 0; row < state.options.grid.rows; ++row)
         for (std::size_t column = 0; column < state.options.grid.columns; ++column)
             destination.blight[row * state.options.grid.columns + column] = state.blight.IsInfected(column, row) ? 1 : 0;
-    return ScenarioStateInfo{state.options.grid, completed_ticks_, count, state.options.field_capacity, state.extent.cells};
+    std::optional<BiomassLedger> ledger;
+    if (state.reclamation) {
+        std::ranges::copy(state.reclamation->GetStocks(), destination.stocks.begin());
+        ledger = state.reclamation->GetLedger();
+    }
+    return ScenarioStateInfo{state.options.grid, completed_ticks_, count, state.options.field_capacity, state.extent.cells, ledger};
 }
 }

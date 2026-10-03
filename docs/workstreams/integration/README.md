@@ -6,7 +6,9 @@ Current implementation evidence: [first collaborative wave](wave1-validation.md)
 Own root CMake, cmake/, presets, CI, AGENTS.md, CONTRIBUTING.md, src/main.cpp,
 src/simulation.cpp, include/crucible/simulation.hpp, tests/integration/ and central docs.
 
-Core owns ECS and consumes Contracts/Swarm/Spatial/Fields/Blight; Runtime is the main caller.
+Current phase 3 evidence: [finite reclamation and hex receiving](phase3-validation.md).
+
+Core owns ECS and consumes Contracts/Swarm/Spatial/Fields/Blight/Interactions; Runtime is the main caller.
 Stack libraries link explicitly to the stack test instead of leaking through Core.
 Integration tests register in tests/integration/CMakeLists.txt; domain tests are local.
 

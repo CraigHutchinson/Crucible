@@ -4,10 +4,12 @@ Read [game design and project intent](game-design.md) before dispatch. Workstrea
 serve its playable loop; numerical/resource and presentation decisions must close
 at the listed gates before implementation. Concept art is illustrative.
 
-Status: first increments of W0/W1, W2, W3 and W4 integrated, 2026-10-01. Full package
-gates below remain open. The [wave 1 handoff](workstreams/integration/wave1-validation.md)
-records delivered scope and remaining work. Read [architecture.md](architecture.md) for binding proposed contracts and
-[validation.md](validation.md) for prior integration evidence. Use the [workstream map](workstreams/README.md) for actual folders, build targets and session ownership.
+Status: phase 3 integrates finite reclamation, conserved inspection and verified H2
+spatial reuse, 2026-10-03. W0/W1/W2/W3/W4/W5/W6 retain broader gates below;
+finite stock-to-reserve work is the first W6 increment, not structural completion.
+[Phase 3 evidence](workstreams/integration/phase3-validation.md) records delivered
+scope; [architecture](architecture.md) and [workstream map](workstreams/README.md)
+record technical boundaries and paths. Historical wave-1 evidence remains archived.
 
 This is the capability backlog, not a fixed sprint allocation. Follow the
 [phase workflow](phases/README.md) and current [phase 3 packages](phases/phase3.md) for

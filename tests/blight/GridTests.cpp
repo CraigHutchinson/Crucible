@@ -5,6 +5,8 @@
 #include <limits>
 #include <stdexcept>
 #include <string_view>
+#include <utility>
+#include <type_traits>
 
 namespace {
 using crucible::blight::Grid;
@@ -28,6 +30,34 @@ bool Rejects(crucible::GridConfig config) {
     } catch (const std::invalid_argument &) {
         return true;
     }
+}
+bool PreparedFixtures() {
+    static_assert(!std::is_copy_constructible_v<Grid::PreparedStep>);
+    static_assert(std::is_nothrow_move_constructible_v<Grid::PreparedStep>);
+    Grid grid{{3, 1, 1.0F}};
+    if (!grid.TrySeed(0, 0)) return false;
+    {
+        auto pending = grid.TryPrepareStep();
+        if (!pending || !pending->IsInfected(0) || !pending->IsInfected(1) || pending->IsInfected(2) ||
+            grid.TryPrepareStep() || grid.TrySeed(2, 0) || !CheckGrid(grid, 3, "#..")) return false;
+        bool rejected = false;
+        try { grid.Step(); } catch (const std::logic_error&) { rejected = true; }
+        if (!rejected || !pending->TryClear(1) || pending->TryClear(3) || !CheckGrid(grid, 3, "#..")) return false;
+        auto moved = std::move(*pending);
+        if (pending->TryClear(0) || pending->IsInfected(0) || std::move(*pending).Commit()) return false;
+        if (!moved.IsInfected(0) || moved.IsInfected(1)) return false;
+        // Abandon the moved lease; current values and cached count stay unchanged.
+    }
+    if (!CheckGrid(grid, 3, "#..")) return false;
+    auto pending = grid.TryPrepareStep();
+    if (!pending || !pending->TryClear(0) || !std::move(*pending).Commit() ||
+        std::move(*pending).Commit() || !CheckGrid(grid, 3, ".#.")) return false;
+    // Destruction of the consumed guard must not release a newer active lease.
+    auto newer = grid.TryPrepareStep();
+    pending.reset();
+    if (!newer || grid.TryPrepareStep()) return false;
+    if (!std::move(*newer).Commit() || !CheckGrid(grid, 3, "###")) return false;
+    return true;
 }
 } // namespace
 
@@ -129,6 +159,8 @@ int main() {
     } catch (const std::length_error &) {
         // Geometry fits, but storage must be rejected before attempting allocation.
     }
+
+    if (!PreparedFixtures()) return 22;
 
     std::cout << "Blight hand-calculated fixtures passed\n";
 }

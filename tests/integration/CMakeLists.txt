@@ -18,3 +18,8 @@ add_executable(crucible_phase2_test phase2.cpp)
 target_link_libraries(crucible_phase2_test PRIVATE Crucible::Runtime Crucible::Presentation)
 add_test(NAME phase2_full_state COMMAND crucible_phase2_test)
 set_tests_properties(phase2_full_state PROPERTIES LABELS "integration;presentation")
+
+add_executable(crucible_phase3_test phase3.cpp)
+target_link_libraries(crucible_phase3_test PRIVATE Crucible::Runtime Crucible::Presentation)
+add_test(NAME phase3_full_state COMMAND crucible_phase3_test)
+set_tests_properties(phase3_full_state PROPERTIES LABELS "integration;presentation;resources")
