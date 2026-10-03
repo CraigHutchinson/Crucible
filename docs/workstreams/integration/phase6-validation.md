@@ -68,3 +68,8 @@ completion and subsequent headless runs are unconfirmed. No interrupted result i
 counted as a pass. Exact authored source recovery preserves the reviewed packages;
 hosted final-head nine-job acceptance and GPU artifact remain the merge gates.
 Use the permission-repair test entrypoint; preserve source/build/evidence checkpoints.
+
+Initial hosted head6b92d553 passed eight jobs; normal sanitizer29/30 but strategy
+fixture timed out900sec with no diagnostic. Instrumented targets now use scoped
+-O1 while preserving assertions, ASan/UBSan/leak checks and all replay cases.
+The final-head nine-job rerun is required; no failed gate is counted green.

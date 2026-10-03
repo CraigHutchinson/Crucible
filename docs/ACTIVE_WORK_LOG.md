@@ -150,3 +150,8 @@ immutable Git blobs; no source regeneration. Shared root CPU/build session outco
 cannot be observed until service recovery. Hosted exact-head nine-job acceptance
 and fresh GPU exporter evidence are required before merge. Local branches/builds
 and captures remain retained; local reconciliation is deferred until recovery.
+
+Initial hosted head6b92d553: eight jobs green; normal sanitizer29/30, strategy
+fixture timeout900sec, no diagnostic. Architect corrects instrumented target build
+to -O1 with frame pointers/sibling-call preservation, keeping Debug assertions,
+all strategies and full-state replay. Fresh final-head nine-job gate required.

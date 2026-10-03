@@ -36,6 +36,15 @@ captures and publication. Workers authored and reviewed without competing CPU ru
 | Buffered evidence streams checked before flush | Late write failures could escape persistence checks | Explicit flush before final stream checks in mission/GPU evidence callers | Filesystem/device failure injection remains separate |
 | Malformed shader preflight mistaken for partial GPU creation cleanup | Failure acceptance would be overstated | Empty shader fixture rejects before GPU creation; partial-creation RAII/drain reviewed | P06-F02 remains open for actual fault receiving |
 
+Sanitizer receiving at the initial published head6b92d553 passed29/30 but the
+four-strategy fixture exceeded900sec. No sanitizer diagnostic was emitted. Keep
+all strategies, terminal replay, assertions and ASan/UBSan/leak checking; compile
+instrumented project/Pipeline targets with scoped -O1 plus retained frame pointers
+and disabled sibling-call optimization. This follows the
+[Clang sanitizer usage guidance](https://clang.llvm.org/docs/AddressSanitizer.html#usage).
+Ordinary Debug/Release configuration is unchanged. Final-head acceptance is required
+after this build-policy correction; initial eight green jobs are historical evidence.
+
 ## Verification and useful artifacts
 
 Architect reports the optional executing GPU readback fixture passed under same-shell
