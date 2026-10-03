@@ -26,6 +26,16 @@ the sub0 ecosystem. Technical scale serves that experience: the target of
 100,000–150,000 entities matters when it makes the swarm feel continuous and alive.
 A convincing, understandable small scenario comes before a measured large one.
 
+## Future factions and control
+
+The current single-player reference has nanites and Blight. Preserve the option
+for more than two factions, including differently colored variants of either kind
+as potentially controllable groups. Kind, allegiance, controller and palette are
+separate concepts; different factions may be allied, neutral or hostile. This is
+[extensibility groundwork](decisions/faction-extensibility.md), not implemented
+multiplayer or new gameplay rules. Freeze resource ownership and command authority
+at their first real consumers; Phase 6 only reviews rendering assumptions.
+
 ## Player, setting and viewpoint
 
 The player is the operator of a reclamation swarm on a damaged industrial substrate.

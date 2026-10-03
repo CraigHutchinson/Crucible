@@ -118,3 +118,14 @@ loss probe passed; macOS temporary-root fixture correction passed hosted accepta
 Preserve branch/build/strategy/visual artifacts. Next action: start from merged main,
 read phase-05 review, carry stable follow-ups and choose the next bounded increment.
 Documentation-only closure follows; no repeated local C++ build is needed.
+
+## Phase 6 planning and visual completion rule, 2026-10-03
+
+Base `5411125`; architect owns documentation-only branch phase6-plan-visual-evidence.
+User requests next sprint packages for collaborative delegation and visual examples
+where viable at each iteration. Existing workers give read-only package reviews;
+no implementation/build CPU claim is active. Phase6.md consolidates GPU/numeric/
+retirement under one worker and retains a mission-route/evidence provider under
+another; root owns shared wiring and validation. Added faction/material/control
+extensibility note for three-plus factions and future multiplayer; no such gameplay
+or network implementation is dispatched. Preserve completed Phase 5 artifacts.

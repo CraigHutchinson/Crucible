@@ -3,7 +3,7 @@
 ```sh
 cmake --preset bench
 cmake --build --preset bench --parallel 4
-ctest --preset bench
+python scripts/run_tests.py --preset bench
 python3 scripts/capture_benchmarks.py --output bench-results/current
 ```
 

@@ -13,6 +13,7 @@ package is not a permanent agent assignment.
 | 4 | Live owned-frame inspection, field input and concrete batch adapter | [Plan](phase4.md), [review](../sprint-reviews/phase-04.md), [delivery](../workstreams/integration/phase4-validation.md); complete, [PR 9](https://github.com/CraigHutchinson/Crucible/pull/9) at `09ae74f` |
 | Interim | Owned instance-packet rendering spike | [Report](../../spikes/rendering/README.md); [PR 11](https://github.com/CraigHutchinson/Crucible/pull/11) at `0bc9731` |
 | 5 | Playable reclamation quota/deadline and instancing design | [Plan](phase5.md), [review](../sprint-reviews/phase-05.md); complete, [PR 12](https://github.com/CraigHutchinson/Crucible/pull/12) at `57c1da6` |
+| 6 | Real instancing foundation and mission receiving examples | [Delegation plan](phase6.md); planned, implementation not started |
 
 The [sprint-review archive](../sprint-reviews/README.md) tracks findings, follow-ups
 and delegation lessons for every completed increment.
@@ -59,9 +60,31 @@ justifies targeted additional checks; a green unchanged tree does not need repea
 full builds. Serialize builds and reserve an uncontended host for measurements.
 
 Spend remaining quota on correcting/reviewing the core increment before stretching.
-Never skip correctness or lifecycle gates to obtain an attractive demo. Choose one
-small visual artifact when it consumes the validated state without forcing a new
-graphics stack. Carry unfinished stretch explicitly to the next phase.
+Never skip correctness or lifecycle gates to obtain an attractive demo. Visual
+evidence is part of completion wherever viable, as specified below. Bound captures
+to the changed behavior; avoid adding a graphics stack solely for evidence.
+
+## Visual examples at each iteration
+
+At phase start, name the observable behavior and planned capture in each package.
+At completion, capture and visually inspect representative examples of the actual
+implementation wherever viable: screenshots, deterministic frame exports, a short
+interaction recording, or a plot/diagram derived from actual output for headless
+changes. Choose the smallest set that explains the increment and its relevant
+states; use before/after pairs when the change is visual. A code-only change with
+no useful observable visual may record an explicit reason instead.
+
+Store captures with the Git-backed sprint evidence (normally
+`docs/concepts/exports/phaseN-*`), link them from the sprint review and record:
+source revision/dirty state, reproduction command or capture script, scenario/seed,
+tick and applied commands, backend/platform/toolchain, dimensions/DPI as relevant,
+and what was visually checked. Keep raw output or replay identifiers behind plots.
+Distinguish software exports, actual GPU/device captures and generated concepts.
+Do not infer device acceptance, human playtesting or performance from an image.
+If capture is blocked, record the blocker, owner and receiving gate; it remains
+open rather than being silently dropped. For a failed required backend/device gate,
+a software substitute does not complete that package. Avoid sensitive/private SDK
+content in public captures.
 
 ## Phase close: review, merge and preserve evidence
 
