@@ -14,6 +14,7 @@ package is not a permanent agent assignment.
 | Interim | Owned instance-packet rendering spike | [Report](../../spikes/rendering/README.md); [PR 11](https://github.com/CraigHutchinson/Crucible/pull/11) at `0bc9731` |
 | 5 | Playable reclamation quota/deadline and instancing design | [Plan](phase5.md), [review](../sprint-reviews/phase-05.md); complete, [PR 12](https://github.com/CraigHutchinson/Crucible/pull/12) at `57c1da6` |
 | 6 | Real instancing foundation and mission receiving examples | [Plan](phase6.md), [review](../sprint-reviews/phase-06.md); optional foundation delivered, PR15 at `7317a03c8bca6848b17a352f0a192fb0d8e0e375`; fault/device gates open |
+| 7 | Controlled GPU fault/retirement receiving and mission timing investigation | [Plan](phase7.md), [review](../sprint-reviews/phase-07.md); dispatched |
 
 The [sprint-review archive](../sprint-reviews/README.md) tracks findings, follow-ups
 and delegation lessons for every completed increment.

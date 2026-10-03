@@ -46,3 +46,12 @@ if(CRUCIBLE_BUILD_DESKTOP)
     add_test(NAME mission_strategy_examples COMMAND crucible_mission_examples)
     set_tests_properties(mission_strategy_examples PROPERTIES LABELS "integration;mission;presentation" TIMEOUT 900)
 endif()
+
+if(CRUCIBLE_BUILD_DESKTOP)
+    add_executable(crucible_mission_sensitivity mission_sensitivity.cpp)
+    target_link_libraries(crucible_mission_sensitivity PRIVATE
+        Crucible::Runtime Crucible::ScenePainter SDL3::SDL3)
+    add_test(NAME mission_timing_schedule COMMAND crucible_mission_sensitivity --schedule-only)
+    set_tests_properties(mission_timing_schedule PROPERTIES
+        LABELS "integration;mission;presentation" TIMEOUT 60)
+endif()

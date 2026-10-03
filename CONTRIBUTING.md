@@ -23,7 +23,7 @@ python scripts/run_tests.py --preset sanitize
 
 The sanitizer preset requires GCC/Clang. Run it separately from timing work.
 Use `scripts/run_tests.py` for local and CI execution. It asks CTest for the selected
-commands, repairs lost execute bits on owned ELF/Mach-O test artifacts under `build/`,
+commands and their explicit `REQUIRED_FILES` native prerequisites, repairs lost execute bits on owned ELF/Mach-O test artifacts under `build/`,
 reports repairs, then runs the requested suite once. It preserves read/write modes,
 ignores source/scripts/symlinks/external tools and leaves Windows modes unchanged.
 Pass ordinary CTest filters after `--preset`; `--ctest path` selects a tool outside

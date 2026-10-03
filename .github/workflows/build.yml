@@ -1,5 +1,11 @@
 name: Build and test
-on: [push, pull_request]
+on:
+  push:
+    branches: [main]
+  pull_request:
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
 permissions:
   contents: read
 jobs:
@@ -75,18 +81,23 @@ jobs:
       - name: Actual receiver Debug readback
         run: |
           cmake --preset gpu-debug
-          cmake --build --preset gpu-debug --target crucible_gpu_readback_test --parallel 4
-          xvfb-run -a python scripts/run_tests.py --preset gpu-debug -R '^gpu_instanced_readback$' --no-tests=error
+          cmake --build --preset gpu-debug --target crucible_gpu_readback_test crucible_gpu_fault_test --parallel 4
+          xvfb-run -a python scripts/run_tests.py --preset gpu-debug -R '^(gpu_instanced_readback|gpu_fault_receiving|gpu_fault_process)$' --no-tests=error
       - name: Actual receiver ASan/UBSan readback
         run: |
           cmake --preset gpu-sanitize
-          cmake --build --preset gpu-sanitize --target crucible_gpu_readback_test --parallel 4
-          xvfb-run -a python scripts/run_tests.py --preset gpu-sanitize -R '^gpu_instanced_readback$' --no-tests=error
+          cmake --build --preset gpu-sanitize --target crucible_gpu_readback_test crucible_gpu_fault_test --parallel 4
+          xvfb-run -a python scripts/run_tests.py --preset gpu-sanitize -R '^(gpu_instanced_readback|gpu_fault_receiving|gpu_fault_process)$' --no-tests=error
       - name: Actual completed production-frame GPU captures
         run: xvfb-run -a python scripts/capture_gpu_examples.py --executable build/gpu-release/crucible_gpu_receiver --vertex build/gpu-release/gpu-shaders/world.vert.spv --fragment build/gpu-release/gpu-shaders/world.frag.spv --output ${{ runner.temp }}/gpu-captures
+      - name: Visual capture dependencies
+        run: python -m pip install Pillow matplotlib
+      - name: Actual controlled-retirement captures
+        run: xvfb-run -a python scripts/capture_phase7_examples.py gpu --executable build/gpu-release/tests/presentation/gpu/crucible_gpu_fault_test --vertex build/gpu-release/gpu-shaders/world.vert.spv --fragment build/gpu-release/gpu-shaders/world.frag.spv --output ${{ runner.temp }}/phase7-retirement
       - uses: actions/upload-artifact@v4
         with:
           name: gpu-readback-evidence
           path: |
             ${{ runner.temp }}/gpu-captures/
+            ${{ runner.temp }}/phase7-retirement/
             build/gpu-release/gpu-shader-toolchain.txt
