@@ -38,6 +38,7 @@ explicit retirement ownership before new abstraction/exchange work.
 |---|---|---|
 | P01-F04 | First input/display implemented; complete playable mission still partial | Presentation/game architect; mission goal/progression and real interaction playtest |
 | P04-F01 | Open: public iOS package/touch/device acceptance | Platform architect; Apple build/signing, logical touch, background/foreground and physical-device proof |
+| P04-F03 | Open: Apple redistributable bundle/runtime validation | Platform architect; package/sign runtime dependencies, validate native Apple toolchain before distribution |
 | P04-F02 | Open: complete native workload/device measurements and final typography | Presentation/validation; input-to-present measurements, readable/DPI/device playtests before renderer scale claims |
 | P01-F03 | Finite ledger delivered; full W6 structural growth/fusion remains partial | Resource architect; capacity/identity/commit audit |
 | P01-F05 | Deferred: structural/concurrent/measured scale | Integration/scheduling; capacity/generation/join and complete workload |

@@ -177,3 +177,19 @@ R to restart, Delete to erase and Escape to cancel preview. Queued edits apply a
 a completed boundary; paused edits wait for resume. Restart discards the previous
 run and trace. macOS build/test coverage is included in CI; iOS packaging, touch
 input and physical-device validation remain future gates.
+
+macOS requires the complete C++23 library used by Sub0Pipeline. The current Apple
+SDK library lacks `std::stop_token`/`std::jthread`; CI uses Homebrew LLVM21 with its
+matching libc++/libunwind, selected explicitly by the macOS presets:
+
+```sh
+brew install llvm@21
+export CRUCIBLE_LLVM_ROOT="$(brew --prefix llvm@21)"
+cmake --preset macos-release
+cmake --build --preset macos-release --parallel 4
+ctest --preset macos-release
+./build/macos-release/src/desktop/crucible_desktop
+```
+
+This developer build uses runtime paths into the LLVM installation. A redistributable
+Apple bundle and iOS toolchain require separate packaging/runtime validation.

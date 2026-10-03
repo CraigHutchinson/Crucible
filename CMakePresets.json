@@ -66,6 +66,16 @@
       "cacheVariables": {
         "CRUCIBLE_BUILD_DESKTOP": "ON"
       }
+    },
+    {
+      "name": "macos-debug",
+      "inherits": "desktop-debug",
+      "toolchainFile": "${sourceDir}/cmake/toolchains/macos-homebrew-llvm.cmake"
+    },
+    {
+      "name": "macos-release",
+      "inherits": "desktop-release",
+      "toolchainFile": "${sourceDir}/cmake/toolchains/macos-homebrew-llvm.cmake"
     }
   ],
   "buildPresets": [
@@ -96,6 +106,14 @@
     {
       "name": "desktop-sanitize",
       "configurePreset": "desktop-sanitize"
+    },
+    {
+      "name": "macos-debug",
+      "configurePreset": "macos-debug"
+    },
+    {
+      "name": "macos-release",
+      "configurePreset": "macos-release"
     }
   ],
   "testPresets": [
@@ -144,6 +162,20 @@
     {
       "name": "desktop-sanitize",
       "configurePreset": "desktop-sanitize",
+      "output": {
+        "outputOnFailure": true
+      }
+    },
+    {
+      "name": "macos-debug",
+      "configurePreset": "macos-debug",
+      "output": {
+        "outputOnFailure": true
+      }
+    },
+    {
+      "name": "macos-release",
+      "configurePreset": "macos-release",
       "output": {
         "outputOnFailure": true
       }

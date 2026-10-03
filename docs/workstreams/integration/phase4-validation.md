@@ -76,3 +76,10 @@ workflow results and the merge baseline are recorded in the completed phase revi
 iOS packaging/signing/touch and physical-device lifecycle/graphics remain open.
 No new backend abstraction, GPU shaders/retirement, concurrent frame exchange,
 structural growth/fusion, mission outcome or hierarchy was introduced.
+
+The first hosted macOS run exposed a pre-existing stack toolchain requirement:
+Apple SDK libc++ lacks Pipeline's `std::stop_token`/`std::jthread`. The macOS presets
+now select Homebrew LLVM21 and its matching headers/libc++/libunwind together,
+using the [vendor's documented runtime and availability selection](https://formulae.brew.sh/formula/llvm@21).
+No Pipeline API shim or reduced tests were added. This developer toolchain does not
+establish Apple bundle redistribution/signing; that remains a packaging gate.
