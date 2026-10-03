@@ -1,6 +1,6 @@
 # Phase 5 sprint review: reclamation challenge
 
-Status: implementation reviewed and locally validated; publication pending,
+Status: complete, merged and verified,
 2026-10-03. Accountable reviewer: architect.
 
 ## Intent, baseline and scope
@@ -41,7 +41,7 @@ Linux GCC 13.3/CMake 4.4.3: desktop Debug/Release 25/25 each; headless Release 2
 including passive/route CLI and SDL absence. ASan/UBSan covered all 25:24 launched
 and passed unfiltered, permission-blocked phase 3 passed after mode restoration.
 Local leak scanning is disabled because managed process inspection is blocked;
-hosted sanitizer is normal. Exact-head platform acceptance pending publication.
+hosted sanitizer is normal. Hosted acceptance passed on the final published head (see closure).
 
 [Raw outcomes](../workstreams/integration/phase5-evidence/metadata.json): passive LOST
 at 900 / reclaimed 1,774; swept attractor WON at 267 / reclaimed 1,780 with five applied edits.
@@ -89,6 +89,16 @@ is warranted before actual backends establish the shared protocol.
 
 ## Closure
 
-Pending exact-head CI, merge and verified baseline. Worker write/review claims are
-complete; architect owns publication. Prior worktrees, spike sources and receiving/
-strategy/visual artifacts retained; no unrelated cleanup.
+[PR 12](https://github.com/CraigHutchinson/Crucible/pull/12) merged at
+`57c1da65c2e6e74a6f9b7f76f596fb8d36bf590e`; published head `94d2e269c5c6620d7a21acdd6b3629222ff3bdde`,
+tree `f71e391ce1ceb77ece4b26de7932bc56fcafd8dd` matched the reviewed local tree.
+[Hosted run](https://github.com/CraigHutchinson/Crucible/actions/runs/37123756682) passed all eight jobs:
+Linux/Windows/macOS Debug and Release plus normal Linux ASan/UBSan, 26 cases each;
+headless Release 25 cases with SDL absent; both Linux native X11 smokes passed.
+Initial macOS permission fixtures compared unresolved temporary paths; resolve roots
+fixed the assertions and final acceptance passed. The repair itself needed no change.
+Local main was fast-forwarded to the merge and verified clean with the same tree.
+Worker and architect execution/review/CPU claims are complete. Prior worktrees,
+spike sources and receiving/strategy/visual artifacts remain retained.
+Next increment starts from merged main, carries the follow-ups above and reassesses
+mission playtesting versus consolidated real-instancing/numeric/lifetime work.

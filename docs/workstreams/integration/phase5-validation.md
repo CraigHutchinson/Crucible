@@ -2,7 +2,8 @@
 
 Base `0bc9731`, 2026-10-03. [Plan](../../phases/phase5.md),
 [review](../../sprint-reviews/phase-05.md), [rules](../../decisions/phase5-reclamation.md).
-Implementation reviewed; hosted acceptance/publication pending.
+Complete: [PR 12](https://github.com/CraigHutchinson/Crucible/pull/12), merge
+`57c1da65c2e6e74a6f9b7f76f596fb8d36bf590e`.
 
 ## Actual consumers and checks
 
@@ -39,8 +40,10 @@ the prior rendering spike, whose world raster/lifetime oracle still passes.
 
 Local ASan/UBSan uses `ASAN_OPTIONS=detect_leaks=0` because managed leak inspection
 is blocked; hosted sanitizer stays normal. No changed-source warning, dependency/pin
-update or unsupported device claim. Exact-head Linux/Windows/macOS and X11 receiving
-checks will be recorded at publication closure.
+update or unsupported device claim. Hosted head `94d2e269c5c6620d7a21acdd6b3629222ff3bdde` passed all eight jobs: Linux/Windows/macOS
+Debug/Release and normal Linux sanitizer 26/26 each, headless 25/25 with SDL absent,
+both native X11 smokes. [Run](https://github.com/CraigHutchinson/Crucible/actions/runs/37123756682).
+Published tree matched reviewed local tree and merged main was verified clean.
 
 ## Permission-loss prevention
 
