@@ -4,24 +4,30 @@ Product intent and gameplay scope live in [game-design.md](game-design.md). This
 document owns technical boundaries; [visual concepts](concepts/README.md) illustrate
 the proposed experience without selecting a renderer or changing current physics.
 The [reuse catalog](reuse/README.md) records upstream/extraction opportunities.
-Hex spatial topology is likely but unresolved; [Sub0HexGrid](reuse/Sub0HexGrid.md)
-has standalone scalar groundwork. The current rectangular implementation remains the verified baseline;
-swarm indexing and Blight adjacency require separate migration decisions.
+[Sub0HexGrid H2](reuse/Sub0HexGrid.md) supplies normal-domain spatial assignment
+and conservative candidates; Crucible owns bins, IDs and exact point filtering.
+A private rectangular fallback preserves unsupported geometry/environment domains,
+and scan fallback preserves every finite float query radius. Blight remains cardinal.
 
-Status: second integrated headless increment, 2026-10-01. Bounded command admission,
+Status: third integrated headless increment, 2026-10-03. Bounded command admission,
 tick trace replay, stable spatial queries, bounded separation/radial steering, clock
-driving, owned state copies and cellular spread exist in a sequential optional scenario; full gameplay/concurrency remain planned. See
-[workstream map](workstreams/README.md) for paths/status and
-[work-breakdown.md](work-breakdown.md) for implementation gates.
+driving, owned state copies, cellular spread and finite reclamation exist in a
+sequential optional scenario. Full gameplay/concurrency remain planned. See
+[workstream map](workstreams/README.md) and [work breakdown](work-breakdown.md).
 
-The [phase 2 handoff](workstreams/integration/phase2-validation.md) is the authority
-for implemented scope and evidence. HeadlessSession borrows an exclusively owned
+The [phase 3 handoff](workstreams/integration/phase3-validation.md) records current
+implemented scope and evidence. HeadlessSession borrows an exclusively owned
 Simulation; main owns both. The broader Runtime composition below is the target
 architecture. The legacy Simulation constructor retains the ECS-only workload;
 ScenarioOptions selects startup-owned grids, fields, scratch and stable sample IDs.
-Scenario ticks spread Blight, optionally compute immutable-input bounded steering
-(the prior radial-only path remains the absent-option behavior),
-then rebuild the spatial grid. Consumption, alignment/cohesion and structural mutation remain pending.
+Scenario ticks compute immutable tick-start steering (or the existing radial-only
+path), publish movement, prepare cardinal spread, then arbitrate post-move resource
+contacts in cell/ID order and publish infection, material and ledger together.
+The absent-resource option retains ordinary spread. Rebuild the moved spatial state
+last, then increment completed tick. Unexpected tick failure stops runtime; resource
+atomicity does not promise movement or boundary-command rollback. Owned snapshots
+copy infection, all stock and optional ledger alongside samples and fields.
+Alignment/cohesion and structural mutation remain pending.
 
 ## Goal and existing foundation
 
@@ -64,7 +70,7 @@ pool and telemetry. Simulation owns its grids, fields and reusable scratch. Doma
 modules receive scoped immutable input and exclusive output views; they retain no
 world pointers. Rendering receives copied values, never ECS views. Simulation has
 no platform/render, Pub callback or Log-global dependencies. Core now exposes only
-ECS/Contracts plus project requirements; Swarm, Spatial, Fields and Blight are private. Runtime currently links
+ECS/Contracts plus project requirements; Swarm, Spatial, Fields, Blight and Interactions are private. Runtime currently links
 Core for headless running. Its future adapters will link Pub/Pipeline/Log explicitly.
 Local workstream targets/source lists isolate parallel-session build edits. Reserved
 targets contain no dummy objects and do not claim implemented gameplay.

@@ -1,2 +1,8 @@
-# Own interactions test sources, executables and add_test registrations here.
-# Apply LABELS interactions; this file is included only with BUILD_TESTING enabled.
+add_executable(crucible_reclamation_tests ReclamationTests.cpp)
+target_link_libraries(crucible_reclamation_tests PRIVATE Crucible::Interactions Crucible::Blight)
+add_test(NAME interactions_reclamation COMMAND crucible_reclamation_tests)
+set_tests_properties(interactions_reclamation PROPERTIES LABELS "interactions;blight")
+add_executable(crucible_reclamation_allocation_tests AllocationTests.cpp)
+target_link_libraries(crucible_reclamation_allocation_tests PRIVATE Crucible::Interactions Crucible::Blight)
+add_test(NAME interactions_reclamation_allocations COMMAND crucible_reclamation_allocation_tests)
+set_tests_properties(interactions_reclamation_allocations PROPERTIES LABELS "interactions;blight")

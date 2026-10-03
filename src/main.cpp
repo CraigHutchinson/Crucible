@@ -1,6 +1,7 @@
 #include <crucible/simulation.hpp>
 
 #include <array>
+#include <algorithm>
 #include <iostream>
 #include <fstream>
 #include <iomanip>
@@ -14,6 +15,23 @@
 #include <crucible/presentation/ScenarioSnapshot.hpp>
 
 namespace {
+bool HasEqualState(const crucible::presentation::ScenarioSnapshot& left,
+                   const crucible::presentation::ScenarioSnapshot& right) {
+    const auto a = left.GetInfo(), b = right.GetInfo();
+    if (!a || !b || a->completed_tick != b->completed_tick || a->biomass != b->biomass ||
+        a->grid.columns != b->grid.columns || a->grid.rows != b->grid.rows ||
+        a->grid.cell_size != b->grid.cell_size || a->samples != b->samples ||
+        a->fields != b->fields || a->cells != b->cells) return false;
+    return std::ranges::equal(left.GetSamples(), right.GetSamples(), [](const auto& x, const auto& y) {
+            return x.id == y.id && x.position.x == y.position.x && x.position.y == y.position.y &&
+                x.velocity.x == y.velocity.x && x.velocity.y == y.velocity.y;
+        }) && std::ranges::equal(left.GetFields(), right.GetFields(), [](const auto& x, const auto& y) {
+            return x.kind == y.kind && x.slot == y.slot && x.center.x == y.center.x && x.center.y == y.center.y &&
+                x.radius == y.radius && x.strength == y.strength;
+        }) && std::ranges::equal(left.GetBlight(), right.GetBlight()) &&
+        std::ranges::equal(left.GetStocks(), right.GetStocks());
+}
+
 void ExportSvg(const crucible::presentation::ScenarioSnapshot& snapshot, const char* path) {
     const auto info = snapshot.GetInfo();
     if (!info) throw std::runtime_error("Cannot export an uncaptured snapshot");
@@ -52,19 +70,29 @@ void ExportSvg(const crucible::presentation::ScenarioSnapshot& snapshot, const c
     output << "</g>\n<text x=\"24\" y=\"493\" fill=\"#c6d9ea\" font-family=\"sans-serif\" font-size=\"15\">"
         << "Cyan: " << info->samples << " nanite samples | red: Blight | ring: active radial field"
         << "</text>\n<text x=\"24\" y=\"513\" fill=\"#8199ae\" font-family=\"sans-serif\" font-size=\"12\">"
-        << "Planar prototype / downwards +Y / no resource consumption, terrain or mission logic yet</text>\n</svg>\n";
+        << "Planar prototype / downwards +Y / ";
+    if (info->biomass) {
+        const auto ledger = *info->biomass;
+        output << "stock " << ledger.remaining_stock << " + mobile " << ledger.mobile_mass
+            << " + reserve " << ledger.reserve << " = initial " << ledger.initial_total;
+    } else {
+        output << "no resource consumption, terrain or mission logic yet";
+    }
+    output << "</text>\n</svg>\n";
     output.flush();
     if (!output) throw std::runtime_error("SVG write failed");
 }
 
-void RunScenario(const char* export_path) {
+void RunScenario(const char* export_path, std::optional<crucible::ResourceSettings> resources) {
     using namespace crucible;
     using runtime::HeadlessSession;
-    const Simulation::ScenarioOptions options{{64, 32, 1.0F}, 2, SteeringSettings{}};
+    const Simulation::ScenarioOptions options{{64, 32, 1.0F}, 2, SteeringSettings{}, resources};
     Simulation scenario{2048, options};
     HeadlessSession session{scenario, {8, 8}};
     runtime::ClockDriver clock{session};
     presentation::ScenarioSnapshot snapshot{2048, 2, 2048};
+    if (!snapshot.TryCapture(scenario)) throw std::runtime_error("Initial capture failed");
+    const auto initial_ledger = snapshot.GetInfo()->biomass;
     const std::array paint{
         FieldEdit{FieldEditKind::set, 0, {24, 16}, 20, 4},
         FieldEdit{FieldEditKind::set, 1, {48, 8}, 8, -2}};
@@ -86,37 +114,52 @@ void RunScenario(const char* export_path) {
 
     Simulation replayed{2048, options};
     HeadlessSession replay{replayed, {8, 8}};
+    presentation::ScenarioSnapshot replay_snapshot{2048, 2, 2048};
     if (replay.TryReplay(session.GetTrace(), 20).status != HeadlessSession::StepStatus::advanced ||
-        replayed.checksum() != scenario.checksum() ||
-        replayed.GetBlightInfectedCount() != scenario.GetBlightInfectedCount() ||
-        replayed.GetOccupiedCellCount() != scenario.GetOccupiedCellCount())
+        !snapshot.TryCapture(scenario) || !replay_snapshot.TryCapture(replayed) ||
+        !HasEqualState(snapshot, replay_snapshot))
         throw std::runtime_error("Scenario replay diverged");
     const auto neighbors = scenario.TryCountNeighbors({32, 16}, 3);
     if (!neighbors) throw std::runtime_error("Scenario neighbor query failed");
-    if (!snapshot.TryCapture(scenario)) throw std::runtime_error("Snapshot capture failed");
     if (export_path) ExportSvg(snapshot, export_path);
     const auto summary = clock.GetSummary();
     clock.Close();
-    std::cout << "Crucible phase2 scenario: entities=2048 ticks=20 commands=" << session.GetTrace().size()
+    std::cout << "Crucible " << (resources ? "reclamation" : "phase2")
+              << " scenario: entities=2048 ticks=20 commands=" << session.GetTrace().size()
               << " occupied_cells=" << scenario.GetOccupiedCellCount()
               << " nearby=" << *neighbors << " blight=" << scenario.GetBlightInfectedCount()
               << " captured_samples=" << snapshot.GetSamples().size()
               << " completed_tick=" << summary.completed_tick
               << " discarded_ns=" << summary.discarded_scaled_nanoseconds / 60
-              << " replay=checksum-and-counts\n";
+              << " replay=full-state\n";
+    if (const auto ledger = snapshot.GetInfo()->biomass) {
+        std::cout << "Biomass: initial=" << initial_ledger->initial_total << " stock=" << ledger->remaining_stock
+                  << " mobile=" << ledger->mobile_mass << " reserve=" << ledger->reserve
+                  << " harvested=" << ledger->harvested << " work_actions=" << ledger->work_actions
+                  << " conserved=" << (ledger->initial_total == ledger->remaining_stock + ledger->mobile_mass + ledger->reserve)
+                  << '\n';
+    }
 }
 }
 
 int main(int argc, char** argv) {
     try {
         const char* export_path = nullptr;
-        if (argc == 3 && std::string_view{argv[1]} == "--export-svg") export_path = argv[2];
-        else if (argc != 1) throw std::invalid_argument("Usage: crucible [--export-svg path.svg]");
+        std::optional<crucible::ResourceSettings> resources;
+        int first_option = 1;
+        if (argc > 1 && std::string_view{argv[1]} == "--reclamation") {
+            resources = crucible::ResourceSettings{};
+            first_option = 2;
+        }
+        if (argc == first_option + 2 && std::string_view{argv[first_option]} == "--export-svg")
+            export_path = argv[first_option + 1];
+        else if (argc != first_option)
+            throw std::invalid_argument("Usage: crucible [--reclamation] [--export-svg path.svg]");
         crucible::Simulation simulation{150'000};
         crucible::runtime::run_ticks(simulation, 60);
         std::cout << "Crucible headless ECS foundation: 150000 entities, 60 ticks, checksum="
                   << simulation.checksum() << '\n';
-        RunScenario(export_path);
+        RunScenario(export_path, resources);
     } catch (const std::exception& error) {
         std::cerr << error.what() << '\n';
         return 1;

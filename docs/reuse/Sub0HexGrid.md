@@ -1,12 +1,13 @@
 # Sub0HexGrid: standalone groundwork and adoption specification
 
-Status: H2 delivered upstream; Crucible adoption pending, updated 2026-10-03.
+Status: H2 delivered upstream; Crucible consumed by phase 3, updated 2026-10-03.
 Current inspected upstream main: `aaae5c2fc5731a23db94fa947bbb0182d0ea69fd`.
 [H2 delivery](https://github.com/CraigHutchinson/Sub0HexGrid/blob/aaae5c2fc5731a23db94fa947bbb0182d0ea69fd/docs/phases/h2-delivery.md)
 and [PR 4](https://github.com/CraigHutchinson/Sub0HexGrid/pull/4) record checked finite
 regions, conservative complete candidates, slices/cursors, strict package consumers
-and supported platform CI. [Phase 3 P3-02](../phases/phase3.md) now owns the actual
-Crucible receiving proof; no dependency pin or production migration has been made.
+and supported platform CI. [Phase 3 P3-02](../phases/phase3.md) records the actual
+Crucible receiving proof delivered through the pinned spatial consumer and
+[combined evidence](../workstreams/integration/phase3-validation.md).
 Hierarchy alternatives are a research programme, not a selected production structure.
 
 Initialization history: the user supplied the existing empty
@@ -14,14 +15,14 @@ Initialization history: the user supplied the existing empty
 requirements, architecture and initial code groundwork. H0 architecture is 9a4e604;
 H1 kernel is e9d4231, reviewed/validated locally and delivered through
 [PR 1](https://github.com/CraigHutchinson/Sub0HexGrid/pull/1). No Crucible dependency pin
-or migration has been added. Catalog entry: [R05](README.md).
+or migration was added during H1. Catalog entry: [R05](README.md).
 
 The first library increment supplies checked axial neighbors, wide distance,
 validated pointy-top world mapping, an example, independent numeric fixtures and
 a relocated CMake package consumer. MSVC Debug/Release and WSL GCC 15 ASan/UBSan
 each pass 3/3 tests. Detailed requirements/architecture and evidence now live in
-the standalone project. That historical H1 limitation is resolved by H2; the remaining
-gate is Crucible's exact query, capacity/lifetime and integrated replay evidence.
+the standalone project. That historical H1 limitation is resolved by H2; phase 3 supplies
+Crucible's exact query, capacity/lifetime and integrated replay evidence.
 
 ## H2 receiving constraints
 
@@ -46,7 +47,7 @@ first, possible near-uniform spherical subdivision later. Neither is implemented
 ## Purpose and receiving consumer
 
 Provide product-neutral hexagonal coordinates, topology and world-space geometry
-for C++ consumers. Crucible's spatial module is the first proposed receiving caller:
+for C++ consumers. Crucible's spatial module is the first receiving caller:
 it assigns swarm positions to cells and enumerates candidate cells for complete
 radius queries. Stable sample IDs, bin storage, neighbor result ownership and swarm
 behavior remain Crucible responsibilities in the initial extraction boundary.

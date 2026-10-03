@@ -37,3 +37,17 @@ Base: `7692049a2c3b596f35ab27d159efdc215b52f84e`; branch
 
 Implementation worktrees/branches and A/B write claims are created explicitly at
 dispatch from the planning merge. These read-only assignments do not imply code dispatch.
+
+## Phase 3 implementation dispatch, 2026-10-03
+
+User authorized delegation, execution, push and merge. Plan PR 6 merged at
+`837a38002bbc189e7fe319b069a1a6cbba9f28c4` after exact-head CI success.
+Worker starting commit `71c14c0` is contained in that merge; architect merged main
+before integration. cpp-write/cpp-review recovered from CraigHutchinson/Agentic-CPP;
+workers load the full skills and four shared references before C++ authoring.
+
+| Owner | State | Branch / exclusive paths / CPU | Handoff |
+|---|---|---|---|
+| Architect | Implementation complete; publication gates | phase3-reclamation-hex; contracts, Simulation/main/presentation, integration tests, root wiring/pins/CI and central docs; configure/build CPU reserved | [Combined delivery](workstreams/integration/phase3-validation.md); Debug/Release 18/18, local adjusted sanitizer 18 tests pass; CPU released |
+| resource_package / P3-01 | Complete handoff and peer review | phase3-resource worktree, base 71c14c0 + contracts 7f0e75c; blight/interactions include/src/tests/docs; no CPU claim | 399e945 integrated b4c3dff; [provider](workstreams/interactions/validation.md) |
+| hex_adoption_package / P3-02 | Complete handoff and consumer review | phase3-spatial worktree, base 71c14c0; spatial include/src/tests/docs; no CPU claim | 22a77d8 integrated ef1e877; [spatial](workstreams/spatial/validation.md), focused GCC 3/3 |

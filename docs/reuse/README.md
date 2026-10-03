@@ -19,8 +19,8 @@ the guarantees actually checked. No upstream edits were made during this catalog
 | R02: typed delivery | Sub0Pub v2, stack round-trip consumer | Improve callback lifetime examples and bounded ingress integration when a real input adapter arrives | Preserve explicit disconnect/drain ownership; the pinned audit is evidence, not a claim that every finding remains at current HEAD |
 | R03: execution and joining | Sub0Pipeline, sequential stack consumer | Feed concrete bounded executor/join/cancellation requirements upstream during W7; retain game phase policy locally | Exact-version join/failure fixtures before changing pins; no new concurrency work in phase 2 |
 | R04: compact observation | Sub0Log, stack decoded-record consumer | Use consumed runtime summaries to improve logging adapters, teardown examples and round-trip tests | Phase 2 summary first; logger adapter follows an actual caller and bounded storage/lifecycle evidence |
-| R05: hex topology and geometry | [Sub0HexGrid H2](Sub0HexGrid.md), finite regions/complete candidates delivered; Crucible adoption pending | Phase 3 P3-02 proves physical/query compatibility and contributes HX-07 receiving fixtures; hierarchy is separate research | Upstream PR 4 delivers package/numerical evidence; Crucible complete-query/lifetime/replay gates before production migration |
-| R06: spatial bins and radius traversal | Crucible::Spatial, integrated rectangular implementation | Keep entity binning local for now; identify whether a geometry library can support it without owning SampleId/ECS or gameplay | Compare complete queries to brute force for the chosen topology; second demonstrated consumer before extracting a generic binning library |
+| R05: hex topology and geometry | [Sub0HexGrid H2](Sub0HexGrid.md), finite regions/complete candidates delivered; consumed by Crucible spatial Grid | Phase 3 P3-02 preserves physical/query compatibility and delivers HX-07 receiving fixtures; hierarchy is separate research | Upstream PR 4 delivers package/numerical evidence; [Phase 3 evidence](../workstreams/integration/phase3-validation.md) records complete-query/lifetime/replay promotion gates |
+| R06: spatial bins and radius traversal | Crucible::Spatial, integrated hex geometry with private rectangular compatibility | Keep entity binning local for now; identify whether a geometry library can support it without owning SampleId/ECS or gameplay | Compare complete queries to brute force for the chosen topology; second demonstrated consumer before extracting a generic binning library |
 | R07: bounded input/trace/state exchange | Crucible::Runtime and planned owned read model | Record patterns that may improve Pub/Pipeline or justify later extraction; avoid a generic runtime framework | Concrete consumers and bounded lifetime/capacity tests; phase 2 only adds the owned copy it uses, not an unconsumed exchange |
 | R08: steering, Blight and resource rules | Crucible domain modules | Keep gameplay policy local; feed any general storage/math defect upstream with a minimal reproduction | Product-neutral boundary and independent reusable consumer required before extraction; game tuning remains in Crucible |
 | R09: paging/cache foundations | Sub0MemPage/Sub0TieredCache, future evaluation | Reuse existing libraries if a measured world/data residency requirement appears; simulation can supply real workloads and feedback | No current Crucible consumer or demonstrated residency bottleneck; postpone integration until measured need |
@@ -70,3 +70,14 @@ R04 remains deferred because summary values do not require a logger adapter. R08
 separation rule is game policy, so it is deliberately retained in Crucible. R01's fixed
 population and 24-bit guard remain relevant before any future structural resource work.
 No measurement or upstream optimization is claimed from the functional fixtures.
+
+## Phase 3 disposition
+
+R05 is consumed at aaae5c2fc5731a23db94fa947bbb0182d0ea69fd. Normal-domain
+assignment/candidates reuse H2; IDs, bin storage and exact point filtering remain
+R06 local policy. Private startup/domain/environment compatibility and exact-scan
+query fallback preserve the previous contract. The benefit is shared checked geometry
+and reproducible receiving evidence, with no speedup claim. R08 finite reclamation
+remains local game policy. R07 owned frames now carry stock and ledger without a
+concurrent exchange. See [delivery and HX-07 handoff](../workstreams/integration/phase3-validation.md).
+No upstream source edit or hierarchy selection was made.

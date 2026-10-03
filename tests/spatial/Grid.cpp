@@ -6,6 +6,8 @@
 #include <iostream>
 #include <limits>
 #include <stdexcept>
+#include <set>
+#include <numbers>
 #include <vector>
 
 namespace {
@@ -51,7 +53,16 @@ int main() {
     samples.push_back({{50002}, {14, 0}});
     samples.push_back({{50003}, {0, 10}});
     Check(grid.TryRebuild(samples), "dense rectangular rebuild rejected");
-    Check(grid.GetOccupiedCellCount() == 35, "rectangular fixture did not populate every cell");
+    // Occupancy is a representation diagnostic; query identities still use the independent scan.
+    const auto layout = sub0hexgrid::PointyLayout::TryCreate(2.0 / std::numbers::sqrt3);
+    std::set<std::pair<std::int32_t, std::int32_t>> occupied_cells;
+    for (const auto& sample : samples) {
+        const auto cell = layout->TryCellAt({std::clamp(sample.position.x, 0.0F, 14.0F),
+                                           std::clamp(sample.position.y, 0.0F, 10.0F)});
+        Check(cell.has_value(), "fixture mapping rejected");
+        occupied_cells.emplace(cell->q, cell->r);
+    }
+    Check(grid.GetOccupiedCellCount() == occupied_cells.size(), "hex occupancy differs from mapped fixture");
     for (const auto center : {Position{6, 4}, Position{0, 0}, Position{14, 10}, Position{14, 0},
                               Position{0, 10}, Position{-9, -3}, Position{50, 50}, Position{3.1F, 7.7F}})
         for (float radius : {0.0F, 0.1F, 1.0F, 2.0F, 2.01F, 5.3F, 17.0F, std::numeric_limits<float>::max()})
