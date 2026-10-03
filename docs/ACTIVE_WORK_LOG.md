@@ -75,3 +75,20 @@ headless Release and normal Linux sanitizer CI passed. Local main matched
 origin/main cleanly; reviewed tree matched published tree. Follow-ups and next
 ownership recommendation are in [the completed review](sprint-reviews/phase-04.md).
 Worker branches/worktrees and local build/visual/FMA receiving artifacts remain intact.
+
+## Interim rendering spike, 2026-10-03
+
+Base1d47fa6. User explicitly requested a bounded rendering architecture spike.
+Architect owns spikes/rendering, root option/presets/CI and spike decision/evidence;
+configure/build CPU reserved. Consolidate this small experiment under one owner;
+retain production ScenePainter/Camera/Inspector without gameplay changes. Test a
+startup-bounded owned32-byte instance candidate against the actual SDL world pass,
+retained-frame isolation, camera-only redraw and advisory extraction/packing costs.
+No GPU/console/device result is inferred from software rendering. Carry P04-F01/02/03
+and P02-F02 unchanged; real GPU upload/fence/shader acceptance remains open.
+
+Experiment implemented and independently reviewed by hex_adoption_package (read-only).
+Review fixed moved-from observer ownership, sRGB labeling and both half extents.
+Five Release process measurements and consumed fixtures are retained in
+[the spike report](../spikes/rendering/README.md). Publication follows reviewed-tree
+and exact-head CI gates; this bounded interim experiment does not dispatch phase 5.

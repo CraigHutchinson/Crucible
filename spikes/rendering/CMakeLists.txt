@@ -1,0 +1,6 @@
+add_executable(crucible_render_spike main.cpp WorldPacket.cpp PacketPainter.cpp)
+target_link_libraries(crucible_render_spike PRIVATE Crucible::Core Crucible::Presentation Crucible::ScenePainter SDL3::SDL3)
+if(BUILD_TESTING)
+    add_test(NAME rendering_instance_spike COMMAND crucible_render_spike --verify)
+    set_tests_properties(rendering_instance_spike PROPERTIES LABELS "presentation;spike")
+endif()

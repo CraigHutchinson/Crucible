@@ -24,7 +24,7 @@ jobs:
       - name: Linux window development dependencies
         if: runner.os == 'Linux'
         run: sudo apt-get update && sudo apt-get install -y libx11-dev libxext-dev libxrandr-dev libxcursor-dev libxi-dev libxfixes-dev libxss-dev libxtst-dev xvfb xauth
-      - run: cmake --preset ${{ env.BUILD_PRESET }}
+      - run: cmake --preset ${{ env.BUILD_PRESET }} -DCRUCIBLE_BUILD_RENDER_SPIKE=ON
       - run: cmake --build --preset ${{ env.BUILD_PRESET }} --parallel 4
       - run: ctest --preset ${{ env.BUILD_PRESET }}
       - name: Native X11 window event smoke
@@ -46,6 +46,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - run: sudo apt-get update && sudo apt-get install -y libx11-dev libxext-dev libxrandr-dev libxcursor-dev libxi-dev libxfixes-dev libxss-dev libxtst-dev
-      - run: cmake --preset desktop-sanitize
+      - run: cmake --preset desktop-sanitize -DCRUCIBLE_BUILD_RENDER_SPIKE=ON
       - run: cmake --build --preset desktop-sanitize --parallel 4
       - run: ctest --preset desktop-sanitize
