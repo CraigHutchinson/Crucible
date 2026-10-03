@@ -18,6 +18,7 @@ workers own disjoint paths. Existing source/build/capture artifacts are retained
 |---|---|---|
 | Local execution service recovered | Fetch remote main into a new clean sprint branch; preserve old Phase 6 source/builds | Prior interrupted run remains unconfirmed |
 | Test variant would fork renderer implementation | Link-time test wrappers consume the unchanged production archive | Linux fixture scope; actual hardware faults remain open |
+| Python subprocess test hides its child from direct-command mode repair | Explicit CTest REQUIRED_FILES prerequisite, owned native repair and process-only loss probe | No arbitrary argv or external tool chmod |
 | Startup has no seed API | Freeze timing-only three-case comparison | No initial-scenario robustness or human-balance claim |
 
 ## Verification and useful artifacts

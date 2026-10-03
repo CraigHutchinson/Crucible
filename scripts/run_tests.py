@@ -1,6 +1,7 @@
 """Run configured CTest cases after repairing restored, owned native test artifacts.
 
-Only commands selected by CTest beneath this repository's build directory qualify.
+Only selected CTest commands and explicitly declared native prerequisites beneath
+this repository's build directory qualify.
 Source files, symlinks, external tools and non-native files keep their original modes.
 Test failures propagate; the runner never retries a suite automatically.
 """
@@ -16,17 +17,26 @@ import sys
 
 
 def repair_permissions(tests: list[dict], artifact_root: Path) -> list[Path]:
-    """Restore execute bits from read bits for owned configured native commands only."""
+    """Restore execute bits from read bits for owned configured native commands/prerequisites only."""
     if os.name != "posix":
         return []
     root = artifact_root.resolve()
     repaired = []
     seen = set()
+    candidates = []
     for test in tests:
         command = test.get("command", [])
-        if not command:
-            continue
-        path = Path(command[0])
+        if command:
+            candidates.append(command[0])
+        # CTest declares native subprocess prerequisites explicitly; arbitrary
+        # argv paths are never interpreted as executable artifacts.
+        for prop in test.get("properties", []):
+            if prop.get("name") == "REQUIRED_FILES":
+                value = prop.get("value", [])
+                if isinstance(value, list):
+                    candidates.extend(value)
+    for candidate in candidates:
+        path = Path(candidate)
         if not path.is_absolute() or path.is_symlink():
             continue
         resolved = path.resolve()

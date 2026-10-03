@@ -71,7 +71,11 @@ full-state tests remain enabled without reduced checks.
    terminal production-painter states plus a plot derived from retained raw results.
    Preserve source revision/dirty status, commands, ticks, tool/device/shader hashes
    and exact reproduction. A picture never proves failure cleanup or hardware speed.
-6. Publish reviewed remote source checkpoints before long acceptance. CI runs on
+6. Python subprocess tests declare native child prerequisites through CTest
+   `REQUIRED_FILES`; permission repair considers only those explicit paths and
+   direct commands, never arbitrary arguments. Verify a deliberate process-only
+   executable-loss probe before long runs.
+7. Publish reviewed remote source checkpoints before long acceptance. CI runs on
    PRs and main pushes; cancel obsolete runs for the same PR, avoiding duplicate
    branch-push/PR builds. Preserve successful receipts; unknown interrupted runs
    are not counted green. Merge the completed increment and verify local/remote main.

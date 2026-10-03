@@ -38,3 +38,8 @@ if(CRUCIBLE_BUILD_GPU_RECEIVER AND CMAKE_SYSTEM_NAME STREQUAL "Linux")
     set_tests_properties(gpu_fault_receiving gpu_fault_process PROPERTIES
         LABELS "gpu;fault;lifetime" TIMEOUT 120)
 endif()
+
+if(CRUCIBLE_BUILD_GPU_RECEIVER AND CMAKE_SYSTEM_NAME STREQUAL "Linux")
+    set_tests_properties(gpu_fault_process PROPERTIES
+        REQUIRED_FILES $<TARGET_FILE:crucible_gpu_fault_test>)
+endif()
