@@ -1,7 +1,7 @@
 # Phase 7 review: controlled GPU failures and frozen mission timing
 
-Status: remote increment merged and hosted acceptance complete; local recovery
-P07-F01 remains open, 2026-10-03. Architect accountable.
+Status: Phase 7 merged; P07-F01 recovery verified and included in this follow-through
+publication, 2026-10-03. Architect accountable.
 Dispatch baseline 0767a3033a84417c19bde9a4ff46dca0ce118f99.
 [Plan](../phases/phase7.md), [receiving](../workstreams/integration/phase7-validation.md),
 [next proposal](../phases/phase8.md).
@@ -95,7 +95,7 @@ inspection cues. Audit actual public device/tool availability before backend spl
 | P02-F02 | Open; runtime/scheduling needs actual delayed/concurrent consumer before exchange/leases |
 | P01-F03/F04/F05 | Retain; simulation/scheduling freezes structural resource, fusion/relay and parallel-scale workload before implementation |
 | P02-F03 / P03-F01 / HX-07 | Retain; spatial/world owner receives declared terrain/topology/traversal and exact geometry gates before pin changes |
-| P07-F01 | Open; integration recovers original local evidence bytes/hashes and reconciles retained source trees after environment_offline; local baseline verification remains required before dispatch |
+| P07-F01 | Recovery verified; original bytes/hashes, independently reopened hosted ZIP and local baseline reconciliation are recorded in the recovery receipt below; publish this follow-through before dispatch |
 
 ## Publication
 
@@ -116,3 +116,34 @@ clean; fresh ZIP contents were not reopened while offline. Original local visual
 were inspected before disconnect. Local baseline and original byte/hash recovery
 remain explicitly P07-F01, preventing next dispatch; no cleanup or regeneration.
 Documentation closeout records these actual results without altering C++/CI/pins.
+
+## Recovery and infrastructure follow-through
+
+P07-F01 original-byte/hash and local-baseline receiving verified2026-10-03.
+[Recovery receipt](../workstreams/integration/phase7-evidence/recovery.json) records
+preserved commit7240f97, merged baseline2e0f3ec, original11PNG publication and
+independently reopened hosted ZIP. Nine hosted state images match original pixels;
+root inspected them again. Historical offline statements above describe closeout
+time; this received recovery supersedes their open status upon merge.
+
+The user requested development/test system/hardware prerequisites and separate
+hardware-capable sessions where required. The new
+[backlog](../workstreams/integration/hardware-receiving-backlog.md) makes the
+capability audit and session handoff explicit; a same-machine agent is not extra
+hardware. Shader/backend, physical full-frame/failure, iOS and human gates retain
+their existing stable IDs. Phase8 implementation still requires capability audit.
+
+The follow-through adds development/runtime canaries and selected-test capability
+checks to CI and the test runner, plus HW-01..HW-07 scoped backlog packages.
+Local development canary passed. Local sanitizer canary blocked on LeakSanitizer
+/proc access; local X11/Vulkan child probes blocked namespace connectivity. These
+are preserved failure receipts, not acceptance. Python fixture and runner checks
+cover scope selection and failure propagation; hosted exact-head CI is required.
+Original state captures remain this increment's visual evidence: the infrastructure
+change produces diagnostic receipts rather than a new gameplay image.
+
+Public metadata receipts omit full build-cache/environment dumps. Original metadata
+bytes remain in the retained local recovery checkpoint; reduced receipts record
+their SHA256 and retain source/input/capture hashes. Automatic approval review
+rejected publishing the two full environment dumps; reduced provenance is the
+safer public evidence package. Original PNG bytes remain unchanged.

@@ -1,0 +1,43 @@
+{
+  "source_commit": "1712c89a3be156eadd824c4008b3472c71ebf9a5",
+  "committed_source_tree": "106e12febc58714ba81a0c05242b469a231ac803",
+  "source_dirty": false,
+  "logical_canvas": [
+    1280,
+    720
+  ],
+  "capture_tools": {
+    "python": "3.12.14",
+    "pillow": "12.3.0",
+    "matplotlib": "3.10.8"
+  },
+  "backend": "production software ScenePainter",
+  "capture_sha256": {
+    "cadence30-start0-terminal.bmp": "ff6df2c8984706a6a2837828aef928e1438650d760e34921c65aba077c18bce1",
+    "cadence120-start0-terminal.bmp": "8853bc0858ad8d17a25205fc92c4775a5943882b3d20ec2c7303580af36828e6",
+    "results.json": "f4f5702e06c9b19dd0357cf7fd978c6f82deb00555fe6adfa0a5bde93f82c3d7",
+    "cadence60-start60-terminal.png": "033201fd45986321390af32716ad5a6d19d35783c85227609766e6a1046709cd",
+    "cadence30-start0-tick60.bmp": "9707245788650570eeffa221312d892c9596cba5c491a82250088d27a2010845",
+    "cadence120-start0-tick60.bmp": "3e3413af185c27d1a7d060411a084a4ef70e088b5c9f69e8d3168f930864244c",
+    "cadence60-start60-terminal.bmp": "ae81e1080294afe7264191c1c69a235bff2d7a60b0321baedad35847fa3464d7",
+    "cadence120-start0-terminal.png": "57669069a0be17757f777438f1fd8ff28e365a5ac3ec820f6579a5a6f6416ec0",
+    "cadence30-start0-terminal.png": "c6c3e18ae63e7568d8229c9dde679317404250698d3eef627bd0a7b88f810f36",
+    "cadence30-start0-tick60.png": "468ba12645c2372d60516d87879357e3b9134f423244ffa9e14e6eddf8cc3f33",
+    "cadence60-start60-tick60.bmp": "a1008f04ef735846799339d34435faf68e234f1c0653fb61982549fb23436452",
+    "cadence120-start0-tick60.png": "ec73dc18a4b11cd85b94086e32042e5d4d04ab6ebb55a19851f0ba65681332ce",
+    "cadence60-start60-tick60.png": "8a221ce7dae304cc0868d8cd6bc2884a2be0ca4153ad7c2c2a237b0a1fc64664",
+    "timing-comparison.png": "751709b58d91e43d0ecdea51ff896404e5c5bc27231b1caccf34d8119a30545f"
+  },
+  "dependency_pins": "set(CRUCIBLE_SUB0PIPELINE_REVISION f6f54c623908649e8daac3613545062cf08b3822)\nset(CRUCIBLE_SUB0ECS_REVISION 8391f81fd74a016564b4711b074eb286d3c5e14b)\nset(CRUCIBLE_SUB0LOG_REVISION 85498bb7b735f8c7e43653955be582ee903c653f)\nset(CRUCIBLE_SUB0PUB_REVISION 2cd3daf15e44c9429fd2cfbc4ca2fcb723b77ced)\nset(CRUCIBLE_SUB0HEXGRID_REVISION aaae5c2fc5731a23db94fa947bbb0182d0ea69fd)\nset(CRUCIBLE_SDL_REVISION 829a65d769d935c4852f8159e964312c0957260a)\n",
+  "scope": "Actual diagnostic outputs; injected faults/retirement are not hardware device-loss or performance evidence. Automated mission replay is not human validation.",
+  "input_sha256": {
+    "crucible_mission_sensitivity": "14e080a118224e045963a94169acdb155157def09ba12e0b851ce90b11626bf6",
+    "mission_sensitivity.cpp": "d15858b258d2f0de96ae9c870599055ae14ccd8f253e7e78d6b099c83b245609"
+  },
+  "publication": {
+    "kind": "reduced public provenance receipt",
+    "original_metadata_sha256": "2c0bc82a7dd88a7ffd8cbe177c49b2f484f1e16d7e75eb50bc4847b6b01a0aaa",
+    "original_retained_in": "phase7-original-evidence-recovery local checkpoint",
+    "omitted": "Full CMake cache, filesystem paths, environment/tool output, device inventory and machine identity are retained locally; these are excluded from public evidence."
+  }
+}

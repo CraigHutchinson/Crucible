@@ -15,6 +15,8 @@ import stat
 import subprocess
 import sys
 
+from check_prerequisites import check_prerequisites
+
 
 def repair_permissions(tests: list[dict], artifact_root: Path) -> list[Path]:
     """Restore execute bits from read bits for owned configured native commands/prerequisites only."""
@@ -67,16 +69,40 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--preset", required=True)
     parser.add_argument("--ctest", default="ctest", help="CTest executable, when absent from PATH")
+    parser.add_argument("--prerequisite-build-dir", type=Path,
+                        help="Explicit configured build directory for custom/UserPresets")
+    parser.add_argument("--prerequisite-report", type=Path)
+    parser.add_argument("--require-hardware", action="store_true")
     args, ctest_options = parser.parse_known_args()
     repo = Path(__file__).resolve().parents[1]
     command = [args.ctest, "--preset", args.preset, *ctest_options]
     try:
-        if os.name == "posix":
-            inventory = subprocess.run(command + ["--show-only=json-v1"], cwd=repo,
-                                       check=True, capture_output=True, text=True)
-            tests = json.loads(inventory.stdout)["tests"]
-            for path in repair_permissions(tests, repo / "build"):
-                print(f"Restored test executable permission: {path.relative_to(repo)}", flush=True)
+        # Listing is inspection, not test execution or device acceptance.
+        if any(option == "-N" or option.startswith("--show-only") for option in ctest_options):
+            return subprocess.run(command, cwd=repo).returncode
+        inventory = subprocess.run(command + ["--show-only=json-v1"], cwd=repo,
+                                   check=True, capture_output=True, text=True)
+        tests = json.loads(inventory.stdout)["tests"]
+        for path in repair_permissions(tests, repo / "build"):
+            print(f"Restored test executable permission: {path.relative_to(repo)}", flush=True)
+        build_dir = args.prerequisite_build_dir
+        if build_dir is None:
+            presets = json.loads((repo / "CMakePresets.json").read_text())
+            preset = next((item for item in presets["testPresets"] if item["name"] == args.preset), None)
+            if preset is None or not preset.get("configurePreset"):
+                raise ValueError("Custom test preset requires --prerequisite-build-dir")
+            # Repository presets share base's build/<configurePreset> layout.
+            build_dir = repo / "build" / preset["configurePreset"]
+        receipt = check_prerequisites(build_dir, tests, stage="test",
+                                      require_hardware=args.require_hardware)
+        rendered = json.dumps(receipt, indent=2)
+        print(rendered, flush=True)
+        if args.prerequisite_report:
+            args.prerequisite_report.parent.mkdir(parents=True, exist_ok=True)
+            args.prerequisite_report.write_text(rendered + "\n")
+        if not receipt["ok"]:
+            print("Test prerequisites blocked execution; see receipt above.", file=sys.stderr)
+            return 1
         return subprocess.run(command, cwd=repo).returncode
     except subprocess.CalledProcessError as error:
         print(error.stdout or "", file=sys.stderr, end="")

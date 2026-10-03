@@ -14,7 +14,7 @@
     "url": "https://github.com/CraigHutchinson/Crucible/actions/runs/37144416481/artifacts/11281862369",
     "downloaded_reference": "file_0000000057408210bdb6bef911f6357a"
   },
-  "local_baseline_verified": false,
+  "local_baseline_verified": true,
   "local_recovery_gate": "P07-F01",
   "capture_scope": "Fresh hosted Release mission study and executing GPU retirement/production captures. Root inspected original local outputs before environment_offline; original bytes/hash recovery and final local publication remain open. Hosted artifact contents are not claimed visually re-inspected after download.",
   "acceptance": {
@@ -108,5 +108,9 @@
       "conclusion": "success"
     }
   ],
-  "zip_contents_independently_inspected": false
+  "zip_contents_independently_inspected": true,
+  "local_baseline_verified_at_closeout": false,
+  "zip_contents_independently_inspected_at_closeout": false,
+  "recovery_receipt": "phase7-evidence/recovery.json",
+  "recovery_status": "Verified; original Git evidence publication included in recovery increment"
 }

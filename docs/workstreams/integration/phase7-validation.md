@@ -164,3 +164,40 @@ merge identity, artifact and limits. Software Vulkan uses llvmpipe LLVM20.1.2;
 no physical-device, hardware-loss/hang/latency, performance or human result follows.
 Original local file/hash recovery, visual Git publication and checkout reconciliation
 remain P07-F01 and must precede the next implementation dispatch.
+
+## Recovery received, 2026-10-03
+
+Execution recovered. Original files were preserved in local commit7240f97/tag
+phase7-original-evidence-recovery before a new isolated checkout was created from
+verified merged main2e0f3ec. Local main fast-forwarded to the identical remote
+baseline without changing old worker branches/builds. All original raw/output and
+executable/source/shader hashes match metadata, and receiving source inputs match
+merged main. No source or capture was regenerated.
+
+Original11 PNGs (nine states plus two plots), results/events, metadata and local
+logs are now retained with this Git-backed recovery increment. The hosted ZIP was
+reopened: size/digest and all capture output hashes verify; checkout19fa1fd matches
+its metadata. All nine hosted state images are pixel-identical to the originals
+and were visually inspected again. Hosted timing results match297/271/449 and
+10/3/7 edits. This resolves the original P07-F01 receiving gap upon publication.
+See [recovery receipt](phase7-evidence/recovery.json) and
+[pixel comparison](phase7-evidence/hosted-image-comparison.json).
+
+![Frozen timing observations](../../concepts/exports/phase7-mission-timing-comparison.png)
+
+[Actual retirement order](../../concepts/exports/phase7-gpu-retirement-events.png),
+[red](../../concepts/exports/phase7-gpu-retained-0.png),
+[green](../../concepts/exports/phase7-gpu-retained-1.png),
+[blue](../../concepts/exports/phase7-gpu-retained-2.png),
+[terminal mission](../../concepts/exports/phase7-mission-cadence120-start0-terminal.png),
+[delayed-start tick60](../../concepts/exports/phase7-mission-cadence60-start60-tick60.png).
+
+Prerequisite infrastructure now follows the
+[hardware backlog](hardware-receiving-backlog.md). Capability checks precede CPU or
+physical-device allocation; they cannot close the actual renderer/human gates.
+
+Public metadata receipts omit full build-cache/environment dumps. Original metadata
+bytes remain in the retained local recovery checkpoint; reduced receipts record
+their SHA256 and retain source/input/capture hashes. Automatic approval review
+rejected publishing the two full environment dumps; reduced provenance is the
+safer public evidence package. Original PNG bytes remain unchanged.
