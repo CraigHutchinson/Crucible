@@ -27,7 +27,7 @@ for explicit source registration and local test commands.
 
 Target: Crucible::Presentation. The [architecture](../../architecture.md) names its
 production consumer and input/output, capacity and lifetime contracts. Build links
-control dependency visibility, not tick scheduling. The owned copy is implemented; concurrent exchange and graphics are pending.
+control dependency visibility, not tick scheduling. The owned copy is implemented; the phase 4 concrete SDL painter and portable camera/tools now consume it. Concurrent exchange remains deferred.
 
 ## Acceptance and handoff
 
@@ -37,3 +37,9 @@ Run the preset build, stream CTest label and combined suite when integrated. Rep
 commands/results, platforms, changed paths/SHAs, production wiring, shared patch
 requests and unmet prerequisites. Follow [the task brief](../../work-breakdown.md).
 Completion requires both a real consumer and acceptance evidence.
+
+Phase 4 providers: [camera/input](camera-input.md), [drawing](drawing.md),
+[combined validation](../integration/phase4-validation.md), and
+[rendering decision](../../decisions/phase4-rendering.md). ScenePainter stays in the
+optional `Crucible::ScenePainter` target; Camera2D/FieldTool stay in portable
+`Crucible::Presentation`.

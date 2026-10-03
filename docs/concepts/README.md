@@ -52,3 +52,10 @@ production geometry and movement rules must agree before such terrain becomes pl
 [Phase 2 SVG and rendered preview](phase2-state.md) show a real owned tick-20
 simulation frame, with reproduction and visual validation. Keep it distinct from
 the generated concepts above: resource/fusion/mission behavior is still pending.
+
+[Phase 4 live SDL frame](exports/phase4-live-frame.png) is an actual software-rendered
+owned tick-60 frame, with 2048 samples, applied attract/repel fields and a dashed
+uncommitted preview. Reproduce it with `crucible_scene_painter_test output.bmp`
+after building a desktop preset. Its ledger is 10240 = 6439 stock + 2048 mobile +
+1753 reserve. The field controls change sample positions; no relay/fusion objective
+or performance claim is implied by this image.

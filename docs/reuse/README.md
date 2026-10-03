@@ -81,3 +81,14 @@ and reproducible receiving evidence, with no speedup claim. R08 finite reclamati
 remains local game policy. R07 owned frames now carry stock and ledger without a
 concurrent exchange. See [delivery and HX-07 handoff](../workstreams/integration/phase3-validation.md).
 No upstream source edit or hierarchy selection was made.
+
+## Phase 4 disposition
+
+R07 owned frame values now have live drawing/event consumers. Keep Camera2D,
+InspectorSession and FieldTool local: they encode the current fixed world/tool
+contract. SDL3 supplies the concrete platform/2D adapter with a pinned full revision;
+no new generic renderer interface or extracted framework is justified. The software
+pixel fixture and native-window event smoke exercise different boundaries. No
+upstream code defect or measured optimization was found; HX-07 and the H2 pin stay
+unchanged. A future GPU upload must establish resource retirement and a real
+concurrent reader before adding frame leases/exchange.

@@ -1,0 +1,4 @@
+add_executable(crucible_scene_painter_test ScenePainterTests.cpp)
+target_link_libraries(crucible_scene_painter_test PRIVATE Crucible::ScenePainter Crucible::Core SDL3::SDL3)
+add_test(NAME scene_painter_software COMMAND crucible_scene_painter_test)
+set_tests_properties(scene_painter_software PROPERTIES LABELS "presentation;desktop")

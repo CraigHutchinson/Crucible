@@ -17,3 +17,8 @@ add_executable(crucible_runtime_clock_tests ClockDriver.cpp)
 target_link_libraries(crucible_runtime_clock_tests PRIVATE Crucible::Runtime)
 add_test(NAME runtime_clock COMMAND crucible_runtime_clock_tests)
 set_tests_properties(runtime_clock PROPERTIES LABELS runtime)
+
+add_executable(crucible_inspector_tests InspectorSession.cpp)
+target_link_libraries(crucible_inspector_tests PRIVATE Crucible::Runtime Crucible::Presentation)
+add_test(NAME runtime_inspector COMMAND crucible_inspector_tests)
+set_tests_properties(runtime_inspector PROPERTIES LABELS "runtime;presentation")

@@ -47,6 +47,8 @@ public:
     void Resume() noexcept;
     /// Idempotently closes ingress, discards backlog and stops future boundaries.
     void Close();
+    /// Returns the latched lifecycle state without pumping time.
+    [[nodiscard]] constexpr Status GetStatus() const noexcept { return status_; }
     [[nodiscard]] Summary GetSummary() const;
 
 private:
