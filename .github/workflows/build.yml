@@ -76,28 +76,12 @@ jobs:
         run: |
           cmake --preset gpu-debug
           cmake --build --preset gpu-debug --target crucible_gpu_readback_test --parallel 4
-          xvfb-run -a python scripts/run_tests.py --preset gpu-debug -R '^gpu_instanced_readback
-        run: xvfb-run -a python scripts/capture_gpu_examples.py --executable build/gpu-release/crucible_gpu_receiver --vertex build/gpu-release/gpu-shaders/world.vert.spv --fragment build/gpu-release/gpu-shaders/world.frag.spv --output ${{ runner.temp }}/gpu-captures
-      - uses: actions/upload-artifact@v4
-        with:
-          name: gpu-readback-evidence
-          path: |
-            ${{ runner.temp }}/gpu-captures/
-            build/gpu-release/gpu-shader-toolchain.txt
- --no-tests=error
+          xvfb-run -a python scripts/run_tests.py --preset gpu-debug -R '^gpu_instanced_readback$' --no-tests=error
       - name: Actual receiver ASan/UBSan readback
         run: |
           cmake --preset gpu-sanitize
           cmake --build --preset gpu-sanitize --target crucible_gpu_readback_test --parallel 4
-          xvfb-run -a python scripts/run_tests.py --preset gpu-sanitize -R '^gpu_instanced_readback
-        run: xvfb-run -a python scripts/capture_gpu_examples.py --executable build/gpu-release/crucible_gpu_receiver --vertex build/gpu-release/gpu-shaders/world.vert.spv --fragment build/gpu-release/gpu-shaders/world.frag.spv --output ${{ runner.temp }}/gpu-captures
-      - uses: actions/upload-artifact@v4
-        with:
-          name: gpu-readback-evidence
-          path: |
-            ${{ runner.temp }}/gpu-captures/
-            build/gpu-release/gpu-shader-toolchain.txt
- --no-tests=error
+          xvfb-run -a python scripts/run_tests.py --preset gpu-sanitize -R '^gpu_instanced_readback$' --no-tests=error
       - name: Actual completed production-frame GPU captures
         run: xvfb-run -a python scripts/capture_gpu_examples.py --executable build/gpu-release/crucible_gpu_receiver --vertex build/gpu-release/gpu-shaders/world.vert.spv --fragment build/gpu-release/gpu-shaders/world.frag.spv --output ${{ runner.temp }}/gpu-captures
       - uses: actions/upload-artifact@v4
