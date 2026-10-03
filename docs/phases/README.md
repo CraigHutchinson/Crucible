@@ -13,7 +13,7 @@ package is not a permanent agent assignment.
 | 4 | Live owned-frame inspection, field input and concrete batch adapter | [Plan](phase4.md), [review](../sprint-reviews/phase-04.md), [delivery](../workstreams/integration/phase4-validation.md); complete, [PR 9](https://github.com/CraigHutchinson/Crucible/pull/9) at `09ae74f` |
 | Interim | Owned instance-packet rendering spike | [Report](../../spikes/rendering/README.md); [PR 11](https://github.com/CraigHutchinson/Crucible/pull/11) at `0bc9731` |
 | 5 | Playable reclamation quota/deadline and instancing design | [Plan](phase5.md), [review](../sprint-reviews/phase-05.md); complete, [PR 12](https://github.com/CraigHutchinson/Crucible/pull/12) at `57c1da6` |
-| 6 | Real instancing foundation and mission receiving examples | [Delegation plan](phase6.md); planned, implementation not started |
+| 6 | Real instancing foundation and mission receiving examples | [Plan](phase6.md), [review](../sprint-reviews/phase-06.md); implementation and receiving evidence ready, publication pending |
 
 The [sprint-review archive](../sprint-reviews/README.md) tracks findings, follow-ups
 and delegation lessons for every completed increment.

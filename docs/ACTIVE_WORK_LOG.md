@@ -129,3 +129,29 @@ retirement under one worker and retains a mission-route/evidence provider under
 another; root owns shared wiring and validation. Added faction/material/control
 extensibility note for three-plus factions and future multiplayer; no such gameplay
 or network implementation is dispatched. Preserve completed Phase 5 artifacts.
+
+## Phase 6 execution, 2026-10-03
+
+User dispatched execution from `44701d6`; shared branch phase6-instancing-examples.
+resource_package owns P6-M provider, runtime fixtures/manifests and local handoff;
+hex_adoption_package owns P6-R gpu include/source/tests/local manifests and handoff.
+Architect owns shared wiring, main/integration/diagnostic/capture, central docs and
+all configure/build/test CPU. No worker builds/commits before integration handoff.
+Tool paths: ../build-tools/cmake/data/bin/cmake and ctest; ../build-tools/bin/ninja;
+CPM cache ../cpm-cache; SDL source ../SDL3 at existing full pin. Local Vulkan loader
+exists, but driver/shader compiler provisioning is P6-0 prerequisite. Preserve all
+Phase 5 branches, builds and captures; no cleanup.
+
+P6-R and P6-M handoffs and reciprocal review complete; architect source checkpoints
+b11a377/c9a8704/0cd1299. Local GPU Release31/31 and Debug29+targeted mission1/1
+passed. Local sanitizer completion unconfirmed after execution-service disconnect.
+No automatic test rerun. Exact authored remaining test payloads recovered into
+immutable Git blobs; no source regeneration. Shared root CPU/build session outcome
+cannot be observed until service recovery. Hosted exact-head nine-job acceptance
+and fresh GPU exporter evidence are required before merge. Local branches/builds
+and captures remain retained; local reconciliation is deferred until recovery.
+
+Initial hosted head6b92d553: eight jobs green; normal sanitizer29/30, strategy
+fixture timeout900sec, no diagnostic. Architect corrects instrumented target build
+to -O1 with frame pointers/sibling-call preservation, keeping Debug assertions,
+all strategies and full-state replay. Fresh final-head nine-job gate required.

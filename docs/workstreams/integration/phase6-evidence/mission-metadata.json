@@ -1,0 +1,23 @@
+{
+  "source_commit": "b11a377a5a18b9c89ab42b8320382cad9f5b426e",
+  "mission_sources_committed": true,
+  "command": "build/desktop-release/tests/integration/crucible_mission_examples --export NEW_DIRECTORY",
+  "configuration": "desktop-release, GCC 13.3.0, SDL3 full pin unchanged",
+  "backend": "SDL software painter, 1280x720 RGBA32, logical pixels",
+  "samples": 2048,
+  "world": [
+    64,
+    32,
+    1
+  ],
+  "target": 1780,
+  "deadline": 900,
+  "capture_ticks": {
+    "sweep-active": 60,
+    "sweep-won": 267,
+    "passive-lost": 900
+  },
+  "raw_sha256": "c71ea851a44bd05d96eb3d5913d0a6b61f717d1dad376ae6894ca15fb19d6e6d",
+  "scope": "Four deterministic live-tool examples with independent full-state terminal replay; no human difficulty or GPU/device performance claim",
+  "plot": "Matplotlib derived from retained completed-tick checkpoints; no interpolation evidence beyond connecting observed points"
+}

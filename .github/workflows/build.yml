@@ -49,3 +49,44 @@ jobs:
       - run: cmake --preset desktop-sanitize -DCRUCIBLE_BUILD_RENDER_SPIKE=ON
       - run: cmake --build --preset desktop-sanitize --parallel 4
       - run: python scripts/run_tests.py --preset desktop-sanitize
+
+  gpu:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Explicit shader and software Vulkan receiver tools
+        run: sudo apt-get update && sudo apt-get install -y glslang-tools mesa-vulkan-drivers vulkan-tools xvfb xauth libx11-dev libxext-dev libxrandr-dev libxcursor-dev libxi-dev libxfixes-dev libxss-dev libxtst-dev
+      - name: Select and inspect executing software Vulkan device
+        run: |
+          selected_icd=""
+          for icd in /usr/share/vulkan/icd.d/lvp_icd*.json; do
+            if [ -f "$icd" ]; then
+              selected_icd="$icd"
+              echo "VK_DRIVER_FILES=$icd" >> "$GITHUB_ENV"
+              VK_DRIVER_FILES="$icd" vulkaninfo --summary
+              break
+            fi
+          done
+          test -n "$selected_icd"
+          glslangValidator --version
+      - run: cmake --preset gpu-release
+      - run: cmake --build --preset gpu-release --parallel 4
+      - run: xvfb-run -a python scripts/run_tests.py --preset gpu-release
+      - name: Actual receiver Debug readback
+        run: |
+          cmake --preset gpu-debug
+          cmake --build --preset gpu-debug --target crucible_gpu_readback_test --parallel 4
+          xvfb-run -a python scripts/run_tests.py --preset gpu-debug -R '^gpu_instanced_readback$' --no-tests=error
+      - name: Actual receiver ASan/UBSan readback
+        run: |
+          cmake --preset gpu-sanitize
+          cmake --build --preset gpu-sanitize --target crucible_gpu_readback_test --parallel 4
+          xvfb-run -a python scripts/run_tests.py --preset gpu-sanitize -R '^gpu_instanced_readback$' --no-tests=error
+      - name: Actual completed production-frame GPU captures
+        run: xvfb-run -a python scripts/capture_gpu_examples.py --executable build/gpu-release/crucible_gpu_receiver --vertex build/gpu-release/gpu-shaders/world.vert.spv --fragment build/gpu-release/gpu-shaders/world.frag.spv --output ${{ runner.temp }}/gpu-captures
+      - uses: actions/upload-artifact@v4
+        with:
+          name: gpu-readback-evidence
+          path: |
+            ${{ runner.temp }}/gpu-captures/
+            build/gpu-release/gpu-shader-toolchain.txt

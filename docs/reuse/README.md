@@ -102,3 +102,13 @@ a generic scheduling framework. SDL3/H2 pins and receiving evidence remain intac
 [Instancing design](../decisions/render-instancing.md) carries the CPU packet
 experiment into explicit shader/upload/retirement gates. No upstream defect or
 controlled speedup was found, and no extraction or pin update is justified.
+
+## Phase 6 close assessment
+
+Pinned SDL3 supplies the executing Vulkan receiver; H2 and all sub0 pins remain
+unchanged. Owned normalized records, weak submission identity and bounded slot
+retirement remain local presentation integration. R07/R08 do not acquire a generic
+exchange or graphics framework. No demonstrated storage/residency bottleneck or
+product-neutral upstream defect justifies a new dependency or extraction this phase.
+See [receiving evidence](../workstreams/integration/phase6-validation.md); physical
+receivers and fault injection are follow-up gates, not upstream library claims.

@@ -53,20 +53,19 @@ Blight material studies, with the exact generation prompts recorded.
 
 ## Project status
 
-**Status: third integrated headless increment.** Bounded field commands, tick trace
-replay, a stable spatial grid, radial forces and double-buffered Blight spread are
-implemented alongside bounded separation steering, a fixed-step clock and owned
-state snapshots. Opt-in finite reclamation now transfers substrate stock into a
-conserved reserve ledger, with staged Blight clearing and exact full-state replay.
-Spatial bins consume pinned Sub0HexGrid H2 geometry with bounded compatibility
-fallbacks. The original ECS workload and stack round-trip test remain. Full
-swarm gameplay and rendering remain planned. The design
-target is 100,000–150,000 entities at 60 FPS; this is not a measured game result.
+**Status: interactive reclamation challenge with an optional GPU instancing receiver.**
+Bounded commands, full-state replay, steering, finite biomass conservation and pinned
+Sub0HexGrid H2 receiving remain intact. The desktop supports spatial tools, pause,
+restart and a quota/deadline outcome. Phase 6 adds an offscreen Vulkan instanced
+world pass, retained shader/readback fixtures and reproducible mission examples.
+See the [Phase 6 review](docs/sprint-reviews/phase-06.md) for acceptance and limits.
+The design target remains 100,000–150,000 entities at 60 FPS; this is not a measured
+complete-game result. Physical GPU/platform receiving and lifetime fault tests
+precede any default backend promotion.
 
 The sub0 ecosystem supplies the simulation foundation. Scale is useful when it makes
 the swarm feel continuous and alive; a clear, playable small scenario comes first.
-The next simulation packages lead toward reserve deployment and a usable
-input/presentation loop. [Architecture](docs/architecture.md) describes how those systems
+The next simulation packages lead toward reserve deployment and relay/fusion rules. [Architecture](docs/architecture.md) describes how those systems
 fit together; [work breakdown](docs/work-breakdown.md) assigns their implementation gates.
 
 Crucible also forges stronger reusable sub0 libraries: real application increments

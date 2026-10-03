@@ -68,3 +68,11 @@ Reproduce via `crucible_desktop_event_test --export-mission output.bmp`, then co
 BMP to PNG without changing the content. This pair of fields is a displayed fixture,
 distinct from the CLI's winning swept-attractor route. Typography and human mission
 tuning remain acceptance gates; neither this image nor software CI proves GPU scale.
+
+[Phase 6 actual examples](../workstreams/integration/phase6-validation.md) retain
+ACTIVE/WON/LOST production-painter captures and raw strategy checkpoints.
+The [matched software/GPU world](exports/phase6-gpu-software-pair.png) uses the same
+initial tick0 mission snapshot and fitted camera; [evolved GPU tick60](exports/phase6-gpu-evolved.png)
+is an executing offscreen Vulkan readback. The [synthetic palette](exports/phase6-gpu-synthetic-palette.png)
+checks arbitrary per-instance presentation colors without introducing factions.
+All were visually inspected; this is software-device evidence, not physical-device FPS.

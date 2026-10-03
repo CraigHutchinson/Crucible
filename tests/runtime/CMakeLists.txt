@@ -27,3 +27,8 @@ add_executable(crucible_mission_tests ReclamationMission.cpp)
 target_link_libraries(crucible_mission_tests PRIVATE Crucible::Runtime Crucible::Presentation)
 add_test(NAME runtime_mission COMMAND crucible_mission_tests)
 set_tests_properties(runtime_mission PROPERTIES LABELS "runtime;presentation;mission")
+
+add_executable(crucible_reference_route_tests ReferenceMissionRoute.cpp)
+target_link_libraries(crucible_reference_route_tests PRIVATE Crucible::Runtime Crucible::Presentation)
+add_test(NAME runtime_reference_route COMMAND crucible_reference_route_tests)
+set_tests_properties(runtime_reference_route PROPERTIES LABELS "runtime;presentation;mission")

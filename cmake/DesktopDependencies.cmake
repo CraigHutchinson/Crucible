@@ -1,5 +1,5 @@
 include_guard(GLOBAL)
-# This optional adapter is the sole SDL consumer. Ordinary headless builds do not fetch it.
+# Optional desktop and GPU adapters consume SDL. Ordinary headless builds do not fetch it.
 CPMAddPackage(NAME SDL3 GITHUB_REPOSITORY libsdl-org/SDL
     GIT_TAG ${CRUCIBLE_SDL_REVISION} EXCLUDE_FROM_ALL YES
     OPTIONS "SDL_STATIC ON" "SDL_SHARED OFF" "SDL_TESTS OFF" "SDL_TEST_LIBRARY OFF"

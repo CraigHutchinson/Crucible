@@ -1,0 +1,31 @@
+{
+  "backend": "vulkan",
+  "size": [
+    1280,
+    720
+  ],
+  "scope": "offscreen world only",
+  "frames": [
+    {
+      "tick": 0,
+      "reclaimed": 0,
+      "initial_total": 10240,
+      "stock": 8192,
+      "mobile": 2048,
+      "commands": 0,
+      "receipt": 1,
+      "readback": "complete"
+    },
+    {
+      "tick": 60,
+      "reclaimed": 1758,
+      "initial_total": 10240,
+      "stock": 6434,
+      "mobile": 2048,
+      "commands": 1,
+      "receipt": 2,
+      "readback": "complete"
+    }
+  ],
+  "palette": "synthetic presentation colors; no faction gameplay"
+}

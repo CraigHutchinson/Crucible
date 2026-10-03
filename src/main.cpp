@@ -13,6 +13,7 @@
 #include <crucible/runtime/HeadlessSession.hpp>
 #include <crucible/runtime/ClockDriver.hpp>
 #include <crucible/runtime/InspectorSession.hpp>
+#include <crucible/runtime/ReferenceMissionRoute.hpp>
 #include <crucible/presentation/ScenarioSnapshot.hpp>
 
 namespace {
@@ -39,12 +40,10 @@ void RunMission(MissionInput input) {
     runtime::InspectorSession run{2048, {64, 4096}, ReclamationMissionSettings{}};
     while (run.GetMission()->outcome == ReclamationMissionOutcome::active) {
         const auto tick = run.GetMission()->completed_tick;
-        if (input == MissionInput::sweeping_attractor && tick % 60 == 0) {
-            const FieldEdit attract{FieldEditKind::set, 0,
-                {static_cast<float>(8 + 16 * ((tick / 60) % 4)),
-                 static_cast<float>(8 + 16 * ((tick / 240) % 2))}, 8, 4};
-            if (run.TryAdmitFieldEdit(attract).status != runtime::CommandIngress::AdmissionStatus::accepted)
-                throw std::runtime_error("Reference route admission failed");
+        if (input == MissionInput::sweeping_attractor) {
+            if (const auto edit = runtime::GetReferenceMissionRouteEdit(tick))
+                if (run.TryAdmitFieldEdit(*edit).status != runtime::CommandIngress::AdmissionStatus::accepted)
+                    throw std::runtime_error("Reference route admission failed");
         }
         if (run.TryPump(std::chrono::nanoseconds{16'666'667}).advanced_ticks != 1)
             throw std::runtime_error("Reference challenge boundary failed");
