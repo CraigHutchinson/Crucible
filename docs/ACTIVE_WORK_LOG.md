@@ -169,7 +169,7 @@ run remains live; its interrupted sanitizer outcome stays unconfirmed.
 
 | Owner | Claim | Exclusive paths / CPU | Handoff |
 |---|---|---|---|
-| Architect / P7-I | Active | Shared manifests/CI, central docs, scripts/evidence; all configure/build/test CPU | [Plan](phases/phase7.md), [review](sprint-reviews/phase-07.md) |
+| Architect / P7-I | Remote delivered; local recovery blocked | Shared manifests/CI, central docs, scripts/evidence; all configure/build/test CPU | [Plan](phases/phase7.md), [review](sprint-reviews/phase-07.md) |
 | hex_adoption_package / P7-R | Authored/reviewed | tests/presentation/gpu and phase7-faults.md; no heavy CPU | Same production receiver via Linux link wrappers; controlled failures/retirement |
 | resource_package / P7-M | Authored/reviewed | tests/integration/mission_sensitivity.cpp; runtime phase7 investigation and human playtest docs; no heavy CPU | Frozen command-timing shootout and short schedule fixtures |
 
@@ -186,3 +186,12 @@ but final reads/writes stalled and environment_offline prevents hash review/loca
 reconciliation. Preserve all files/branches/builds, do not regenerate source.
 PR17 receives remotely checkpointed source. The reviewed workflow retains fresh
 mission/GPU evidence; Phase 8 proposal remains not dispatched pending closure/gates.
+
+PR17 merged at d2fda2a8042cf9d1b681dc142d3e021bd5a2fa37 after final head8b3eec
+passed all nine hosted jobs in run37144416481. Actual tested synthetic checkout19fa1fd
+and actual merge share treeefc6982. Remote main verified; local checkout unavailable.
+Artifact11281862369 (665196bytes, e9888f...01dd3 ZIP digest) retains fresh GPU/mission
+captures for90days; full API/log receiving review is clean. P7-R/P7-M claims closed;
+root hosted build CPU released. P07-F01 remains blocked for original local bytes/
+hashes, Git capture publication and safe local reconciliation; preserve all artifacts.
+Do not dispatch Phase8 until that baseline gate and actual tool/device audit pass.

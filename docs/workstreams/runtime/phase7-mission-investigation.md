@@ -1,7 +1,7 @@
 # Phase 7 mission timing investigation
 
-Status: local study/capture inspection complete; hosted receiving and original evidence
-publication pending after execution disconnect. See [receiving](../integration/phase7-validation.md).
+Status: local study/visual inspection and hosted receiving complete; original local
+evidence recovery/publication remains P07-F01 after execution disconnect. See [receiving](../integration/phase7-validation.md).
 This is deterministic timing evidence and preparation for human observation, not
 human validation, difficulty tuning or a random-seed experiment.
 
@@ -32,7 +32,7 @@ are part of a schedule.
 
 ## Reproduction and evidence
 
-After the architect wires `crucible_mission_sensitivity`, run:
+After building `crucible_mission_sensitivity`, run:
 
 ```sh
 <build>/tests/integration/crucible_mission_sensitivity --schedule-only

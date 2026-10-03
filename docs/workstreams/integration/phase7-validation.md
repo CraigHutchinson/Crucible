@@ -1,7 +1,7 @@
 # Phase 7 receiving evidence
 
 Dispatch `0767a303`, 2026-10-03; [plan](../../phases/phase7.md),
-[review](../../sprint-reviews/phase-07.md). Implementation received locally; hosted exact-head acceptance and durable capture publication pending.
+[review](../../sprint-reviews/phase-07.md). Remote increment merged with exact-head hosted acceptance and durable fresh captures; original local evidence recovery remains P07-F01.
 
 ## Source and review
 
@@ -53,7 +53,7 @@ Leak checks remain enabled, and hosted normal/GPU sanitizer checks remain mandat
 SDL-free Release passed 28/28 (10.639 seconds). Full local GPU sanitizer returned
 CTest exit 8: 32/34 cases report the same LSan /proc fatal error. No ASan error
 report or UBSan runtime error was observed, but this is blocked acceptance,
-not a passing sanitizer suite. Hosted exact-head counts remain pending.
+not a passing sanitizer suite. Hosted exact-head counts passed as recorded below.
 All runs use scripts/run_tests.py; the sanitizer retains ASan/UBSan, leak checking,
 scoped -O1, assertions and direct X11 linkage only in gpu-sanitize.
 
@@ -130,3 +130,37 @@ driver hangs and delayed saturation remain open. P05-F02 physical public receive
 and whole-frame 2K/100K/150K measurements remain open. P05-F01 human playtesting,
 P04-F01/F02/F03, P06-F01 faction/control/resource authority and the other stable
 backlog gates carry forward explicitly. No performance or default-GPU promotion.
+
+## Hosted acceptance and merged baseline
+
+[PR17](https://github.com/CraigHutchinson/Crucible/pull/17) merged at
+`d2fda2a8042cf9d1b681dc142d3e021bd5a2fa37` after all nine jobs succeeded for
+PR head `8b3eec001377ea79063590655720c9ff4a425b9a` in
+[run 37144416481](https://github.com/CraigHutchinson/Crucible/actions/runs/37144416481).
+GitHub tested synthetic checkout `19fa1fd61abbb39c486434092ae766ece044a29d`;
+that checkout, PR head and actual merge have the identical tree
+`efc69828276ac4e613f47088d90e3ec6726247c8`. Remote main was independently read
+and verified at the actual merge. Local main is not verified while execution is offline.
+
+Desktop Linux/Windows/macOS Debug/Release each passed 31; headless passed 28 and
+normal sanitizer passed 31. GPU Release passed all 34 (37.25 seconds), selected
+actual GPU Debug 3 (16.15 seconds), and actual GPU sanitizer 3 (16.48 seconds).
+The normal sanitizer ran 211.58 seconds; no leak-disable setting or sanitizer
+error was observed. Controlled forced-exit children still bypass exit-time LSan.
+
+All production, retirement and mission capture/upload steps succeeded. The fresh
+[artifact](https://github.com/CraigHutchinson/Crucible/actions/runs/37144416481/artifacts/11281862369)
+is 665196 bytes, ID 11281862369, ZIP digest
+`sha256:e9888f67506d216059fe9bd51cfd06e3730c5efc4da8bb5ddeeb7bf884601dd3`.
+It expires 2027-01-01T18:30:01Z (90-day retention). Connector download succeeded
+with a reusable ZIP file reference. API/log receipt review is clean; downloaded
+ZIP contents and fresh metadata/image hashes were not independently reopened
+because execution is offline. Preserve that distinction from root's original
+local visual inspection. Fresh capture metadata records the synthetic checkout,
+not the PR-head SHA or later actual merge.
+
+[Machine-readable receipt](phase7-publication.json) records jobs, source/checkout/
+merge identity, artifact and limits. Software Vulkan uses llvmpipe LLVM20.1.2;
+no physical-device, hardware-loss/hang/latency, performance or human result follows.
+Original local file/hash recovery, visual Git publication and checkout reconciliation
+remain P07-F01 and must precede the next implementation dispatch.

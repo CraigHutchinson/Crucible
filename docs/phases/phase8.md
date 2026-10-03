@@ -16,10 +16,11 @@ Consume [Phase 7 scope](phase7.md), [GPU rules](../decisions/phase6-gpu.md),
 Phase 7 controlled failures and deliberately hidden queries exercise the concrete
 Vulkan receiver; they do not prove physical device loss, a real hung driver or
 hardware latency. Local Debug passed 34/34; the local sanitizer namespace blocks
-LSan /proc inspection, and hosted leak-enabled acceptance remains mandatory.
+LSan /proc inspection; hosted leak-enabled acceptance passed at Phase 7 head8b3eec.
 The frozen timing cases won at ticks 297, 271 and 449 with independent full-state
-replay. These automated results do not establish human robustness. Finish hosted
-receipts, durable evidence and baseline verification before beginning this phase.
+replay. These automated results do not establish human robustness. Hosted receipts and fresh durable evidence are recorded in the Phase7 publication.
+P07-F01 original evidence recovery and local baseline verification remain necessary
+before beginning this phase.
 
 ## Division and bounded packages
 
