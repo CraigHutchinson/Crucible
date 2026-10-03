@@ -4,23 +4,23 @@ Read [game design and project intent](game-design.md) before dispatch. Workstrea
 serve its playable loop; numerical/resource and presentation decisions must close
 at the listed gates before implementation. Concept art is illustrative.
 
-Status: phase 5 adds a quota/deadline challenge to live inspection, finite reclamation
-and verified H2 spatial reuse, 2026-10-03. W0/W1/W2/W3/W4/W5/W6 retain broader gates below;
+Status: phase6 adds optional executing GPU instancing and replay-backed mission
+examples to the phase5 challenge and verified H2 reuse, 2026-10-03. W0/W1/W2/W3/W4/W5/W6 retain broader gates below;
 finite stock-to-reserve work is the first W6 increment, not structural completion.
 [Phase 3 evidence](workstreams/integration/phase3-validation.md) records delivered
 scope; [architecture](architecture.md) and [workstream map](workstreams/README.md)
 record technical boundaries and paths. Historical wave-1 evidence remains archived.
 
 This is the capability backlog, not a fixed sprint allocation. Follow the
-[phase workflow](phases/README.md) and completed [phase 5 packages](phases/phase5.md) and planned
+[phase workflow](phases/README.md) and completed [phase 5 packages](phases/phase5.md) and delivered
 [Phase 6 delegation](phases/phase6.md) for scope and revised ownership. Each phase reviews retain/consolidate/split/defer
 choices before dispatch; package completion claims still require their full gates.
 
 [Instancing design](decisions/render-instancing.md) scopes the next rendering
 foundation: static quad, per-instance data, camera uniforms and explicit upload/
-retirement ownership. Current SDL batching and the CPU spike do not deliver GPU
-instancing or measured scale. Consolidate the first real backend/numerical contract,
-then split platform receivers around consumed shader/resource requirements.
+retirement ownership. Phase6 now executes the optional Vulkan receiver and shader/readback comparison.
+Physical-device scale and fault/retirement receiving remain open. Consolidate
+P06-F02 before splitting platform receivers around consumed contracts.
 
 [Faction extensibility groundwork](decisions/faction-extensibility.md) reserves
 more than two factions and controllable variants of either organism kind without

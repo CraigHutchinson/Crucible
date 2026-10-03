@@ -13,7 +13,7 @@ package is not a permanent agent assignment.
 | 4 | Live owned-frame inspection, field input and concrete batch adapter | [Plan](phase4.md), [review](../sprint-reviews/phase-04.md), [delivery](../workstreams/integration/phase4-validation.md); complete, [PR 9](https://github.com/CraigHutchinson/Crucible/pull/9) at `09ae74f` |
 | Interim | Owned instance-packet rendering spike | [Report](../../spikes/rendering/README.md); [PR 11](https://github.com/CraigHutchinson/Crucible/pull/11) at `0bc9731` |
 | 5 | Playable reclamation quota/deadline and instancing design | [Plan](phase5.md), [review](../sprint-reviews/phase-05.md); complete, [PR 12](https://github.com/CraigHutchinson/Crucible/pull/12) at `57c1da6` |
-| 6 | Real instancing foundation and mission receiving examples | [Plan](phase6.md), [review](../sprint-reviews/phase-06.md); implementation and receiving evidence ready, publication pending |
+| 6 | Real instancing foundation and mission receiving examples | [Plan](phase6.md), [review](../sprint-reviews/phase-06.md); optional foundation delivered, PR15 at `7317a03c8bca6848b17a352f0a192fb0d8e0e375`; fault/device gates open |
 
 The [sprint-review archive](../sprint-reviews/README.md) tracks findings, follow-ups
 and delegation lessons for every completed increment.
@@ -58,6 +58,14 @@ in docs instead of repeated status polling. Use one consolidated review per cohe
 handoff and one combined validation pass after integration. A failure or new change
 justifies targeted additional checks; a green unchanged tree does not need repeated
 full builds. Serialize builds and reserve an uncontended host for measurements.
+
+Before long acceptance runs, publish a reviewed source checkpoint to the sprint
+branch and record its exact SHA; a draft PR can expose incomplete status. A local
+commit alone does not survive every execution-service failure. Preserve completed
+receipts and captures remotely. On transport loss, keep unknown runs unconfirmed,
+use hosted exact-head CI, and reconcile retained local trees when access returns.
+Recover source only from exact authored records and verify immutable blob identity;
+never regenerate a completed package to guess what was lost.
 
 Spend remaining quota on correcting/reviewing the core increment before stretching.
 Never skip correctness or lifecycle gates to obtain an attractive demo. Visual

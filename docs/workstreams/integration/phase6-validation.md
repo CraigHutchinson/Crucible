@@ -1,6 +1,6 @@
 # Phase 6 receiving evidence
 
-Dispatch44701d6, 2026-10-03; integration underway.
+Dispatch `44701d6`, 2026-10-03; optional foundation increment complete.
 [Plan](../../phases/phase6.md), [review](../../sprint-reviews/phase-06.md),
 [frozen GPU contract](../../decisions/phase6-gpu.md).
 
@@ -69,13 +69,31 @@ counted as a pass. Exact authored source recovery preserves the reviewed package
 hosted final-head nine-job acceptance and GPU artifact remain the merge gates.
 Use the permission-repair test entrypoint; preserve source/build/evidence checkpoints.
 
-Initial hosted head6b92d553 passed eight jobs; normal sanitizer29/30 but strategy
-fixture timed out900sec with no diagnostic. Instrumented targets now use scoped
--O1 while preserving assertions, ASan/UBSan/leak checks and all replay cases.
-The final-head nine-job rerun is required; no failed gate is counted green.
+## Published final-head acceptance
 
-The existing GPU job additionally builds the actual receiver readback target under
-gpu-debug and gpu-sanitize and runs that selected fixture, with missing-test failure.
-This closes actual-receiver Debug/ASan coverage without repeating unrelated suites;
-normal sanitizer retains the full mission replay pack. No runtime sanitizer checks
-are disabled for the GPU receiving step. Final-head job acceptance remains required.
+[Run37133718532](https://github.com/CraigHutchinson/Crucible/actions/runs/37133718532) passed all nine jobs at97ff7d3:
+Linux/Windows/macOS Debug/Release30/30 each, normal Linux ASan/UBSan30/30,
+headless28/28 with SDL exclusion, GPU31/31 and both native Linux X11 smoke steps.
+Final exporter, capture provenance and upload passed.
+[Artifact11277429745](https://github.com/CraigHutchinson/Crucible/actions/runs/37133718532/artifacts/11277429745)
+retains fresh final-head readbacks/provenance; [manifest](phase6-evidence/hosted.json)
+records identity/digest and90-day retention. Original inspected repository PNGs
+remain representative; final trace/ledger/flush refinements alter evidence metadata.
+PR15 merge 7317a03c8bca6848b17a352f0a192fb0d8e0e375 is verified on remote main. Local execution-service
+reconciliation is deferred; no unobserved local run is counted green.
+
+Actual GPU Debug readback passed before GPU sanitizer receiving exposed X11
+library-global startup allocations after SDL dynamically unloaded Xlib. All reported
+allocation groups originated in X11 initialization; the pinned SDL closes its XIM
+and displays and destroys owned resource databases. The `gpu-sanitize` preset uses
+`SDL_X11_SHARED=OFF` to link X11 and its enabled extensions directly, keeping library
+globals resident through process exit. X11 remains enabled; ASan, UBSan and leak
+checking remain enabled. Fresh exact-head CI established this correction, and
+no device-failure or physical-performance acceptance follows from it.
+
+Final-head GPU receiving passed the full Release suite (31/31), actual Debug
+readback (1/1), and actual ASan/UBSan readback (1/1) with leak checking enabled.
+Direct X11 linkage resolved the startup-cache report at head `97ff7d3ce17280c6e3be943490ab6273958ca000`.
+The selected readback durations (1.52 seconds Debug, 1.89 seconds sanitizer) are test
+durations, not rendering performance measurements. Fresh exact-head captures and
+provenance were uploaded as artifact 11277429745 with the retained manifest digest.
