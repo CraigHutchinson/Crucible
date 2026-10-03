@@ -159,3 +159,20 @@ run completion and local checkout reconciliation are unconfirmed. Preserve local
 0cd1299 source branch, builds/captures and all prior artifacts; no cleanup or reset.
 Documentation-only closeout records actual acceptance and remote-source checkpoint
 workflow. Next dispatch must start from verified merged main; P06-F02 remains open.
+
+## Phase 7 dispatch, 2026-10-03
+
+Base `0767a303`; branch phase7-fault-receiving. User authorizes plan, investigation,
+collaborative execution, push and merge. Local execution recovered; new clean branch
+tracks fetched main, old Phase 6 source/build/capture artifacts retained. No old CPU
+run remains live; its interrupted sanitizer outcome stays unconfirmed.
+
+| Owner | Claim | Exclusive paths / CPU | Handoff |
+|---|---|---|---|
+| Architect / P7-I | Active | Shared manifests/CI, central docs, scripts/evidence; all configure/build/test CPU | [Plan](phases/phase7.md), [review](sprint-reviews/phase-07.md) |
+| hex_adoption_package / P7-R | Active authoring | tests/presentation/gpu and phase7-faults.md; no heavy CPU | Same production receiver via Linux link wrappers; controlled failures/retirement |
+| resource_package / P7-M | Active authoring | tests/integration/mission_sensitivity.cpp; runtime phase7 investigation and human playtest docs; no heavy CPU | Frozen command-timing shootout and short schedule fixtures |
+
+Both read-only planning audits consumed. Root stages/publishes coherent checkpoints
+before long acceptance; workers do not commit/push. Pins/rules/default renderer stay
+unchanged. Actual hardware loss, physical platform and human playtest remain open.
