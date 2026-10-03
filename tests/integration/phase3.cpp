@@ -93,7 +93,7 @@ void Run(std::size_t population, std::ostream* output) {
     Require(samples[0].id.value == 999 && fields[0].slot == 99 && cells[0] == 99);
     Simulation too_large{population + 1, options};
     Require(!sa.TryCapture(too_large)); Equal(sa, sr);
-    Simulation legacy{0}; Require(!sa.TryCapture(legacy)); Equal(sa, sr);
+    Simulation legacy{0}; Require(!sa.TryCapture(legacy) && !legacy.GetBiomassLedger()); Equal(sa, sr);
     ca.Close(); Require(ca.TryPump(1s).advanced_ticks == 0);
 }
 }
@@ -124,7 +124,7 @@ int main(int argc, char** argv) {
     Require(frame.TryCapture(disabled));
     Require(frame.GetInfo()->biomass == BiomassLedger{10, 2, 3, 5, 0, 0} && frame.GetBlight()[0] == 1);
     Simulation legacy{1, {{1, 1, 1}, 0}};
-    Require(frame.TryCapture(legacy) && !frame.GetInfo()->biomass && frame.GetStocks().empty());
+    Require(frame.TryCapture(legacy) && !frame.GetInfo()->biomass && frame.GetStocks().empty() && !legacy.GetBiomassLedger());
     bool overflow = false;
     try { Simulation bad{1, {{1, 1, 1}, 0, {}, ResourceSettings{1, 1, std::numeric_limits<std::uint64_t>::max(), 1}}}; }
     catch (const std::overflow_error&) { overflow = true; }

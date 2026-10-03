@@ -17,6 +17,8 @@ Use CMakePresets.json for local work and CI. Do not disable checksum or TLS veri
 Follow CONTRIBUTING.md and docs/benchmarking.md. Keep performance measurements advisory.
 Add meaningful behavior and lifetime tests for integration changes; run Debug, Release,
 and ASan/UBSan on supported platforms. Document what actually passed and limitations.
+Run CTest through `python scripts/run_tests.py --preset <preset>`; its narrow
+artifact preflight repairs restored executable modes before spending suite time.
 Do not claim 100K+ entities at 60 FPS from an isolated integration loop.
 
 ## Parallel workstream sessions
@@ -26,7 +28,11 @@ division and record retain/consolidate/split/defer decisions, a small consumed
 increment, shared contracts, core gates and bounded stretch in the phase plan.
 Phases 1/2 are delivered; phase 3 implements finite reclamation and pinned H2
 spatial reuse. See docs/phases/phase3.md and its delivery/review for publication state.
-Phase 4 adds sequential interactive input/display; see docs/phases/phase4.md and its review for validation/publication state. Future implementation dispatch remains explicit; do not infer dispatch from a backlog. Read docs/sprint-reviews/README.md and the latest review
+Phase 4 adds sequential interactive input/display; see docs/phases/phase4.md and its
+review for validation/publication state. Future dispatch remains explicit; do not
+infer dispatch from a backlog.
+Phase 5 adds a bounded reclamation challenge; docs/phases/phase5.md and its review
+record its outcome and open relay/fusion/instancing gates. Read docs/sprint-reviews/README.md and the latest review
 before the next phase; carry unresolved follow-up IDs into its plan. Create an
 in-progress phase-NN.md from the review template and complete it at phase close
 with findings, evidence, retrospective, follow-up owner/gates and merge baseline.

@@ -12,16 +12,23 @@ From the repository root:
 ```sh
 cmake --preset debug
 cmake --build --preset debug --parallel 4
-ctest --preset debug
+python scripts/run_tests.py --preset debug
 cmake --preset release
 cmake --build --preset release --parallel 4
-ctest --preset release
+python scripts/run_tests.py --preset release
 cmake --preset sanitize
 cmake --build --preset sanitize --parallel 4
-ctest --preset sanitize
+python scripts/run_tests.py --preset sanitize
 ```
 
 The sanitizer preset requires GCC/Clang. Run it separately from timing work.
+Use `scripts/run_tests.py` for local and CI execution. It asks CTest for the selected
+commands, repairs lost execute bits on owned ELF/Mach-O test artifacts under `build/`,
+reports repairs, then runs the requested suite once. It preserves read/write modes,
+ignores source/scripts/symlinks/external tools and leaves Windows modes unchanged.
+Pass ordinary CTest filters after `--preset`; `--ctest path` selects a tool outside
+PATH. A real test failure propagates without automatic retry. After a test that
+failed to launch, use the runner with `--rerun-failed` instead of repeating the suite.
 Use clang-format with .clang-format. Avoid global compiler flags and hidden fetches.
 Only benchmark tools are opt-in; correctness tests stay enabled.
 
@@ -34,3 +41,10 @@ The CPM bootstrap is SHA256-verified and dependencies are not installed system-w
 Review gates: explain behavior, validate ownership and data access, report tests
 actually run, document remaining gaps. For hot-path changes capture baseline/current
 Release results on the same machine as described in docs/benchmarking.md.
+
+When execution is interrupted, retain the branch, build directories and evidence.
+Record the commit, completed checks, tool paths and next action in
+`docs/ACTIVE_WORK_LOG.md`; resume from that checkpoint. Run the test wrapper before
+rebuilding unchanged code. If only a tool permission or launch problem blocked a
+case, repair that specific owned artifact/tool and rerun the failed selection; do
+not repeat successful checks unless code or configuration changed.

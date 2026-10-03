@@ -9,14 +9,16 @@ and conservative candidates; Crucible owns bins, IDs and exact point filtering.
 A private rectangular fallback preserves unsupported geometry/environment domains,
 and scan fallback preserves every finite float query radius. Blight remains cardinal.
 
-Status: third integrated headless increment, 2026-10-03. Bounded command admission,
+Status: phase 5 mission increment in progress, 2026-10-03. Bounded command admission,
 tick trace replay, stable spatial queries, bounded separation/radial steering, clock
 driving, owned state copies, cellular spread and finite reclamation exist in a
-sequential optional scenario. Full gameplay/concurrency remain planned. See
+sequential optional scenario; phase 4 supplies a live SDL consumer. Phase 5 adds a
+completed-tick challenge before relay/fusion. Full gameplay/concurrency remain planned. See
 [workstream map](workstreams/README.md) and [work breakdown](work-breakdown.md).
 
-The [phase 3 handoff](workstreams/integration/phase3-validation.md) records current
-implemented scope and evidence. HeadlessSession borrows an exclusively owned
+The [phase 4 handoff](workstreams/integration/phase4-validation.md) records the live
+consumer's evidence; [instancing design](decisions/render-instancing.md) carries the
+spike findings into later GPU work. HeadlessSession borrows an exclusively owned
 Simulation; main owns both. The broader Runtime composition below is the target
 architecture. The legacy Simulation constructor retains the ECS-only workload;
 ScenarioOptions selects startup-owned grids, fields, scratch and stable sample IDs.

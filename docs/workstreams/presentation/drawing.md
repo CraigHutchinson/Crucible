@@ -50,3 +50,25 @@ zoom clipping, committed versus preview rings, finite external centers and tiny-
 geometry. It does not assert cross-GPU image identity. An optional executable argument
 exports a BMP of a 2048-sample, sixty-tick owned frame after the tests, outside their
 verified loop. Root integration records executed build/test evidence.
+
+## Reclamation challenge overlay
+
+SceneUi appends optional owned ReclamationMissionProgress. Omission preserves the
+previous inspector HUD and world pass. The mission overlay occupies only the top
+HUD: ACTIVE/WON/LOST beside the title, a bounded 416x16 progress track, recovered
+quota and completed-simulation ticks left, the existing tick/population status and
+conservation ledger, and outcome-specific instructions with an explicit restart cue.
+The original world batches, field layers, toolbar, command feedback and help remain.
+Nanite cyan marks active progress, attraction green marks victory and amber marks
+loss; text and the progress shape communicate outcome alongside color. Progress
+saturates at quota; deadline subtraction saturates at zero. Wall-clock time never
+enters the displayed countdown.
+
+Before any SDL drawing, mission progress must match the captured completed tick,
+resource reserve bound, positive tuning and the frozen active/terminal thresholds.
+The painter does not derive game outcome or initial reserve; it consumes the runtime's
+by-value progress and rejects inconsistent views without changing the canvas.
+Software fixtures compare independent expected SDL text regions for all outcomes,
+quota/tick countdown and instructions, verify empty/partial/overshooting bounded
+progress, keep world and ledger pixels unchanged, and reject mismatched views before
+paint. Root integration owns executed evidence and the live DesktopApp caller.

@@ -13,8 +13,11 @@ namespace crucible::desktop {
  */
 class DesktopApp {
 public:
-    /// Allocates the reference run and SDL window/renderer; throws on startup failure.
-    DesktopApp();
+    /** Allocates the reference challenge and SDL window/renderer.
+     * @param[in] mission Positive quota/deadline tuning within startup substrate stock.
+     * @throws std::invalid_argument Invalid mission; startup/allocation errors propagate.
+     */
+    explicit DesktopApp(ReclamationMissionSettings mission = {});
     ~DesktopApp();
     DesktopApp(const DesktopApp&) = delete;
     DesktopApp& operator=(const DesktopApp&) = delete;
@@ -54,7 +57,7 @@ private:
     std::optional<runtime::CommandIngress::Admission> admission_;
     presentation::ScreenPoint last_pointer_{};
     bool dragging_{}, suspended_{}, restore_running_{}, background_{}, minimized_{};
-    std::string_view message_{"Click world to queue a field edit"};
+    std::string_view message_{"Recover biomass before the deadline - click world to steer"};
     std::chrono::steady_clock::time_point baseline_{std::chrono::steady_clock::now()};
 };
 }

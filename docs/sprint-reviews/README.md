@@ -11,6 +11,7 @@ consider. Read the latest review before planning or delegating another sprint.
 | 2 | Steering, bounded clock, owned inspection and actual-state visual; complete | [Phase 2](phase-02.md) | `cdc6034`, PR 4 |
 | 3 | Finite reclamation and consumed H2 receiving proof; complete | [Phase 3 review](phase-03.md), [plan](../phases/phase3.md) | `21f3786`, PR 7 |
 | 4 | Interactive inspection/control; complete | [Phase 4 review](phase-04.md), [plan](../phases/phase4.md) | `09ae74f`, PR 9 |
+| 5 | Reclamation challenge and instancing design; in progress | [Phase 5 review](phase-05.md), [plan](../phases/phase5.md) | Publication pending |
 
 ## Review procedure
 

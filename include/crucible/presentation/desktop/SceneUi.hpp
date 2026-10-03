@@ -1,5 +1,6 @@
 #pragma once
 
+#include <crucible/contracts/ReclamationMission.hpp>
 #include <crucible/presentation/FieldTool.hpp>
 #include <crucible/presentation/Camera2D.hpp>
 #include <cstddef>
@@ -22,5 +23,6 @@ struct SceneUi {
     std::size_t selected_slot{};
     std::optional<FieldEdit> preview{};
     std::string_view message{};
+    std::optional<ReclamationMissionProgress> mission{}; ///< Owned progress for this captured boundary.
 };
 }

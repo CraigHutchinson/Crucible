@@ -87,7 +87,7 @@ Requires CMake 3.25+, Ninja, Git and a C++23 toolchain (GCC 13+ or current MSVC)
 ```sh
 cmake --preset debug
 cmake --build --preset debug --parallel 4
-ctest --preset debug
+python scripts/run_tests.py --preset debug
 ./build/debug/crucible
 ```
 
@@ -156,16 +156,22 @@ query parity and supported validation. Growth, attrition and fusion/shatter rema
 
 [Open the actual tick-20 SVG](docs/concepts/phase3-state.svg).
 
-## Interactive inspector
+## Playable reclamation challenge
 
 The optional SDL3 prototype consumes owned ECS frames; it batches cells and nanites
 without per-entity rendering interfaces. See the [rendering decision](docs/decisions/phase4-rendering.md)
-and [phase 4](docs/phases/phase4.md).
+and [phase 5](docs/phases/phase5.md). Recover 1,780 biomass quanta before completed
+tick 900 (15 simulation seconds); pause stops the deadline. The HUD shows progress,
+ticks left and latched win/loss. Terminal runs permit camera inspection and restart;
+field edits are denied. This initial tuning needs a human playtest. Relay/fusion is
+a later scenario. [Mission rules](docs/decisions/phase5-reclamation.md) define the
+boundary contract; [instancing design](docs/decisions/render-instancing.md) carries
+the CPU spike findings into future GPU work.
 
 ```sh
 cmake --preset desktop-release
 cmake --build --preset desktop-release --parallel 4
-ctest --preset desktop-release
+python scripts/run_tests.py --preset desktop-release
 ./build/desktop-release/src/desktop/crucible_desktop
 ```
 
@@ -187,9 +193,22 @@ brew install llvm@21
 export CRUCIBLE_LLVM_ROOT="$(brew --prefix llvm@21)"
 cmake --preset macos-release
 cmake --build --preset macos-release --parallel 4
-ctest --preset macos-release
+python scripts/run_tests.py --preset macos-release
 ./build/macos-release/src/desktop/crucible_desktop
 ```
 
 This developer build uses runtime paths into the LLVM installation. A redistributable
 Apple bundle and iOS toolchain require separate packaging/runtime validation.
+
+Run the same mission coordinator headlessly, with a passive or scripted field route:
+
+```sh
+./build/release/crucible --mission
+./build/release/crucible --mission --route
+```
+
+The reference reports terminal tick, quota, conservation and full-state replay. The
+route sweeps a radius-8/strength-4 attractor once per 60 completed ticks through
+world positions (8,8), (24,8), (40,8), (56,8), then the same x positions at y=24,
+repeating until outcome. It uses the live tool's capabilities; its trace independently
+replays. These are reproducible tuning cases, not a human playtest or benchmark.

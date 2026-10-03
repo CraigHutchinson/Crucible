@@ -1,5 +1,6 @@
 #pragma once
 #include <crucible/runtime/ClockDriver.hpp>
+#include <crucible/contracts/ReclamationMission.hpp>
 #include <memory>
 namespace crucible::presentation { class ScenarioSnapshot; }
 namespace crucible::runtime {
@@ -11,10 +12,13 @@ public:
     /** Allocates the fixed 64x32, four-field finite-resource scenario and initial frame.
      * @param[in] samples Fixed population; no subsequent structural growth.
      * @param[in] limits Startup bounds for pending commands and completed trace.
+     * @param[in] mission Optional positive quota/deadline challenge; quota must not
+     * exceed startup substrate stock. Omission retains ordinary inspector behavior.
      * @throws std::invalid_argument Invalid count/limits; allocation errors propagate.
      */
     explicit InspectorSession(std::size_t samples = 2048,
-        HeadlessSession::Limits limits = {64, 4096});
+        HeadlessSession::Limits limits = {64, 4096},
+        std::optional<ReclamationMissionSettings> mission = std::nullopt);
     ~InspectorSession();
     InspectorSession(const InspectorSession&) = delete;
     InspectorSession& operator=(const InspectorSession&) = delete;
@@ -36,6 +40,8 @@ public:
     void Restart();
     [[nodiscard]] ClockDriver::Status GetStatus() const noexcept;
     [[nodiscard]] ClockDriver::Summary GetSummary() const;
+    /// Returns owned completed-boundary mission progress, absent for ordinary inspectors.
+    [[nodiscard]] std::optional<ReclamationMissionProgress> GetMission() const noexcept;
     /// Borrow expires on next successful pump, restart or destruction.
     [[nodiscard]] const presentation::ScenarioSnapshot& GetSnapshot() const noexcept;
     /// Borrow expires on restart/destruction; completed trace prefix never changes.
@@ -44,6 +50,7 @@ private:
     struct Run;
     const std::size_t samples_;
     const HeadlessSession::Limits limits_;
+    const std::optional<ReclamationMissionSettings> mission_;
     std::unique_ptr<Run> run_;
 };
 }

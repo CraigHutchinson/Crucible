@@ -11,6 +11,8 @@ package is not a permanent agent assignment.
 | 2 | Bounded local steering, clock/observability, owned state inspection and actual-state SVG | [Review](../sprint-reviews/phase-02.md), [delivery](../workstreams/integration/phase2-validation.md), [plan](phase2.md) |
 | 3 | Finite reclamation; Crucible hex receiving proof after upstream H2 delivery | [Work packages](phase3.md), [review](../sprint-reviews/phase-03.md), [delivery](../workstreams/integration/phase3-validation.md); complete, [PR 7](https://github.com/CraigHutchinson/Crucible/pull/7) at `21f3786` |
 | 4 | Live owned-frame inspection, field input and concrete batch adapter | [Plan](phase4.md), [review](../sprint-reviews/phase-04.md), [delivery](../workstreams/integration/phase4-validation.md); complete, [PR 9](https://github.com/CraigHutchinson/Crucible/pull/9) at `09ae74f` |
+| Interim | Owned instance-packet rendering spike | [Report](../../spikes/rendering/README.md); [PR 11](https://github.com/CraigHutchinson/Crucible/pull/11) at `0bc9731` |
+| 5 | Playable reclamation quota/deadline and instancing design | [Plan](phase5.md), [review](../sprint-reviews/phase-05.md); in progress |
 
 The [sprint-review archive](../sprint-reviews/README.md) tracks findings, follow-ups
 and delegation lessons for every completed increment.
