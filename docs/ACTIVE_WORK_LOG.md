@@ -108,3 +108,13 @@ permission-loss prevention: configured owned native test preflight now repairs m
 before execution, with a deliberate loss probe and narrow-scope fixtures. Publication
 remains the architect claim; resume from the committed tree and retained evidence,
 check hosted exact-head results, then merge and record closure.
+
+Phase 5 closed: PR 12 merged at `57c1da65c2e6e74a6f9b7f76f596fb8d36bf590e` after hosted
+head `94d2e269c5c6620d7a21acdd6b3629222ff3bdde` passed all eight jobs (desktop/sanitizer
+26/26, headless 25/25, two native X11 smokes). Reviewed/published tree matched;
+local main fast-forwarded and verified clean. All worker/architect write, review
+and heavy CPU claims released. Four permission fixtures and deliberate executable
+loss probe passed; macOS temporary-root fixture correction passed hosted acceptance.
+Preserve branch/build/strategy/visual artifacts. Next action: start from merged main,
+read phase-05 review, carry stable follow-ups and choose the next bounded increment.
+Documentation-only closure follows; no repeated local C++ build is needed.

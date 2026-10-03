@@ -1,6 +1,7 @@
 # Phase 5: playable reclamation challenge
 
-Implementation reviewed and locally validated; publication pending, 2026-10-03.
+Complete, 2026-10-03. [PR 12](https://github.com/CraigHutchinson/Crucible/pull/12)
+merged at `57c1da65c2e6e74a6f9b7f76f596fb8d36bf590e` after all eight hosted jobs passed.
 Dispatch baseline `0bc9731230d55442ca2eaae8670203121bc747a7`.
 User authorized implementation, delegation, push and merge. [Review](../sprint-reviews/phase-05.md).
 
