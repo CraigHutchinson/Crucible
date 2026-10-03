@@ -14,7 +14,7 @@ from run_tests import repair_permissions
 class PermissionRepairTests(unittest.TestCase):
     def test_only_configured_owned_native_artifacts_are_repaired(self):
         with tempfile.TemporaryDirectory() as directory:
-            root = Path(directory) / "build"
+            root = Path(directory).resolve() / "build"
             root.mkdir()
             target = root / "test"
             other = root / "unselected"
@@ -34,7 +34,7 @@ class PermissionRepairTests(unittest.TestCase):
 
     def test_macho_test_artifacts_are_repaired(self):
         with tempfile.TemporaryDirectory() as directory:
-            root = Path(directory)
+            root = Path(directory).resolve()
             target = root / "test"
             target.write_bytes(bytes.fromhex("cffaedfe") + b"fixture")
             target.chmod(0o644)
@@ -43,19 +43,19 @@ class PermissionRepairTests(unittest.TestCase):
 
     def test_missing_commands_remain_for_ctest_to_report(self):
         with tempfile.TemporaryDirectory() as directory:
-            root = Path(directory)
+            root = Path(directory).resolve()
             self.assertEqual(repair_permissions([{"command": [str(root / "missing")]}], root), [])
 
     def test_external_commands_and_symlinks_keep_their_modes(self):
         with tempfile.TemporaryDirectory() as directory:
-            root = Path(directory) / "build"
+            root = Path(directory).resolve() / "build"
             root.mkdir()
-            external = Path(directory) / "outside"
+            external = Path(directory).resolve() / "outside"
             external.write_bytes(b"\x7fELFfixture")
             external.chmod(0o644)
             link = root / "linked"
             link.symlink_to(external)
-            alias = Path(directory) / "alias"
+            alias = Path(directory).resolve() / "alias"
             alias.symlink_to(root, target_is_directory=True)
             inside = root / "inside"
             inside.write_bytes(b"\x7fELFfixture")
