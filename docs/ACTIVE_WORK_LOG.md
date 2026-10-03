@@ -195,3 +195,43 @@ captures for90days; full API/log receiving review is clean. P7-R/P7-M claims clo
 root hosted build CPU released. P07-F01 remains blocked for original local bytes/
 hashes, Git capture publication and safe local reconciliation; preserve all artifacts.
 Do not dispatch Phase8 until that baseline gate and actual tool/device audit pass.
+
+## Phase 7 recovery and prerequisite increment, 2026-10-03
+
+User requests development/test system/hardware prerequisite gates and dedicated
+hardware-session backlog. Source baseline origin/main2e0f3ec; isolated worktree
+Crucible-receiving, branch phase7-recovery-prerequisites. Original local files
+committed7240f97 and tagged phase7-original-evidence-recovery; no cleanup/reset.
+Original11 PNGs, raw output hashes and actual source/executable/shader hashes
+match capture metadata. Relevant source inputs match merged main. Fresh isolated
+checkout matches merged baseline; original raw directories/builds remain intact.
+
+| Owner | Claim | Exclusive paths / CPU |
+|---|---|---|
+| Architect | Active recovery/integration | Runner/CMake/CI, central docs, evidence/publication; all build/test CPU |
+| prerequisite_checks | Active | scripts/check_prerequisites.py, tests/workflow/test_prerequisites.py; no builds/commits |
+| hardware_backlog | Active | docs/workstreams/integration/hardware-receiving-backlog.md; no builds/commits |
+
+No Phase8 renderer/field implementation dispatch. Prerequisite failure blocks
+required work; no disabled leaks, silent skips or asserted hardware availability.
+
+2026-10-03 follow-through receiving: root ran 26 capability fixtures and 5 narrow
+mode-repair fixtures successfully. Bounded real development compile/run passed;
+sanitizer runtime blocked on LeakSanitizer /proc access, and X11/Vulkan child
+connectivity blocked in the current execution namespace. Failure receipts retained
+under phase7-evidence/prerequisite-local-*.json. No production C++/shader changes,
+full local suite reruns or new physical-device acceptance. Hardware backlog and
+runner/CI wiring reviewed reciprocally without blockers; hosted final-head CI next.
+
+Final fixture receiving: 30 prerequisite/runner tests and 5 permission tests passed.
+
+Hosted run37155413952: Windows release cold MSVC canary exceeded10s;
+required check blocked before build. Windows CI allowance now bounded30s/probe
+and60s total; no bypass/retry. New source head requires new exact-head acceptance.
+
+Hosted run37155547246 found macOS normal-variable compiler metadata absent from
+CMakeCache and Linux assumptions in mocked workflow fixtures on Windows. Fixed
+bounded generated compiler discovery (cache wins; ambiguous paths block), explicit
+fixture platforms and separate Windows direct-child coverage. Local36 prerequisite/
+runner fixtures and5 mode-repair fixtures passed. Production checks retain their
+scope; a final new head must pass all nine jobs before merge.

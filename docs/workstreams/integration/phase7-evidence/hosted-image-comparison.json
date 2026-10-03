@@ -1,0 +1,47 @@
+[
+  {
+    "kind": "mission",
+    "file": "cadence120-start0-terminal.png",
+    "same_pixels_as_local": true
+  },
+  {
+    "kind": "mission",
+    "file": "cadence120-start0-tick60.png",
+    "same_pixels_as_local": true
+  },
+  {
+    "kind": "mission",
+    "file": "cadence30-start0-terminal.png",
+    "same_pixels_as_local": true
+  },
+  {
+    "kind": "mission",
+    "file": "cadence30-start0-tick60.png",
+    "same_pixels_as_local": true
+  },
+  {
+    "kind": "mission",
+    "file": "cadence60-start60-terminal.png",
+    "same_pixels_as_local": true
+  },
+  {
+    "kind": "mission",
+    "file": "cadence60-start60-tick60.png",
+    "same_pixels_as_local": true
+  },
+  {
+    "kind": "gpu",
+    "file": "retained-0.png",
+    "same_pixels_as_local": true
+  },
+  {
+    "kind": "gpu",
+    "file": "retained-1.png",
+    "same_pixels_as_local": true
+  },
+  {
+    "kind": "gpu",
+    "file": "retained-2.png",
+    "same_pixels_as_local": true
+  }
+]

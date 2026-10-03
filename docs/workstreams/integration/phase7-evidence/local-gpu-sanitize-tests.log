@@ -1,0 +1,292 @@
+Test project /workspace/scratch/24e6565bae82/Crucible/build/gpu-sanitize
+      Start  1: workflow_permissions
+ 1/34 Test  #1: workflow_permissions ...................   Passed    0.04 sec
+      Start  2: gpu_packet_numeric
+ 2/34 Test  #2: gpu_packet_numeric .....................***Failed    0.01 sec
+==8634==Can't open /proc/8633/task for reading.
+==8633==LeakSanitizer has encountered a fatal error.
+==8633==HINT: For debugging, try setting environment variable LSAN_OPTIONS=verbosity=1:log_threads=1
+==8633==HINT: LeakSanitizer does not work under ptrace (strace, gdb, etc)
+
+      Start  3: gpu_slot_retirement
+ 3/34 Test  #3: gpu_slot_retirement ....................***Failed    0.00 sec
+==8636==Can't open /proc/8635/task for reading.
+==8635==LeakSanitizer has encountered a fatal error.
+==8635==HINT: For debugging, try setting environment variable LSAN_OPTIONS=verbosity=1:log_threads=1
+==8635==HINT: LeakSanitizer does not work under ptrace (strace, gdb, etc)
+
+      Start  4: gpu_instanced_readback
+ 4/34 Test  #4: gpu_instanced_readback .................***Failed    1.32 sec
+==8658==Can't open /proc/8637/task for reading.
+==8637==LeakSanitizer has encountered a fatal error.
+==8637==HINT: For debugging, try setting environment variable LSAN_OPTIONS=verbosity=1:log_threads=1
+==8637==HINT: LeakSanitizer does not work under ptrace (strace, gdb, etc)
+
+      Start  5: gpu_fault_receiving
+ 5/34 Test  #5: gpu_fault_receiving ....................***Failed    0.35 sec
+==8682==Can't open /proc/8661/task for reading.
+==8661==LeakSanitizer has encountered a fatal error.
+==8661==HINT: For debugging, try setting environment variable LSAN_OPTIONS=verbosity=1:log_threads=1
+==8661==HINT: LeakSanitizer does not work under ptrace (strace, gdb, etc)
+
+      Start  6: gpu_fault_process
+ 6/34 Test  #6: gpu_fault_process ......................   Passed   15.16 sec
+      Start  7: scene_painter_software
+ 7/34 Test  #7: scene_painter_software .................***Failed    0.98 sec
+==8733==Can't open /proc/8730/task for reading.
+==8730==LeakSanitizer has encountered a fatal error.
+==8730==HINT: For debugging, try setting environment variable LSAN_OPTIONS=verbosity=1:log_threads=1
+==8730==HINT: LeakSanitizer does not work under ptrace (strace, gdb, etc)
+
+      Start  8: simulation
+ 8/34 Test  #8: simulation .............................***Failed    0.01 sec
+==8735==Can't open /proc/8734/task for reading.
+==8734==LeakSanitizer has encountered a fatal error.
+==8734==HINT: For debugging, try setting environment variable LSAN_OPTIONS=verbosity=1:log_threads=1
+==8734==HINT: LeakSanitizer does not work under ptrace (strace, gdb, etc)
+
+      Start  9: stack_round_trip
+ 9/34 Test  #9: stack_round_trip .......................***Failed    0.32 sec
+==8737==Can't open /proc/8736/task for reading.
+==8736==LeakSanitizer has encountered a fatal error.
+==8736==HINT: For debugging, try setting environment variable LSAN_OPTIONS=verbosity=1:log_threads=1
+==8736==HINT: LeakSanitizer does not work under ptrace (strace, gdb, etc)
+
+      Start 10: scenario_integration
+10/34 Test #10: scenario_integration ...................***Failed    0.01 sec
+==8739==Can't open /proc/8738/task for reading.
+==8738==LeakSanitizer has encountered a fatal error.
+==8738==HINT: For debugging, try setting environment variable LSAN_OPTIONS=verbosity=1:log_threads=1
+==8738==HINT: LeakSanitizer does not work under ptrace (strace, gdb, etc)
+
+      Start 11: phase2_full_state
+11/34 Test #11: phase2_full_state ......................***Failed    7.89 sec
+==8741==Can't open /proc/8740/task for reading.
+==8740==LeakSanitizer has encountered a fatal error.
+==8740==HINT: For debugging, try setting environment variable LSAN_OPTIONS=verbosity=1:log_threads=1
+==8740==HINT: LeakSanitizer does not work under ptrace (strace, gdb, etc)
+
+      Start 12: phase3_full_state
+12/34 Test #12: phase3_full_state ......................***Failed    7.94 sec
+==8743==Can't open /proc/8742/task for reading.
+==8742==LeakSanitizer has encountered a fatal error.
+==8742==HINT: For debugging, try setting environment variable LSAN_OPTIONS=verbosity=1:log_threads=1
+==8742==HINT: LeakSanitizer does not work under ptrace (strace, gdb, etc)
+
+      Start 13: desktop_events
+13/34 Test #13: desktop_events .........................***Failed    0.91 sec
+==8819==Can't open /proc/8744/task for reading.
+==8744==LeakSanitizer has encountered a fatal error.
+==8744==HINT: For debugging, try setting environment variable LSAN_OPTIONS=verbosity=1:log_threads=1
+==8744==HINT: LeakSanitizer does not work under ptrace (strace, gdb, etc)
+
+      Start 14: mission_strategy_examples
+14/34 Test #14: mission_strategy_examples ..............***Failed  265.65 sec
+{"target":1780,"deadline":900,"samples":2048,"strategies":[{"strategy":"passive","checkpoints":[{"tick":0,"reclaimed":0,"stock":8192,"mobile":2048,"commands":0},{"tick":60,"reclaimed":1753,"stock":6439,"mobile":2048,"commands":0},{"tick":120,"reclaimed":1763,"stock":6429,"mobile":2048,"commands":0},{"tick":180,"reclaimed":1765,"stock":6427,"mobile":2048,"commands":0},{"tick":240,"reclaimed":1765,"stock":6427,"mobile":2048,"commands":0},{"tick":300,"reclaimed":1765,"stock":6427,"mobile":2048,"commands":0},{"tick":360,"reclaimed":1768,"stock":6424,"mobile":2048,"commands":0},{"tick":420,"reclaimed":1770,"stock":6422,"mobile":2048,"commands":0},{"tick":480,"reclaimed":1770,"stock":6422,"mobile":2048,"commands":0},{"tick":540,"reclaimed":1770,"stock":6422,"mobile":2048,"commands":0},{"tick":600,"reclaimed":1770,"stock":6422,"mobile":2048,"commands":0},{"tick":660,"reclaimed":1770,"stock":6422,"mobile":2048,"commands":0},{"tick":720,"reclaimed":1770,"stock":6422,"mobile":2048,"commands":0},{"tick":780,"reclaimed":1774,"stock":6418,"mobile":2048,"commands":0},{"tick":840,"reclaimed":1774,"stock":6418,"mobile":2048,"commands":0},{"tick":900,"reclaimed":1774,"stock":6418,"mobile":2048,"commands":0}],"outcome":"LOST","tick":900,"reclaimed":1774,"replay":"full-state","trace":[]},{"strategy":"sweep","checkpoints":[{"tick":0,"reclaimed":0,"stock":8192,"mobile":2048,"commands":0},{"tick":60,"reclaimed":1758,"stock":6434,"mobile":2048,"commands":1},{"tick":120,"reclaimed":1777,"stock":6415,"mobile":2048,"commands":2},{"tick":180,"reclaimed":1779,"stock":6413,"mobile":2048,"commands":3},{"tick":240,"reclaimed":1779,"stock":6413,"mobile":2048,"commands":4},{"tick":267,"reclaimed":1780,"stock":6412,"mobile":2048,"commands":5}],"outcome":"WON","tick":267,"reclaimed":1780,"replay":"full-state","trace":[{"sequence":1,"applied_tick":1,"kind":"set","slot":0,"x":8,"y":8,"radius":8,"strength":4},{"sequence":2,"applied_tick":61,"kind":"set","slot":0,"x":24,"y":8,"radius":8,"strength":4},{"sequence":3,"applied_tick":121,"kind":"set","slot":0,"x":40,"y":8,"radius":8,"strength":4},{"sequence":4,"applied_tick":181,"kind":"set","slot":0,"x":56,"y":8,"radius":8,"strength":4},{"sequence":5,"applied_tick":241,"kind":"set","slot":0,"x":8,"y":24,"radius":8,"strength":4}]},{"strategy":"stationary","checkpoints":[{"tick":0,"reclaimed":0,"stock":8192,"mobile":2048,"commands":0},{"tick":60,"reclaimed":1753,"stock":6439,"mobile":2048,"commands":1},{"tick":120,"reclaimed":1763,"stock":6429,"mobile":2048,"commands":1},{"tick":180,"reclaimed":1765,"stock":6427,"mobile":2048,"commands":1},{"tick":240,"reclaimed":1765,"stock":6427,"mobile":2048,"commands":1},{"tick":300,"reclaimed":1765,"stock":6427,"mobile":2048,"commands":1},{"tick":360,"reclaimed":1768,"stock":6424,"mobile":2048,"commands":1},{"tick":420,"reclaimed":1770,"stock":6422,"mobile":2048,"commands":1},{"tick":480,"reclaimed":1770,"stock":6422,"mobile":2048,"commands":1},{"tick":540,"reclaimed":1770,"stock":6422,"mobile":2048,"commands":1},{"tick":600,"reclaimed":1770,"stock":6422,"mobile":2048,"commands":1},{"tick":660,"reclaimed":1770,"stock":6422,"mobile":2048,"commands":1},{"tick":720,"reclaimed":1770,"stock":6422,"mobile":2048,"commands":1},{"tick":780,"reclaimed":1774,"stock":6418,"mobile":2048,"commands":1},{"tick":840,"reclaimed":1774,"stock":6418,"mobile":2048,"commands":1},{"tick":900,"reclaimed":1774,"stock":6418,"mobile":2048,"commands":1}],"outcome":"LOST","tick":900,"reclaimed":1774,"replay":"full-state","trace":[{"sequence":1,"applied_tick":1,"kind":"set","slot":0,"x":32,"y":16,"radius":8,"strength":4}]},{"strategy":"repel-reposition-erase","checkpoints":[{"tick":0,"reclaimed":0,"stock":8192,"mobile":2048,"commands":0},{"tick":60,"reclaimed":1753,"stock":6439,"mobile":2048,"commands":1},{"tick":120,"reclaimed":1763,"stock":6429,"mobile":2048,"commands":1},{"tick":180,"reclaimed":1765,"stock":6427,"mobile":2048,"commands":2},{"tick":240,"reclaimed":1765,"stock":6427,"mobile":2048,"commands":2},{"tick":300,"reclaimed":1765,"stock":6427,"mobile":2048,"commands":3},{"tick":360,"reclaimed":1768,"stock":6424,"mobile":2048,"commands":3},{"tick":420,"reclaimed":1770,"stock":6422,"mobile":2048,"commands":3},{"tick":480,"reclaimed":1770,"stock":6422,"mobile":2048,"commands":3},{"tick":540,"reclaimed":1770,"stock":6422,"mobile":2048,"commands":3},{"tick":600,"reclaimed":1770,"stock":6422,"mobile":2048,"commands":3},{"tick":660,"reclaimed":1770,"stock":6422,"mobile":2048,"commands":3},{"tick":720,"reclaimed":1770,"stock":6422,"mobile":2048,"commands":3},{"tick":780,"reclaimed":1774,"stock":6418,"mobile":2048,"commands":3},{"tick":840,"reclaimed":1774,"stock":6418,"mobile":2048,"commands":3},{"tick":900,"reclaimed":1774,"stock":6418,"mobile":2048,"commands":3}],"outcome":"LOST","tick":900,"reclaimed":1774,"replay":"full-state","trace":[{"sequence":1,"applied_tick":1,"kind":"set","slot":0,"x":32,"y":16,"radius":8,"strength":-4},{"sequence":2,"applied_tick":121,"kind":"set","slot":0,"x":48,"y":16,"radius":8,"strength":-4},{"sequence":3,"applied_tick":241,"kind":"remove","slot":0,"x":0,"y":0,"radius":0,"strength":0}]}]}
+==8823==Can't open /proc/8822/task for reading.
+==8822==LeakSanitizer has encountered a fatal error.
+==8822==HINT: For debugging, try setting environment variable LSAN_OPTIONS=verbosity=1:log_threads=1
+==8822==HINT: LeakSanitizer does not work under ptrace (strace, gdb, etc)
+
+      Start 15: mission_timing_schedule
+15/34 Test #15: mission_timing_schedule ................***Failed    0.09 sec
+three frozen schedules and actual request/application boundaries passed
+==8827==Can't open /proc/8824/task for reading.
+==8824==LeakSanitizer has encountered a fatal error.
+==8824==HINT: For debugging, try setting environment variable LSAN_OPTIONS=verbosity=1:log_threads=1
+==8824==HINT: LeakSanitizer does not work under ptrace (strace, gdb, etc)
+
+      Start 16: contracts_values
+16/34 Test #16: contracts_values .......................***Failed    0.01 sec
+==8829==Can't open /proc/8828/task for reading.
+==8828==LeakSanitizer has encountered a fatal error.
+==8828==HINT: For debugging, try setting environment variable LSAN_OPTIONS=verbosity=1:log_threads=1
+==8828==HINT: LeakSanitizer does not work under ptrace (strace, gdb, etc)
+
+      Start 17: runtime_headless
+17/34 Test #17: runtime_headless .......................***Failed    0.01 sec
+==8831==Can't open /proc/8830/task for reading.
+==8830==LeakSanitizer has encountered a fatal error.
+==8830==HINT: For debugging, try setting environment variable LSAN_OPTIONS=verbosity=1:log_threads=1
+==8830==HINT: LeakSanitizer does not work under ptrace (strace, gdb, etc)
+
+      Start 18: runtime_ingress
+18/34 Test #18: runtime_ingress ........................***Failed    0.01 sec
+==8835==Can't open /proc/8832/task for reading.
+==8832==LeakSanitizer has encountered a fatal error.
+==8832==HINT: For debugging, try setting environment variable LSAN_OPTIONS=verbosity=1:log_threads=1
+==8832==HINT: LeakSanitizer does not work under ptrace (strace, gdb, etc)
+
+      Start 19: runtime_session
+19/34 Test #19: runtime_session ........................***Failed    0.01 sec
+==8837==Can't open /proc/8836/task for reading.
+==8836==LeakSanitizer has encountered a fatal error.
+==8836==HINT: For debugging, try setting environment variable LSAN_OPTIONS=verbosity=1:log_threads=1
+==8836==HINT: LeakSanitizer does not work under ptrace (strace, gdb, etc)
+
+      Start 20: runtime_clock
+20/34 Test #20: runtime_clock ..........................***Failed    0.01 sec
+==8839==Can't open /proc/8838/task for reading.
+==8838==LeakSanitizer has encountered a fatal error.
+==8838==HINT: For debugging, try setting environment variable LSAN_OPTIONS=verbosity=1:log_threads=1
+==8838==HINT: LeakSanitizer does not work under ptrace (strace, gdb, etc)
+
+      Start 21: runtime_inspector
+21/34 Test #21: runtime_inspector ......................***Failed    0.01 sec
+==8841==Can't open /proc/8840/task for reading.
+==8840==LeakSanitizer has encountered a fatal error.
+==8840==HINT: For debugging, try setting environment variable LSAN_OPTIONS=verbosity=1:log_threads=1
+==8840==HINT: LeakSanitizer does not work under ptrace (strace, gdb, etc)
+
+      Start 22: runtime_mission
+22/34 Test #22: runtime_mission ........................***Failed    0.38 sec
+==8843==Can't open /proc/8842/task for reading.
+==8842==LeakSanitizer has encountered a fatal error.
+==8842==HINT: For debugging, try setting environment variable LSAN_OPTIONS=verbosity=1:log_threads=1
+==8842==HINT: LeakSanitizer does not work under ptrace (strace, gdb, etc)
+
+      Start 23: runtime_reference_route
+23/34 Test #23: runtime_reference_route ................***Failed    0.08 sec
+==8845==Can't open /proc/8844/task for reading.
+==8844==LeakSanitizer has encountered a fatal error.
+==8844==HINT: For debugging, try setting environment variable LSAN_OPTIONS=verbosity=1:log_threads=1
+==8844==HINT: LeakSanitizer does not work under ptrace (strace, gdb, etc)
+
+      Start 24: spatial_grid
+24/34 Test #24: spatial_grid ...........................***Failed    0.04 sec
+==8847==Can't open /proc/8846/task for reading.
+==8846==LeakSanitizer has encountered a fatal error.
+==8846==HINT: For debugging, try setting environment variable LSAN_OPTIONS=verbosity=1:log_threads=1
+==8846==HINT: LeakSanitizer does not work under ptrace (strace, gdb, etc)
+
+      Start 25: spatial_hex_queries
+25/34 Test #25: spatial_hex_queries ....................***Failed    4.35 sec
+==8849==Can't open /proc/8848/task for reading.
+==8848==LeakSanitizer has encountered a fatal error.
+==8848==HINT: For debugging, try setting environment variable LSAN_OPTIONS=verbosity=1:log_threads=1
+==8848==HINT: LeakSanitizer does not work under ptrace (strace, gdb, etc)
+
+      Start 26: spatial_allocation_reuse
+26/34 Test #26: spatial_allocation_reuse ...............***Failed    0.07 sec
+==8851==Can't open /proc/8850/task for reading.
+==8850==LeakSanitizer has encountered a fatal error.
+==8850==HINT: For debugging, try setting environment variable LSAN_OPTIONS=verbosity=1:log_threads=1
+==8850==HINT: LeakSanitizer does not work under ptrace (strace, gdb, etc)
+
+      Start 27: fields_sampling
+27/34 Test #27: fields_sampling ........................***Failed    0.00 sec
+==8853==Can't open /proc/8852/task for reading.
+==8852==LeakSanitizer has encountered a fatal error.
+==8852==HINT: For debugging, try setting environment variable LSAN_OPTIONS=verbosity=1:log_threads=1
+==8852==HINT: LeakSanitizer does not work under ptrace (strace, gdb, etc)
+
+      Start 28: blight_grid
+28/34 Test #28: blight_grid ............................***Failed    0.00 sec
+==8855==Can't open /proc/8854/task for reading.
+==8854==LeakSanitizer has encountered a fatal error.
+==8854==HINT: For debugging, try setting environment variable LSAN_OPTIONS=verbosity=1:log_threads=1
+==8854==HINT: LeakSanitizer does not work under ptrace (strace, gdb, etc)
+
+      Start 29: swarm_steering
+29/34 Test #29: swarm_steering .........................***Failed    2.90 sec
+==8857==Can't open /proc/8856/task for reading.
+==8856==LeakSanitizer has encountered a fatal error.
+==8856==HINT: For debugging, try setting environment variable LSAN_OPTIONS=verbosity=1:log_threads=1
+==8856==HINT: LeakSanitizer does not work under ptrace (strace, gdb, etc)
+
+      Start 30: interactions_reclamation
+30/34 Test #30: interactions_reclamation ...............***Failed    0.01 sec
+==8859==Can't open /proc/8858/task for reading.
+==8858==LeakSanitizer has encountered a fatal error.
+==8858==HINT: For debugging, try setting environment variable LSAN_OPTIONS=verbosity=1:log_threads=1
+==8858==HINT: LeakSanitizer does not work under ptrace (strace, gdb, etc)
+
+      Start 31: interactions_reclamation_allocations
+31/34 Test #31: interactions_reclamation_allocations ...***Failed    0.01 sec
+==8861==Can't open /proc/8860/task for reading.
+==8860==LeakSanitizer has encountered a fatal error.
+==8860==HINT: For debugging, try setting environment variable LSAN_OPTIONS=verbosity=1:log_threads=1
+==8860==HINT: LeakSanitizer does not work under ptrace (strace, gdb, etc)
+
+      Start 32: camera_affine
+32/34 Test #32: camera_affine ..........................***Failed    0.01 sec
+==8863==Can't open /proc/8862/task for reading.
+==8862==LeakSanitizer has encountered a fatal error.
+==8862==HINT: For debugging, try setting environment variable LSAN_OPTIONS=verbosity=1:log_threads=1
+==8862==HINT: LeakSanitizer does not work under ptrace (strace, gdb, etc)
+
+      Start 33: field_tools
+33/34 Test #33: field_tools ............................***Failed    0.00 sec
+==8865==Can't open /proc/8864/task for reading.
+==8864==LeakSanitizer has encountered a fatal error.
+==8864==HINT: For debugging, try setting environment variable LSAN_OPTIONS=verbosity=1:log_threads=1
+==8864==HINT: LeakSanitizer does not work under ptrace (strace, gdb, etc)
+
+      Start 34: rendering_instance_spike
+34/34 Test #34: rendering_instance_spike ...............***Failed    1.50 sec
+==8867==Can't open /proc/8866/task for reading.
+==8866==LeakSanitizer has encountered a fatal error.
+==8866==HINT: For debugging, try setting environment variable LSAN_OPTIONS=verbosity=1:log_threads=1
+==8866==HINT: LeakSanitizer does not work under ptrace (strace, gdb, etc)
+
+
+6% tests passed, 32 tests failed out of 34
+
+Label Time Summary:
+blight          =   0.02 sec*proc (3 tests)
+contracts       =   0.01 sec*proc (1 test)
+desktop         =   1.89 sec*proc (2 tests)
+fault           =  15.51 sec*proc (2 tests)
+fields          =   0.00 sec*proc (1 test)
+gpu             =  16.84 sec*proc (5 tests)
+input           =   0.01 sec*proc (2 tests)
+integration     = 282.82 sec*proc (8 tests)
+interactions    =   0.01 sec*proc (2 tests)
+lifetime        =  16.83 sec*proc (4 tests)
+mission         = 266.19 sec*proc (4 tests)
+numeric         =   0.01 sec*proc (1 test)
+presentation    = 284.54 sec*proc (13 tests)
+readback        =   1.32 sec*proc (1 test)
+resources       =   7.94 sec*proc (1 test)
+runtime         =   0.49 sec*proc (7 tests)
+spatial         =   4.47 sec*proc (3 tests)
+spike           =   1.50 sec*proc (1 test)
+swarm           =   2.90 sec*proc (1 test)
+workflow        =   0.04 sec*proc (1 test)
+
+Total Test time (real) = 310.08 sec
+
+The following tests FAILED:
+	  2 - gpu_packet_numeric (Failed)                       gpu numeric presentation
+	  3 - gpu_slot_retirement (Failed)                      gpu lifetime presentation
+	  4 - gpu_instanced_readback (Failed)                   gpu lifetime readback
+	  5 - gpu_fault_receiving (Failed)                      fault gpu lifetime
+	  7 - scene_painter_software (Failed)                   desktop presentation
+	  8 - simulation (Failed)                               integration
+	  9 - stack_round_trip (Failed)                         integration
+	 10 - scenario_integration (Failed)                     integration
+	 11 - phase2_full_state (Failed)                        integration presentation
+	 12 - phase3_full_state (Failed)                        integration presentation resources
+	 13 - desktop_events (Failed)                           desktop integration
+	 14 - mission_strategy_examples (Failed)                integration mission presentation
+	 15 - mission_timing_schedule (Failed)                  integration mission presentation
+	 16 - contracts_values (Failed)                         contracts
+	 17 - runtime_headless (Failed)                         runtime
+	 18 - runtime_ingress (Failed)                          runtime
+	 19 - runtime_session (Failed)                          runtime
+	 20 - runtime_clock (Failed)                            runtime
+	 21 - runtime_inspector (Failed)                        presentation runtime
+	 22 - runtime_mission (Failed)                          mission presentation runtime
+	 23 - runtime_reference_route (Failed)                  mission presentation runtime
+	 24 - spatial_grid (Failed)                             spatial
+	 25 - spatial_hex_queries (Failed)                      spatial
+	 26 - spatial_allocation_reuse (Failed)                 spatial
+	 27 - fields_sampling (Failed)                          fields
+	 28 - blight_grid (Failed)                              blight
+	 29 - swarm_steering (Failed)                           swarm
+	 30 - interactions_reclamation (Failed)                 blight interactions
+	 31 - interactions_reclamation_allocations (Failed)     blight interactions
+	 32 - camera_affine (Failed)                            input presentation
+	 33 - field_tools (Failed)                              input presentation
+	 34 - rendering_instance_spike (Failed)                 presentation spike
+Errors while running CTest

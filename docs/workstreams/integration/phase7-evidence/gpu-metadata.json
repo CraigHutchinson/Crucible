@@ -1,0 +1,42 @@
+{
+  "source_commit": "1712c89a3be156eadd824c4008b3472c71ebf9a5",
+  "committed_source_tree": "106e12febc58714ba81a0c05242b469a231ac803",
+  "source_dirty": true,
+  "logical_canvas": [
+    1280,
+    720
+  ],
+  "capture_tools": {
+    "python": "3.12.14",
+    "pillow": "12.3.0",
+    "matplotlib": "3.10.8"
+  },
+  "backend": "executing SDL_GPU Vulkan receiver; controlled delayed queries",
+  "capture_sha256": {
+    "retained-2.bmp": "a445049ad4e882bfd4605c2efcea221f7458bb9275ebc415f7755c15da8c4f77",
+    "retained-1.png": "678ae5b4d9458f0236df9598dc29dc54a390da3629ccccbbb8d10f03e03d9178",
+    "retirement-events.png": "69cc9239c1be8abc6c348438b369e667d7ff8bfde983fee897917d77518c410c",
+    "retained-1.bmp": "2c4d4904ef62b5f7f0f32b6d2206fe932e2b79e497460a991fc3e8d113751f3e",
+    "retained-0.bmp": "3d909f75bfc361c2d01334a166efbb7a8474b677af44782156c6568b152b485e",
+    "retained-2.png": "4281d65d7504e6c21e86a9c035d46da6f6ff987dd26bcc206e86cd7db66ef389",
+    "retained-0.png": "7341e02d41a3e9d271202b4dd57be62e74313192828f3dbf336156694dad4506",
+    "events.csv": "7759c6421e05bbc6f2c655bc0306f4ec3896f65198b6dbef176564d058aab4d1"
+  },
+  "dependency_pins": "set(CRUCIBLE_SUB0PIPELINE_REVISION f6f54c623908649e8daac3613545062cf08b3822)\nset(CRUCIBLE_SUB0ECS_REVISION 8391f81fd74a016564b4711b074eb286d3c5e14b)\nset(CRUCIBLE_SUB0LOG_REVISION 85498bb7b735f8c7e43653955be582ee903c653f)\nset(CRUCIBLE_SUB0PUB_REVISION 2cd3daf15e44c9429fd2cfbc4ca2fcb723b77ced)\nset(CRUCIBLE_SUB0HEXGRID_REVISION aaae5c2fc5731a23db94fa947bbb0182d0ea69fd)\nset(CRUCIBLE_SDL_REVISION 829a65d769d935c4852f8159e964312c0957260a)\n",
+  "scope": "Actual diagnostic outputs; injected faults/retirement are not hardware device-loss or performance evidence. Automated mission replay is not human validation.",
+  "input_sha256": {
+    "crucible_gpu_fault_test": "c6b2412717038af465ff5d87097b4953fdbcb4cfb395f7b4c0646a8a2b120ef0",
+    "world.vert.spv": "2f3bbcc93c2d75dab198fbeed6d7579b657068df06d75685fed665f35abaa73c",
+    "world.frag.spv": "d98a30e0c1cffb6ebf3ec4811ae6239c3d4e6ceef6d01fcdfbce8f0c965df2dc",
+    "OffscreenRenderer.cpp": "85321f7863c1e492655233c160a2ef0b5bcbeba8b6c401c605ec7ec6bd56dcec",
+    "FaultTests.cpp": "470f6cc75155c93a727d5a6a9a739573fd1927753e5ea32301987818e79a2975",
+    "FaultController.cpp": "87cf092c79d4f2177c8f6459195494bb897951e5c61e35620043d116d2a824f5",
+    "FaultController.hpp": "64bffd79663f470c6f7b49cbb5c1c1e0ce43b8e3fa152743c7ce959a5c1cba51"
+  },
+  "publication": {
+    "kind": "reduced public provenance receipt",
+    "original_metadata_sha256": "f263958b03b51ae1e941992f6f77725400d747e1655dcfeb96a44918178a92a0",
+    "original_retained_in": "phase7-original-evidence-recovery local checkpoint",
+    "omitted": "Full CMake cache, filesystem paths, environment/tool output, device inventory and machine identity are retained locally; these are excluded from public evidence."
+  }
+}

@@ -10,6 +10,7 @@ Clang requires a C++ standard library implementing std::expected.
 From the repository root:
 
 ```sh
+python scripts/check_prerequisites.py --stage development
 cmake --preset debug
 cmake --build --preset debug --parallel 4
 python scripts/run_tests.py --preset debug
@@ -60,3 +61,27 @@ protect against loss of the execution service. Use hosted exact-head CI if local
 transport fails; do not infer a pass or rerun successful checks. Reconcile local
 branches/build artifacts after recovery. Exact authored-file recovery must preserve
 blob identity; do not recreate code from an approximate description.
+
+Before expensive builds, run `python scripts/check_prerequisites.py --stage development`.
+Add `--sanitize` for ASan/UBSan compile and normal-exit runtime checks; add `--gpu`
+for the optional Vulkan/shader profile. Use `--build-dir build/<preset>` to probe
+an existing cached compiler and flags. The development canary exercises C++23
+`std::expected`, thread startup and executable loading. Failures/unknown required
+capabilities block; the checker never installs tools or disables leak detection.
+
+The test runner checks the exact selected CTest inventory after its narrow mode
+repair. Portable tests require no GPU. Selected executing GPU cases additionally
+check Linux X11 connectivity, Vulkan candidate inventory and declared SPIR-V magic;
+actual shader/device/readback acceptance remains the test's job. Other display
+backends need a supported receiving session; current diagnostics report unknown.
+`--require-hardware` rejects software/mixed/unknown inventories and establishes
+candidate availability only. `--prerequisite-report <path>` saves the receipt;
+custom/UserPresets use `--prerequisite-build-dir <path>`. Inspection via `-N` or
+`--show-only` launches no capability probes. Dependency fetch/link, platform SDK,
+Xvfb helper and complete preset requirements remain explicit setup audits.
+
+See the [hardware receiving backlog](docs/workstreams/integration/hardware-receiving-backlog.md)
+for dedicated-session capability matching, public/private trust boundaries, scoped
+stop gates and evidence handoff. An additional agent on this host supplies labor,
+not additional hardware. Missing hardware leaves its gate open while independent
+portable work proceeds. Windows descendant-process timeout cleanup remains HW-01.

@@ -30,6 +30,8 @@ jobs:
       - name: Linux window development dependencies
         if: runner.os == 'Linux'
         run: sudo apt-get update && sudo apt-get install -y libx11-dev libxext-dev libxrandr-dev libxcursor-dev libxi-dev libxfixes-dev libxss-dev libxtst-dev xvfb xauth
+      - name: Development prerequisites before configure/build
+        run: python scripts/check_prerequisites.py --stage development --timeout ${{ runner.os == 'Windows' && '30' || '10' }} --budget 60
       - run: cmake --preset ${{ env.BUILD_PRESET }} -DCRUCIBLE_BUILD_RENDER_SPIKE=ON
       - run: cmake --build --preset ${{ env.BUILD_PRESET }} --parallel 4
       - run: python scripts/run_tests.py --preset ${{ env.BUILD_PRESET }}
@@ -42,6 +44,7 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
+      - run: python scripts/check_prerequisites.py --stage development
       - run: cmake --preset release
       - run: cmake --build --preset release --parallel 4
       - run: python scripts/run_tests.py --preset release
@@ -52,6 +55,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - run: sudo apt-get update && sudo apt-get install -y libx11-dev libxext-dev libxrandr-dev libxcursor-dev libxi-dev libxfixes-dev libxss-dev libxtst-dev
+      - run: python scripts/check_prerequisites.py --stage development --sanitize
       - run: cmake --preset desktop-sanitize -DCRUCIBLE_BUILD_RENDER_SPIKE=ON
       - run: cmake --build --preset desktop-sanitize --parallel 4
       - run: python scripts/run_tests.py --preset desktop-sanitize
@@ -75,9 +79,10 @@ jobs:
           done
           test -n "$selected_icd"
           glslangValidator --version
+      - run: python scripts/check_prerequisites.py --stage development --gpu
       - run: cmake --preset gpu-release
       - run: cmake --build --preset gpu-release --parallel 4
-      - run: xvfb-run -a python scripts/run_tests.py --preset gpu-release
+      - run: xvfb-run -a python scripts/run_tests.py --preset gpu-release --prerequisite-report ${{ runner.temp }}/gpu-prerequisites.json
       - name: Actual receiver Debug readback
         run: |
           cmake --preset gpu-debug
@@ -86,6 +91,7 @@ jobs:
       - name: Actual receiver ASan/UBSan readback
         run: |
           cmake --preset gpu-sanitize
+          python scripts/check_prerequisites.py --stage development --build-dir build/gpu-sanitize --sanitize --gpu
           cmake --build --preset gpu-sanitize --target crucible_gpu_readback_test crucible_gpu_fault_test --parallel 4
           xvfb-run -a python scripts/run_tests.py --preset gpu-sanitize -R '^(gpu_instanced_readback|gpu_fault_receiving|gpu_fault_process)$' --no-tests=error
       - name: Actual completed production-frame GPU captures
@@ -105,3 +111,4 @@ jobs:
             ${{ runner.temp }}/phase7-retirement/
             ${{ runner.temp }}/phase7-mission/
             build/gpu-release/gpu-shader-toolchain.txt
+            ${{ runner.temp }}/gpu-prerequisites.json

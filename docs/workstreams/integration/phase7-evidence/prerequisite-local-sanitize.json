@@ -1,0 +1,103 @@
+{
+  "schema": 1,
+  "stage": "development",
+  "ok": false,
+  "checks": [
+    {
+      "name": "python",
+      "status": "pass",
+      "required": true,
+      "detail": "Python >=3.10 required",
+      "version": "3.12.14",
+      "executable": "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python"
+    },
+    {
+      "name": "cmake",
+      "status": "pass",
+      "required": true,
+      "detail": "cmake version 4.4.3\n\nCMake suite maintained and supported by Kitware (kitware.com/cmake).",
+      "returncode": 0,
+      "command": [
+        "cmake",
+        "--version"
+      ],
+      "elapsed_seconds": 0.008,
+      "process_scope": "POSIX process group",
+      "output_truncated": false
+    },
+    {
+      "name": "ninja",
+      "status": "pass",
+      "required": true,
+      "detail": "1.13.2.git.kitware.jobserver-pipe-1",
+      "returncode": 0,
+      "command": [
+        "ninja",
+        "--version"
+      ],
+      "elapsed_seconds": 0.004,
+      "process_scope": "POSIX process group",
+      "output_truncated": false
+    },
+    {
+      "name": "git",
+      "status": "pass",
+      "required": true,
+      "detail": "git version 2.51.1",
+      "returncode": 0,
+      "command": [
+        "git",
+        "--version"
+      ],
+      "elapsed_seconds": 0.002,
+      "process_scope": "POSIX process group",
+      "output_truncated": false
+    },
+    {
+      "name": "cxx23_expected",
+      "status": "pass",
+      "required": true,
+      "detail": "",
+      "returncode": 0,
+      "command": [
+        "c++",
+        "-std=c++23",
+        "-pthread",
+        "/tmp/crucible-prerequisites-arbhswd2/capability.cpp",
+        "-o",
+        "/tmp/crucible-prerequisites-arbhswd2/canary",
+        "-fsanitize=address,undefined",
+        "-fno-omit-frame-pointer"
+      ],
+      "elapsed_seconds": 0.616,
+      "process_scope": "POSIX process group",
+      "output_truncated": false,
+      "compiler": "c++"
+    },
+    {
+      "name": "sanitizer_canary",
+      "status": "fail",
+      "required": true,
+      "detail": "==21==Can't open /proc/18/task for reading.\n==18==LeakSanitizer has encountered a fatal error.\n==18==HINT: For debugging, try setting environment variable LSAN_OPTIONS=verbosity=1:log_threads=1\n==18==HINT: LeakSanitizer does not work under ptrace (strace, gdb, etc)",
+      "returncode": 1,
+      "command": [
+        "/tmp/crucible-prerequisites-arbhswd2/canary"
+      ],
+      "elapsed_seconds": 0.008,
+      "process_scope": "POSIX process group",
+      "output_truncated": false,
+      "leak_checking": true
+    }
+  ],
+  "selected_tests": [],
+  "scope": "Capability preflight only; no performance, physical-console or suite acceptance claim",
+  "capacity": {
+    "cpu_count": 9,
+    "memory_bytes": null,
+    "requirement": "No invented CPU/RAM minimum"
+  },
+  "compiler": "c++",
+  "sanitizers": true,
+  "gpu_required": false,
+  "elapsed_seconds": 0.638
+}

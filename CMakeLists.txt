@@ -71,6 +71,9 @@ if(BUILD_TESTING)
     add_test(NAME workflow_permissions COMMAND ${Python3_EXECUTABLE}
         ${PROJECT_SOURCE_DIR}/tests/workflow/test_permissions.py)
     set_tests_properties(workflow_permissions PROPERTIES LABELS workflow)
+    add_test(NAME workflow_prerequisites COMMAND ${Python3_EXECUTABLE}
+        ${PROJECT_SOURCE_DIR}/tests/workflow/test_prerequisites.py)
+    set_tests_properties(workflow_prerequisites PROPERTIES LABELS workflow)
     add_subdirectory(tests/integration)
     add_subdirectory(tests/workstreams)
 endif()

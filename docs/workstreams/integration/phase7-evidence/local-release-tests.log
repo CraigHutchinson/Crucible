@@ -1,0 +1,79 @@
+Test project /workspace/scratch/24e6565bae82/Crucible/build/release
+      Start  1: workflow_permissions
+ 1/28 Test  #1: workflow_permissions ...................   Passed    0.05 sec
+      Start  2: gpu_packet_numeric
+ 2/28 Test  #2: gpu_packet_numeric .....................   Passed    0.00 sec
+      Start  3: gpu_slot_retirement
+ 3/28 Test  #3: gpu_slot_retirement ....................   Passed    0.00 sec
+      Start  4: simulation
+ 4/28 Test  #4: simulation .............................   Passed    0.00 sec
+      Start  5: stack_round_trip
+ 5/28 Test  #5: stack_round_trip .......................   Passed    0.03 sec
+      Start  6: scenario_integration
+ 6/28 Test  #6: scenario_integration ...................   Passed    0.00 sec
+      Start  7: phase2_full_state
+ 7/28 Test  #7: phase2_full_state ......................   Passed    0.60 sec
+      Start  8: phase3_full_state
+ 8/28 Test  #8: phase3_full_state ......................   Passed    0.63 sec
+      Start  9: challenge_passive_cli
+ 9/28 Test  #9: challenge_passive_cli ..................   Passed    6.64 sec
+      Start 10: challenge_route_cli
+10/28 Test #10: challenge_route_cli ....................   Passed    2.00 sec
+      Start 11: contracts_values
+11/28 Test #11: contracts_values .......................   Passed    0.00 sec
+      Start 12: runtime_headless
+12/28 Test #12: runtime_headless .......................   Passed    0.00 sec
+      Start 13: runtime_ingress
+13/28 Test #13: runtime_ingress ........................   Passed    0.00 sec
+      Start 14: runtime_session
+14/28 Test #14: runtime_session ........................   Passed    0.00 sec
+      Start 15: runtime_clock
+15/28 Test #15: runtime_clock ..........................   Passed    0.00 sec
+      Start 16: runtime_inspector
+16/28 Test #16: runtime_inspector ......................   Passed    0.00 sec
+      Start 17: runtime_mission
+17/28 Test #17: runtime_mission ........................   Passed    0.03 sec
+      Start 18: runtime_reference_route
+18/28 Test #18: runtime_reference_route ................   Passed    0.01 sec
+      Start 19: spatial_grid
+19/28 Test #19: spatial_grid ...........................   Passed    0.00 sec
+      Start 20: spatial_hex_queries
+20/28 Test #20: spatial_hex_queries ....................   Passed    0.28 sec
+      Start 21: spatial_allocation_reuse
+21/28 Test #21: spatial_allocation_reuse ...............   Passed    0.01 sec
+      Start 22: fields_sampling
+22/28 Test #22: fields_sampling ........................   Passed    0.00 sec
+      Start 23: blight_grid
+23/28 Test #23: blight_grid ............................   Passed    0.00 sec
+      Start 24: swarm_steering
+24/28 Test #24: swarm_steering .........................   Passed    0.26 sec
+      Start 25: interactions_reclamation
+25/28 Test #25: interactions_reclamation ...............   Passed    0.00 sec
+      Start 26: interactions_reclamation_allocations
+26/28 Test #26: interactions_reclamation_allocations ...   Passed    0.00 sec
+      Start 27: camera_affine
+27/28 Test #27: camera_affine ..........................   Passed    0.00 sec
+      Start 28: field_tools
+28/28 Test #28: field_tools ............................   Passed    0.00 sec
+
+100% tests passed out of 28
+
+Label Time Summary:
+blight          =   0.01 sec*proc (3 tests)
+contracts       =   0.00 sec*proc (1 test)
+fields          =   0.00 sec*proc (1 test)
+gpu             =   0.00 sec*proc (2 tests)
+input           =   0.00 sec*proc (2 tests)
+integration     =   9.91 sec*proc (7 tests)
+interactions    =   0.00 sec*proc (2 tests)
+lifetime        =   0.00 sec*proc (1 test)
+mission         =   8.69 sec*proc (4 tests)
+numeric         =   0.00 sec*proc (1 test)
+presentation    =   1.28 sec*proc (9 tests)
+resources       =   0.63 sec*proc (1 test)
+runtime         =   0.05 sec*proc (7 tests)
+spatial         =   0.30 sec*proc (3 tests)
+swarm           =   0.26 sec*proc (1 test)
+workflow        =   0.05 sec*proc (1 test)
+
+Total Test time (real) =  10.59 sec

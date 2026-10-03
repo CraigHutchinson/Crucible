@@ -1,0 +1,101 @@
+{
+  "schema": 1,
+  "stage": "development",
+  "ok": true,
+  "checks": [
+    {
+      "name": "python",
+      "status": "pass",
+      "required": true,
+      "detail": "Python >=3.10 required",
+      "version": "3.12.14",
+      "executable": "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python"
+    },
+    {
+      "name": "cmake",
+      "status": "pass",
+      "required": true,
+      "detail": "cmake version 4.4.3\n\nCMake suite maintained and supported by Kitware (kitware.com/cmake).",
+      "returncode": 0,
+      "command": [
+        "cmake",
+        "--version"
+      ],
+      "elapsed_seconds": 0.016,
+      "process_scope": "POSIX process group",
+      "output_truncated": false
+    },
+    {
+      "name": "ninja",
+      "status": "pass",
+      "required": true,
+      "detail": "1.13.2.git.kitware.jobserver-pipe-1",
+      "returncode": 0,
+      "command": [
+        "ninja",
+        "--version"
+      ],
+      "elapsed_seconds": 0.004,
+      "process_scope": "POSIX process group",
+      "output_truncated": false
+    },
+    {
+      "name": "git",
+      "status": "pass",
+      "required": true,
+      "detail": "git version 2.51.1",
+      "returncode": 0,
+      "command": [
+        "git",
+        "--version"
+      ],
+      "elapsed_seconds": 0.004,
+      "process_scope": "POSIX process group",
+      "output_truncated": false
+    },
+    {
+      "name": "cxx23_expected",
+      "status": "pass",
+      "required": true,
+      "detail": "",
+      "returncode": 0,
+      "command": [
+        "c++",
+        "-std=c++23",
+        "-pthread",
+        "/tmp/crucible-prerequisites-vv5e3bz2/capability.cpp",
+        "-o",
+        "/tmp/crucible-prerequisites-vv5e3bz2/canary"
+      ],
+      "elapsed_seconds": 0.566,
+      "process_scope": "POSIX process group",
+      "output_truncated": false,
+      "compiler": "c++"
+    },
+    {
+      "name": "runtime_canary",
+      "status": "pass",
+      "required": true,
+      "detail": "",
+      "returncode": 0,
+      "command": [
+        "/tmp/crucible-prerequisites-vv5e3bz2/canary"
+      ],
+      "elapsed_seconds": 0.004,
+      "process_scope": "POSIX process group",
+      "output_truncated": false,
+      "scope": "Bundled standard library load and consumed thread startup"
+    }
+  ],
+  "selected_tests": [],
+  "scope": "Capability preflight only; no performance, physical-console or suite acceptance claim",
+  "capacity": {
+    "cpu_count": 9,
+    "memory_bytes": null,
+    "requirement": "No invented CPU/RAM minimum"
+  },
+  "compiler": "c++",
+  "sanitizers": false,
+  "gpu_required": false,
+  "elapsed_seconds": 0.595
+}

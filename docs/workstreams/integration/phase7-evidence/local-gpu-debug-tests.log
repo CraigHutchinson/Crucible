@@ -1,0 +1,95 @@
+Test project /workspace/scratch/24e6565bae82/Crucible/build/gpu-debug
+      Start  1: workflow_permissions
+ 1/34 Test  #1: workflow_permissions ...................   Passed    0.05 sec
+      Start  2: gpu_packet_numeric
+ 2/34 Test  #2: gpu_packet_numeric .....................   Passed    0.01 sec
+      Start  3: gpu_slot_retirement
+ 3/34 Test  #3: gpu_slot_retirement ....................   Passed    0.00 sec
+      Start  4: gpu_instanced_readback
+ 4/34 Test  #4: gpu_instanced_readback .................   Passed    1.16 sec
+      Start  5: gpu_fault_receiving
+ 5/34 Test  #5: gpu_fault_receiving ....................   Passed    0.38 sec
+      Start  6: gpu_fault_process
+ 6/34 Test  #6: gpu_fault_process ......................   Passed   15.09 sec
+      Start  7: scene_painter_software
+ 7/34 Test  #7: scene_painter_software .................   Passed    0.62 sec
+      Start  8: simulation
+ 8/34 Test  #8: simulation .............................   Passed    0.00 sec
+      Start  9: stack_round_trip
+ 9/34 Test  #9: stack_round_trip .......................   Passed    0.55 sec
+      Start 10: scenario_integration
+10/34 Test #10: scenario_integration ...................   Passed    0.00 sec
+      Start 11: phase2_full_state
+11/34 Test #11: phase2_full_state ......................   Passed    6.48 sec
+      Start 12: phase3_full_state
+12/34 Test #12: phase3_full_state ......................   Passed    6.48 sec
+      Start 13: desktop_events
+13/34 Test #13: desktop_events .........................   Passed    0.73 sec
+      Start 14: mission_strategy_examples
+14/34 Test #14: mission_strategy_examples ..............   Passed  246.77 sec
+      Start 15: mission_timing_schedule
+15/34 Test #15: mission_timing_schedule ................   Passed    0.05 sec
+      Start 16: contracts_values
+16/34 Test #16: contracts_values .......................   Passed    0.00 sec
+      Start 17: runtime_headless
+17/34 Test #17: runtime_headless .......................   Passed    0.00 sec
+      Start 18: runtime_ingress
+18/34 Test #18: runtime_ingress ........................   Passed    0.00 sec
+      Start 19: runtime_session
+19/34 Test #19: runtime_session ........................   Passed    0.00 sec
+      Start 20: runtime_clock
+20/34 Test #20: runtime_clock ..........................   Passed    0.00 sec
+      Start 21: runtime_inspector
+21/34 Test #21: runtime_inspector ......................   Passed    0.00 sec
+      Start 22: runtime_mission
+22/34 Test #22: runtime_mission ........................   Passed    0.33 sec
+      Start 23: runtime_reference_route
+23/34 Test #23: runtime_reference_route ................   Passed    0.04 sec
+      Start 24: spatial_grid
+24/34 Test #24: spatial_grid ...........................   Passed    0.09 sec
+      Start 25: spatial_hex_queries
+25/34 Test #25: spatial_hex_queries ....................   Passed   18.39 sec
+      Start 26: spatial_allocation_reuse
+26/34 Test #26: spatial_allocation_reuse ...............   Passed    0.23 sec
+      Start 27: fields_sampling
+27/34 Test #27: fields_sampling ........................   Passed    0.00 sec
+      Start 28: blight_grid
+28/34 Test #28: blight_grid ............................   Passed    0.00 sec
+      Start 29: swarm_steering
+29/34 Test #29: swarm_steering .........................   Passed   11.68 sec
+      Start 30: interactions_reclamation
+30/34 Test #30: interactions_reclamation ...............   Passed    0.00 sec
+      Start 31: interactions_reclamation_allocations
+31/34 Test #31: interactions_reclamation_allocations ...   Passed    0.00 sec
+      Start 32: camera_affine
+32/34 Test #32: camera_affine ..........................   Passed    0.00 sec
+      Start 33: field_tools
+33/34 Test #33: field_tools ............................   Passed    0.00 sec
+      Start 34: rendering_instance_spike
+34/34 Test #34: rendering_instance_spike ...............   Passed    0.89 sec
+
+100% tests passed out of 34
+
+Label Time Summary:
+blight          =   0.01 sec*proc (3 tests)
+contracts       =   0.00 sec*proc (1 test)
+desktop         =   1.34 sec*proc (2 tests)
+fault           =  15.47 sec*proc (2 tests)
+fields          =   0.00 sec*proc (1 test)
+gpu             =  16.64 sec*proc (5 tests)
+input           =   0.00 sec*proc (2 tests)
+integration     = 261.06 sec*proc (8 tests)
+interactions    =   0.00 sec*proc (2 tests)
+lifetime        =  16.63 sec*proc (4 tests)
+mission         = 247.19 sec*proc (4 tests)
+numeric         =   0.01 sec*proc (1 test)
+presentation    = 261.67 sec*proc (13 tests)
+readback        =   1.16 sec*proc (1 test)
+resources       =   6.48 sec*proc (1 test)
+runtime         =   0.38 sec*proc (7 tests)
+spatial         =  18.71 sec*proc (3 tests)
+spike           =   0.89 sec*proc (1 test)
+swarm           =  11.68 sec*proc (1 test)
+workflow        =   0.05 sec*proc (1 test)
+
+Total Test time (real) = 310.05 sec

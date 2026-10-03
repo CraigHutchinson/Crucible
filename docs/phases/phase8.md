@@ -19,7 +19,7 @@ hardware latency. Local Debug passed 34/34; the local sanitizer namespace blocks
 LSan /proc inspection; hosted leak-enabled acceptance passed at Phase 7 head8b3eec.
 The frozen timing cases won at ticks 297, 271 and 449 with independent full-state
 replay. These automated results do not establish human robustness. Hosted receipts and fresh durable evidence are recorded in the Phase7 publication.
-P07-F01 original evidence recovery and local baseline verification remain necessary
+P07-F01 original evidence recovery and local baseline verification are received below; publication remains necessary
 before beginning this phase.
 
 ## Division and bounded packages
@@ -149,3 +149,13 @@ Only an exact-version reproducible defect merits upstream feedback. No residency
 consumer justifies R09 or a storage dependency; no second reusable consumer justifies
 extracting a graphics/runtime framework. Reassess consolidation versus platform
 split after the actual shader/device and human evidence, without automatic dispatch.
+
+## Received prerequisite groundwork
+
+P07-F01 original-byte/hash recovery and local-baseline reconciliation are received
+in the [recovery receipt](../workstreams/integration/phase7-evidence/recovery.json).
+The accompanying preflight/hardware-session
+[backlog](../workstreams/integration/hardware-receiving-backlog.md) is consumed by
+P8-I availability audit before allocation/delegation. Preset/compiler/sanitizer
+readiness and actual selected backend execution remain distinct. No physical
+device inventory or renderer/field implementation is dispatched by this recovery.

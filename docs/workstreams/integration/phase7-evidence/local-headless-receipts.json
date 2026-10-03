@@ -1,0 +1,47 @@
+[
+  {
+    "preset": "release",
+    "step": "configure",
+    "exit_code": 0,
+    "seconds": 0.281,
+    "log": "/workspace/scratch/24e6565bae82/phase7-release-configure.log",
+    "command": [
+      "/workspace/scratch/24e6565bae82/build-tools/cmake/data/bin/cmake",
+      "--preset",
+      "release",
+      "-DCMAKE_PREFIX_PATH=/workspace/scratch/24e6565bae82/native-sdk/usr",
+      "-DCPM_SDL3_SOURCE=/workspace/scratch/24e6565bae82/SDL3",
+      "-DCMAKE_MAKE_PROGRAM=/workspace/scratch/24e6565bae82/build-tools/bin/ninja"
+    ]
+  },
+  {
+    "preset": "release",
+    "step": "build",
+    "exit_code": 0,
+    "seconds": 9.777,
+    "log": "/workspace/scratch/24e6565bae82/phase7-release-build.log",
+    "command": [
+      "/workspace/scratch/24e6565bae82/build-tools/cmake/data/bin/cmake",
+      "--build",
+      "--preset",
+      "release",
+      "--parallel",
+      "4"
+    ]
+  },
+  {
+    "preset": "release",
+    "step": "tests",
+    "exit_code": 0,
+    "seconds": 10.639,
+    "log": "/workspace/scratch/24e6565bae82/phase7-release-tests.log",
+    "command": [
+      "python",
+      "scripts/run_tests.py",
+      "--preset",
+      "release",
+      "--ctest",
+      "/workspace/scratch/24e6565bae82/build-tools/cmake/data/bin/ctest"
+    ]
+  }
+]
