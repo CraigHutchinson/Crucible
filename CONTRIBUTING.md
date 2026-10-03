@@ -52,3 +52,11 @@ not repeat successful checks unless code or configuration changed.
 Sprint completion includes visually inspected examples wherever viable. Plan the
 capture with the package, preserve reproduction/provenance and link it from the
 review; see [visual evidence criteria](docs/phases/README.md#visual-examples-at-each-iteration).
+
+Before long validation, publish a coherently reviewed source checkpoint to the sprint
+branch and record its remote SHA (draft PR optional). Preserve acceptance outputs
+with that checkpoint and label pending/partial results. A local commit does not
+protect against loss of the execution service. Use hosted exact-head CI if local
+transport fails; do not infer a pass or rerun successful checks. Reconcile local
+branches/build artifacts after recovery. Exact authored-file recovery must preserve
+blob identity; do not recreate code from an approximate description.

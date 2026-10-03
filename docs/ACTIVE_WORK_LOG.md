@@ -151,7 +151,11 @@ cannot be observed until service recovery. Hosted exact-head nine-job acceptance
 and fresh GPU exporter evidence are required before merge. Local branches/builds
 and captures remain retained; local reconciliation is deferred until recovery.
 
-Initial hosted head6b92d553: eight jobs green; normal sanitizer29/30, strategy
-fixture timeout900sec, no diagnostic. Architect corrects instrumented target build
-to -O1 with frame pointers/sibling-call preservation, keeping Debug assertions,
-all strategies and full-state replay. Fresh final-head nine-job gate required.
+Phase6 implementation merged by PR15 at 7317a03c8bca6848b17a352f0a192fb0d8e0e375 after exact-head
+97ff7d3 all nine hosted jobs passed. Both recovered-file owners verified published
+blob identity; fresh hosted GPU captures/provenance uploaded. Worker claims closed;
+hosted build CPU released. Local execution service remains unavailable, so its CPU/
+run completion and local checkout reconciliation are unconfirmed. Preserve local
+0cd1299 source branch, builds/captures and all prior artifacts; no cleanup or reset.
+Documentation-only closeout records actual acceptance and remote-source checkpoint
+workflow. Next dispatch must start from verified merged main; P06-F02 remains open.

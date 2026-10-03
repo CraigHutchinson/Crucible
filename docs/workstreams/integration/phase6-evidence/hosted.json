@@ -1,0 +1,224 @@
+{
+  "schema_version": 1,
+  "repository": "CraigHutchinson/Crucible",
+  "source_head": "97ff7d3ce17280c6e3be943490ab6273958ca000",
+  "source_tree": "910ac7177ab794b805077ed499bedd0d3f277c61",
+  "implementation_pr": 15,
+  "implementation_merge": "7317a03c8bca6848b17a352f0a192fb0d8e0e375",
+  "workflow_run": 37133718532,
+  "workflow_url": "https://github.com/CraigHutchinson/Crucible/actions/runs/37133718532",
+  "jobs": [
+    {
+      "id": 111233818258,
+      "name": "headless",
+      "status": "completed",
+      "conclusion": "success",
+      "acceptance_steps": [
+        {
+          "name": "Run python scripts/run_tests.py --preset release",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "SDL stays out of the ordinary dependency graph",
+          "status": "completed",
+          "conclusion": "success"
+        }
+      ]
+    },
+    {
+      "id": 111233818386,
+      "name": "gpu",
+      "status": "completed",
+      "conclusion": "success",
+      "acceptance_steps": [
+        {
+          "name": "Run xvfb-run -a python scripts/run_tests.py --preset gpu-release",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Actual receiver Debug readback",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Actual receiver ASan/UBSan readback",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Actual completed production-frame GPU captures",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/upload-artifact@v4",
+          "status": "completed",
+          "conclusion": "success"
+        }
+      ]
+    },
+    {
+      "id": 111233818452,
+      "name": "sanitize",
+      "status": "completed",
+      "conclusion": "success",
+      "acceptance_steps": [
+        {
+          "name": "Run python scripts/run_tests.py --preset desktop-sanitize",
+          "status": "completed",
+          "conclusion": "success"
+        }
+      ]
+    },
+    {
+      "id": 111233818476,
+      "name": "build (ubuntu-24.04, release)",
+      "status": "completed",
+      "conclusion": "success",
+      "acceptance_steps": [
+        {
+          "name": "Run python scripts/run_tests.py --preset desktop-release",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Native X11 window event smoke",
+          "status": "completed",
+          "conclusion": "success"
+        }
+      ]
+    },
+    {
+      "id": 111233818502,
+      "name": "build (windows-latest, debug)",
+      "status": "completed",
+      "conclusion": "success",
+      "acceptance_steps": [
+        {
+          "name": "Run python scripts/run_tests.py --preset desktop-debug",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Native X11 window event smoke",
+          "status": "completed",
+          "conclusion": "skipped"
+        }
+      ]
+    },
+    {
+      "id": 111233818505,
+      "name": "build (windows-latest, release)",
+      "status": "completed",
+      "conclusion": "success",
+      "acceptance_steps": [
+        {
+          "name": "Run python scripts/run_tests.py --preset desktop-release",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Native X11 window event smoke",
+          "status": "completed",
+          "conclusion": "skipped"
+        }
+      ]
+    },
+    {
+      "id": 111233818511,
+      "name": "build (macos-15, release)",
+      "status": "completed",
+      "conclusion": "success",
+      "acceptance_steps": [
+        {
+          "name": "Run python scripts/run_tests.py --preset macos-release",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Native X11 window event smoke",
+          "status": "completed",
+          "conclusion": "skipped"
+        }
+      ]
+    },
+    {
+      "id": 111233818531,
+      "name": "build (macos-15, debug)",
+      "status": "completed",
+      "conclusion": "success",
+      "acceptance_steps": [
+        {
+          "name": "Run python scripts/run_tests.py --preset macos-debug",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Native X11 window event smoke",
+          "status": "completed",
+          "conclusion": "skipped"
+        }
+      ]
+    },
+    {
+      "id": 111233818542,
+      "name": "build (ubuntu-24.04, debug)",
+      "status": "completed",
+      "conclusion": "success",
+      "acceptance_steps": [
+        {
+          "name": "Run python scripts/run_tests.py --preset desktop-debug",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Native X11 window event smoke",
+          "status": "completed",
+          "conclusion": "success"
+        }
+      ]
+    }
+  ],
+  "test_counts": {
+    "public_platform_debug_release_each": 30,
+    "normal_linux_asan_ubsan": 30,
+    "sdl_free_headless_release": 28,
+    "gpu_release_full": 31,
+    "gpu_debug_actual_readback": 1,
+    "gpu_asan_ubsan_actual_readback": 1
+  },
+  "gpu_artifact": {
+    "id": 11277429745,
+    "name": "gpu-readback-evidence",
+    "size_in_bytes": 78070,
+    "url": "https://api.github.com/repos/CraigHutchinson/Crucible/actions/artifacts/11277429745",
+    "archive_download_url": "https://api.github.com/repos/CraigHutchinson/Crucible/actions/artifacts/11277429745/zip",
+    "expired": false,
+    "created_at": "2026-10-03T15:38:52Z",
+    "expires_at": "2027-01-01T15:34:26Z",
+    "updated_at": "2026-10-03T15:38:52Z",
+    "digest": "sha256:2cf7c84bb1f0b9ecc06992811f137d4db79042514b428461be7f21f31d5b1f92",
+    "workflow_run": {
+      "id": 37133718532,
+      "repository_id": 1398771135,
+      "head_repository_id": 1398771135,
+      "head_branch": "phase6-instancing-examples",
+      "head_sha": "97ff7d3ce17280c6e3be943490ab6273958ca000"
+    },
+    "retention_days": 90
+  },
+  "receiving_limits": [
+    "Software Vulkan device; physical-device performance and backend promotion remain open.",
+    "Drained readbacks do not prove actual delayed three-slot saturation.",
+    "Injected device/submission/map/partial-creation/failed-drain/hang receiving remains P06-F02.",
+    "Original Git-backed local visuals were inspected before final exporter metadata refinements; this hosted artifact records fresh exact-head capture provenance.",
+    "Local execution service disconnected; interrupted local sanitizer completion and checkout reconciliation remain unconfirmed."
+  ],
+  "sanitizer_policy": {
+    "instrumentation": "AddressSanitizer and UndefinedBehaviorSanitizer; leak checking enabled",
+    "optimization": "Scoped -O1 on instrumented project/Pipeline targets; Debug assertions retained",
+    "x11": "SDL_X11_SHARED=OFF only for gpu-sanitize; direct X11 linkage keeps library globals resident at process exit"
+  }
+}

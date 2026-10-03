@@ -1,6 +1,6 @@
 # Phase 6: real instancing foundation and mission examples
 
-Status: implementation delivered; receiving/combined validation and publication in progress, 2026-10-03.
+Status: optional implementation delivered and merged; fault/physical receiving remains open.
 Dispatch baseline `44701d6ff0a2ad94acf312f07f7f0ce2ab17ae83`.
 Planning baseline `5411125d68889c073d56e1526b50c619cd237ed1`, 2026-10-03.
 Consumes [Phase 5 review](../sprint-reviews/phase-05.md),
@@ -11,7 +11,7 @@ material/entity kind and faction allegiance remain separate, with no two-side
 assumption in instance colors. No faction/network implementation is dispatched.
 Packages have concrete callers and initial receiving evidence. The
 [sprint review](../sprint-reviews/phase-06.md) separates passed observations from
-pending combined tests, hosted CI, publication and fault receiving.
+final combined/hosted acceptance from open fault and physical-device receiving.
 
 ## Useful increment and scope
 
@@ -51,7 +51,7 @@ Device/submission/map failure, partial GPU creation after allocation, failed dra
 and hang paths are reviewed but not injected; malformed shader testing covers only
 preflight rejection. New P06-F02 explicitly retains these receiving gates, together
 with delayed saturation, before default-backend promotion. Combined builds/tests,
-hosted CI and publication are architect-owned and pending.
+hosted CI and publication are architect-owned and recorded in the completed review.
 
 ## Team and ownership reassessment
 
@@ -64,7 +64,7 @@ are read-only; they do not dispatch implementation or reserve build CPU.
 | P6-R renderer worker | Consolidate backend, numeric layout, shader and upload/fence rules (prior R1/R2) | `include/crucible/presentation/gpu/`, `src/presentation/gpu/`, `tests/presentation/gpu/`, their local manifests, `docs/workstreams/presentation/phase6-gpu.md` | Concrete receiver and actual readback fixtures wired by architect |
 | P6-M mission-evidence worker | Retain bounded runtime/provider and examples; defer balance changes | `include/crucible/runtime/ReferenceMissionRoute.hpp`, `src/runtime/ReferenceMissionRoute.cpp`, `tests/runtime/ReferenceMissionRoute.cpp`, runtime local manifests, `docs/workstreams/runtime/phase6-examples.md` | Shared fixed route consumed by existing CLI and mission exports; measured strategy results |
 | P6-I architect | Retain shared wiring, integration and final review | `src/main.cpp`, `src/desktop/`, `tests/integration/`, all shared manifests/presets/CI/pins/contracts, `scripts/`, central docs and retained evidence | Optional GPU executable/capture, production route/export callers, combined validation and publication |
-| Platform receiving | Split after P6-R contract is consumed | Future separate Metal/D3D12/platform paths; no writes this sprint | Phase 7 receivers with explicit device/toolchain gates |
+| Platform receiving | Split after P06-F02 fault/retirement receiving passes | Future separate Metal/D3D12/platform paths; no writes this sprint | Phase 7 receivers with explicit device/toolchain gates |
 | ECS/spatial/resources | Retain existing policy and pins | Read-only for workers | Existing conservation/query/replay oracles remain intact |
 
 Workers send shared-surface patch requests; no concurrent edits to root manifests,
@@ -237,3 +237,19 @@ also separated offscreen acceptance from window ownership and
 These are verified against pinned headers. Actual Vulkan/SPIR-V execution/readback
 has now passed initial receiving; compiler/device provenance, combined acceptance
 and remaining fault/device gates are recorded by the sprint review and architect.
+
+## Published acceptance
+
+[PR15](https://github.com/CraigHutchinson/Crucible/pull/15) merged at
+7317a03c8bca6848b17a352f0a192fb0d8e0e375 after all nine exact-head jobs passed97ff7d3.
+See [review](../sprint-reviews/phase-06.md) and [hosted manifest](../workstreams/integration/phase6-evidence/hosted.json)
+for complete counts, capture provenance and source recovery limits. P06-F02 explicitly
+remains open; local checkout reconciliation awaits execution-service recovery.
+
+Phase 7 fault receiving uses private test-scoped seams, without introducing a public
+backend interface. Injected SDL failures after real resource creation must be labeled
+as injected failures rather than hardware device loss. Withholding fence observation
+on an executing device must be labeled as controlled delayed retirement rather than
+an observed slow GPU. Failed-drain/terminate and intentionally hung-drain fixtures
+run in isolated subprocesses with explicit expected exit markers and parent timeouts;
+SDL idle waiting has no bounded timeout, so intentional hangs cannot run inline.

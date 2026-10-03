@@ -1,7 +1,7 @@
 # Phase 6 sprint review: instancing and mission examples
 
-Status: implementation delivered, receiving/validation in progress, 2026-10-03.
-Accountable reviewer: architect. Combined tests, hosted CI and publication pending.
+Status: completed optional foundation increment, 2026-10-03.
+Accountable reviewer: architect. Fault/physical-platform receiving remains open.
 
 ## Intent, baseline and scope
 
@@ -42,8 +42,18 @@ all strategies, terminal replay, assertions and ASan/UBSan/leak checking; compil
 instrumented project/Pipeline targets with scoped -O1 plus retained frame pointers
 and disabled sibling-call optimization. This follows the
 [Clang sanitizer usage guidance](https://clang.llvm.org/docs/AddressSanitizer.html#usage).
-Ordinary Debug/Release configuration is unchanged. Final-head acceptance is required
+Ordinary Debug/Release configuration is unchanged. Final-head acceptance passed
 after this build-policy correction; initial eight green jobs are historical evidence.
+
+
+Actual GPU Debug readback passed before GPU sanitizer receiving exposed X11
+library-global startup allocations after SDL dynamically unloaded Xlib. All reported
+allocation groups originated in X11 initialization; the pinned SDL closes its XIM
+and displays and destroys owned resource databases. The `gpu-sanitize` preset uses
+`SDL_X11_SHARED=OFF` to link X11 and its enabled extensions directly, keeping library
+globals resident through process exit. X11 remains enabled; ASan, UBSan and leak
+checking remain enabled. Fresh exact-head CI established this correction, and
+no device-failure or physical-performance acceptance follows from it.
 
 ## Verification and useful artifacts
 
@@ -76,7 +86,7 @@ Source checkpoints b11a377, c9a8704 and 0cd1299 preserve progress. Fifty reviewe
 file blobs were uploaded before the disconnect; the agents recovered the remaining
 five test files exactly from their authored reads/patches. No source was regenerated.
 The public repository and push permission were verified before recovery publication.
-Hosted exact-head CI must validate all nine jobs and the final exporter; its uploaded
+Hosted exact-head CI validated all nine jobs and the final exporter; its uploaded
 GPU artifact supplies fresh executable/source/shader/device/trace provenance.
 Local tree reconciliation remains pending execution-service recovery.
 
@@ -105,8 +115,13 @@ Actual production-painter [ACTIVE tick 60](../concepts/exports/phase6-sweep-acti
 [LOST tick 900](../concepts/exports/phase6-passive-lost.png) were captured and visually
 inspected by the architect. The [strategy comparison](../concepts/exports/phase6-strategy-comparison.png)
 uses retained checkpoints. These show executable behavior, not a human playtest,
-balanced difficulty or broad strategy robustness. Remaining combined, native,
-hosted GPU and exact-head CI results are architect-owned and pending.
+balanced difficulty or broad strategy robustness. Hosted final-head acceptance is recorded below; human and physical-platform
+receiving remains open.
+
+The GPU job also receives the actual OffscreenRenderer path in Debug and
+ASan/UBSan using the selected readback fixture. The full Release suite remains
+31 cases; other public-platform and normal sanitizer suites remain 30 cases.
+No runtime sanitizer checks are disabled for actual GPU receiving.
 
 ## Retrospective and reuse
 
@@ -138,4 +153,40 @@ structural, terrain or concurrent simulation implementation was dispatched.
 
 ## Closure
 
-Pending reviewed publication, exact-head CI, merge and verified baseline.
+Implementation [PR 15](https://github.com/CraigHutchinson/Crucible/pull/15) merged at
+7317a03c8bca6848b17a352f0a192fb0d8e0e375 after [exact-head CI](https://github.com/CraigHutchinson/Crucible/actions/runs/37133718532)
+passed all nine jobs at `97ff7d3ce17280c6e3be943490ab6273958ca000`.
+Linux/Windows/macOS Debug and Release each passed30/30; normal Linux ASan/UBSan
+passed30/30; SDL-free headless Release passed28/28; GPU Release passed31/31.
+Both native Linux X11 smoke steps passed. The GPU capture and upload steps passed;
+[artifact 11277429745](https://github.com/CraigHutchinson/Crucible/actions/runs/37133718532/artifacts/11277429745)
+contains exact-head executable/source/shader/compiler/device inventory and actual
+trace provenance. [Hosted receiving manifest](../workstreams/integration/phase6-evidence/hosted.json)
+retains run/head/job/artifact identity and digest; artifact retention is90days.
+
+Published source and recovered files were reviewed by both owners at the exact head.
+Main is verified through the authorized GitHub repository. The local execution
+service remains unavailable: local source/build/capture checkpoints are preserved,
+and local checkout reconciliation and the interrupted sanitizer outcome are deferred.
+No interrupted local test is claimed green. This closeout changes documentation
+only; the existing inspected visuals remain representative, so no new capture is needed.
+
+Next increment consolidates P06-F02 under one rendering/lifetime owner, retains a
+mission/playtest preparation owner, and keeps architect wiring/CI. Split Metal and
+D3D12 receivers only after the fault/retirement contract is consumed. No new sprint
+is dispatched by this closure.
+
+Phase 7 fault receiving uses private test-scoped seams, without introducing a public
+backend interface. Injected SDL failures after real resource creation must be labeled
+as injected failures rather than hardware device loss. Withholding fence observation
+on an executing device must be labeled as controlled delayed retirement rather than
+an observed slow GPU. Failed-drain/terminate and intentionally hung-drain fixtures
+run in isolated subprocesses with explicit expected exit markers and parent timeouts;
+SDL idle waiting has no bounded timeout, so intentional hangs cannot run inline.
+
+Final-head GPU receiving passed the full Release suite (31/31), actual Debug
+readback (1/1), and actual ASan/UBSan readback (1/1) with leak checking enabled.
+Direct X11 linkage resolved the startup-cache report at head `97ff7d3ce17280c6e3be943490ab6273958ca000`.
+The selected readback durations (1.52 seconds Debug, 1.89 seconds sanitizer) are test
+durations, not rendering performance measurements. Fresh exact-head captures and
+provenance were uploaded as artifact 11277429745 with the retained manifest digest.
