@@ -1,6 +1,6 @@
 # Phase 7: failure receiving and mission timing investigation
 
-Status: implementation received; hosted acceptance/publication pending, 2026-10-03. Baseline `0767a3033a84417c19bde9a4ff46dca0ce118f99`.
+Status: remote increment merged and hosted acceptance complete; P07-F01 local recovery open, 2026-10-03. Baseline `0767a3033a84417c19bde9a4ff46dca0ce118f99`.
 User authorizes collaborative execution, push and merge. Consume the
 [Phase 6 review](../sprint-reviews/phase-06.md),
 [GPU contract](../decisions/phase6-gpu.md),
@@ -111,3 +111,8 @@ Hosted GPU CI now retains one fresh explicit Release timing study plus retiremen
 captures for 90 days, without multiplying the study across desktop jobs.
 [Phase 8 proposal](phase8.md) reserves shader/device shootouts and field inspection;
 no automatic dispatch or unsupported platform winner. See the final review.
+
+PR17 merged at d2fda2a8042cf9d1b681dc142d3e021bd5a2fa37 with all nine exact-head
+jobs green; [publication receipt](../workstreams/integration/phase7-publication.json)
+links fresh hosted captures and distinguishes synthetic checkout/merge identity.
+Remote main verified; local evidence/hash and checkout recovery remain P07-F01.

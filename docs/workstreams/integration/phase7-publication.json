@@ -1,0 +1,112 @@
+{
+  "pr": 17,
+  "source_head": "8b3eec001377ea79063590655720c9ff4a425b9a",
+  "source_tree": "efc69828276ac4e613f47088d90e3ec6726247c8",
+  "run_id": 37144416481,
+  "run_url": "https://github.com/CraigHutchinson/Crucible/actions/runs/37144416481",
+  "artifact": {
+    "id": 11281862369,
+    "name": "gpu-readback-evidence",
+    "bytes": 665196,
+    "digest": "sha256:e9888f67506d216059fe9bd51cfd06e3730c5efc4da8bb5ddeeb7bf884601dd3",
+    "created_at": "2026-10-03T18:34:15Z",
+    "expires_at": "2027-01-01T18:30:01Z",
+    "url": "https://github.com/CraigHutchinson/Crucible/actions/runs/37144416481/artifacts/11281862369",
+    "downloaded_reference": "file_0000000057408210bdb6bef911f6357a"
+  },
+  "local_baseline_verified": false,
+  "local_recovery_gate": "P07-F01",
+  "capture_scope": "Fresh hosted Release mission study and executing GPU retirement/production captures. Root inspected original local outputs before environment_offline; original bytes/hash recovery and final local publication remain open. Hosted artifact contents are not claimed visually re-inspected after download.",
+  "acceptance": {
+    "gpu_release": 34,
+    "gpu_debug_selected": 3,
+    "gpu_sanitize_selected": 3,
+    "desktop_per_job": 31,
+    "headless": 28,
+    "normal_sanitize": 31
+  },
+  "local_timing": [
+    {
+      "case": "cadence30-start0",
+      "outcome": "WON",
+      "tick": 297,
+      "reclaimed": 1780,
+      "edits": 10
+    },
+    {
+      "case": "cadence120-start0",
+      "outcome": "WON",
+      "tick": 271,
+      "reclaimed": 1780,
+      "edits": 3
+    },
+    {
+      "case": "cadence60-start60",
+      "outcome": "WON",
+      "tick": 449,
+      "reclaimed": 1780,
+      "edits": 7
+    }
+  ],
+  "merge_sha": "d2fda2a8042cf9d1b681dc142d3e021bd5a2fa37",
+  "verified_remote_main_at_merge": "d2fda2a8042cf9d1b681dc142d3e021bd5a2fa37",
+  "tested_checkout_sha": "19fa1fd61abbb39c486434092ae766ece044a29d",
+  "tested_checkout_tree": "efc69828276ac4e613f47088d90e3ec6726247c8",
+  "jobs": [
+    {
+      "id": 111265317889,
+      "name": "headless",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "id": 111265318108,
+      "name": "gpu",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "id": 111265318117,
+      "name": "build (macos-15, debug)",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "id": 111265318142,
+      "name": "build (ubuntu-24.04, release)",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "id": 111265318153,
+      "name": "sanitize",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "id": 111265318187,
+      "name": "build (macos-15, release)",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "id": 111265318189,
+      "name": "build (ubuntu-24.04, debug)",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "id": 111265318217,
+      "name": "build (windows-latest, debug)",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "id": 111265318270,
+      "name": "build (windows-latest, release)",
+      "status": "completed",
+      "conclusion": "success"
+    }
+  ],
+  "zip_contents_independently_inspected": false
+}

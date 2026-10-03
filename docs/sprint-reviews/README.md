@@ -12,7 +12,7 @@ consider. Read the latest review before planning or delegating another sprint.
 | 3 | Finite reclamation and consumed H2 receiving proof; complete | [Phase 3 review](phase-03.md), [plan](../phases/phase3.md) | `21f3786`, PR 7 |
 | 4 | Interactive inspection/control; complete | [Phase 4 review](phase-04.md), [plan](../phases/phase4.md) | `09ae74f`, PR 9 |
 | 5 | Reclamation challenge, instancing design and resilient validation; complete | [Phase 5 review](phase-05.md), [plan](../phases/phase5.md) | `57c1da6`, PR 12 |
-| 7 | Controlled GPU failure/retirement and mission timing; final receiving/publication pending | [Phase 7 review](phase-07.md), [plan](../phases/phase7.md) | Pending |
+| 7 | Controlled GPU failure/retirement and mission timing; remote merged/CI green, local recovery P07-F01 open | [Phase 7 review](phase-07.md), [plan](../phases/phase7.md) | `d2fda2a8042cf9d1b681dc142d3e021bd5a2fa37`, PR17 |
 | 6 | Optional executing Vulkan instancing and replay-backed visual examples; fault/device gates open | [Phase 6 review](phase-06.md), [plan](../phases/phase6.md) | `7317a03c8bca6848b17a352f0a192fb0d8e0e375`, PR15 |
 
 ## Review procedure

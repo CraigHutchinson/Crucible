@@ -1,7 +1,7 @@
 # Phase 7 review: controlled GPU failures and frozen mission timing
 
-Status: source implementation reviewed and locally received; final hosted acceptance
-and publication pending, 2026-10-03. Architect accountable.
+Status: remote increment merged and hosted acceptance complete; local recovery
+P07-F01 remains open, 2026-10-03. Architect accountable.
 Dispatch baseline 0767a3033a84417c19bde9a4ff46dca0ce118f99.
 [Plan](../phases/phase7.md), [receiving](../workstreams/integration/phase7-validation.md),
 [next proposal](../phases/phase8.md).
@@ -46,9 +46,8 @@ No production renderer/API/shader, numerical rule or dependency pin changed.
 Full local GPU Debug passed 34/34. Release passed 31 non-GPU cases and its three
 environment-blocked GPU cases subsequently passed after the helper correction.
 SDL-free Release passed 28/28. The full GPU sanitizer built but 32/34 cases report
-the same LSan /proc fatal error; leak checks remain enabled. Exact-head hosted nine
-jobs, including normal sanitizer and three actual GPU cases in Debug/sanitizer,
-remain required before merge.
+the same LSan /proc fatal error; leak checks remain enabled. All nine hosted jobs passed at final PR head8b3eec, including normal sanitizer31
+and GPU Release34/Debug3/sanitizer3. See the immutable publication receipt.
 
 | Timing case | Outcome / tick | Reclaimed | Applied edits |
 |---|---|---:|---:|
@@ -64,8 +63,7 @@ delayed-start tick-60 image correctly has no field before application at tick61.
 Original local PNGs/raw metadata/results/logs were copied into Git-backed evidence
 paths but final review/publication is unconfirmed after environment_offline.
 The workflow now retains a fresh Release study and GPU captures in the same hosted
-90-day artifact; it does not imply original files were recovered. Artifact receipts
-and hosted acceptance will be recorded at closure. Forced-exit/killed child fixtures
+90-day artifact; it does not imply original files were recovered. Artifact receipts and hosted acceptance are recorded below. Forced-exit/killed child fixtures
 bypass exit-time LSan; normal paths keep leak checks. Images do not prove physical
 device loss, performance or human comprehension.
 
@@ -107,4 +105,14 @@ trees; original commits are retained by local checkpoint tags. Final documentati
 workflow publication uses the authorized connector while execution is offline.
 It does not claim local reconciliation. Preserve all Phase 6/7 branches, builds,
 raw captures, failed outputs and worker documents; no cleanup is dispatched.
-Exact final-head CI/artifact receipt and actual merged baseline follow at closure.
+PR17 merged at `d2fda2a8042cf9d1b681dc142d3e021bd5a2fa37` after all nine jobs
+passed at PR head `8b3eec001377ea79063590655720c9ff4a425b9a`,
+[run37144416481](https://github.com/CraigHutchinson/Crucible/actions/runs/37144416481).
+The tested synthetic checkout19fa1fd and actual merge share treeefc6982; remote
+main was verified. [Publication receipt](../workstreams/integration/phase7-publication.json)
+and [downloadable evidence](https://github.com/CraigHutchinson/Crucible/actions/runs/37144416481/artifacts/11281862369)
+record exact artifact identity/90-day expiry. Hosted API/log receiving review is
+clean; fresh ZIP contents were not reopened while offline. Original local visuals
+were inspected before disconnect. Local baseline and original byte/hash recovery
+remain explicitly P07-F01, preventing next dispatch; no cleanup or regeneration.
+Documentation closeout records these actual results without altering C++/CI/pins.
