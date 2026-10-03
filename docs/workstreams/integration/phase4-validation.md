@@ -83,3 +83,13 @@ now select Homebrew LLVM21 and its matching headers/libc++/libunwind together,
 using the [vendor's documented runtime and availability selection](https://formulae.brew.sh/formula/llvm@21).
 No Pipeline API shim or reduced tests were added. This developer toolchain does not
 establish Apple bundle redistribution/signing; that remains a packaging gate.
+
+macOS LLVM21 built all targets, then the camera corner fixture identified FMA
+contraction changing a fitted corner just outside its viewport. The original failure
+was independently reproduced on x86 with `-O3 -mfma -ffp-contract=fast`. The fix
+constructs canonical contained fit endpoints and interpolates between them; strict
+screen-space containment/nextafter exterior rejection remain intact, with no epsilon
+widening or global compiler-flag workaround. Width/height-limited nonbinary and
+offset/letterbox fixtures cover this boundary. Reciprocal review found no blocker;
+the FMA probe and affected camera/painter/event tests pass in local Debug/Release
+and adjusted sanitizers. Exact-head hosted gates validate the receiving Apple consumer.

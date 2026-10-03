@@ -72,9 +72,21 @@ std::optional<ScreenPoint> Camera2D::TryToScreen(Position position) const noexce
     if (!std::isfinite(position.x) || !std::isfinite(position.y) ||
         position.x < 0 || position.y < 0 || position.x > extent_.width || position.y > extent_.height) return std::nullopt;
     const auto scale = GetScale();
+    const auto project = [this, scale](double value, double center, double world_size,
+            double origin, double viewport_size) {
+        if (zoom_ == 1 || viewport_size / scale / 2 >= world_size / 2) {
+            // A fitted axis covers the entire world. Construct contained bounds directly:
+            // centered multiply/add cancellation (including FMA) can otherwise put an
+            // exact world corner just outside the viewport. lerp preserves these endpoints.
+            const double projected_size = std::min(world_size * scale, viewport_size);
+            const double padding = (viewport_size - projected_size) / 2;
+            return std::lerp(origin + padding, (origin + viewport_size) - padding, value / world_size);
+        }
+        return origin + viewport_size / 2 + (value - center) * scale;
+    };
     const ScreenPoint screen{
-        viewport_.x + viewport_.width / 2 + (position.x - center_.x) * scale,
-        viewport_.y + viewport_.height / 2 + (position.y - center_.y) * scale};
+        project(position.x, center_.x, extent_.width, viewport_.x, viewport_.width),
+        project(position.y, center_.y, extent_.height, viewport_.y, viewport_.height)};
     if (!std::isfinite(screen.x) || !std::isfinite(screen.y)) return std::nullopt;
     return screen;
 }

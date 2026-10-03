@@ -139,6 +139,52 @@ bool RejectionFixtures() {
     return true;
 }
 
+bool NonbinaryFitEndpoints() {
+    const auto infinity = std::numeric_limits<double>::infinity();
+    for (const ScreenPoint offset : std::array{ScreenPoint{0, 0}, ScreenPoint{13, 29}}) {
+        Camera2D wide{{7, 5, 1}, {offset.x, offset.y, 400, 400}};
+        const auto first = wide.TryToScreen({0, 0});
+        const auto last = wide.TryToScreen({7, 5});
+        CHECK(first && last);
+        // Independently derived fit: the wide axis fills 400; the short axis has
+        // (400 - 5 * 400/7)/2 padding. Exact viewport boundaries stay canonical.
+        CHECK(first->x == offset.x && last->x == offset.x + 400);
+        CHECK(Near(first->y, offset.y + 400.0 / 7));
+        CHECK(Near(last->y, offset.y + 400 - 400.0 / 7));
+        CHECK(WorldIs(wide, *first, {0, 0}));
+        CHECK(WorldIs(wide, {offset.x + 200, first->y}, {3.5F, 0}));
+        CHECK(WorldIs(wide, {offset.x + 200, last->y}, {3.5F, 5}));
+        CHECK(!wide.TryToWorld({offset.x + 400, offset.y + 200}));
+        CHECK(!wide.TryToWorld({std::nextafter(first->x, -infinity), first->y}));
+        CHECK(!wide.TryToWorld({offset.x + 200, std::nextafter(first->y, -infinity)}));
+        CHECK(!wide.TryToWorld({offset.x + 200, std::nextafter(last->y, infinity)}));
+
+        Camera2D tall{{5, 7, 1}, {offset.x, offset.y, 400, 400}};
+        const auto top = tall.TryToScreen({0, 0});
+        const auto bottom = tall.TryToScreen({5, 7});
+        CHECK(top && bottom);
+        CHECK(top->y == offset.y && bottom->y == offset.y + 400);
+        CHECK(WorldIs(tall, *top, {0, 0}));
+        CHECK(WorldIs(tall, {top->x, offset.y + 200}, {0, 3.5F}));
+        CHECK(WorldIs(tall, {bottom->x, offset.y + 200}, {5, 3.5F}));
+        CHECK(!tall.TryToWorld({offset.x + 200, offset.y + 400}));
+        CHECK(!tall.TryToWorld({top->x, std::nextafter(top->y, -infinity)}));
+        CHECK(!tall.TryToWorld({std::nextafter(top->x, -infinity), offset.y + 200}));
+        CHECK(!tall.TryToWorld({std::nextafter(bottom->x, infinity), offset.y + 200}));
+    }
+    // One axis still fits after zoom, while the other retains unclipped projection.
+    Camera2D thin{{7, 1, 1}, {0, 0, 400, 400}};
+    CHECK(thin.TryZoom({200, 200}, 2));
+    const auto first = thin.TryToScreen({0, 0});
+    const auto last = thin.TryToScreen({7, 1});
+    CHECK(first && last && first->x < 0 && last->x > 400);
+    CHECK(WorldIs(thin, {200, first->y}, {3.5F, 0}));
+    CHECK(WorldIs(thin, {200, last->y}, {3.5F, 1}));
+    CHECK(!thin.TryToWorld({200, std::nextafter(first->y, -infinity)}));
+    CHECK(!thin.TryToWorld({200, std::nextafter(last->y, infinity)}));
+    return true;
+}
+
 bool StartupFixtures() {
     const auto rejects = [](GridConfig config, ScreenRect viewport) {
         try { Camera2D camera{config, viewport}; }
@@ -164,6 +210,6 @@ bool StartupFixtures() {
 
 int main() {
     if (!AffineFixtures() || !EdgeZoomFixtures() || !OffsetAndRoundTripFixtures() ||
-        !RejectionFixtures() || !StartupFixtures()) return 1;
+        !RejectionFixtures() || !NonbinaryFitEndpoints() || !StartupFixtures()) return 1;
     std::cout << "Camera independent affine/boundary fixtures passed\n";
 }

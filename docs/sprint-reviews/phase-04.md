@@ -16,6 +16,9 @@ pause/restart and finite-resource display have actual production callers.
 Peer review found and resolved stale application feedback clearing previews,
 overlapping suspension reasons, cosmetic controls discarding elapsed time and
 lost-focus drags. Native resize fixtures explicitly wait for asynchronous completion.
+Apple hosted tests also exposed FMA cancellation at fitted camera corners.
+Canonical endpoint interpolation fixes the defect while preserving strict exterior
+rejection; root reproduced the failure/fix locally and the provider peer-reviewed it.
 Reciprocal provider and root lifetime/numerical reviews found no remaining blockers.
 See combined evidence for independent oracles, builds, actual-state image and limits.
 
