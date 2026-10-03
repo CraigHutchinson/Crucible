@@ -116,7 +116,8 @@
       "name": "gpu-sanitize",
       "inherits": "spike-sanitize",
       "cacheVariables": {
-        "CRUCIBLE_BUILD_GPU_RECEIVER": "ON"
+        "CRUCIBLE_BUILD_GPU_RECEIVER": "ON",
+        "SDL_X11_SHARED": "OFF"
       }
     }
   ],
