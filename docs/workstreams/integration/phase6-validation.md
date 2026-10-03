@@ -73,3 +73,9 @@ Initial hosted head6b92d553 passed eight jobs; normal sanitizer29/30 but strateg
 fixture timed out900sec with no diagnostic. Instrumented targets now use scoped
 -O1 while preserving assertions, ASan/UBSan/leak checks and all replay cases.
 The final-head nine-job rerun is required; no failed gate is counted green.
+
+The existing GPU job additionally builds the actual receiver readback target under
+gpu-debug and gpu-sanitize and runs that selected fixture, with missing-test failure.
+This closes actual-receiver Debug/ASan coverage without repeating unrelated suites;
+normal sanitizer retains the full mission replay pack. No runtime sanitizer checks
+are disabled for the GPU receiving step. Final-head job acceptance remains required.

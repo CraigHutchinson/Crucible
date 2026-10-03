@@ -111,6 +111,13 @@
       "cacheVariables": {
         "CRUCIBLE_BUILD_GPU_RECEIVER": "ON"
       }
+    },
+    {
+      "name": "gpu-sanitize",
+      "inherits": "spike-sanitize",
+      "cacheVariables": {
+        "CRUCIBLE_BUILD_GPU_RECEIVER": "ON"
+      }
     }
   ],
   "buildPresets": [
@@ -169,6 +176,10 @@
     {
       "name": "gpu-release",
       "configurePreset": "gpu-release"
+    },
+    {
+      "name": "gpu-sanitize",
+      "configurePreset": "gpu-sanitize"
     }
   ],
   "testPresets": [
@@ -266,6 +277,13 @@
     {
       "name": "gpu-release",
       "configurePreset": "gpu-release",
+      "output": {
+        "outputOnFailure": true
+      }
+    },
+    {
+      "name": "gpu-sanitize",
+      "configurePreset": "gpu-sanitize",
       "output": {
         "outputOnFailure": true
       }
