@@ -3,11 +3,13 @@ import importlib.util
 from contextlib import redirect_stderr, redirect_stdout
 import io
 import json
+import os
 from pathlib import Path
 import subprocess
 import sys
 import tempfile
 import unittest
+from types import SimpleNamespace
 from unittest.mock import patch
 
 SPEC = importlib.util.spec_from_file_location("check_prerequisites", Path(__file__).resolve().parents[2] / "scripts/check_prerequisites.py")
@@ -27,6 +29,9 @@ class PrerequisiteTests(unittest.TestCase):
         self.build = Path(self.directory.name)
         self.cache()
         self.calls = []
+        platform_patch = patch.object(prerequisites.platform, "system", return_value="Linux")
+        platform_patch.start()
+        self.addCleanup(platform_patch.stop)
 
     def cache(self, sanitize=False):
         (self.build / "CMakeCache.txt").write_text("CMAKE_CXX_COMPILER:FILEPATH=/configured/compiler\nCMAKE_CXX_FLAGS:STRING=-stdlib=libc++\nCRUCIBLE_ENABLE_SANITIZERS:BOOL=" + ("ON" if sanitize else "OFF") + "\n")
@@ -182,6 +187,7 @@ class PrerequisiteTests(unittest.TestCase):
         self.assertFalse(receipt["ok"])
         self.assertEqual("selected_inventory", receipt["checks"][-1]["name"])
 
+    @unittest.skipUnless(os.name == "posix", "POSIX process-group cleanup")
     def test_probe_timeout_kills_and_reaps_group_with_receipt(self):
         from unittest.mock import patch, Mock
         child = Mock(pid=12345, returncode=-9, stdout=io.BytesIO())
@@ -195,6 +201,19 @@ class PrerequisiteTests(unittest.TestCase):
         self.assertEqual(2, child.wait.call_count)
         self.assertEqual(["tool"], receipt["command"])
         self.assertIn("elapsed_seconds", receipt)
+
+    def test_windows_timeout_kills_direct_child_with_explicit_scope(self):
+        from unittest.mock import Mock
+        child = Mock(pid=12345, returncode=-9, stdout=io.BytesIO())
+        child.wait.side_effect = [subprocess.TimeoutExpired("tool", 0.2), -9]
+        with patch.object(prerequisites, "os", SimpleNamespace(name="nt")), \
+                patch.object(prerequisites.subprocess, "Popen", return_value=child) as launch:
+            receipt = prerequisites.run_probe("tool", ["tool"], timeout=0.2, env={})
+        self.assertEqual("unknown", receipt["status"])
+        child.kill.assert_called_once_with()
+        self.assertEqual(2, child.wait.call_count)
+        self.assertFalse(launch.call_args.kwargs["start_new_session"])
+        self.assertEqual("Windows direct child only", receipt["process_scope"])
 
     def test_probe_output_receipt_is_bounded(self):
         from unittest.mock import patch, Mock
@@ -278,6 +297,56 @@ class PrerequisiteTests(unittest.TestCase):
                                                      probe=probe, env={})
         self.assertTrue(receipt["ok"])
         self.assertNotIn("display", [call[0] for call in self.calls])
+
+    def test_normal_toolchain_compiler_variable_comes_from_generated_metadata(self):
+        (self.build / "CMakeCache.txt").write_text("CRUCIBLE_ENABLE_SANITIZERS:BOOL=OFF\n")
+        metadata = self.build / "CMakeFiles/3.30.5/CMakeCXXCompiler.cmake"
+        metadata.parent.mkdir(parents=True)
+        metadata.write_text('set(CMAKE_CXX_COMPILER "/opt/homebrew/opt/llvm@21/bin/clang++")\nset(CMAKE_CXX_COMPILER_ID "Clang")\n')
+        with patch.object(prerequisites.platform, "system", return_value="Darwin"):
+            receipt = prerequisites.check_prerequisites(self.build, [], probe=self.probe,
+                                                         env={"CXX": "/unrelated/ambient/compiler"})
+        self.assertTrue(receipt["ok"])
+        self.assertEqual("/opt/homebrew/opt/llvm@21/bin/clang++", receipt["compiler"])
+        self.assertEqual([], self.calls)
+
+    def test_missing_generated_compiler_never_uses_ambient_for_test_stage(self):
+        (self.build / "CMakeCache.txt").write_text("CRUCIBLE_ENABLE_SANITIZERS:BOOL=OFF\n")
+        receipt = prerequisites.check_prerequisites(self.build, [], probe=self.probe,
+                                                     env={"CXX": "/unrelated/ambient/compiler"})
+        self.assertFalse(receipt["ok"])
+        self.assertIsNone(receipt["compiler"])
+
+    def test_generated_compiler_ambiguity_blocks_but_cache_has_priority(self):
+        for version, compiler in [("3.29", "/old/compiler"), ("3.30", "/new/compiler")]:
+            metadata = self.build / "CMakeFiles" / version / "CMakeCXXCompiler.cmake"
+            metadata.parent.mkdir(parents=True)
+            metadata.write_text(f'set(CMAKE_CXX_COMPILER "{compiler}")\n')
+        receipt = self.check()
+        self.assertTrue(receipt["ok"])
+        self.assertEqual("/configured/compiler", receipt["compiler"])
+        (self.build / "CMakeCache.txt").write_text("CRUCIBLE_ENABLE_SANITIZERS:BOOL=OFF\n")
+        receipt = self.check()
+        self.assertFalse(receipt["ok"])
+        self.assertIn("multiple distinct compiler paths", receipt["checks"][-1]["detail"])
+
+    def test_generated_compiler_metadata_read_bound(self):
+        (self.build / "CMakeCache.txt").write_text("CRUCIBLE_ENABLE_SANITIZERS:BOOL=OFF\n")
+        metadata = self.build / "CMakeFiles/3.30/CMakeCXXCompiler.cmake"
+        metadata.parent.mkdir(parents=True)
+        metadata.write_bytes(b"x" * 65537)
+        receipt = self.check()
+        self.assertFalse(receipt["ok"])
+        self.assertIn("64 KiB", receipt["checks"][-1]["detail"])
+
+    def test_mac_and_windows_display_capability_remains_unknown(self):
+        for system in ("Darwin", "Windows"):
+            with self.subTest(system=system), patch.object(prerequisites.platform, "system", return_value=system):
+                receipt = self.check(self.gpu_tests())
+            self.assertFalse(receipt["ok"])
+            display = next(row for row in receipt["checks"] if row["name"] == "display")
+            self.assertEqual("unknown", display["status"])
+            self.assertNotIn("display", [call[0] for call in self.calls])
 
     def test_windows_existing_cached_compiler_path_remains_one_argument(self):
         from unittest.mock import patch

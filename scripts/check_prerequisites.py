@@ -48,6 +48,29 @@ def split_arguments(value: str) -> list[str]:
     return shlex.split(value)
 
 
+def read_generated_compiler(build_dir: Path) -> str | None:
+    """Read bounded literal CMake compiler metadata; reject stale ambiguous versions."""
+    candidates = []
+    for candidate in (build_dir / "CMakeFiles").glob("*/CMakeCXXCompiler.cmake"):
+        candidates.append(candidate)
+        if len(candidates) > 16:
+            raise ValueError("Configured compiler metadata exceeds 16 candidates")
+    compilers = set()
+    for candidate in candidates:
+        with candidate.open("rb") as source:
+            contents = source.read(65537)
+        if len(contents) > 65536:
+            raise ValueError("Configured compiler metadata exceeds 64 KiB")
+        text = contents.decode("utf-8")
+        match = re.search(r'^set\(CMAKE_CXX_COMPILER\s+"([^"\r\n]+)"\s*\)', text, re.MULTILINE)
+        if not match or any(marker in match.group(1) for marker in ("$", ";")):
+            raise ValueError("Configured compiler metadata is not a supported literal path")
+        compilers.add(match.group(1).replace("\\\\", "\\"))
+    if len(compilers) > 1:
+        raise ValueError("Configured compiler metadata contains multiple distinct compiler paths")
+    return next(iter(compilers), None)
+
+
 def read_cache(build_dir: Path | None) -> dict[str, str]:
     """Read configured values without guessing from a preset name."""
     if build_dir is None:
@@ -57,6 +80,10 @@ def read_cache(build_dir: Path | None) -> dict[str, str]:
         if line and not line.startswith(("#", "//")) and "=" in line:
             key, value = line.split("=", 1)
             cache[key.split(":", 1)[0]] = value
+    if not cache.get("CMAKE_CXX_COMPILER"):
+        compiler = read_generated_compiler(build_dir)
+        if compiler:
+            cache["CMAKE_CXX_COMPILER"] = compiler
     return cache
 
 
@@ -217,7 +244,9 @@ def check_prerequisites(build_dir: Path | None = None, tests: list[dict] | None 
                     result.update(status="fail", output="CMake >=3.25 required")
             record(tool, result)
 
-    compiler = compiler or cache.get("CMAKE_CXX_COMPILER") or environment.get("CXX")
+    compiler = compiler or cache.get("CMAKE_CXX_COMPILER")
+    if not compiler and stage == "development":
+        compiler = environment.get("CXX")
     configuration = cache.get("CMAKE_BUILD_TYPE", "").upper()
     flags = split_arguments(cache.get("CMAKE_CXX_FLAGS", ""))
     flags += split_arguments(cache.get(f"CMAKE_CXX_FLAGS_{configuration}", ""))

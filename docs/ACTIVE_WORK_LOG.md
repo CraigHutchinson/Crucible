@@ -228,3 +228,10 @@ Final fixture receiving: 30 prerequisite/runner tests and 5 permission tests pas
 Hosted run37155413952: Windows release cold MSVC canary exceeded10s;
 required check blocked before build. Windows CI allowance now bounded30s/probe
 and60s total; no bypass/retry. New source head requires new exact-head acceptance.
+
+Hosted run37155547246 found macOS normal-variable compiler metadata absent from
+CMakeCache and Linux assumptions in mocked workflow fixtures on Windows. Fixed
+bounded generated compiler discovery (cache wins; ambiguous paths block), explicit
+fixture platforms and separate Windows direct-child coverage. Local36 prerequisite/
+runner fixtures and5 mode-repair fixtures passed. Production checks retain their
+scope; a final new head must pass all nine jobs before merge.
