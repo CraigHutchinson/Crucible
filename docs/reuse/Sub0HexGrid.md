@@ -1,6 +1,15 @@
 # Sub0HexGrid: standalone groundwork and adoption specification
 
-Status: standalone initialization, 2026-10-01. The user supplied the existing empty
+Status: H2 delivered upstream; Crucible adoption pending, updated 2026-10-03.
+Current inspected upstream main: `aaae5c2fc5731a23db94fa947bbb0182d0ea69fd`.
+[H2 delivery](https://github.com/CraigHutchinson/Sub0HexGrid/blob/aaae5c2fc5731a23db94fa947bbb0182d0ea69fd/docs/phases/h2-delivery.md)
+and [PR 4](https://github.com/CraigHutchinson/Sub0HexGrid/pull/4) record checked finite
+regions, conservative complete candidates, slices/cursors, strict package consumers
+and supported platform CI. [Phase 3 P3-02](../phases/phase3.md) now owns the actual
+Crucible receiving proof; no dependency pin or production migration has been made.
+Hierarchy alternatives are a research programme, not a selected production structure.
+
+Initialization history: the user supplied the existing empty
 [Sub0HexGrid repository](https://github.com/CraigHutchinson/Sub0HexGrid) and authorized
 requirements, architecture and initial code groundwork. H0 architecture is 9a4e604;
 H1 kernel is e9d4231, reviewed/validated locally and delivered through
@@ -11,8 +20,24 @@ The first library increment supplies checked axial neighbors, wide distance,
 validated pointy-top world mapping, an example, independent numeric fixtures and
 a relocated CMake package consumer. MSVC Debug/Release and WSL GCC 15 ASan/UBSan
 each pass 3/3 tests. Detailed requirements/architecture and evidence now live in
-the standalone project. Finite regions and complete radius candidates remain its
-next gate before replacing Crucible's spatial backend.
+the standalone project. That historical H1 limitation is resolved by H2; the remaining
+gate is Crucible's exact query, capacity/lifetime and integrated replay evidence.
+
+## H2 receiving constraints
+
+Preserve the closed rectangular physical world, cardinal Blight adjacency and complete
+ascending SampleId results. H2 candidate enumeration is conservative r/q order, not
+exact point results. Crucible keeps its double squared-distance predicate and borrowed
+result semantics; the application-only SpatialIndex example is not an exported index.
+H2 rejects some unsupported normalized query arithmetic that Crucible currently
+accepts. Valid extreme finite radii require an exact committed-sample scan fallback.
+Check covering axial region arithmetic and mapping before allocation. Hex occupancy
+diagnostics may change; exact query identities and movement may not.
+
+The phase 3 spatial package contributes actual motion/identity/snapshot requirements
+to upstream HX-07. Tighter candidates (HX-05), stronger sampling (HX-06) and competing
+hierarchy experiments remain upstream work. Mini-map/zoom/navigation requirements
+are separate future consumers; neither occupancy nor a hierarchy proves traversability.
 
 The user's [terrain/world extension](../decisions/terrain-and-world-extension.md)
 is also preserved in the library's future-surfaces requirements: planar height
@@ -45,7 +70,11 @@ them. A generic owning world/container and concurrent spatial index are outside 
 minimal library. Runtime/template orientation choice is decided from consumer needs,
 not exposed as two options before either has a caller.
 
-## Decisions required before implementation
+## Historical groundwork decisions
+
+The following checklist records the original H0/H1 design gate. Scalar/layout and
+region/candidate decisions are now implemented upstream through H2. Do not dispatch
+them again; current consumer choices and adoption proof are owned by phase 3 P3-02.
 
 - Choose coordinate scalar/range and explicit overflow failure; do not infer storage
   capacity from unbounded coordinate mathematics.
@@ -88,7 +117,10 @@ replay its integrated scenario after migration. Performance conclusions require
 controlled measurements on real scenario inputs; six-neighbor topology alone says
 nothing about the cost of a point-radius query.
 
-## Extraction and migration gates
+## Historical extraction sequence and remaining migration gate
+
+Items 1–3 record the original extraction sequence and are superseded by delivered
+H2. Items 4–5 now apply through P3-02's concrete query/lifetime/replay and pin gates.
 
 1. Record a topology ADR and one consumed geometry contract within phase 2's budget.
    Retain the rectangular baseline if unresolved; do not stall useful inspection/clock work.
