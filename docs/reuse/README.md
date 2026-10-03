@@ -112,3 +112,12 @@ exchange or graphics framework. No demonstrated storage/residency bottleneck or
 product-neutral upstream defect justifies a new dependency or extraction this phase.
 See [receiving evidence](../workstreams/integration/phase6-validation.md); physical
 receivers and fault injection are follow-up gates, not upstream library claims.
+
+## Phase 7 close assessment
+
+Fault receiving consumes the unchanged production SDL GPU archive through local
+Linux fixtures; no generic call table/backend framework is extracted. The mission
+study consumes coordinator/route/painter without seed APIs or rule changes. R07/R08
+remain local and all SDL/H2/sub0 pins unchanged. No exact-version upstream defect,
+residency need or second product-neutral consumer warrants extraction. See Phase 7
+receiving for controlled failure/timing limits and the distinct physical/human gates.

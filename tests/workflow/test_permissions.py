@@ -32,6 +32,23 @@ class PermissionRepairTests(unittest.TestCase):
             self.assertEqual(stat.S_IMODE(script.stat().st_mode), 0o644)
             self.assertEqual(repair_permissions(inventory, root), [])
 
+    def test_declared_native_child_is_repaired_without_scanning_arguments(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory).resolve() / "build"
+            root.mkdir()
+            child, unregistered = root / "child", root / "argument"
+            for path in (child, unregistered):
+                path.write_bytes(b"\x7fELFfixture")
+                path.chmod(0o640)
+            inventory = [{"command": [sys.executable, "harness.py", str(child), str(unregistered)],
+                          "properties": [{"name": "REQUIRED_FILES", "value": [str(child)]}]}]
+            self.assertEqual(repair_permissions(inventory, root), [child])
+            self.assertEqual(stat.S_IMODE(child.stat().st_mode), 0o750)
+            self.assertEqual(stat.S_IMODE(unregistered.stat().st_mode), 0o640)
+            child.chmod(0o640)
+            inventory[0]["properties"][0]["value"] = str(child)
+            self.assertEqual(repair_permissions(inventory, root), [])
+
     def test_macho_test_artifacts_are_repaired(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory).resolve()
