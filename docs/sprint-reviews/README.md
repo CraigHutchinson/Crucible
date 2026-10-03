@@ -9,7 +9,7 @@ consider. Read the latest review before planning or delegating another sprint.
 |---|---|---|---|
 | 1 | Headless foundations and game intent; complete | [Phase 1](phase-01.md) | `ab708a7`, PR 1 |
 | 2 | Steering, bounded clock, owned inspection and actual-state visual; complete | [Phase 2](phase-02.md) | `cdc6034`, PR 4 |
-| 3 | Resource consequence and optional reusable hex traversal; proposed only | [Plan](../phases/phase3.md); review due at phase close | Not started |
+| 3 | Finite reclamation and hex receiving proof; architecture preparation | [In-progress review](phase-03.md), [plan](../phases/phase3.md) | Implementation not started |
 
 ## Review procedure
 

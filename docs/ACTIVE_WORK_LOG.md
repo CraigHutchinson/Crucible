@@ -23,3 +23,17 @@ an uncontended host even when files do not overlap.
 
 New claims include agent, branch/worktree, package, exact paths, host/CPU reservation,
 base SHA and dependencies. Completed rows link evidence or say documentation-only.
+
+## Phase 3 architecture preparation, 2026-10-03
+
+Base: `7692049a2c3b596f35ab27d159efdc215b52f84e`; branch
+`plan/phase3-aligned-packages` in the current clone. No heavy CPU/build reservation.
+
+| Owner | State | Exclusive paths / resources | Handoff |
+|---|---|---|---|
+| Architect | Complete planning; publication | AGENTS.md; central phase/reuse/review/workflow docs; no C++ edits | [Packages](phases/phase3.md), [resource rules](decisions/phase3-resource-rules.md); links/whitespace/oracle checks pass |
+| resource_package agent | Complete read-only review | No writable paths or CPU claim | No blocker; resource ID-domain clarity addressed |
+| hex_adoption_package agent | Complete read-only review | No writable paths or CPU claim | No blocker; historical hex sequence labeled superseded |
+
+Implementation worktrees/branches and A/B write claims are created explicitly at
+dispatch from the planning merge. These read-only assignments do not imply code dispatch.

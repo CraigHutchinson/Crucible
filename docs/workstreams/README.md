@@ -5,7 +5,7 @@ authority. A reserved folder/target does not mean its gameplay package is implem
 Read [game design](../game-design.md) for player intent and the first playable slice;
 use [concepts](../concepts/README.md) as visual exploration rather than game rules.
 Active assignments are phase-specific: see the [phase workflow](../phases/README.md)
-and [phase 2 ownership review](../phases/phase2.md). Retain these module folders while
+and [phase 3 ownership review](../phases/phase3.md). Retain these module folders while
 consolidating small coupled packages under a single phase owner when useful.
 
 ## Ownership map

@@ -24,7 +24,8 @@ Do not claim 100K+ entities at 60 FPS from an isolated integration loop.
 Follow docs/phases/README.md. At every phase start reassess active workstream
 division and record retain/consolidate/split/defer decisions, a small consumed
 increment, shared contracts, core gates and bounded stretch in the phase plan.
-Phases 1/2 are delivered; phase 3 is proposed in docs/phases/phase3.md. Do not infer
+Phases 1/2 are delivered; phase 3 work packages are in docs/phases/phase3.md.
+Architecture preparation has started; implementation dispatch remains explicit. Do not infer
 dispatch from a backlog. Read docs/sprint-reviews/README.md and the latest review
 before the next phase; carry unresolved follow-up IDs into its plan. Create an
 in-progress phase-NN.md from the review template and complete it at phase close
@@ -32,7 +33,8 @@ with findings, evidence, retrospective, follow-up owner/gates and merge baseline
 Review docs/reuse/README.md at phase start/close. Feed concrete findings, fixtures
 and measured improvements into existing sub0 projects; propose extraction only
 around consumed product-neutral boundaries. Sub0HexGrid has standalone groundwork;
-Crucible adoption is gated on complete candidates and query/replay evidence, not pinned yet.
+H2 finite regions/complete candidates are delivered upstream; Crucible adoption remains
+gated on its own query/lifetime/replay evidence, not pinned yet.
 Respect quota: architect plus at most two workers, minimal repeated reviews/builds,
 and core correctness/refinement before stretch. Close each completed phase with a
 reviewable pushed PR, exact-head CI, merge to main and a verified baseline.

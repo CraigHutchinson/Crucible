@@ -10,7 +10,7 @@ records delivered scope and remaining work. Read [architecture.md](architecture.
 [validation.md](validation.md) for prior integration evidence. Use the [workstream map](workstreams/README.md) for actual folders, build targets and session ownership.
 
 This is the capability backlog, not a fixed sprint allocation. Follow the
-[phase workflow](phases/README.md) and current [phase 2 plan](phases/phase2.md) for
+[phase workflow](phases/README.md) and current [phase 3 packages](phases/phase3.md) for
 active scope and revised ownership. Each phase reviews retain/consolidate/split/defer
 choices before dispatch; package completion claims still require their full gates.
 

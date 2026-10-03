@@ -9,7 +9,7 @@ package is not a permanent agent assignment.
 |---|---|---|
 | 1 | Headless foundations, bounded commands/replay, spatial/fields/Blight and game intent | [Review](../sprint-reviews/phase-01.md), [handoff](../workstreams/integration/wave1-validation.md), [PR 1](https://github.com/CraigHutchinson/Crucible/pull/1) |
 | 2 | Bounded local steering, clock/observability, owned state inspection and actual-state SVG | [Review](../sprint-reviews/phase-02.md), [delivery](../workstreams/integration/phase2-validation.md), [plan](phase2.md) |
-| 3 | Proposed resource consequence, with reusable hex H2 work bounded separately | [Proposal](phase3.md); not dispatched |
+| 3 | Finite reclamation; Crucible hex receiving proof after upstream H2 delivery | [Work packages](phase3.md), [review in progress](../sprint-reviews/phase-03.md); architecture preparation only |
 
 The [sprint-review archive](../sprint-reviews/README.md) tracks findings, follow-ups
 and delegation lessons for every completed increment.
