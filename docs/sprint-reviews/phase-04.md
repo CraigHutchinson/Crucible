@@ -1,7 +1,6 @@
 # Phase 4 sprint review: interactive inspection and control
 
-Status: implementation complete; local validation and hosted publication gate in progress,
-2026-10-03. Base647f536. Accountable reviewer: architect.
+Status: complete and merged, 2026-10-03. Base647f536. Accountable reviewer: architect.
 [Plan](../phases/phase4.md), [rendering/data decision](../decisions/phase4-rendering.md),
 [combined evidence](../workstreams/integration/phase4-validation.md).
 
@@ -56,4 +55,16 @@ Keep Camera2D, FieldTool and InspectorSession local to the fixed interactive con
 Reuse SDL3 pinned at829a65d769d935c4852f8159e964312c0957260a and retain the verified
 H2 pin/oracle. No upstream defect or measured optimization was found. Worker branches,
 worktrees and build/visual artifacts are retained; no unrelated session was cleaned up.
-Exact-head CI, final merge SHA and clean main verification are added at publication closure.
+## Publication closure
+
+[PR 9](https://github.com/CraigHutchinson/Crucible/pull/9) merged at
+`09ae74f9f2a1a05c95bb5e1d4196256880cb55a7` from exact head `250aecaa949adc8971acbda629701dfa6f012dec` after
+[CI](https://github.com/CraigHutchinson/Crucible/actions/runs/37110577249) passed all eight jobs: Linux/Windows/macOS Debug/Release
+23/23 each, ordinary Linux headless Release21/21 and normal Linux sanitizer23/23.
+Both Linux native X11 event/resize smokes passed. macOS used Clang21.1.8 with
+matching libc++/libunwind; Windows used MSVC19.51.36260.0. The final published tree
+matched reviewed local tree `a1d8ce30e74067d549e9aa18beb52849943aec22`.
+
+Local main was verified clean and equal to origin/main at that merge. This
+small documentation closure records the known merge without changing source.
+Start the next increment from merged main; all worker write/CPU claims are complete.

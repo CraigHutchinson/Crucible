@@ -1,6 +1,6 @@
 # Phase 4: interactive inspection and spatial control
 
-Status: implementation delivered; publication validation in progress, 2026-10-03. Base main `647f536b0a37b48f08b1b58b0c791e2ec850bf4b`.
+Status: complete and merged, 2026-10-03. Base main `647f536b0a37b48f08b1b58b0c791e2ec850bf4b`.
 [Phase 3 review](../sprint-reviews/phase-03.md) recommends this increment;
 [rendering decision](../decisions/phase4-rendering.md) freezes the consumed boundary.
 Architect plus two workers maximum. User authorized continued iteration and changing
@@ -106,3 +106,7 @@ Carry P01-F04 (first input/display) into this delivered foundation; full playabl
 remains partial. P01-F03 fullW6, P01-F05 structural/concurrent/measured scale, P02-F02
 concurrent exchange, P02-F03 terrain/world and P03-F01 measured fallback costs remain
 with their existing accountable owners/gates. HX-07 stays a reproducible geometry pack.
+
+Delivery: [PR 9](https://github.com/CraigHutchinson/Crucible/pull/9), merge `09ae74f9f2a1a05c95bb5e1d4196256880cb55a7`;
+[exact-head CI](https://github.com/CraigHutchinson/Crucible/actions/runs/37110577249) passed all eight jobs. See the completed
+[review](../sprint-reviews/phase-04.md) for platform/toolchain limits and next gates.

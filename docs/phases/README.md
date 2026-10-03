@@ -10,7 +10,7 @@ package is not a permanent agent assignment.
 | 1 | Headless foundations, bounded commands/replay, spatial/fields/Blight and game intent | [Review](../sprint-reviews/phase-01.md), [handoff](../workstreams/integration/wave1-validation.md), [PR 1](https://github.com/CraigHutchinson/Crucible/pull/1) |
 | 2 | Bounded local steering, clock/observability, owned state inspection and actual-state SVG | [Review](../sprint-reviews/phase-02.md), [delivery](../workstreams/integration/phase2-validation.md), [plan](phase2.md) |
 | 3 | Finite reclamation; Crucible hex receiving proof after upstream H2 delivery | [Work packages](phase3.md), [review](../sprint-reviews/phase-03.md), [delivery](../workstreams/integration/phase3-validation.md); complete, [PR 7](https://github.com/CraigHutchinson/Crucible/pull/7) at `21f3786` |
-| 4 | Live owned-frame inspection, field input and concrete batch adapter | [Plan](phase4.md), [review](../sprint-reviews/phase-04.md), [delivery](../workstreams/integration/phase4-validation.md); implementation complete, publication gate in progress |
+| 4 | Live owned-frame inspection, field input and concrete batch adapter | [Plan](phase4.md), [review](../sprint-reviews/phase-04.md), [delivery](../workstreams/integration/phase4-validation.md); complete, [PR 9](https://github.com/CraigHutchinson/Crucible/pull/9) at `09ae74f` |
 
 The [sprint-review archive](../sprint-reviews/README.md) tracks findings, follow-ups
 and delegation lessons for every completed increment.

@@ -10,7 +10,7 @@ consider. Read the latest review before planning or delegating another sprint.
 | 1 | Headless foundations and game intent; complete | [Phase 1](phase-01.md) | `ab708a7`, PR 1 |
 | 2 | Steering, bounded clock, owned inspection and actual-state visual; complete | [Phase 2](phase-02.md) | `cdc6034`, PR 4 |
 | 3 | Finite reclamation and consumed H2 receiving proof; complete | [Phase 3 review](phase-03.md), [plan](../phases/phase3.md) | `21f3786`, PR 7 |
-| 4 | Interactive inspection/control; publication gate in progress | [Phase 4 review](phase-04.md), [plan](../phases/phase4.md) | base647f536 |
+| 4 | Interactive inspection/control; complete | [Phase 4 review](phase-04.md), [plan](../phases/phase4.md) | `09ae74f`, PR 9 |
 
 ## Review procedure
 

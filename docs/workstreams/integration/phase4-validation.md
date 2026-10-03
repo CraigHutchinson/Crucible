@@ -93,3 +93,9 @@ widening or global compiler-flag workaround. Width/height-limited nonbinary and
 offset/letterbox fixtures cover this boundary. Reciprocal review found no blocker;
 the FMA probe and affected camera/painter/event tests pass in local Debug/Release
 and adjusted sanitizers. Exact-head hosted gates validate the receiving Apple consumer.
+
+Publication closure: [PR 9](https://github.com/CraigHutchinson/Crucible/pull/9)
+merged at `09ae74f9f2a1a05c95bb5e1d4196256880cb55a7` after [exact-head CI](https://github.com/CraigHutchinson/Crucible/actions/runs/37110577249) passed
+all eight jobs. Linux/Windows/macOS desktop Debug/Release and normal Linux sanitizer
+23/23 each; ordinary headless Release21/21; both native Linux X11 smokes passed.
+Local main and origin/main were clean/equal; no source changed in this closure.
