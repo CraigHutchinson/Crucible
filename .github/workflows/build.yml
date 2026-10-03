@@ -31,7 +31,7 @@ jobs:
         if: runner.os == 'Linux'
         run: sudo apt-get update && sudo apt-get install -y libx11-dev libxext-dev libxrandr-dev libxcursor-dev libxi-dev libxfixes-dev libxss-dev libxtst-dev xvfb xauth
       - name: Development prerequisites before configure/build
-        run: python scripts/check_prerequisites.py --stage development
+        run: python scripts/check_prerequisites.py --stage development --timeout ${{ runner.os == 'Windows' && '30' || '10' }} --budget 60
       - run: cmake --preset ${{ env.BUILD_PRESET }} -DCRUCIBLE_BUILD_RENDER_SPIKE=ON
       - run: cmake --build --preset ${{ env.BUILD_PRESET }} --parallel 4
       - run: python scripts/run_tests.py --preset ${{ env.BUILD_PRESET }}

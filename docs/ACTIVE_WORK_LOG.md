@@ -224,3 +224,7 @@ full local suite reruns or new physical-device acceptance. Hardware backlog and
 runner/CI wiring reviewed reciprocally without blockers; hosted final-head CI next.
 
 Final fixture receiving: 30 prerequisite/runner tests and 5 permission tests passed.
+
+Hosted run37155413952: Windows release cold MSVC canary exceeded10s;
+required check blocked before build. Windows CI allowance now bounded30s/probe
+and60s total; no bypass/retry. New source head requires new exact-head acceptance.
