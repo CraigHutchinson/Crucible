@@ -89,3 +89,10 @@ lifecycle require actual receiving/device tests. Future restricted platform adap
 preserve capability and ownership contracts; SDK details stay outside public artifacts.
 Carry P04-F01/F02/F03 and P02-F02. A compiled shader/software fixture does not close
 device scale, human readability or mission difficulty tuning.
+
+## Faction extensibility checkpoint
+
+Follow [faction/material/control separation](faction-extensibility.md) at the first
+GPU contract: arbitrary per-instance palette values; cell/marker ranges represent
+geometry behavior, not exactly two factions. Future allegiance/relations/authority
+stay in simulation policy and owned observation, not shaders or renderer ECS queries.

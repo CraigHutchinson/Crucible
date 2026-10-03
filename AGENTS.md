@@ -44,6 +44,9 @@ backed by its own query/lifetime/replay evidence and a full H2 pin.
 Respect quota: architect plus at most two workers, minimal repeated reviews/builds,
 and core correctness/refinement before stretch. Close each completed phase with a
 reviewable pushed PR, exact-head CI, merge to main and a verified baseline.
+Capture and visually inspect examples of actual changed behavior at every iteration
+where viable; follow docs/phases/README.md for provenance, reproduction and explicit
+reasons when a visual does not apply. Include them in the sprint review.
 
 Read docs/game-design.md for product intent and first-playable scope before choosing
 implementation behavior. docs/concepts distinguishes generated visual proposals

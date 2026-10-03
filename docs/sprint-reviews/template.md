@@ -31,6 +31,12 @@ smoke and artifact reproduction/visual checks. Separate correctness from perform
 static inspection from measurements and synthetic fixtures from real inputs. Link the
 detailed evidence rather than copying logs. State missing coverage or failing gates.
 
+Include visually inspected examples of actual changed behavior wherever viable.
+For each link, record provenance, reproduction, relevant scenario/tick/commands and
+backend/platform, what the example demonstrates and its limits. Use before/after
+where useful. Record an explicit reason for a nonvisual change or the capture
+blocker, accountable owner and receiving gate; do not silently omit this criterion.
+
 ## Retrospective and reuse
 
 What helped, what created avoidable work, and what to change next time. Record receiving

@@ -48,3 +48,7 @@ Record the commit, completed checks, tool paths and next action in
 rebuilding unchanged code. If only a tool permission or launch problem blocked a
 case, repair that specific owned artifact/tool and rerun the failed selection; do
 not repeat successful checks unless code or configuration changed.
+
+Sprint completion includes visually inspected examples wherever viable. Plan the
+capture with the package, preserve reproduction/provenance and link it from the
+review; see [visual evidence criteria](docs/phases/README.md#visual-examples-at-each-iteration).

@@ -12,8 +12,8 @@ scope; [architecture](architecture.md) and [workstream map](workstreams/README.m
 record technical boundaries and paths. Historical wave-1 evidence remains archived.
 
 This is the capability backlog, not a fixed sprint allocation. Follow the
-[phase workflow](phases/README.md) and current [phase 5 packages](phases/phase5.md) for
-active scope and revised ownership. Each phase reviews retain/consolidate/split/defer
+[phase workflow](phases/README.md) and completed [phase 5 packages](phases/phase5.md) and planned
+[Phase 6 delegation](phases/phase6.md) for scope and revised ownership. Each phase reviews retain/consolidate/split/defer
 choices before dispatch; package completion claims still require their full gates.
 
 [Instancing design](decisions/render-instancing.md) scopes the next rendering
@@ -21,6 +21,11 @@ foundation: static quad, per-instance data, camera uniforms and explicit upload/
 retirement ownership. Current SDL batching and the CPU spike do not deliver GPU
 instancing or measured scale. Consolidate the first real backend/numerical contract,
 then split platform receivers around consumed shader/resource requirements.
+
+[Faction extensibility groundwork](decisions/faction-extensibility.md) reserves
+more than two factions and controllable variants of either organism kind without
+dispatching networking or new mechanics. Apply its gates before packet/ownership/
+structural/remote-input contracts make two-side assumptions.
 
 ## Milestones and dependencies
 
