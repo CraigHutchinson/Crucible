@@ -1,2 +1,7 @@
-# Own presentation test sources, executables and add_test registrations here.
-# Apply LABELS presentation; this file is included only with BUILD_TESTING enabled.
+add_executable(crucible_camera_tests Camera2DTests.cpp)
+target_link_libraries(crucible_camera_tests PRIVATE Crucible::Presentation)
+add_test(NAME camera_affine COMMAND crucible_camera_tests)
+add_executable(crucible_field_tool_tests FieldToolTests.cpp)
+target_link_libraries(crucible_field_tool_tests PRIVATE Crucible::Presentation)
+add_test(NAME field_tools COMMAND crucible_field_tool_tests)
+set_tests_properties(camera_affine field_tools PROPERTIES LABELS "presentation;input")

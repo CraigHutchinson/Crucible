@@ -45,6 +45,37 @@
         "CMAKE_BUILD_TYPE": "Release",
         "CRUCIBLE_BUILD_BENCHMARKS": "ON"
       }
+    },
+    {
+      "name": "desktop-debug",
+      "inherits": "debug",
+      "cacheVariables": {
+        "CRUCIBLE_BUILD_DESKTOP": "ON"
+      }
+    },
+    {
+      "name": "desktop-release",
+      "inherits": "release",
+      "cacheVariables": {
+        "CRUCIBLE_BUILD_DESKTOP": "ON"
+      }
+    },
+    {
+      "name": "desktop-sanitize",
+      "inherits": "sanitize",
+      "cacheVariables": {
+        "CRUCIBLE_BUILD_DESKTOP": "ON"
+      }
+    },
+    {
+      "name": "macos-debug",
+      "inherits": "desktop-debug",
+      "toolchainFile": "${sourceDir}/cmake/toolchains/macos-homebrew-llvm.cmake"
+    },
+    {
+      "name": "macos-release",
+      "inherits": "desktop-release",
+      "toolchainFile": "${sourceDir}/cmake/toolchains/macos-homebrew-llvm.cmake"
     }
   ],
   "buildPresets": [
@@ -63,6 +94,26 @@
     {
       "name": "bench",
       "configurePreset": "bench"
+    },
+    {
+      "name": "desktop-debug",
+      "configurePreset": "desktop-debug"
+    },
+    {
+      "name": "desktop-release",
+      "configurePreset": "desktop-release"
+    },
+    {
+      "name": "desktop-sanitize",
+      "configurePreset": "desktop-sanitize"
+    },
+    {
+      "name": "macos-debug",
+      "configurePreset": "macos-debug"
+    },
+    {
+      "name": "macos-release",
+      "configurePreset": "macos-release"
     }
   ],
   "testPresets": [
@@ -90,6 +141,41 @@
     {
       "name": "bench",
       "configurePreset": "bench",
+      "output": {
+        "outputOnFailure": true
+      }
+    },
+    {
+      "name": "desktop-debug",
+      "configurePreset": "desktop-debug",
+      "output": {
+        "outputOnFailure": true
+      }
+    },
+    {
+      "name": "desktop-release",
+      "configurePreset": "desktop-release",
+      "output": {
+        "outputOnFailure": true
+      }
+    },
+    {
+      "name": "desktop-sanitize",
+      "configurePreset": "desktop-sanitize",
+      "output": {
+        "outputOnFailure": true
+      }
+    },
+    {
+      "name": "macos-debug",
+      "configurePreset": "macos-debug",
+      "output": {
+        "outputOnFailure": true
+      }
+    },
+    {
+      "name": "macos-release",
+      "configurePreset": "macos-release",
       "output": {
         "outputOnFailure": true
       }

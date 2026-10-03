@@ -58,3 +58,13 @@ Debug/Release plus Linux sanitizer CI passed all five jobs / 18 tests each.
 Local main matched origin/main cleanly. Worker handoffs and local integration
 branch/worktrees/build/comparison artifacts are retained; no active worker or CPU claim remains.
 This documentation-only closure records the merge and carries the next-phase recommendation.
+
+## Phase4 dispatch, 2026-10-03
+
+Base647f536; user requested next increment and restructured workstreams.
+
+| Owner | State | Exclusive paths / branch / CPU | Handoff |
+|---|---|---|---|
+| Architect | Active | phase4-interactive; InspectorSession/runtime, src/desktop, root manifests/pins/presets/CI, SceneUi and central docs/integration tests; configure/build CPU reserved | [Plan](phases/phase4.md), [rendering decision](decisions/phase4-rendering.md) |
+| resource_package / P4-01 | Complete handoff/peer review | phase4-input; named Camera2D/FieldTool include/src/tests and camera-input.md; no shared manifests or CPU | f0c0129 integrated cd7aea1; independent input fixtures and reciprocal review |
+| hex_adoption_package / P4-02 | Complete handoff/peer review | phase4-drawing; presentation/desktop include/src/tests/CMake (SceneUi reserved root), drawing.md; no CPU | e16c8d6 integrated 9aa9d6f; pixel oracle and reciprocal review |

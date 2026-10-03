@@ -7,20 +7,45 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-24.04, windows-latest]
+        os: [ubuntu-24.04, windows-latest, macos-15]
         preset: [debug, release]
     runs-on: ${{ matrix.os }}
+    env:
+      BUILD_PRESET: ${{ matrix.os == 'macos-15' && format('macos-{0}', matrix.preset) || format('desktop-{0}', matrix.preset) }}
     steps:
       - uses: actions/checkout@v4
       - uses: ilammy/msvc-dev-cmd@v1
         if: runner.os == 'Windows'
-      - run: cmake --preset ${{ matrix.preset }}
-      - run: cmake --build --preset ${{ matrix.preset }} --parallel 4
-      - run: ctest --preset ${{ matrix.preset }}
+      - name: Select complete macOS C++23 toolchain
+        if: runner.os == 'macOS'
+        run: |
+          brew install llvm@21
+          echo "CRUCIBLE_LLVM_ROOT=$(brew --prefix llvm@21)" >> "$GITHUB_ENV"
+      - name: Linux window development dependencies
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y libx11-dev libxext-dev libxrandr-dev libxcursor-dev libxi-dev libxfixes-dev libxss-dev libxtst-dev xvfb xauth
+      - run: cmake --preset ${{ env.BUILD_PRESET }}
+      - run: cmake --build --preset ${{ env.BUILD_PRESET }} --parallel 4
+      - run: ctest --preset ${{ env.BUILD_PRESET }}
+      - name: Native X11 window event smoke
+        if: runner.os == 'Linux'
+        env:
+          SDL_RENDER_DRIVER: software
+        run: xvfb-run -a build/desktop-${{ matrix.preset }}/tests/integration/crucible_desktop_event_test --native
+  headless:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - run: cmake --preset release
+      - run: cmake --build --preset release --parallel 4
+      - run: ctest --preset release
+      - name: SDL stays out of the ordinary dependency graph
+        run: test ! -d build/release/_deps/sdl3-build
   sanitize:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
-      - run: cmake --preset sanitize
-      - run: cmake --build --preset sanitize --parallel 4
-      - run: ctest --preset sanitize
+      - run: sudo apt-get update && sudo apt-get install -y libx11-dev libxext-dev libxrandr-dev libxcursor-dev libxi-dev libxfixes-dev libxss-dev libxtst-dev
+      - run: cmake --preset desktop-sanitize
+      - run: cmake --build --preset desktop-sanitize --parallel 4
+      - run: ctest --preset desktop-sanitize

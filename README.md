@@ -155,3 +155,41 @@ The CLI checks complete replay and prints the conservation equation.
 query parity and supported validation. Growth, attrition and fusion/shatter remain future work.
 
 [Open the actual tick-20 SVG](docs/concepts/phase3-state.svg).
+
+## Interactive inspector
+
+The optional SDL3 prototype consumes owned ECS frames; it batches cells and nanites
+without per-entity rendering interfaces. See the [rendering decision](docs/decisions/phase4-rendering.md)
+and [phase 4](docs/phases/phase4.md).
+
+```sh
+cmake --preset desktop-release
+cmake --build --preset desktop-release --parallel 4
+ctest --preset desktop-release
+./build/desktop-release/src/desktop/crucible_desktop
+```
+
+Windows executable suffix is `.exe`. Linux needs a native video SDK (X11 or Wayland)
+and a display. The normal `release` preset stays headless and does not fetch SDL.
+Use 1/2/3 or toolbar buttons for attract/repel/erase, Tab for field slot, click the
+world to queue an edit, middle drag to pan, wheel to zoom, F to fit, Space to pause,
+R to restart, Delete to erase and Escape to cancel preview. Queued edits apply at
+a completed boundary; paused edits wait for resume. Restart discards the previous
+run and trace. macOS build/test coverage is included in CI; iOS packaging, touch
+input and physical-device validation remain future gates.
+
+macOS requires the complete C++23 library used by Sub0Pipeline. The current Apple
+SDK library lacks `std::stop_token`/`std::jthread`; CI uses Homebrew LLVM21 with its
+matching libc++/libunwind, selected explicitly by the macOS presets:
+
+```sh
+brew install llvm@21
+export CRUCIBLE_LLVM_ROOT="$(brew --prefix llvm@21)"
+cmake --preset macos-release
+cmake --build --preset macos-release --parallel 4
+ctest --preset macos-release
+./build/macos-release/src/desktop/crucible_desktop
+```
+
+This developer build uses runtime paths into the LLVM installation. A redistributable
+Apple bundle and iOS toolchain require separate packaging/runtime validation.

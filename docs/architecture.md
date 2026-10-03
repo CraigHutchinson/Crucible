@@ -226,3 +226,15 @@ frame timings. ECS microbenchmarks do not prove game FPS.
 Record consequential changes in docs/decisions/ when made, including affected
 consumers, compatibility and acceptance evidence. Integrator approves shared-contract
 changes before dependent agents apply them. No unused public flags or APIs.
+
+## Phase 4 rendering boundary
+
+The [rendering decision](decisions/phase4-rendering.md) consumes sequential owned
+ScenarioSnapshot values rather than ECS render components or virtual draw methods.
+Portable Camera2D/FieldTool feed the concrete desktop event owner; InspectorSession
+owns Simulation/session/clock/frame and replaces a complete run on restart.
+Optional ScenePainter reuses startup quad scratch for two cell/sample geometry
+submissions. SDL callbacks own the window/renderer and yield to the platform.
+No SDL dependency enters the default headless graph. A future GPU backend consumes
+world-space frame data; upload/resource retirement, iOS packaging/touch and any
+concurrent reader require their own acceptance gates.
