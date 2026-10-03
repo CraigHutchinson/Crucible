@@ -24,6 +24,15 @@ target_link_libraries(crucible_phase3_test PRIVATE Crucible::Runtime Crucible::P
 add_test(NAME phase3_full_state COMMAND crucible_phase3_test)
 set_tests_properties(phase3_full_state PROPERTIES LABELS "integration;presentation;resources")
 
+if(NOT CRUCIBLE_BUILD_DESKTOP)
+    add_test(NAME challenge_passive_cli COMMAND crucible --mission)
+    add_test(NAME challenge_route_cli COMMAND crucible --mission --route)
+    set_tests_properties(challenge_passive_cli PROPERTIES LABELS "integration;mission"
+        PASS_REGULAR_EXPRESSION "LOST tick=900 .*conserved=1 replay=full-state")
+    set_tests_properties(challenge_route_cli PROPERTIES LABELS "integration;mission"
+        PASS_REGULAR_EXPRESSION "WON tick=.*conserved=1 replay=full-state")
+endif()
+
 if(CRUCIBLE_BUILD_DESKTOP)
     add_executable(crucible_desktop_event_test desktop.cpp)
     target_link_libraries(crucible_desktop_event_test PRIVATE crucible_desktop_adapter)

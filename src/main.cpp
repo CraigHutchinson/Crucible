@@ -12,6 +12,7 @@
 #include <crucible/runtime/headless.hpp>
 #include <crucible/runtime/HeadlessSession.hpp>
 #include <crucible/runtime/ClockDriver.hpp>
+#include <crucible/runtime/InspectorSession.hpp>
 #include <crucible/presentation/ScenarioSnapshot.hpp>
 
 namespace {
@@ -30,6 +31,41 @@ bool HasEqualState(const crucible::presentation::ScenarioSnapshot& left,
                 x.radius == y.radius && x.strength == y.strength;
         }) && std::ranges::equal(left.GetBlight(), right.GetBlight()) &&
         std::ranges::equal(left.GetStocks(), right.GetStocks());
+}
+
+enum class MissionInput { none, sweeping_attractor };
+void RunMission(MissionInput input) {
+    using namespace crucible;
+    runtime::InspectorSession run{2048, {64, 4096}, ReclamationMissionSettings{}};
+    while (run.GetMission()->outcome == ReclamationMissionOutcome::active) {
+        const auto tick = run.GetMission()->completed_tick;
+        if (input == MissionInput::sweeping_attractor && tick % 60 == 0) {
+            const FieldEdit attract{FieldEditKind::set, 0,
+                {static_cast<float>(8 + 16 * ((tick / 60) % 4)),
+                 static_cast<float>(8 + 16 * ((tick / 240) % 2))}, 8, 4};
+            if (run.TryAdmitFieldEdit(attract).status != runtime::CommandIngress::AdmissionStatus::accepted)
+                throw std::runtime_error("Reference route admission failed");
+        }
+        if (run.TryPump(std::chrono::nanoseconds{16'666'667}).advanced_ticks != 1)
+            throw std::runtime_error("Reference challenge boundary failed");
+    }
+    const auto mission = *run.GetMission();
+    const auto ledger = *run.GetSnapshot().GetInfo()->biomass;
+    if (run.GetStatus() != runtime::ClockDriver::Status::closed ||
+        ledger.initial_total != ledger.remaining_stock + ledger.mobile_mass + ledger.reserve)
+        throw std::runtime_error("Reference challenge terminal conservation failed");
+    Simulation oracle{2048, {{64, 32, 1}, 4, SteeringSettings{}, ResourceSettings{}}};
+    runtime::HeadlessSession replay{oracle, {64, 4096}};
+    presentation::ScenarioSnapshot expected{2048, 4, 2048};
+    if (replay.TryReplay(run.GetTrace(), mission.completed_tick).status != runtime::HeadlessSession::StepStatus::advanced ||
+        !expected.TryCapture(oracle) || !HasEqualState(run.GetSnapshot(), expected))
+        throw std::runtime_error("Reference challenge full-state replay failed");
+    std::cout << "Crucible reference challenge ("
+        << (input == MissionInput::none ? "no field input" : "swept attractor") << "): "
+        << (mission.outcome == ReclamationMissionOutcome::won ? "WON" : "LOST")
+        << " tick=" << mission.completed_tick << " recovered=" << mission.reclaimed
+        << " target=" << mission.settings.target_reclaimed << " deadline=" << mission.settings.deadline_ticks
+        << " commands=" << run.GetTrace().size() << " conserved=1 replay=full-state\n";
 }
 
 void ExportSvg(const crucible::presentation::ScenarioSnapshot& snapshot, const char* path) {
@@ -144,6 +180,11 @@ void RunScenario(const char* export_path, std::optional<crucible::ResourceSettin
 
 int main(int argc, char** argv) {
     try {
+        if ((argc == 2 || (argc == 3 && std::string_view{argv[2]} == "--route")) &&
+                std::string_view{argv[1]} == "--mission") {
+            RunMission(argc == 2 ? MissionInput::none : MissionInput::sweeping_attractor);
+            return 0;
+        }
         const char* export_path = nullptr;
         std::optional<crucible::ResourceSettings> resources;
         int first_option = 1;
@@ -154,7 +195,7 @@ int main(int argc, char** argv) {
         if (argc == first_option + 2 && std::string_view{argv[first_option]} == "--export-svg")
             export_path = argv[first_option + 1];
         else if (argc != first_option)
-            throw std::invalid_argument("Usage: crucible [--reclamation] [--export-svg path.svg]");
+            throw std::invalid_argument("Usage: crucible --mission [--route] | [--reclamation] [--export-svg path.svg]");
         crucible::Simulation simulation{150'000};
         crucible::runtime::run_ticks(simulation, 60);
         std::cout << "Crucible headless ECS foundation: 150000 entities, 60 ticks, checksum="

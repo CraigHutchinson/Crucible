@@ -92,3 +92,19 @@ Review fixed moved-from observer ownership, sRGB labeling and both half extents.
 Five Release process measurements and consumed fixtures are retained in
 [the spike report](../spikes/rendering/README.md). Publication follows reviewed-tree
 and exact-head CI gates; this bounded interim experiment does not dispatch phase 5.
+
+## Phase 5 dispatch, 2026-10-03
+
+Base0bc9731. User explicitly dispatches next sprint and push/merge. Architect reserves
+shared contracts, src/desktop, integration tests, central docs/manifests and all build
+CPU on phase5-reclamation-challenge. resource_package owns runtime objective/clock/
+InspectorSession and runtime tests/local CMake; hex_adoption_package owns SceneUi,
+ScenePainter and software fixtures. Shared contract frozen in phase5.md; no worker
+build or shared-file write without handoff. Existing branches/artifacts retained.
+
+Phase 5 implementation and reciprocal review complete; local acceptance recorded in
+[receiving evidence](workstreams/integration/phase5-validation.md). User requested
+permission-loss prevention: configured owned native test preflight now repairs modes
+before execution, with a deliberate loss probe and narrow-scope fixtures. Publication
+remains the architect claim; resume from the committed tree and retained evidence,
+check hosted exact-head results, then merge and record closure.

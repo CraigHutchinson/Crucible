@@ -46,6 +46,11 @@ public:
     /// Completed scenario observations; return zero for the legacy workload.
     [[nodiscard]] std::size_t GetBlightInfectedCount() const noexcept;
     [[nodiscard]] std::size_t GetOccupiedCellCount() const noexcept;
+    /** Returns an owned completed-boundary ledger without copying world geometry.
+     * @return Finite-resource quantities, or nullopt for scenarios without resources.
+     * @note Requires exclusive coordinator access; no retained ECS/storage borrow.
+     */
+    [[nodiscard]] std::optional<BiomassLedger> GetBiomassLedger() const noexcept;
     /// Consume an immediate radius query without exposing the grid's borrowed buffer.
     /// Invalid input or the legacy workload returns nullopt.
     [[nodiscard]] std::optional<std::size_t> TryCountNeighbors(Position center, float radius) noexcept;

@@ -22,3 +22,8 @@ add_executable(crucible_inspector_tests InspectorSession.cpp)
 target_link_libraries(crucible_inspector_tests PRIVATE Crucible::Runtime Crucible::Presentation)
 add_test(NAME runtime_inspector COMMAND crucible_inspector_tests)
 set_tests_properties(runtime_inspector PROPERTIES LABELS "runtime;presentation")
+
+add_executable(crucible_mission_tests ReclamationMission.cpp)
+target_link_libraries(crucible_mission_tests PRIVATE Crucible::Runtime Crucible::Presentation)
+add_test(NAME runtime_mission COMMAND crucible_mission_tests)
+set_tests_properties(runtime_mission PROPERTIES LABELS "runtime;presentation;mission")

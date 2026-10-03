@@ -59,3 +59,12 @@ uncommitted preview. Reproduce it with `crucible_scene_painter_test output.bmp`
 after building a desktop preset. Its ledger is 10240 = 6439 stock + 2048 mobile +
 1753 reserve. The field controls change sample positions; no relay/fusion objective
 or performance claim is implied by this image.
+
+[Phase 5 mission frame](exports/phase5-mission-frame.png) is actual software output
+from the production InspectorSession and ScenePainter at completed tick 60, with
+2,048 samples and two admitted/applied fields. It shows ACTIVE, 1,753/1,780 reclaimed
+and 840 ticks left; ledger 10,240 = 6,439 stock + 2,048 mobile + 1,753 reserve.
+Reproduce via `crucible_desktop_event_test --export-mission output.bmp`, then convert
+BMP to PNG without changing the content. This pair of fields is a displayed fixture,
+distinct from the CLI's winning swept-attractor route. Typography and human mission
+tuning remain acceptance gates; neither this image nor software CI proves GPU scale.

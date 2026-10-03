@@ -26,7 +26,7 @@ jobs:
         run: sudo apt-get update && sudo apt-get install -y libx11-dev libxext-dev libxrandr-dev libxcursor-dev libxi-dev libxfixes-dev libxss-dev libxtst-dev xvfb xauth
       - run: cmake --preset ${{ env.BUILD_PRESET }} -DCRUCIBLE_BUILD_RENDER_SPIKE=ON
       - run: cmake --build --preset ${{ env.BUILD_PRESET }} --parallel 4
-      - run: ctest --preset ${{ env.BUILD_PRESET }}
+      - run: python scripts/run_tests.py --preset ${{ env.BUILD_PRESET }}
       - name: Native X11 window event smoke
         if: runner.os == 'Linux'
         env:
@@ -38,7 +38,7 @@ jobs:
       - uses: actions/checkout@v4
       - run: cmake --preset release
       - run: cmake --build --preset release --parallel 4
-      - run: ctest --preset release
+      - run: python scripts/run_tests.py --preset release
       - name: SDL stays out of the ordinary dependency graph
         run: test ! -d build/release/_deps/sdl3-build
   sanitize:
@@ -48,4 +48,4 @@ jobs:
       - run: sudo apt-get update && sudo apt-get install -y libx11-dev libxext-dev libxrandr-dev libxcursor-dev libxi-dev libxfixes-dev libxss-dev libxtst-dev
       - run: cmake --preset desktop-sanitize -DCRUCIBLE_BUILD_RENDER_SPIKE=ON
       - run: cmake --build --preset desktop-sanitize --parallel 4
-      - run: ctest --preset desktop-sanitize
+      - run: python scripts/run_tests.py --preset desktop-sanitize

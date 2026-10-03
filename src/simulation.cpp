@@ -172,6 +172,11 @@ std::size_t Simulation::GetOccupiedCellCount() const noexcept {
     return scenario_ ? scenario_->grid.GetOccupiedCellCount() : 0;
 }
 
+std::optional<BiomassLedger> Simulation::GetBiomassLedger() const noexcept {
+    if (!scenario_ || !scenario_->reclamation) return std::nullopt;
+    return scenario_->reclamation->GetLedger();
+}
+
 std::optional<std::size_t> Simulation::TryCountNeighbors(Position center, float radius) noexcept {
     if (!scenario_) return std::nullopt;
     const auto neighbors = scenario_->grid.TryQuery(center, radius);

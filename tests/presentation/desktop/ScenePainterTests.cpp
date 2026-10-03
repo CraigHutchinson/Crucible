@@ -125,6 +125,97 @@ void RingsAndClipping(SoftwareCanvas& canvas) {
     Require(frame.TryCapture(tiny_world) && painter.TryDraw(*canvas.renderer, frame, tiny, {}), "tiny physical world safe double clipping");
 }
 
+std::uint64_t RegionDigest(SoftwareCanvas& canvas, SDL_Rect region) {
+    Require(SDL_FlushRenderer(canvas.renderer.get()), "region flush");
+    const auto* pixels = static_cast<const std::uint8_t*>(canvas.surface->pixels);
+    std::uint64_t digest = 14695981039346656037ULL;
+    for (int y = region.y; y < region.y + region.h; ++y)
+        for (int x = region.x * 4; x < (region.x + region.w) * 4; ++x) {
+            digest ^= pixels[y * canvas.surface->pitch + x];
+            digest *= 1099511628211ULL;
+        }
+    return digest;
+}
+void TextMatches(SoftwareCanvas& canvas, SoftwareCanvas& oracle, const char* text,
+                 SDL_Rect region, std::array<std::uint8_t, 4> color, float scale) {
+    Require(SDL_SetRenderDrawColor(oracle.renderer.get(), 11, 19, 32, 255) &&
+        SDL_RenderClear(oracle.renderer.get()) &&
+        SDL_SetRenderDrawColor(oracle.renderer.get(), color[0], color[1], color[2], color[3]) &&
+        SDL_SetRenderScale(oracle.renderer.get(), scale, scale) &&
+        SDL_RenderDebugText(oracle.renderer.get(), region.x / scale, region.y / scale, text) &&
+        SDL_SetRenderScale(oracle.renderer.get(), 1, 1), "independent expected text");
+    Require(RegionDigest(canvas, region) == RegionDigest(oracle, region), "visible mission text matches expected label");
+}
+void MissionHud(SoftwareCanvas& canvas) {
+    const GridConfig grid{4, 1, 1};
+    Simulation simulation{4, {grid, 4, {}, ResourceSettings{}}};
+    simulation.tick();
+    ScenarioSnapshot frame{4, 4, 4};
+    Camera2D camera{grid, View};
+    ScenePainter painter{4, 4};
+    Require(frame.TryCapture(simulation), "mission frame capture");
+    Require(frame.GetInfo()->biomass->reserve == 3, "independent three-contact fixture");
+    Require(painter.TryDraw(*canvas.renderer, frame, camera, {}), "legacy no mission draw");
+    const auto world = RegionDigest(canvas, {24, 96, 1232, 520});
+    const auto ledger = RegionDigest(canvas, {24, 70, 1232, 8});
+    Require(canvas.Pixel(900, 20) == Background, "no mission has no progress overlay");
+    SoftwareCanvas oracle;
+    SceneUi ui{};
+    ui.mission = ReclamationMissionProgress{{6, 2}, 3, 1, ReclamationMissionOutcome::active};
+    Require(painter.TryDraw(*canvas.renderer, frame, camera, ui), "active mission draw");
+    Require(canvas.Pixel(900, 20) == Cyan && canvas.Pixel(1200, 20) ==
+        std::array<std::uint8_t, 4>{22, 38, 55, 255}, "active progress half-filled");
+    TextMatches(canvas, oracle, "ACTIVE", {536, 16, 128, 16}, Cyan, 2);
+    constexpr std::array<std::uint8_t, 4> White{219, 232, 249, 255};
+    TextMatches(canvas, oracle, "Recovered 3 / 6 | Ticks left 1 (simulation ticks)", {24, 44, 1200, 8}, White, 1);
+    TextMatches(canvas, oracle,
+        "ACTIVE: Recover the quota before ticks run out. Attract/repel nanites with fields. R or RESTART: fresh challenge.",
+        {24, 84, 1232, 8}, White, 1);
+    Require(RegionDigest(canvas, {24, 96, 1232, 520}) == world &&
+        RegionDigest(canvas, {24, 70, 1232, 8}) == ledger, "mission preserves world pass and conservation ledger");
+    const auto active_top = RegionDigest(canvas, {24, 0, 1232, 96});
+    // Quota overshoot must fill, not extend, the bar.
+    ui.mission = ReclamationMissionProgress{{2, 2}, 3, 1, ReclamationMissionOutcome::won};
+    Require(painter.TryDraw(*canvas.renderer, frame, camera, ui), "won mission draw");
+    constexpr std::array<std::uint8_t, 4> Won{115, 227, 173, 255};
+    Require(canvas.Pixel(1254, 20) == Won && canvas.Pixel(1257, 20) == Background,
+        "won overshoot bounded to progress track");
+    TextMatches(canvas, oracle, "WON", {536, 16, 128, 16}, Won, 2);
+    TextMatches(canvas, oracle, "WON: Biomass quota recovered. Run stopped; inspect with pan/zoom. R or RESTART: play again.",
+        {24, 84, 1232, 8}, White, 1);
+    Require(RegionDigest(canvas, {24, 96, 1232, 520}) == world, "win does not alter world geometry");
+    const auto won_top = RegionDigest(canvas, {24, 0, 1232, 96});
+    ui.mission = ReclamationMissionProgress{{4, 1}, 3, 1, ReclamationMissionOutcome::lost};
+    Require(painter.TryDraw(*canvas.renderer, frame, camera, ui), "lost mission draw");
+    constexpr std::array<std::uint8_t, 4> Lost{255, 199, 107, 255};
+    Require(canvas.Pixel(900, 20) == Lost, "loss has distinct graphical progress");
+    TextMatches(canvas, oracle, "LOST", {536, 16, 128, 16}, Lost, 2);
+    TextMatches(canvas, oracle, "Recovered 3 / 4 | Ticks left 0 (simulation ticks)", {24, 44, 1200, 8}, White, 1);
+    TextMatches(canvas, oracle, "LOST: Deadline reached before quota. Run stopped; inspect with pan/zoom. R or RESTART: try again.",
+        {24, 84, 1232, 8}, White, 1);
+    Require(RegionDigest(canvas, {24, 96, 1232, 520}) == world && active_top != won_top &&
+        won_top != RegionDigest(canvas, {24, 0, 1232, 96}), "all outcomes visible without world changes");
+    const auto valid = RegionDigest(canvas, {0, 0, 1280, 720});
+    for (const auto bad : std::array{
+        ReclamationMissionProgress{{4, 1}, 3, 2, ReclamationMissionOutcome::lost},
+        ReclamationMissionProgress{{0, 2}, 3, 1, ReclamationMissionOutcome::won},
+        ReclamationMissionProgress{{6, 0}, 3, 1, ReclamationMissionOutcome::active},
+        ReclamationMissionProgress{{4, 1}, 4, 1, ReclamationMissionOutcome::won},
+        ReclamationMissionProgress{{2, 2}, 3, 1, ReclamationMissionOutcome::active},
+        ReclamationMissionProgress{{4, 2}, 3, 1, ReclamationMissionOutcome::lost},
+        ReclamationMissionProgress{{4, 2}, 3, 1, static_cast<ReclamationMissionOutcome>(99)}}) {
+        ui.mission = bad;
+        Require(!painter.TryDraw(*canvas.renderer, frame, camera, ui) &&
+            RegionDigest(canvas, {0, 0, 1280, 720}) == valid, "inconsistent mission rejected before canvas mutation");
+    }
+    // A zero-progress initial boundary is still drawable, with an empty bounded bar.
+    Simulation initial{0, {grid, 4, {}, ResourceSettings{}}};
+    Require(frame.TryCapture(initial), "initial mission capture");
+    ui.mission = ReclamationMissionProgress{{1, 2}, 0, 0, ReclamationMissionOutcome::active};
+    Require(painter.TryDraw(*canvas.renderer, frame, camera, ui) && canvas.Pixel(900, 20) ==
+        std::array<std::uint8_t, 4>{22, 38, 55, 255}, "zero progress bar empty");
+}
+
 void Export(SoftwareCanvas& canvas, const char* path) {
     const GridConfig grid{64, 32, 1};
     Simulation simulation{2048, {grid, 4, SteeringSettings{}, ResourceSettings{}}};
@@ -148,6 +239,7 @@ int main(int argc, char** argv) {
         PaletteAndRetained(canvas);
         RejectionBeforeDraw(canvas);
         RingsAndClipping(canvas);
+        MissionHud(canvas);
         if (argc == 2) Export(canvas, argv[1]);
         return 0;
     } catch (const std::exception& error) {

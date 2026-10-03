@@ -8,8 +8,9 @@ namespace crucible::desktop {
 namespace {
 void Check(bool ok) { if (!ok) throw std::runtime_error(SDL_GetError()); }
 }
-DesktopApp::DesktopApp() {
-    window_.reset(SDL_CreateWindow("Crucible - bounded field inspector", 1280, 720,
+DesktopApp::DesktopApp(ReclamationMissionSettings mission)
+    : session_(2048, {64, 4096}, mission) {
+    window_.reset(SDL_CreateWindow("Crucible - reclamation challenge", 1280, 720,
         SDL_WINDOW_RESIZABLE | SDL_WINDOW_HIGH_PIXEL_DENSITY));
     Check(static_cast<bool>(window_));
     renderer_.reset(SDL_CreateRenderer(window_.get(), nullptr));
@@ -26,6 +27,10 @@ presentation::ScreenPoint DesktopApp::ToLogical(float x, float y) const {
     return {lx, ly};
 }
 void DesktopApp::Preview(presentation::ScreenPoint point) {
+    if (const auto mission = session_.GetMission(); mission && mission->outcome != ReclamationMissionOutcome::active) {
+        preview_.reset();
+        return;
+    }
     if (const auto world = camera_.TryToWorld(point))
         preview_ = presentation::TryBuildFieldEdit({tool_, slot_, 8, 4}, *world, 4);
     else if (!admission_ || admission_->status == runtime::CommandIngress::AdmissionStatus::accepted)
@@ -59,7 +64,7 @@ void DesktopApp::Act(Action action) {
         break;
     case Action::restart:
         session_.Restart(); camera_.ResetFit(); preview_.reset(); admission_.reset(); dragging_ = false;
-        message_ = "Fresh run - click world to queue a field edit";
+        message_ = "Fresh challenge - recover biomass before the deadline";
         if (suspended_) { restore_running_ = true; session_.Pause(); }
         baseline_ = std::chrono::steady_clock::now();
         break;
@@ -155,9 +160,19 @@ SDL_AppResult DesktopApp::Iterate() {
         }
     }
     if (session_.GetStatus() == runtime::ClockDriver::Status::blocked) message = "Trace full - boundary blocked; restart";
+    const auto mission = session_.GetMission();
+    if (mission && mission->outcome != ReclamationMissionOutcome::active) {
+        preview_.reset();
+        if (admission_ && admission_->status == runtime::CommandIngress::AdmissionStatus::closed)
+            message = "Run stopped - field edits disabled; R or RESTART to edit";
+        else
+            message = mission->outcome == ReclamationMissionOutcome::won
+                ? "Quota secured - press R or RESTART for a fresh challenge"
+                : "Deadline reached - press R or RESTART to try another route";
+    }
     const presentation::desktop::SceneUi ui{
         session_.GetStatus() == runtime::ClockDriver::Status::paused,
-        session_.GetStatus() == runtime::ClockDriver::Status::blocked, tool_, slot_, preview_, message};
+        session_.GetStatus() == runtime::ClockDriver::Status::blocked, tool_, slot_, preview_, message, mission};
     Check(painter_.TryDraw(*renderer_, session_.GetSnapshot(), camera_, ui));
     Check(SDL_RenderPresent(renderer_.get()));
     return SDL_APP_CONTINUE;

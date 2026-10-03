@@ -92,3 +92,13 @@ pixel fixture and native-window event smoke exercise different boundaries. No
 upstream code defect or measured optimization was found; HX-07 and the H2 pin stay
 unchanged. A future GPU upload must establish resource retirement and a real
 concurrent reader before adding frame leases/exchange.
+
+## Phase 5 disposition
+
+R07/R08 remain local: objective policy consumes an owned ledger at each completed
+boundary; presentation consumes an owned mission value alongside the snapshot.
+The clock's optional startup-owned stop callback has an actual mission caller, not
+a generic scheduling framework. SDL3/H2 pins and receiving evidence remain intact.
+[Instancing design](../decisions/render-instancing.md) carries the CPU packet
+experiment into explicit shader/upload/retirement gates. No upstream defect or
+controlled speedup was found, and no extraction or pin update is justified.

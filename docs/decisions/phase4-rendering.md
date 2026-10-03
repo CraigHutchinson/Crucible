@@ -50,6 +50,8 @@ The [interim instance-boundary spike](../../spikes/rendering/README.md) supplies
 optional concrete SDL consumer, ownership/pixel fixtures and advisory packing data.
 It supports testing a compact GPU upload representation next, without promoting
 the extra copy, narrowing production numerical support or introducing interfaces.
+The [instancing follow-up](render-instancing.md) distinguishes two SDL batches from
+true instance draws and specifies shader, precision, upload and retirement gates.
 
 ## Coordinates, lifetime and platform progression
 

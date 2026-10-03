@@ -160,6 +160,27 @@ bool ScenePainter::TryDraw(SDL_Renderer& renderer, const ScenarioSnapshot& frame
         if (fields[i].slot != i || !fields[i].IsValid(fields.size())) return reject("invalid committed field");
     if (ui.preview && !ui.preview->IsValid(fields.size())) return reject("invalid preview field");
 
+    if (ui.mission) {
+        const auto& mission = *ui.mission;
+        if (!info->biomass || mission.completed_tick != info->completed_tick ||
+            mission.settings.target_reclaimed == 0 || mission.settings.deadline_ticks == 0 ||
+            mission.reclaimed > info->biomass->reserve) return reject("mission does not match captured boundary");
+        const bool quota = mission.reclaimed >= mission.settings.target_reclaimed;
+        const bool deadline = mission.completed_tick >= mission.settings.deadline_ticks;
+        switch (mission.outcome) {
+        case ReclamationMissionOutcome::active:
+            if (quota || deadline) return reject("active mission has reached an outcome");
+            break;
+        case ReclamationMissionOutcome::won:
+            if (!quota || mission.completed_tick > mission.settings.deadline_ticks) return reject("invalid winning mission");
+            break;
+        case ReclamationMissionOutcome::lost:
+            if (quota || mission.completed_tick != mission.settings.deadline_ticks) return reject("invalid losing mission");
+            break;
+        default: return reject("invalid mission outcome");
+        }
+    }
+
     if (!SDL_SetRenderViewport(&renderer, nullptr) || !SDL_SetRenderClipRect(&renderer, nullptr) ||
         !SDL_SetRenderScale(&renderer, 1, 1) || !Color(renderer, Background) || !SDL_RenderClear(&renderer)) return false;
     const SDL_Rect clip{24, 96, 1232, 520};
@@ -188,16 +209,52 @@ bool ScenePainter::TryDraw(SDL_Renderer& renderer, const ScenarioSnapshot& frame
     if (!SDL_SetRenderClipRect(&renderer, nullptr) || !Color(renderer, Text)) return false;
     if (!Label(renderer, 24, 16, "CRUCIBLE / FINITE RECLAMATION", 2)) return false;
     char line[192]{};
+    if (ui.mission) {
+        const auto& mission = *ui.mission;
+        const auto outcome = mission.outcome;
+        const auto color = outcome == ReclamationMissionOutcome::won ? Attract :
+            (outcome == ReclamationMissionOutcome::lost ? Repel : Nanite);
+        const char* label = outcome == ReclamationMissionOutcome::won ? "WON" :
+            (outcome == ReclamationMissionOutcome::lost ? "LOST" : "ACTIVE");
+        if (!Color(renderer, color) || !Label(renderer, 536, 16, label, 2)) return false;
+        const SDL_FRect track{840, 16, 416, 16};
+        const auto ratio = static_cast<double>(std::min(mission.reclaimed, mission.settings.target_reclaimed)) /
+            static_cast<double>(mission.settings.target_reclaimed);
+        const SDL_FRect progress{track.x + 1, track.y + 1, static_cast<float>(414 * std::clamp(ratio, 0., 1.)), 14};
+        if (!Color(renderer, Stocked) || !SDL_RenderFillRect(&renderer, &track) || !Color(renderer, color) ||
+            (progress.w > 0 && !SDL_RenderFillRect(&renderer, &progress)) || !SDL_RenderRect(&renderer, &track)) return false;
+        const auto ticks_left = mission.completed_tick < mission.settings.deadline_ticks
+            ? mission.settings.deadline_ticks - mission.completed_tick : 0;
+        SDL_snprintf(line, sizeof line, "Recovered %" PRIu64 " / %" PRIu64 " | Ticks left %" PRIu64 " (simulation ticks)",
+                     mission.reclaimed, mission.settings.target_reclaimed, ticks_left);
+        if (!Color(renderer, Text) || !Label(renderer, 24, 44, line)) return false;
+    }
+    const char* run_state = ui.mission && ui.mission->outcome != ReclamationMissionOutcome::active
+        ? "STOPPED" : (ui.paused ? "PAUSED" : "RUNNING");
     SDL_snprintf(line, sizeof line, "Tick %" PRIu64 " | Nanites %zu | %s%s | Slot %zu", info->completed_tick,
-                 samples.size(), ui.paused ? "PAUSED" : "RUNNING", ui.blocked ? " / BLOCKED" : "", ui.selected_slot + 1);
-    if (!Label(renderer, 24, 44, line, 1.5F)) return false;
+                 samples.size(), run_state, ui.blocked ? " / BLOCKED" : "", ui.selected_slot + 1);
+    if (!Label(renderer, 24, ui.mission ? 56.F : 44.F, line, ui.mission ? 1.F : 1.5F)) return false;
     if (info->biomass) {
         const auto& mass = *info->biomass;
         SDL_snprintf(line, sizeof line, "Mass: initial %" PRIu64 " = stock %" PRIu64 " + mobile %" PRIu64 " + reserve %" PRIu64,
                      mass.initial_total, mass.remaining_stock, mass.mobile_mass, mass.reserve);
     } else SDL_snprintf(line, sizeof line, "Mass ledger unavailable in this scenario");
-    if (!Label(renderer, 24, 70, line) ||
-        !Label(renderer, 24, 84, "Cells: red infected+stock | ochre infected+empty | green reclaimed | cyan nanites | white dashed preview")) return false;
+    if (!Label(renderer, 24, 70, line)) return false;
+    const char* instruction = "Cells: red infected+stock | ochre infected+empty | green reclaimed | cyan nanites | white dashed preview";
+    if (ui.mission) {
+        switch (ui.mission->outcome) {
+        case ReclamationMissionOutcome::active:
+            instruction = "ACTIVE: Recover the quota before ticks run out. Attract/repel nanites with fields. R or RESTART: fresh challenge.";
+            break;
+        case ReclamationMissionOutcome::won:
+            instruction = "WON: Biomass quota recovered. Run stopped; inspect with pan/zoom. R or RESTART: play again.";
+            break;
+        case ReclamationMissionOutcome::lost:
+            instruction = "LOST: Deadline reached before quota. Run stopped; inspect with pan/zoom. R or RESTART: try again.";
+            break;
+        }
+    }
+    if (!Label(renderer, 24, 84, instruction)) return false;
     const std::array labels{"1 ATTRACT", "2 REPEL", "3 ERASE", "TAB SLOT", ui.paused ? "RESUME" : "PAUSE", "RESTART", "FIT VIEW"};
     for (std::size_t i = 0; i < labels.size(); ++i) {
         const auto bounds = ToolbarButton(i);

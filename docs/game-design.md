@@ -137,14 +137,22 @@ back. Loss is recorded explicitly. A visual cloud is not an excuse to lose the l
 Blight is the first opposition. A local spread rule creates pressure on unattended
 territory; the swarm can consume it, but handling a contested cell carries a defined
 attrition cost. That cost must be tunable and visible, with a short fixture proving
-no resource is created by contention or a failed transition. The existing monotone
-spread prototype has no consumption or attrition and does not yet implement this loop.
+no resource is created by contention or a failed transition. Finite reclamation now
+uses a conserved stock/mobile/reserve ledger. Attrition, growth and structural
+allocation remain later parts of this loop.
 
 The important tension is keeping enough mobile mass to reclaim while anchoring enough
 to secure the objective. Difficulty comes initially from map geometry, infection
 placement and spread/consumption balance. Combat AI and multiplayer are deferred.
 
 ## First playable scenario: Secure the relay
+
+The [phase 5 reference challenge](decisions/phase5-reclamation.md) precedes this full
+scenario: recover a visible biomass quota before a completed-tick deadline, with
+latched outcomes and restart. It uses the live field tools and ledger without adding
+structures or protection rules. Difficulty/comprehension require a human playtest.
+The [instancing design](decisions/render-instancing.md) carries measured extraction
+learning into future graphics work; GPU instancing is proposed, not implemented.
 
 A compact bounded arena begins with a finite swarm, an infected frontier and one
 relay marker beyond it. The player learns to gather the swarm, route it through the
@@ -192,8 +200,9 @@ or final production assets, and do not select a renderer.
 
 | Stage | What it establishes |
 |---|---|
-| Implemented headless increment | Owned field edits, bounded ingress, exact tick replay, radial movement, spatial diagnostics and simple cellular spread |
-| Next simulation work | Numerical steering rules; clock/lifecycle completion; telemetry that can describe the emerging loop |
+| Implemented increment | Owned field edits, bounded ingress/replay/clock, bounded steering, spatial diagnostics, finite reclamation ledger and live SDL display |
+| Current mission increment | Reference quota/deadline challenge with progress/outcome/restart; relay/fusion remains later |
+| Next simulation work | Structural fusion/protection rules and tuning; owned snapshots remain the drawing boundary |
 | Gameplay gate | Consumption/attrition ledger, one lattice, fusion/shatter, objective and outcome in a sequential reference scenario |
 | First playable gate | Snapshot display, input tools, pause/restart, objective feedback and a visual win/loss |
 | Scale gate | Full tick/frame workload measured at small, 100K and 150K populations with rendering/uploads included |
