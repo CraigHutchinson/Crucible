@@ -97,6 +97,20 @@
       "cacheVariables": {
         "CRUCIBLE_BUILD_RENDER_SPIKE": "ON"
       }
+    },
+    {
+      "name": "gpu-debug",
+      "inherits": "spike-debug",
+      "cacheVariables": {
+        "CRUCIBLE_BUILD_GPU_RECEIVER": "ON"
+      }
+    },
+    {
+      "name": "gpu-release",
+      "inherits": "spike-release",
+      "cacheVariables": {
+        "CRUCIBLE_BUILD_GPU_RECEIVER": "ON"
+      }
     }
   ],
   "buildPresets": [
@@ -147,6 +161,14 @@
     {
       "name": "spike-sanitize",
       "configurePreset": "spike-sanitize"
+    },
+    {
+      "name": "gpu-debug",
+      "configurePreset": "gpu-debug"
+    },
+    {
+      "name": "gpu-release",
+      "configurePreset": "gpu-release"
     }
   ],
   "testPresets": [
@@ -230,6 +252,20 @@
     {
       "name": "spike-sanitize",
       "configurePreset": "spike-sanitize",
+      "output": {
+        "outputOnFailure": true
+      }
+    },
+    {
+      "name": "gpu-debug",
+      "configurePreset": "gpu-debug",
+      "output": {
+        "outputOnFailure": true
+      }
+    },
+    {
+      "name": "gpu-release",
+      "configurePreset": "gpu-release",
       "output": {
         "outputOnFailure": true
       }

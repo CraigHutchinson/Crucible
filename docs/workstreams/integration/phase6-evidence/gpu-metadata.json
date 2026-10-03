@@ -1,0 +1,58 @@
+{
+  "source_commit": "b11a377a5a18b9c89ab42b8320382cad9f5b426e",
+  "source_dirty": true,
+  "os": "Linux-6.18.44-x86_64-with-glibc2.39",
+  "compiler": "GCC 13.3.0",
+  "shader_compiler": "Glslang Version: 11:15.1.0\nESSL Version: OpenGL ES GLSL 3.20 glslang Khronos. 15.1.0\nGLSL Version: 4.60 glslang Khronos. 15.1.0\nSPIR-V Version 0x00010600, Revision 1\nGLSL.std.450 Version 100, Revision 1\nKhronos Tool ID 8\nSPIR-V Generator Version 11\nGL_KHR_vulkan_glsl version 100\nARB_GL_gl_spirv version 100\n",
+  "device": "Mesa 25.2.8 llvmpipe LLVM 20.1.2, Vulkan 1.4.318 software device",
+  "sdl_pin": "829a65d769d935c4852f8159e964312c0957260a",
+  "backend": "SDL_GPU Vulkan; X11 video loader under TCP Xvfb; offscreen RGBA8_UNORM; no swapchain",
+  "command": "crucible_gpu_receiver world.vert.spv world.frag.spv NEW_OUTPUT_DIRECTORY --palette",
+  "same_input_pair": {
+    "tick": 0,
+    "samples": 2048,
+    "grid": [
+      64,
+      32,
+      1
+    ],
+    "view": [
+      24,
+      96,
+      1232,
+      520
+    ],
+    "camera": "fitted",
+    "commands": [],
+    "capture": "production ScenePainter and InstancePacket from same InspectorSession snapshot in same loop iteration"
+  },
+  "evolved_trace": [
+    {
+      "sequence": 1,
+      "applied_tick": 1,
+      "kind": "set",
+      "slot": 0,
+      "center": [
+        8,
+        8
+      ],
+      "radius": 8,
+      "strength": 4
+    }
+  ],
+  "sha256": {
+    "src/presentation/gpu/shaders/world.vert": "fece45350976dd98f468c1341cc76743aa0c80da30e8c7c51304fe19e347c0f1",
+    "src/presentation/gpu/shaders/world.frag": "90b921d9621cc75b417a89200aa7070af2d3870b675716aa7757cf88c72342ee",
+    "build/gpu-release/gpu-shaders/world.vert.spv": "2f3bbcc93c2d75dab198fbeed6d7579b657068df06d75685fed665f35abaa73c",
+    "build/gpu-release/gpu-shaders/world.frag.spv": "d98a30e0c1cffb6ebf3ec4811ae6239c3d4e6ceef6d01fcdfbce8f0c965df2dc"
+  },
+  "raw_capture_sha256": {
+    "synthetic-palette.bmp": "54c9770e41957508790ac58c61ba5c61a7a65c100e5c32a38a6775e3c0420a11",
+    "frames.json": "fd678266234af78e72b34b050e0c9264bd6d493c8b7182d9932b32bcb299ce3a",
+    "initial.bmp": "8f5bb482f8de06ae66f5b6973204f2286817c24db59711e9482c95288c48c9d2",
+    "initial-software.bmp": "d0076c0339309a726852636a1819e430ffe47e4a22fa0e80ccb4cb82bd0a626e",
+    "evolved.bmp": "2e8c86d7f19a7a85036a2a36d7cb96b25879c2cbbc1be042f2a088785adf28a9"
+  },
+  "scope": "Actual world captures. Palette is synthetic presentation colors; no faction gameplay. No physical GPU/FPS claim.",
+  "provenance_note": "Original local captures were made before the final exporter trace/ledger/flush refinements, from the stated committed base plus dirty integration sources. Shader hashes are actual compiled inputs. The producer source hash was removed because it was collected after a metadata-only source refinement. Final-head hosted GPU artifact retains current executable/source-tree/shader/device inventory and actual trace provenance."
+}

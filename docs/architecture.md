@@ -240,3 +240,16 @@ submissions. SDL callbacks own the window/renderer and yield to the platform.
 No SDL dependency enters the default headless graph. A future GPU backend consumes
 world-space frame data; upload/resource retirement, iOS packaging/touch and any
 concurrent reader require their own acceptance gates.
+
+## Phase 6 instancing consumer
+
+The optional [GPU receiver](decisions/phase6-gpu.md) consumes a startup-owned
+InstancePacket copied from completed ScenarioSnapshot values. It never queries ECS.
+Camera uniforms are separate, so camera-only redraw retains packed instances.
+A concrete SDL_GPU Vulkan consumer owns a static quad and three fenced transfer,
+device, output and readback slots. Submission receipts identify a renderer lifetime
+and slot generation; only completed readback publishes pixels.
+The default desktop remains the established ScenePainter. No virtual renderer
+hierarchy is introduced; platform receivers must earn their boundaries through
+actual callers, shader/toolchain and lifecycle evidence.
+[Phase 6 review](sprint-reviews/phase-06.md) retains numeric, visual and failure limits.

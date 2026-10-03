@@ -96,3 +96,14 @@ Follow [faction/material/control separation](faction-extensibility.md) at the fi
 GPU contract: arbitrary per-instance palette values; cell/marker ranges represent
 geometry behavior, not exactly two factions. Future allegiance/relations/authority
 stay in simulation policy and owned observation, not shaders or renderer ECS queries.
+
+## Phase 6 receiving result
+
+The [concrete contract](phase6-gpu.md) now executes SDL_GPU Vulkan/SPIR-V instancing
+on llvmpipe. Double normalization before float narrowing preserves tiny/large world
+fixtures. Three bounded owned slots and weak issuer receipts separate submission
+from completed readback. The [receiving evidence](../workstreams/integration/phase6-validation.md)
+includes actual shader/software comparison and production-frame captures.
+This remains an optional offscreen receiver: actual delayed multi-slot completion,
+driver failure injection, window lifecycle and physical public-platform receiving
+remain gates before default promotion. No abstract renderer hierarchy was needed.

@@ -1,15 +1,17 @@
 # Phase 6: real instancing foundation and mission examples
 
-Status: planned, ready for collaborative delegation; implementation not started.
+Status: implementation delivered; receiving/combined validation and publication in progress, 2026-10-03.
+Dispatch baseline `44701d6ff0a2ad94acf312f07f7f0ce2ab17ae83`.
 Planning baseline `5411125d68889c073d56e1526b50c619cd237ed1`, 2026-10-03.
-At dispatch, refresh from merged main containing this plan and record that SHA.
 Consumes [Phase 5 review](../sprint-reviews/phase-05.md),
 [instancing decision](../decisions/render-instancing.md) and
 [visual completion criteria](README.md#visual-examples-at-each-iteration).
 Also consumes [faction extensibility groundwork](../decisions/faction-extensibility.md):
 material/entity kind and faction allegiance remain separate, with no two-side
 assumption in instance colors. No faction/network implementation is dispatched.
-This document defines future work; no package below has passed acceptance yet.
+Packages have concrete callers and initial receiving evidence. The
+[sprint review](../sprint-reviews/phase-06.md) separates passed observations from
+pending combined tests, hosted CI, publication and fault receiving.
 
 ## Useful increment and scope
 
@@ -23,12 +25,33 @@ Do not combine SDL_Renderer and SDL_GPU ownership on the same window without a p
 interop contract. No renderer interface hierarchy, per-entity graphics objects or
 parallel ECS mutation is required.
 
-Core is one receiving backend (proposed Vulkan/SPIR-V on Linux) with a real GPU API
+Core is one implemented receiving backend (Vulkan/SPIR-V on Linux) with a real GPU API
 execution/readback gate, permitted on a software Vulkan device. This proves API and
 shader behavior, not physical-device performance. Metal/D3D12/iOS are subsequent
 receivers; portable sources and capability records must support their later work.
 If no executing GPU receiver is available, record the blocker and retain partial
 work; a software SDL comparison alone does not complete P6-R.
+
+## Delivery status and retained gates
+
+The optional concrete offscreen receiver executes real indexed instancing/readback
+on a software Vulkan device under Xvfb; initial/evolved 2K and synthetic palette
+captures completed. Owned normalized packets, camera uniforms, three explicit
+fence-retired slots and weak-issuer receipts are implemented. CPU projection/slot
+fixtures and executing software-oracle/readback fixtures establish different gates;
+actual readbacks drain between frames and do not prove delayed three-slot saturation.
+
+The shared route is consumed by CLI/export. Four frozen strategies independently
+replay terminal full state: passive LOST900/1,774, sweep WON267/1,780/five edits,
+stationary LOST900/1,774/one edit, repel/reposition/erase LOST900/1,774/three edits.
+Actual ACTIVE/WON/LOST examples and a checkpoint comparison are retained in the review.
+No quota/rule changes or human tuning acceptance follow from these experiments.
+
+Device/submission/map failure, partial GPU creation after allocation, failed drain
+and hang paths are reviewed but not injected; malformed shader testing covers only
+preflight rejection. New P06-F02 explicitly retains these receiving gates, together
+with delayed saturation, before default-backend promotion. Combined builds/tests,
+hosted CI and publication are architect-owned and pending.
 
 ## Team and ownership reassessment
 
@@ -158,9 +181,11 @@ prepares a playtest but does not claim one occurred or justify retuning threshol
    claims/review with actual SHAs. Checkpoint completed commands/evidence before long
    jobs; repair launch issues and rerun only affected checks on unchanged code.
 
-The following configure/test interfaces are to be added by P6-I, not existing commands:
+P6-I has wired the following configure/test interfaces:
 `CRUCIBLE_BUILD_GPU_RECEIVER=ON`, `gpu-debug`, `gpu-release`, and CTest labels
-`gpu;readback` / `gpu;lifetime`. Record actual commands after wiring. Portable layout/
+`gpu;readback` / `gpu;lifetime`. Executing Vulkan receiving requires an initialized
+video backend; Linux evidence uses X11 under Xvfb even though output is offscreen.
+Record exact executed commands/results in the review/evidence. Portable layout/
 lifetime/provider fixtures remain in ordinary tests where they need no GPU runtime.
 
 ## Handoff and stop conditions
@@ -177,6 +202,7 @@ promptly. Keep useful branches/builds/captures; no cleanup of sibling worktrees.
 | Follow-up | Phase 6 disposition | Next receiving gate |
 |---|---|---|
 | P06-F01 faction/multiplayer groundwork | Review packet/color assumptions only; no new simulation types | Three-plus faction/control/resource/command rules at first consumer |
+| P06-F02 GPU fault/retirement receiving | Open; failure paths reviewed but not injected, malformed shader covers preflight only | Actual device/submission/map/partial-creation/drain/hang and delayed saturation evidence before default promotion |
 | P05-F02 actual instancing | Prioritize P6-R; partial until public physical receivers/scale pass | P6 actual draw/readback, then Phase 7 device/frame evidence |
 | P05-F01 mission comprehension/difficulty | Prioritize P6-M evidence pack; remains open | Human strategy/comprehension playtest, recorded observations before rule changes |
 | P04-F02 native workloads/typography | Retain software UI; collect matched examples | Physical input-to-present/DPI/readability testing |
@@ -185,12 +211,12 @@ promptly. Keep useful branches/builds/captures; no cleanup of sibling worktrees.
 | P01-F03/F04/F05 structural fusion/relay/scale | Defer mechanics; mission loop retained | Frozen ledger/identity/atomic commit and protection rules, then consumers |
 | P02-F03 terrain, P03-F01 spatial costs, HX-07 oracle | Retain current oracles/pins; no migration | Measured workload or explicit gameplay traversal requirement |
 
-Phase 7 is conditional on Phase 6 review, not an automatic dispatch. Reassess to
-split one Metal/macOS+iOS packaging owner and one D3D12/Windows receiving owner,
-with architect retaining Linux GPU receiving and common contract/CI. Each must
-consume the same verified shader/layout/retirement contract and capture real target
-examples. If P6 correctness/lifetime gates remain open, consolidate fixing them
-before splitting platforms. Shader production, full desktop overlays, device input,
+Phase 7 is conditional on Phase 6 review, not an automatic dispatch. Consolidate
+P06-F02 lifetime fault/retirement receiving before splitting public-platform owners.
+After that gate passes, reassess one Metal/macOS+iOS packaging owner and one
+D3D12/Windows receiving owner, with architect retaining Linux GPU receiving and
+common contract/CI. Each must consume the same verified shader/layout/retirement
+contract and capture real target examples. Shader production, full desktop overlays, device input,
 resize and failure paths must pass before any default-backend promotion. iOS signing
 or physical hardware gaps remain explicit receiving blockers, not completed work.
 
@@ -208,5 +234,6 @@ use [fence queries](https://wiki.libsdl.org/SDL3/SDL_QueryGPUFence) and busy rec
 in the live path, drain separately; three slots do not prove responsiveness. It
 also separated offscreen acceptance from window ownership and
 [post-acquisition cancellation restrictions](https://wiki.libsdl.org/SDL3/SDL_CancelGPUCommandBuffer).
-These are verified against pinned headers; actual backend/tool feasibility remains
-P6-0, not a completed execution claim.
+These are verified against pinned headers. Actual Vulkan/SPIR-V execution/readback
+has now passed initial receiving; compiler/device provenance, combined acceptance
+and remaining fault/device gates are recorded by the sprint review and architect.
