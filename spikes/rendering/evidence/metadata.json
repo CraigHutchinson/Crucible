@@ -1,0 +1,28 @@
+{
+  "date_utc": "2026-10-03T11:30:29.034873+00:00",
+  "os": "Linux-6.18.44-x86_64-with-glibc2.39",
+  "cpu": "INTEL(R) XEON(R) PLATINUM 8573C",
+  "base_commit": "1d47fa692c6392c6266566f11817abebe31a1219",
+  "compiler": "c++ (Ubuntu 13.3.0-6ubuntu2~24.04) 13.3.0",
+  "build": "desktop-release + CRUCIBLE_BUILD_RENDER_SPIKE=ON; default Release flags",
+  "sdl_commit": "829a65d769d935c4852f8159e964312c0957260a",
+  "processes": 5,
+  "warmups_per_case": 20,
+  "timed_iterations_per_case": 200,
+  "grid": "64x32 unit cells",
+  "simulation_tick": 0,
+  "fields": 0,
+  "rendering": "SDL software raster comparison after timing; no draw/GPU timings",
+  "environment": "Shared managed Linux host; no affinity or frequency controls",
+  "source": "Final spike source in the same git tree; base_commit is the pre-spike main baseline",
+  "source_dirty": true,
+  "cxx_flags": "-O3 -DNDEBUG",
+  "source_sha256": {
+    "spikes/rendering/CMakeLists.txt": "c557d27e87c3e85fa0b5336442f86703a81a1ace3045f6c1cbac9f945214d470",
+    "spikes/rendering/PacketPainter.cpp": "dced188552c3918030ae2056a299239683bd8ad5d27e0a00d0cc3c192f343976",
+    "spikes/rendering/PacketPainter.hpp": "bcf90541b25436063bba3cfc94cda48b0e6608385c6c4a51f33c4a80dba4c8b7",
+    "spikes/rendering/WorldPacket.cpp": "db54a1e170ed2580f2361cd670cb13ad56e707e8e54c235f02a5f3af34731ac4",
+    "spikes/rendering/WorldPacket.hpp": "96d3ac783152048c2e04dde7136d18ef211264f0c490a5d8a1282e53af229687",
+    "spikes/rendering/main.cpp": "5eebba95af5b4fa34fc8ac2b142d36bae48ab25c0c6a85ab9f74fb5e4ebe5143"
+  }
+}

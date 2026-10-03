@@ -46,6 +46,11 @@ Official sources: [release](https://github.com/libsdl-org/SDL/releases/tag/relea
 [iOS source guidance](https://github.com/libsdl-org/SDL/blob/829a65d769d935c4852f8159e964312c0957260a/docs/README-ios.md).
 Upstream capability is not a claim that Crucible's package has passed on every device.
 
+The [interim instance-boundary spike](../../spikes/rendering/README.md) supplies an
+optional concrete SDL consumer, ownership/pixel fixtures and advisory packing data.
+It supports testing a compact GPU upload representation next, without promoting
+the extra copy, narrowing production numerical support or introducing interfaces.
+
 ## Coordinates, lifetime and platform progression
 
 Use a fixed1280x720 logical canvas, letterboxing and one window-to-render conversion

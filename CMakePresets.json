@@ -76,6 +76,27 @@
       "name": "macos-release",
       "inherits": "desktop-release",
       "toolchainFile": "${sourceDir}/cmake/toolchains/macos-homebrew-llvm.cmake"
+    },
+    {
+      "name": "spike-debug",
+      "inherits": "desktop-debug",
+      "cacheVariables": {
+        "CRUCIBLE_BUILD_RENDER_SPIKE": "ON"
+      }
+    },
+    {
+      "name": "spike-release",
+      "inherits": "desktop-release",
+      "cacheVariables": {
+        "CRUCIBLE_BUILD_RENDER_SPIKE": "ON"
+      }
+    },
+    {
+      "name": "spike-sanitize",
+      "inherits": "desktop-sanitize",
+      "cacheVariables": {
+        "CRUCIBLE_BUILD_RENDER_SPIKE": "ON"
+      }
     }
   ],
   "buildPresets": [
@@ -114,6 +135,18 @@
     {
       "name": "macos-release",
       "configurePreset": "macos-release"
+    },
+    {
+      "name": "spike-debug",
+      "configurePreset": "spike-debug"
+    },
+    {
+      "name": "spike-release",
+      "configurePreset": "spike-release"
+    },
+    {
+      "name": "spike-sanitize",
+      "configurePreset": "spike-sanitize"
     }
   ],
   "testPresets": [
@@ -176,6 +209,27 @@
     {
       "name": "macos-release",
       "configurePreset": "macos-release",
+      "output": {
+        "outputOnFailure": true
+      }
+    },
+    {
+      "name": "spike-debug",
+      "configurePreset": "spike-debug",
+      "output": {
+        "outputOnFailure": true
+      }
+    },
+    {
+      "name": "spike-release",
+      "configurePreset": "spike-release",
+      "output": {
+        "outputOnFailure": true
+      }
+    },
+    {
+      "name": "spike-sanitize",
+      "configurePreset": "spike-sanitize",
       "output": {
         "outputOnFailure": true
       }
