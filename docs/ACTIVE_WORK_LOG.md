@@ -235,3 +235,29 @@ bounded generated compiler discovery (cache wins; ambiguous paths block), explic
 fixture platforms and separate Windows direct-child coverage. Local36 prerequisite/
 runner fixtures and5 mode-repair fixtures passed. Production checks retain their
 scope; a final new head must pass all nine jobs before merge.
+
+## Git LFS setup, 2026-10-04
+
+Root owns `.gitattributes`, checkout settings in `.github/workflows`,
+`CONTRIBUTING.md` and this log on `chore/git-lfs`, based on `50f61d8`.
+No build CPU claim or gameplay edits; existing Phase 8 worktrees are preserved.
+Binary art/media use LFS, including existing PNGs via index renormalization.
+Published history is retained. Verification: LFS object integrity, attributes,
+pointer inventory, byte hashes and remote upload/download; hosted CI before merge.
+
+Local setup complete at `e9212e9`: 26 PNG payloads match their original Git
+blobs byte-for-byte; pointer SHA256/size and `git lfs fsck --pointers` pass.
+Repository ownership and admin/push permissions verified by the GitHub connector.
+Automatic approval review rejected both push attempts, including the retry after
+verification, because prior push authorization was not accepted by the reviewer.
+No remote branch, uploaded-object receipt, download acceptance or CI pass is
+claimed. Publication awaits renewed explicit approval in this session.
+
+User explicitly renewed commit/push/merge authorization. Shell push then failed
+for missing HTTPS credentials; publication uses the connected GitHub app.
+Temporary branch `chore/lfs-upload` uploaded the 26 existing public PNG payloads
+using a repository-scoped Actions token; no Git history was pushed by that job.
+[Run 37233289404](https://github.com/CraigHutchinson/Crucible/actions/runs/37233289404)
+passed upload, download into an empty LFS object store, and integrity verification.
+The bootstrap workflow is excluded from the setup PR and merged main.
+Final configuration/pointers await exact-head hosted CI and merge.
