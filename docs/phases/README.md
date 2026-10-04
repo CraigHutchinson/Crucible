@@ -16,7 +16,7 @@ package is not a permanent agent assignment.
 | 6 | Real instancing foundation and mission receiving examples | [Plan](phase6.md), [review](../sprint-reviews/phase-06.md); optional foundation delivered, PR15 at `7317a03c8bca6848b17a352f0a192fb0d8e0e375`; fault/device gates open |
 | 7 | Controlled GPU fault/retirement receiving and mission timing investigation | [Plan](phase7.md), [review](../sprint-reviews/phase-07.md); merged/recovered through PR19 at `50f61d8` |
 | 8 | Playable straight flow, primitive cues and resource/faction concepts | [Plan](phase8.md), [review](../sprint-reviews/phase-08.md); recovered/merged PR21 at `a95c511` |
-| 9 | Structural/arena rules comparison and production relay-density investigation | [Plan](phase9.md), [review](../sprint-reviews/phase-09.md); in progress |
+| 9 | Structural/arena rules comparison and production relay-density investigation | [Plan](phase9.md), [review](../sprint-reviews/phase-09.md); investigation delivered, [PR22 publication receipt](https://github.com/CraigHutchinson/Crucible/pull/22) |
 
 The [sprint-review archive](../sprint-reviews/README.md) tracks findings, follow-ups
 and delegation lessons for every completed increment.

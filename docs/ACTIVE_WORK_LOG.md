@@ -292,3 +292,8 @@ normal local LSan preflight blocks on /proc, without suppression. Static plot an
 arena design mock inspected. Selected next contract64→48+16 from the frozen
 production count evidence; no structural implementation or human balance claim.
 Workers complete, shared CPU released; final hosted publication receiving active.
+
+Final publication is tracked by [PR22](https://github.com/CraigHutchinson/Crucible/pull/22):
+reviewed head/tree, nine-job exact-head acceptance and actual merge/main receipt.
+Path/CPU work is complete; publication claim closes with that receipt. No retained
+historical worktree/branch/artifact cleanup was performed.

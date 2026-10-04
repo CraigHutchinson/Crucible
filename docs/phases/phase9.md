@@ -1,7 +1,8 @@
 # Phase 9: rules comparison and relay-density receiving
 
-Status: investigation received locally; exact-head hosted acceptance and merge pending,
-2026-10-05. Architect accountable. Dispatch main is PR21 merge
+Status: investigative scope delivered, 2026-10-05.
+[PR22](https://github.com/CraigHutchinson/Crucible/pull/22) records exact-head hosted
+acceptance and the actual merge baseline; publication is complete only with that receipt. Architect accountable. Dispatch main is PR21 merge
 `a95c5111991f441a451df144fdf443d2379a0939`; recovered Phase8 source and concepts
 are present. [Review](../sprint-reviews/phase-09.md) owns findings and acceptance.
 

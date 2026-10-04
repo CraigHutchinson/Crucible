@@ -15,7 +15,7 @@ consider. Read the latest review before planning or delegating another sprint.
 | 6 | Optional executing Vulkan instancing and replay-backed examples; physical gates open | [Phase 6 review](phase-06.md), [plan](../phases/phase6.md) | `7317a03`, PR15 |
 | 7 | Controlled GPU failure/retirement and mission timing; merged and original evidence recovered | [Phase 7 review](phase-07.md), [plan](../phases/phase7.md) | PR17 `d2fda2a`; recovery PR19 `50f61d8` |
 | 8 | Straight flow, primitive cues and concepts; recovered/merged, original local evidence retained | [Phase 8 review](phase-08.md), [plan](../phases/phase8.md) | `a95c511`, PR21 |
-| 9 | Rules shootout and actual relay-density spike; in progress | [Phase 9 review](phase-09.md), [plan](../phases/phase9.md) | Dispatch `a95c511`; not merged yet |
+| 9 | Rules shootout and actual relay-density spike; investigative scope delivered | [Phase 9 review](phase-09.md), [plan](../phases/phase9.md) | Dispatch `a95c511`; [PR22 acceptance/merge receipt](https://github.com/CraigHutchinson/Crucible/pull/22) |
 
 ## Review procedure
 

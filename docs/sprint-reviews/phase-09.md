@@ -1,7 +1,8 @@
 # Phase 9 sprint review: compare rules before structural implementation
 
-Status: reviewed local investigation complete; final hosted acceptance and merge pending,
-2026-10-05. Architect accountable.
+Status: investigative scope delivered, 2026-10-05.
+[PR22](https://github.com/CraigHutchinson/Crucible/pull/22) is the authoritative
+exact-head acceptance and merge receipt. Architect accountable.
 Dispatch baseline PR21 merge `a95c5111991f441a451df144fdf443d2379a0939`.
 See [plan](../phases/phase9.md), [selection](../decisions/phase9-selection.md)
 and [receiving](../workstreams/integration/phase9-validation.md).
@@ -14,7 +15,7 @@ future changes. Execute the next planned rules comparison using two workers and 
 actual production-state relay-density spike. This is an investigation increment;
 no fusion, combat, faction authority or new playable objective is claimed.
 
-Structural owner supplies an independent mobile32→structure32→mobile24/loss8
+Structural owner supplies an independent mobile64→structure64→mobile48/loss16
 ledger and a production Simulation/HeadlessSession/Snapshot caller. Arena owner
 supplies three-faction authority, contested harvest, Blight control and ties, then
 independently reviews structural/spike boundaries. Architect owns shared docs,
@@ -37,7 +38,7 @@ Debug and Release passed30/30 each; final extrema reporting received targeted1/1
 reruns in both. Full Release900-tick study passed conservation, independent query
 parity at all2,703 strategy/tick states and three complete terminal replays. Normal
 local LSan canary is blocked by `/proc` access; no checks were disabled. Required
-hosted sanitizer/platform acceptance remains pending. Changed Markdown links and
+hosted sanitizer/platform acceptance is recorded against the final head in PR22. Changed Markdown links and
 whitespace pass; incomplete JSONL is rejected by the plot tool.
 
 Both concept boards and the primitive arena mock were visually inspected. The
@@ -66,9 +67,12 @@ pin change or extraction. Select a contract before splitting implementation next
 | P04-F01/F03 | iOS signing/touch/device/lifecycle HW-06 | Platform; hardware gated |
 | P02-F02 | Delayed concurrent observer before leases/exchange | Runtime; deferred |
 | P02-F03 / P03-F01 / HX-07 | Terrain/traversal/exact geometry before pin changes | Spatial/world; deferred |
-| P08-F01 | Recovered publication received; current retained behavior rechecked locally and in final hosted CI | Architect; hosted acceptance pending |
+| P08-F01 | Recovered publication received; current retained behavior rechecked locally and in final hosted CI | Architect; final hosted acceptance recorded in PR22 |
 
 ## Closure
 
-Pending reviewed head, exact-head CI, PR merge and local/remote reconciliation.
-All claims will close against actual receipts; no old worktree/artifact cleanup is requested.
+Publication closes only after nine final-head CI jobs pass, a head-guarded PR22
+merge and local/main reconciliation. The PR retains those exact source/run/merge
+receipts without a documentation-only SHA update triggering another acceptance
+cycle. Local work is preserved; no old worktree or artifact cleanup is requested.
+Next dispatch uses merged main and the selected64→48+16 contract in the decision.

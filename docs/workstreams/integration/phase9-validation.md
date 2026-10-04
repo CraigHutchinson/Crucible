@@ -81,7 +81,9 @@ mission or human balance. No timing number is a full-game performance claim.
 
 Reviewed checkpoint `eefc8754c34982d6b006e0105996824344594cfd` was published to
 [PR22](https://github.com/CraigHutchinson/Crucible/pull/22) before long receiving.
-Final source/evidence checkpoint and exact-head nine-job CI remain pending.
+The final reviewed source/evidence SHA, exact-head nine-job CI and actual merge
+SHA are recorded in that PR receipt. Publication requires all nine jobs passing
+and a matching head-guarded merge; this document does not predict those results.
 Recovery PR21 is a publication receipt, not a new test receipt. Hosted suites
 include retained Phase8 behavior and the opt-in120-tick spike on desktop Debug/Release,
 headless and normal ASan/UBSan. Software Vulkan receiving retains its existing scope.
