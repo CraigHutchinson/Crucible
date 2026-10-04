@@ -1,0 +1,25 @@
+name: Recover Phase 8 LFS payloads
+on:
+  push:
+    branches: [recovery/phase8-lfs-upload]
+permissions:
+  contents: write
+jobs:
+  upload:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          lfs: false
+      - name: Upload recovered PNG payloads and verify remote retrieval
+        run: |
+          git lfs install --local
+          git add --renormalize docs/concepts
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git commit -m 'Prepare recovered Phase 8 LFS payloads locally'
+          git lfs fsck --pointers
+          git lfs fsck
+          git lfs push origin HEAD
+          git -c lfs.storage="${RUNNER_TEMP}/verified-lfs" lfs fetch origin HEAD
+          git -c lfs.storage="${RUNNER_TEMP}/verified-lfs" lfs fsck
