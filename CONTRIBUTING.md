@@ -3,7 +3,7 @@
 For parallel sessions, start with [the workstream map](docs/workstreams/README.md).
 Each stream owns local source/test manifests; shared wiring goes through the integrator.
 
-Requirements: CMake 3.25+, Ninja, Git, Python 3.10+ and a C++23 toolchain with
+Requirements: CMake 3.25+, Ninja, Git with Git LFS, Python 3.10+ and a C++23 toolchain with
 std::expected (GCC 13+ or current MSVC). Use a VS developer prompt on Windows.
 Clang requires a C++ standard library implementing std::expected.
 
@@ -85,3 +85,27 @@ for dedicated-session capability matching, public/private trust boundaries, scop
 stop gates and evidence handoff. An additional agent on this host supplies labor,
 not additional hardware. Missing hardware leaves its gate open while independent
 portable work proceeds. Windows descendant-process timeout cleanup remains HW-01.
+
+## Binary assets and Git LFS
+
+Install [Git LFS](https://git-lfs.com/) before cloning. For a new or existing
+checkout, run:
+
+```sh
+git lfs install --local
+git lfs pull
+git lfs ls-files
+```
+
+The root `.gitattributes` tracks raster art, editable art sources, binary models,
+audio and video through LFS. Keep source code, SVG, JSON, logs and other text
+in ordinary Git. Add new binary formats deliberately with `git lfs track`, then
+commit `.gitattributes` with the assets. Use `git add` and `git commit` normally;
+the LFS pre-push hook uploads the payloads before publishing their pointers.
+GitHub Actions checkouts request LFS payloads explicitly.
+
+After committing assets, run `git lfs fsck --pointers` and `git lfs fsck`.
+The setup converts current tracked PNGs to LFS without rewriting published
+history. Historical Git blobs remain in older commits. Do not run
+`git lfs migrate import` on shared branches without a separately coordinated
+history migration.
