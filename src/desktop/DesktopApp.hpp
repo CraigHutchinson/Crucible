@@ -5,6 +5,7 @@
 #include <crucible/presentation/desktop/ScenePainter.hpp>
 #include <SDL3/SDL.h>
 #include <chrono>
+#include <cstdint>
 #include <memory>
 #include <string_view>
 namespace crucible::desktop {
@@ -35,15 +36,16 @@ public:
     /// Coordinator-only observations used by actual drawing and event acceptance fixtures.
     [[nodiscard]] const runtime::InspectorSession& GetSession() const noexcept { return session_; }
     [[nodiscard]] const presentation::Camera2D& GetCamera() const noexcept { return camera_; }
-    [[nodiscard]] std::optional<FieldEdit> GetPreview() const noexcept { return preview_; }
+    [[nodiscard]] std::optional<FieldEdit> GetPreview() const noexcept { return preview_ ? preview_ : admitted_preview_; }
     [[nodiscard]] SDL_Window& GetWindow() const noexcept { return *window_; }
 private:
     struct WindowDelete { void operator()(SDL_Window* p) const noexcept { SDL_DestroyWindow(p); } };
     struct RendererDelete { void operator()(SDL_Renderer* p) const noexcept { SDL_DestroyRenderer(p); } };
-    enum class Action { attract, repel, erase, slot, pause, restart, fit };
+    enum class Action { attract, repel, erase, slot, pause, restart, fit, flow };
     void Act(Action action);
     void Admit(FieldEdit edit);
     void Preview(presentation::ScreenPoint point);
+    void CancelGesture() noexcept;
     void Suspend(bool value);
     [[nodiscard]] presentation::ScreenPoint ToLogical(float x, float y) const;
     std::unique_ptr<SDL_Window, WindowDelete> window_;
@@ -54,6 +56,9 @@ private:
     presentation::FieldTool tool_{presentation::FieldTool::attract};
     std::size_t slot_{};
     std::optional<FieldEdit> preview_;
+    std::optional<FieldEdit> admitted_preview_;
+    std::uint64_t admitted_sequence_{};
+    std::optional<Position> flow_start_;
     std::optional<runtime::CommandIngress::Admission> admission_;
     presentation::ScreenPoint last_pointer_{};
     bool dragging_{}, suspended_{}, restore_running_{}, background_{}, minimized_{};

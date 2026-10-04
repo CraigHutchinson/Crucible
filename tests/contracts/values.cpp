@@ -2,7 +2,12 @@
 #include <crucible/contracts/GridConfig.hpp>
 #include <crucible/contracts/SampleId.hpp>
 
+#include <initializer_list>
 #include <limits>
+
+static_assert(static_cast<int>(crucible::FieldEditKind::set) == 0);
+static_assert(static_cast<int>(crucible::FieldEditKind::remove) == 1);
+static_assert(static_cast<int>(crucible::FieldEditKind::set_flow) == 2);
 
 int main() {
     using namespace crucible;
@@ -33,5 +38,27 @@ int main() {
     edit.kind = FieldEditKind::remove;
     if (!edit.IsValid(2) || edit.IsValid(1)) return 9;
     if (!(SampleId{1} < SampleId{2}) || SampleId{1} != SampleId{1}) return 10;
+    FieldEdit flow{FieldEditKind::set_flow, 1, {2, 3}, 4, 8, {10, 3}};
+    if (!flow.IsValid(2) || flow.IsValid(1)) return 12;
+    const auto owned_flow = flow;
+    flow.end.x = nan;
+    if (flow.IsValid(2) || owned_flow.end.x != 10) return 13;
+    for (const auto invalid : {
+             FieldEdit{FieldEditKind::set_flow, 1, {nan, 3}, 4, 8, {10, 3}},
+             FieldEdit{FieldEditKind::set_flow, 1, {2, infinity}, 4, 8, {10, 3}},
+             FieldEdit{FieldEditKind::set_flow, 1, {2, 3}, 4, 8, {nan, 3}},
+             FieldEdit{FieldEditKind::set_flow, 1, {2, 3}, 4, 8, {10, infinity}},
+             FieldEdit{FieldEditKind::set_flow, 1, {2, 3}, 4, 8, {2, 3}},
+             FieldEdit{FieldEditKind::set_flow, 1, {2, 3}, -1, 8, {10, 3}},
+             FieldEdit{FieldEditKind::set_flow, 1, {2, 3}, infinity, 8, {10, 3}},
+             FieldEdit{FieldEditKind::set_flow, 1, {2, 3}, 4, -1, {10, 3}},
+             FieldEdit{FieldEditKind::set_flow, 1, {2, 3}, 4, nan, {10, 3}}})
+        if (invalid.IsValid(2)) return 14;
+    flow = owned_flow; flow.radius = 0; flow.strength = 0;
+    if (!flow.IsValid(2)) return 15;
+    edit = copied; edit.end = {nan, infinity};
+    if (!edit.IsValid(2)) return 16;
+    edit.kind = FieldEditKind::remove;
+    if (!edit.IsValid(2)) return 17;
     return 0;
 }

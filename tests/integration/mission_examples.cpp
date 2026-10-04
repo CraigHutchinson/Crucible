@@ -52,7 +52,8 @@ void VerifyReplay(const runtime::InspectorSession& run) {
     }), "strategy stable identity/kinematic replay");
     Require(std::ranges::equal(actual.GetFields(), frame.GetFields(), [](const auto& x, const auto& y) {
         return x.kind == y.kind && x.slot == y.slot && x.center.x == y.center.x && x.center.y == y.center.y &&
-            x.radius == y.radius && x.strength == y.strength;
+            x.radius == y.radius && x.strength == y.strength &&
+                x.end.x == y.end.x && x.end.y == y.end.y;
     }) && std::ranges::equal(actual.GetBlight(), frame.GetBlight()) &&
         std::ranges::equal(actual.GetStocks(), frame.GetStocks()), "strategy fields/infection/stock replay");
 }
@@ -113,9 +114,11 @@ void Run(Strategy strategy, std::string_view name, std::ostream& out, const std:
         first = false;
         const auto& edit = command.edit;
         out << "{\"sequence\":" << command.sequence << ",\"applied_tick\":" << command.tick
-            << ",\"kind\":\"" << (edit.kind == FieldEditKind::set ? "set" : "remove")
+            << ",\"kind\":\"" << (edit.kind == FieldEditKind::set ? "set" :
+                    edit.kind == FieldEditKind::set_flow ? "set_flow" : "remove")
             << "\",\"slot\":" << edit.slot << ",\"x\":" << edit.center.x << ",\"y\":" << edit.center.y
-            << ",\"radius\":" << edit.radius << ",\"strength\":" << edit.strength << '}';
+            << ",\"radius\":" << edit.radius << ",\"strength\":" << edit.strength
+            << ",\"end_x\":" << edit.end.x << ",\"end_y\":" << edit.end.y << '}';
     }
     out << "]}";
 }

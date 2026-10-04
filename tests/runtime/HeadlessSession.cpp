@@ -1,11 +1,14 @@
 #include <crucible/runtime/HeadlessSession.hpp>
 
+#include <algorithm>
 #include <array>
+#include <cmath>
 #include <iostream>
 #include <limits>
 #include <stdexcept>
 
 #include <crucible/simulation.hpp>
+#include <crucible/presentation/ScenarioSnapshot.hpp>
 
 namespace {
 using crucible::FieldEdit;
@@ -27,7 +30,8 @@ bool SameRecord(const AppliedCommand& left, const AppliedCommand& right) {
     return left.sequence == right.sequence && left.tick == right.tick &&
         left.edit.kind == right.edit.kind && left.edit.slot == right.edit.slot &&
         left.edit.center.x == right.edit.center.x && left.edit.center.y == right.edit.center.y &&
-        left.edit.radius == right.edit.radius && left.edit.strength == right.edit.strength;
+        left.edit.radius == right.edit.radius && left.edit.strength == right.edit.strength &&
+        left.edit.end.x == right.edit.end.x && left.edit.end.y == right.edit.end.y;
 }
 
 void CheckPauseResumeAndReplay() {
@@ -73,6 +77,66 @@ void CheckPauseResumeAndReplay() {
     Require(replay.TryStep().status == StepStatus::closed, "replay closes live admission");
     session.GetIngress().Close();
     Require(session.TryStep().status == StepStatus::closed, "close stops new ticks");
+}
+
+void CheckFlowFullReplay(bool steering) {
+    const Simulation::ScenarioOptions options{{8, 4, 1}, 2,
+        steering ? std::optional{crucible::SteeringSettings{}} : std::nullopt, crucible::ResourceSettings{}};
+    Simulation live{3, options}, replayed{3, options};
+    HeadlessSession session{live, {8, 8}}, replay{replayed, {8, 8}};
+    crucible::presentation::ScenarioSnapshot first{3, 2, 32}, final{3, 2, 32}, expected{3, 2, 32};
+    session.Pause();
+    auto batch = std::array{FieldEdit{FieldEditKind::set_flow, 0, {.5F, .5F}, 2, 8, {3.5F, .5F}},
+                            FieldEdit{FieldEditKind::set, 1, {2, 2}, 1, -2}};
+    Require(session.GetIngress().TryAdmit(batch).status == CommandIngress::AdmissionStatus::accepted,
+        "flow accepted while paused");
+    batch[0].end = {};
+    Require(session.TryStep().status == StepStatus::paused && session.GetTrace().empty() &&
+        first.TryCapture(live) && first.GetFields()[0].kind == FieldEditKind::remove,
+        "queued flow does not mutate paused snapshot");
+    session.Resume();
+    Require(session.TryStep().status == StepStatus::advanced && first.TryCapture(live) &&
+        first.GetFields()[0].end.x == 3.5F && first.GetFields()[0].end.y == .5F &&
+        session.GetTrace()[0].edit.end.x == 3.5F, "completed flow owns admitted endpoint");
+    if (!steering) {
+        const auto sample = first.GetSamples()[0];
+        constexpr double dt = 1.0 / 60.0;
+        Require(std::abs(sample.velocity.x - (1.0 + 8.0 * dt)) < 0.000001 &&
+            std::abs(sample.position.x - (.5 + (1.0 + 8.0 * dt) * dt)) < 0.000001 &&
+            sample.velocity.y == .5F, "flow independently accelerates the production simulation");
+    }
+    const std::array replacement{FieldEdit{FieldEditKind::remove, 0},
+        FieldEdit{FieldEditKind::set_flow, 1, {6, .5F}, 2, 4, {1, .5F}}};
+    Require(session.GetIngress().TryAdmit(replacement).status == CommandIngress::AdmissionStatus::accepted &&
+        session.TryStep().status == StepStatus::advanced && session.TryStep().status == StepStatus::advanced &&
+        final.TryCapture(live), "flow replace and erase consumed at boundaries");
+    Require(first.GetInfo()->completed_tick == 1 && first.GetFields()[0].kind == FieldEditKind::set_flow &&
+        first.GetFields()[0].end.x == 3.5F && first.GetFields()[1].kind == FieldEditKind::set,
+        "retained completed flow snapshot unchanged by later edits");
+    Require(replay.TryReplay(session.GetTrace(), 3).status == StepStatus::advanced && expected.TryCapture(replayed),
+        "flow trace independently replays");
+    const auto a = *final.GetInfo(), b = *expected.GetInfo();
+    Require(a.completed_tick == b.completed_tick && a.grid.columns == b.grid.columns &&
+        a.grid.rows == b.grid.rows && a.grid.cell_size == b.grid.cell_size && a.samples == b.samples &&
+        a.fields == b.fields && a.cells == b.cells && a.biomass == b.biomass, "flow full replay metadata/ledger");
+    Require(std::ranges::equal(final.GetSamples(), expected.GetSamples(), [](const auto& p, const auto& q) {
+        return p.id == q.id && p.position.x == q.position.x && p.position.y == q.position.y &&
+            p.velocity.x == q.velocity.x && p.velocity.y == q.velocity.y;
+    }) && std::ranges::equal(final.GetFields(), expected.GetFields(), [](const auto& p, const auto& q) {
+        return p.kind == q.kind && p.slot == q.slot && p.center.x == q.center.x && p.center.y == q.center.y &&
+            p.radius == q.radius && p.strength == q.strength && p.end.x == q.end.x && p.end.y == q.end.y;
+    }) && std::ranges::equal(final.GetBlight(), expected.GetBlight()) &&
+        std::ranges::equal(final.GetStocks(), expected.GetStocks()), "flow full replay samples/fields/infection/stock");
+    Require(std::ranges::equal(session.GetTrace(), replay.GetTrace(), SameRecord), "flow full replay applied commands");
+    auto invalid_trace = std::array{session.GetTrace()[0], session.GetTrace()[1]};
+    invalid_trace[0].edit.end = invalid_trace[0].edit.center;
+    Simulation untouched{3, options};
+    HeadlessSession invalid_replay{untouched, {8, 8}};
+    const auto before = untouched.checksum();
+    Require(invalid_replay.TryReplay(invalid_trace, 1).status == StepStatus::replay_invalid &&
+        untouched.checksum() == before && invalid_replay.GetCompletedTick() == 0 &&
+        invalid_replay.GetTrace().empty() && !invalid_replay.GetIngress().CaptureCutoff().closed,
+        "invalid endpoint replay rejected before all mutation");
 }
 
 void CheckTraceCapacity() {
@@ -139,6 +203,8 @@ void CheckStartupFailure() {
 int main() {
     try {
         CheckPauseResumeAndReplay();
+        CheckFlowFullReplay(false);
+        CheckFlowFullReplay(true);
         CheckTraceCapacity();
         CheckReplayValidation();
         CheckStartupFailure();

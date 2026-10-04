@@ -22,7 +22,8 @@ void Equal(const ScenarioSnapshot& a, const ScenarioSnapshot& b) {
     for (std::size_t i = 0; i < x.fields; ++i) {
         const auto p = a.GetFields()[i], q = b.GetFields()[i];
         Require(p.kind == q.kind && p.slot == q.slot && p.center.x == q.center.x && p.center.y == q.center.y &&
-                p.radius == q.radius && p.strength == q.strength);
+                p.radius == q.radius && p.strength == q.strength &&
+                p.end.x == q.end.x && p.end.y == q.end.y);
     }
     Require(std::ranges::equal(a.GetBlight(), b.GetBlight()));
 }

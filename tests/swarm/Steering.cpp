@@ -61,7 +61,24 @@ std::vector<SampleState> Reference(std::span<const SampleState> input, GridConfi
         }
         double fx = 0, fy = 0;
         for (const auto& edit : edits) {
-            if (edit.radius == 0.0F) continue;
+            if (edit.kind == FieldEditKind::remove || edit.radius == 0.0F || edit.strength == 0.0F) continue;
+            if (edit.kind == FieldEditKind::set_flow) {
+                const double vx = static_cast<double>(edit.end.x) - edit.center.x;
+                const double vy = static_cast<double>(edit.end.y) - edit.center.y;
+                const double length = std::sqrt(vx * vx + vy * vy);
+                const double ux = vx / length, uy = vy / length;
+                const double rx = static_cast<double>(sample.position.x) - edit.center.x;
+                const double ry = static_cast<double>(sample.position.y) - edit.center.y;
+                const double travel = std::clamp(rx * ux + ry * uy, 0.0, length);
+                const double lateral_x = rx - travel * ux, lateral_y = ry - travel * uy;
+                const double distance = std::sqrt(lateral_x * lateral_x + lateral_y * lateral_y);
+                if (distance < edit.radius) {
+                    const double force = edit.strength * (1.0 - distance / edit.radius);
+                    fx += force * ux;
+                    fy += force * uy;
+                }
+                continue;
+            }
             const double dx = static_cast<double>(edit.center.x) - sample.position.x;
             const double dy = static_cast<double>(edit.center.y) - sample.position.y;
             const double distance = std::sqrt(dx * dx + dy * dy);
@@ -272,6 +289,17 @@ int main() {
     RunFixture({{{7}, {5, 5}, {}}, {{1000001}, {5, 5}, {}}}, config,
                {std::numeric_limits<float>::denorm_min(), huge, 1, 1});
     RunFixture({{{7}, {5, 5}, {}}}, config, {2, 0, 16, 4}, edits);
+    const std::array<FieldEdit, 2> flow_fields{{
+        {FieldEditKind::set_flow, 0, {2, 3}, 4, 8, {10, 3}},
+        {FieldEditKind::set, 1, {6, 7}, 4, 8}}};
+    RunFixture({{{7}, {6, 3}, {}}, {{1000001}, {6, 5}, {}},
+                {{1000009}, {0, 3}, {}}, {{1000011}, {12, 3}, {}}}, config, settings, flow_fields);
+    RunFixture({{{7}, {6, 3}, {4, 0}}, {{1000001}, {6, 5}, {-4, 0}}}, config,
+               {2, 0, .5F, .002F}, flow_fields);
+    const std::array<FieldEdit, 2> extreme_flows{{
+        {FieldEditKind::set_flow, 0, {-huge, 0}, huge, huge, {huge, 0}},
+        {FieldEditKind::set_flow, 1, {0, -huge}, huge, huge, {0, huge}}}};
+    RunFixture({{{7}, {5, 5}, {}}}, config, {2, 0, .5F, .002F}, extreme_flows);
     std::vector<SampleState> dense;
     for (std::uint64_t index = 0; index < 2048; ++index) {
         const Position position = index < 1024 ? Position{8, 6} :

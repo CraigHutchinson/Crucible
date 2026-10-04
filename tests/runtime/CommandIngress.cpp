@@ -101,6 +101,31 @@ void CheckCloseAndValidation() {
         "remove ignores unused numerical payload");
 }
 
+void CheckOwnedAtomicFlowAdmission() {
+    CommandIngress ingress{{3, 2}};
+    auto batch = std::array{FieldEdit{FieldEditKind::set_flow, 0, {2, 3}, 4, 8, {10, 3}},
+                            FieldEdit{FieldEditKind::set_flow, 1, {10, 3}, 4, 8, {2, 3}}};
+    auto invalid = batch;
+    invalid.back().end = invalid.back().center;
+    Require(ingress.TryAdmit(invalid).status == Status::invalid && ingress.GetStatistics().pending == 0 &&
+        ingress.GetStatistics().accepted == 0, "invalid flow batch changes no queue prefix");
+    const auto accepted = ingress.TryAdmit(batch);
+    Require(accepted.status == Status::accepted && accepted.first_sequence == 1 && accepted.last_sequence == 2,
+        "flow rejection consumes no sequence");
+    Require(ingress.TryAdmit(batch).status == Status::full && ingress.GetStatistics().pending == 2,
+        "full flow batch preserves accepted prefix");
+    batch[0].center = {}; batch[0].end = {};
+    batch[1].end.x = 999;
+    const std::array erase{FieldEdit{FieldEditKind::remove, 0}};
+    Require(ingress.TryAdmit(erase).last_sequence == 3, "flow overflow consumes no sequence");
+    std::array<AdmittedCommand, 3> output{};
+    const auto drained = ingress.TryDrainThrough(ingress.CaptureCutoff(), output);
+    Require(drained && drained->size() == 3 && output[0].edit.kind == FieldEditKind::set_flow &&
+        output[0].edit.center.x == 2 && output[0].edit.end.x == 10 && output[0].edit.end.y == 3 &&
+        output[1].edit.end.x == 2 && output[2].edit.kind == FieldEditKind::remove,
+        "flow admission owns both endpoints and preserves FIFO erase");
+}
+
 void CheckStartupFailure() {
     bool zero_failed{};
     try { CommandIngress invalid{{0, 1}}; }
@@ -147,6 +172,7 @@ void CheckJoinedProducerConsumerLifetime() {
 int main() {
     try {
         CheckAtomicAdmission();
+        CheckOwnedAtomicFlowAdmission();
         CheckCutoffAndWrap();
         CheckCloseAndValidation();
         CheckStartupFailure();

@@ -114,9 +114,11 @@ int main(int argc, char** argv) {
             first_command = false;
             const auto& edit = command.edit;
             metadata << "{\"sequence\":" << command.sequence << ",\"applied_tick\":" << command.tick
-                << ",\"kind\":\"" << (edit.kind == FieldEditKind::set ? "set" : "remove")
+                << ",\"kind\":\"" << (edit.kind == FieldEditKind::set ? "set" :
+                    edit.kind == FieldEditKind::set_flow ? "set_flow" : "remove")
                 << "\",\"slot\":" << edit.slot << ",\"x\":" << edit.center.x << ",\"y\":" << edit.center.y
-                << ",\"radius\":" << edit.radius << ",\"strength\":" << edit.strength << '}';
+                << ",\"radius\":" << edit.radius << ",\"strength\":" << edit.strength
+                << ",\"end_x\":" << edit.end.x << ",\"end_y\":" << edit.end.y << '}';
         }
         metadata << ']';
         if (argc == 5) {

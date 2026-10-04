@@ -1,6 +1,6 @@
 # Crucible visual concepts
 
-Three generated concept renders accompany the [game design](../game-design.md).
+Generated concept renders accompany the [game design](../game-design.md).
 They explore the proposed swarm/Blight/fusion identity and a readable RTS screen.
 They are not executable screenshots, final assets, a renderer selection or measured
 visual quality/performance. See [exact prompts and provenance](prompts.md).
@@ -47,11 +47,51 @@ units, palette and UI composition. Numbers such as 680 and 42% are illustrative 
 do not define a scenario. The chasms and tall structures are visual exploration;
 production geometry and movement rules must agree before such terrain becomes playable.
 
+
+## Resource and faction direction, playable-first iteration
+
+![Resource materials: finite substrate stock, mobile mass, reserve and a future lattice](resources-v2.png)
+
+The new resource board separates infection from available stock: both clear and
+infected surface may still hold stock. Mobile mass uses the same wedge silhouette
+at individual and collective scales. Amber reserve granules are a representation
+of reclaimed biomass, not a new currency, refinery or implemented world pickup.
+The lattice/shatter panel is labelled future; current conservation is
+`initial = remaining stock + mobile + reserve`. Anchoring/attrition needs its own
+ledger decision before mechanics are added.
+
+![Four faction identities with both nanite and Blight variants and a proposed deathmatch screen](factions-deathmatch-v2.png)
+
+Four badges combine circle/cyan, triangle/amber, diamond/violet and square/lime.
+Each identity has both machine and cellular material studies. Organism kind is
+independent of faction/control; color alone implies neither hostility nor ownership.
+Neutral resource forms and legible current, attract/repel and dashed preview cues
+connect art direction to spatial decisions. The candidate deathmatch objective
+"Last faction standing" is a rules proposal; combat, elimination, alliances and
+multiplayer are not implemented by this image. The displayed minimap is concept UI.
+
+These images are later fidelity targets. The next production milestone uses flat
+cells, simple marks/triangles and arrows to make the existing challenge playable
+with a straight drag flow; see [Phase 8](../phases/phase8.md). Arbitrary curved flows,
+resource ownership, fusion, terrain/traversal and deathmatch require their named
+consumed rules. Textures, meshes and visual flair follow a usable small game.
+Both boards were visually inspected for resource distinction, organism silhouettes,
+four color+shape identities, labels and preview/direction affordances. Their exact
+prompts and image hashes are in [provenance](prompts.md).
+
 ## Actual implemented state
+
+[Phase 8 fitted flow](exports/phase8-flow-fit.png) and
+[zoomed flow](exports/phase8-flow-zoom.png) are inspected production SDL software
+exports at tick60: solid applied current with direction chevrons, inward/outward
+radial cues and a white dashed uncommitted flow. Primitive geometry is the playable
+milestone; the generated boards above are later fidelity targets. See
+[receiving/provenance](../workstreams/integration/phase8-validation.md).
+Publication and hosted acceptance remain blocked; these are local evidence.
 
 [Phase 2 SVG and rendered preview](phase2-state.md) show a real owned tick-20
 simulation frame, with reproduction and visual validation. Keep it distinct from
-the generated concepts above: resource/fusion/mission behavior is still pending.
+the generated concepts above: that historical frame predates the finite resource and quota/deadline mission now delivered.
 
 [Phase 4 live SDL frame](exports/phase4-live-frame.png) is an actual software-rendered
 owned tick-60 frame, with 2048 samples, applied attract/repel fields and a dashed
@@ -76,3 +116,9 @@ initial tick0 mission snapshot and fitted camera; [evolved GPU tick60](exports/p
 is an executing offscreen Vulkan readback. The [synthetic palette](exports/phase6-gpu-synthetic-palette.png)
 checks arbitrary per-instance presentation colors without introducing factions.
 All were visually inspected; this is software-device evidence, not physical-device FPS.
+
+Phase 7 original captures are received in
+[the recovered evidence](../workstreams/integration/phase7-validation.md): eleven
+unchanged PNGs, independent hosted ZIP/hash/pixel comparison and reconciled main.
+PR19 merged after nine exact-head jobs; this resolves P07-F01 recovery while physical
+GPU/full-frame, human, iOS and faction/combat gates remain independently open.

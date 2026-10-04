@@ -9,7 +9,7 @@ add_test(NAME runtime_ingress COMMAND crucible_runtime_ingress_tests)
 set_tests_properties(runtime_ingress PROPERTIES LABELS runtime)
 
 add_executable(crucible_runtime_session_tests HeadlessSession.cpp)
-target_link_libraries(crucible_runtime_session_tests PRIVATE Crucible::Runtime)
+target_link_libraries(crucible_runtime_session_tests PRIVATE Crucible::Runtime Crucible::Presentation)
 add_test(NAME runtime_session COMMAND crucible_runtime_session_tests)
 set_tests_properties(runtime_session PROPERTIES LABELS runtime)
 

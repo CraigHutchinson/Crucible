@@ -22,7 +22,8 @@ void Require(bool condition, const char* message) {
 }
 bool SameEdit(const FieldEdit& a, const FieldEdit& b) {
     return a.kind == b.kind && a.slot == b.slot && a.center.x == b.center.x && a.center.y == b.center.y &&
-        a.radius == b.radius && a.strength == b.strength;
+        a.radius == b.radius && a.strength == b.strength &&
+        a.end.x == b.end.x && a.end.y == b.end.y;
 }
 void CheckIndependentEdits() {
     struct Expected { std::uint64_t tick; Position center; };

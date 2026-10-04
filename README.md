@@ -176,8 +176,9 @@ python scripts/run_tests.py --preset desktop-release
 
 Windows executable suffix is `.exe`. Linux needs a native video SDK (X11 or Wayland)
 and a display. The normal `release` preset stays headless and does not fetch SDL.
-Use 1/2/3 or toolbar buttons for attract/repel/erase, Tab for field slot, click the
-world to queue an edit, middle drag to pan, wheel to zoom, F to fit, Space to pause,
+Use 1/2/3 for attract/repel/erase, or 4/FLOW to draw a straight current. Select a
+field slot with Tab; click for a radial edit or drag and release for FLOW. Escape
+cancels unfinished input. Middle drag pans, wheel zooms, F fits, Space pauses,
 R to restart, Delete to erase and Escape to cancel preview. Queued edits apply at
 a completed boundary; paused edits wait for resume. Restart discards the previous
 run and trace. macOS build/test coverage is included in CI; iOS packaging, touch
