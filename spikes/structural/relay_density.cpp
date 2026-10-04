@@ -74,14 +74,15 @@ bool SameFrame(const presentation::ScenarioSnapshot& actual,
         std::ranges::equal(actual.GetStocks(), replay.GetStocks());
 }
 
-void Run(std::string_view strategy, std::optional<FieldEdit> edit) {
+void Run(std::string_view strategy, std::optional<FieldEdit> edit, std::uint64_t horizon) {
     Simulation simulation{Population, Options};
     runtime::HeadlessSession session{simulation, {8, 8}};
     presentation::ScenarioSnapshot frame{Population, 4, 2048};
     std::size_t checkpoint = 0;
     std::size_t startup_count = 0;
+    std::size_t minimum_count = Population, maximum_count = 0;
     std::uint64_t eligible_run = 0, longest_eligible_run = 0;
-    for (std::uint64_t tick = 0; tick <= Checkpoints.back(); ++tick) {
+    for (std::uint64_t tick = 0; tick <= horizon; ++tick) {
         Require(frame.TryCapture(simulation), "density observation capture");
         const auto info = frame.GetInfo();
         Require(info && info->biomass && info->completed_tick == tick, "density metadata");
@@ -91,6 +92,8 @@ void Run(std::string_view strategy, std::optional<FieldEdit> edit) {
         const auto count = BruteCount(frame.GetSamples(), Relay, Radius);
         const auto query = simulation.TryCountNeighbors(Relay, Radius);
         Require(query && *query == count, "complete-radius query parity with snapshot brute force");
+        minimum_count = std::min(minimum_count, count);
+        maximum_count = std::max(maximum_count, count);
         if (tick == 0) startup_count = count;
         else {
             eligible_run = count >= Required ? eligible_run + 1 : 0;
@@ -101,6 +104,8 @@ void Run(std::string_view strategy, std::optional<FieldEdit> edit) {
                 << ",\"relay_x\":" << Relay.x << ",\"relay_y\":" << Relay.y
                 << ",\"radius\":" << Radius << ",\"required\":" << Required
                 << ",\"count\":" << count
+                << ",\"minimum_count_through_tick\":" << minimum_count
+                << ",\"maximum_count_through_tick\":" << maximum_count
                 << ",\"delta_from_startup\":" << (static_cast<std::int64_t>(count) - static_cast<std::int64_t>(startup_count))
                 << ",\"eligible_run_completed_ticks\":" << eligible_run
                 << ",\"longest_eligible_run_completed_ticks\":" << longest_eligible_run
@@ -111,7 +116,7 @@ void Run(std::string_view strategy, std::optional<FieldEdit> edit) {
                 << ",\"work_actions\":" << ledger.work_actions << "}}\n";
             ++checkpoint;
         }
-        if (tick == Checkpoints.back()) break;
+        if (tick == horizon) break;
         if (tick == 0 && edit) {
             Require(session.GetIngress().TryAdmit(std::span{&*edit, std::size_t{1}}).status ==
                 runtime::CommandIngress::AdmissionStatus::accepted, "study field admission");
@@ -126,20 +131,25 @@ void Run(std::string_view strategy, std::optional<FieldEdit> edit) {
     Simulation replay_simulation{Population, Options};
     runtime::HeadlessSession replay_session{replay_simulation, {8, 8}};
     presentation::ScenarioSnapshot replay_frame{Population, 4, 2048};
-    Require(replay_session.TryReplay(trace, Checkpoints.back()).status ==
+    Require(replay_session.TryReplay(trace, horizon).status ==
         runtime::HeadlessSession::StepStatus::advanced && replay_frame.TryCapture(replay_simulation) &&
         SameFrame(frame, replay_frame), "full-state replay through final boundary");
     std::cout << "{\"kind\":\"replay\",\"strategy\":\"" << strategy << "\",\"tick\":"
-        << Checkpoints.back() << ",\"commands\":" << trace.size() << ",\"status\":\"full-state-pass\"}\n";
+        << horizon << ",\"commands\":" << trace.size() << ",\"status\":\"full-state-pass\"}\n";
 }
 }
 
-int main() {
+int main(int argc, char** argv) {
     try {
+        if (argc > 2 || (argc == 2 && std::string_view{argv[1]} != "--verify"))
+            throw std::invalid_argument("usage: crucible_relay_density [--verify]");
+        // Cross-platform receiving uses the same production paths and strategies,
+        // bounded to 120 ticks. The full 900-tick investigation runs separately.
+        const std::uint64_t horizon = argc == 2 ? 120 : Checkpoints.back();
         SpatialFixture();
-        Run("passive", std::nullopt);
-        Run("radial", FieldEdit{FieldEditKind::set, 0, Relay, 8, 4});
-        Run("straight-flow", FieldEdit{FieldEditKind::set_flow, 0, {24.5F, 16.5F}, 8, 4, Relay});
+        Run("passive", std::nullopt, horizon);
+        Run("radial", FieldEdit{FieldEditKind::set, 0, Relay, 8, 4}, horizon);
+        Run("straight-flow", FieldEdit{FieldEditKind::set_flow, 0, {24.5F, 16.5F}, 8, 4, Relay}, horizon);
         return 0;
     } catch (const std::exception& error) {
         std::cerr << "relay density investigation failed: " << error.what() << '\n';

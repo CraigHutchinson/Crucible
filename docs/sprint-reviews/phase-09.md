@@ -1,6 +1,7 @@
 # Phase 9 sprint review: compare rules before structural implementation
 
-Status: in progress, 2026-10-05. Architect accountable.
+Status: reviewed local investigation complete; final hosted acceptance and merge pending,
+2026-10-05. Architect accountable.
 Dispatch baseline PR21 merge `a95c5111991f441a451df144fdf443d2379a0939`.
 See [plan](../phases/phase9.md), [selection](../decisions/phase9-selection.md)
 and [receiving](../workstreams/integration/phase9-validation.md).
@@ -27,16 +28,24 @@ hardware-dependent receivers remain deferred.
 | Phase8 was merged but entry docs called it blocked | PR21 merge independently verified; original evidence stays historical | Recovery did not rerun acceptance |
 | Architecture described a three-buffer exchange as a default | Current sequential owned frame documented; leases require an actual delayed reader | Threaded observation remains open |
 | Structural activity changes affect fixed-population reclamation | Freeze active-prefix/ledger/input/snapshot receiving in next contract | No structural code delivered here |
-| Candidate relay has49 startup samples above cost32 | Report density deltas and sustained eligibility; freeze experiment before execution | Tuning must establish a player decision |
+| Candidate relay has49 startup samples above cost32 | Observe all ticks: passive max51, radial312, FLOW54; select64/refund48/loss16 reference | Full structural loop and human tuning remain open |
 | Small structural oracle would starve at tick7 | Label transition trace mission-disabled; starvation/terminal rules remain separate fixtures | No mission inference from arithmetic table |
 
 ## Verification and useful artifacts
 
-Receiving in progress. Both concept boards were visually inspected: resource stock,
-mobile/reserve, future lattice; four faction shape/color identities, both organism
-variants and field preview affordances. Generated art is distinct from the proposed
-SVG and production-derived density chart. Build/test/results will be recorded in
-[receiving](../workstreams/integration/phase9-validation.md) before closure.
+Debug and Release passed30/30 each; final extrema reporting received targeted1/1
+reruns in both. Full Release900-tick study passed conservation, independent query
+parity at all2,703 strategy/tick states and three complete terminal replays. Normal
+local LSan canary is blocked by `/proc` access; no checks were disabled. Required
+hosted sanitizer/platform acceptance remains pending. Changed Markdown links and
+whitespace pass; incomplete JSONL is rejected by the plot tool.
+
+Both concept boards and the primitive arena mock were visually inspected. The
+[actual density SVG](../investigations/phase9/relay-density.svg) is a static plot
+of production counts, with [raw output](../investigations/phase9/relay-density.jsonl)
+and [source/output provenance](../investigations/phase9/receipt.json). Its original32
+eligibility duration is explicitly not structure hold. Detailed commands, observations
+and limits are in [receiving](../workstreams/integration/phase9-validation.md).
 
 ## Retrospective and reuse
 
@@ -57,7 +66,7 @@ pin change or extraction. Select a contract before splitting implementation next
 | P04-F01/F03 | iOS signing/touch/device/lifecycle HW-06 | Platform; hardware gated |
 | P02-F02 | Delayed concurrent observer before leases/exchange | Runtime; deferred |
 | P02-F03 / P03-F01 / HX-07 | Terrain/traversal/exact geometry before pin changes | Spatial/world; deferred |
-| P08-F01 | Recovered publication received; current retained behavior rechecked in Phase9 | Architect; acceptance pending |
+| P08-F01 | Recovered publication received; current retained behavior rechecked locally and in final hosted CI | Architect; hosted acceptance pending |
 
 ## Closure
 

@@ -17,29 +17,31 @@ active prefixes; Reclamation needs explicit capacity/ID/ledger receiving. Keep f
 startup ECS identities with mobile/anchored/lost participation. No ECS mutation,
 new pin, building framework or generic multiplayer abstraction.
 
-## Tuning gate and next sprint packages
+## Received concentration gate and next sprint packages
 
-The density spike freezes an interior relay at (48.5,16.5), radius4, cost32 and the
-current 2,048-sample scenario. It starts with49 eligible identities. That already
-falsifies any claim that this cost requires initial concentration. Its passive,
-radial and straight-flow results compare actual gathering and persistence, not fusion
-success. Do not silently raise cost after observing output or infer a human decision.
+The [actual study](../investigations/phase9/relay-density.jsonl) froze an interior
+relay at (48.5,16.5), radius4 and investigated threshold32 against the current
+2,048-sample scenario. Startup49 falsified that threshold as an initial gathering
+decision. Per-tick observed maxima through900 were passive51, radial312 and
+straight-flow54; radial has74 samples at tick60 and116 at120. All three have complete
+terminal replay, and every tick has independent query parity and conservation.
 
-Before structural implementation, bound a scenario-selection experiment to the
-existing relay and radius, at most two explicit cost candidates (64 and96), and
-population2,048. Reuse the frozen passive/radial/flow schedules and the same900-tick
-window; add the actual sequential flow-then-gather input if both pure tools fail.
-Stop once one candidate requires directing mass rather than startup eligibility,
-has no passive fuse window before the deadline while at least one directed
-schedule does, and leaves enough mobile mass to continue reclamation. Startup
-ineligibility alone does not establish a directing decision. If neither does, report the unmet condition and revise
-scenario geometry through one recorded decision; do not build an expanding parameter sweep.
-This is an automated feasibility gate, followed by the separate human task gate.
+Select **64 anchored identities, shatter48 survivors and record16 lost** for the
+next reference loop. Cost64 is the smaller of the declared64/96 candidates: it is
+above every passive and straight-flow observation, but the radial input gathers
+more than64 before tick60. Anchoring leaves1,984 mobile workers. This closes the
+bounded automated concentration gate without rerunning different simulation rules:
+the spike measured existing population counts, and did not perform fusion.
+The [structural proposal](phase9-structural-proposal.md) freezes matching membership,
+refund/loss, starvation, replay and display rules at these selected constants.
 
-The structural proposal's cost32/refund24/loss8 and objective thresholds are exact
-reference-fixture rules, not accepted difficulty. A cost change must freeze matching
-member counts/refund/loss, conservation, starvation and rendering values together
-before dependent implementation; never parameterize unrelated future mechanics.
+Retain the original threshold32 in the raw evidence and eligibility-duration plot;
+those durations are not64-cost eligibility, structure hold, victory or difficulty.
+A current pointing through the relay does not collect material there: its tangent
+force carries it onward. Teach flow as routing and the attractor as gathering.
+The full harvest/protection/hold loop and human tuning remain acceptance work in
+Phase10. If that loop fails, change one recorded scenario rule with an independent
+oracle rather than introduce a broad parameter sweep or silently patch old evidence.
 
 | Phase 10 owner | Package after tuning freeze | Receiving gate |
 |---|---|---|

@@ -20,11 +20,10 @@ The schedules are fixed before execution:
 **The uniform startup is already eligible:** an interior radius4 includes49 cell-center
 samples, exceeding the proposed32-member cost before any input. This experiment
 cannot establish that flow is necessary to unlock fusion. It reports signed count
-change from startup and consecutive/longest eligible completed-tick runs, measured
+change from startup, cumulative count minima/maxima and consecutive/longest
+eligible completed-tick runs, measured
 at every tick and summarized at checkpoints. A result in which passive stays eligible
-requires a subsequent bounded starting-density/relay-placement rule experiment;
-stop that experiment when passive and admitted routes have a reproducible difference
-in eligibility duration and both retain full-state replay. Do not change this spike's
+requires the bounded scenario-selection gate defined in the selection record. Do not change this spike's
 cost after observing its result or claim human difficulty from a density difference.
 
 The magnitude/radius match the live tools. Flow's capsule pushes along its tangent,
@@ -32,7 +31,28 @@ including its endpoint cap; it is not an attractor at the relay. A negative resu
 is useful evidence, not justification to change tuning silently. No pathfinding,
 new input API or substitute experiment engine is introduced.
 
-Run the `crucible_relay_density` target from the build tree. Stdout is JSONL: density
+Build the opt-in target and execute the full study:
+
+```sh
+cmake --preset release -DCRUCIBLE_BUILD_RULE_SPIKE=ON
+cmake --build --preset release --parallel 4
+./build/release/spikes/structural/crucible_relay_density > relay-density.jsonl
+python scripts/plot_relay_density.py relay-density.jsonl relay-density.svg
+```
+
+[The plotting script](../../scripts/plot_relay_density.py) requires matplotlib and
+accepts only the complete study with all three successful tick900 full-state replays.
+Its deterministic SVG compares counts with cost32/startup49 and the longest
+consecutive eligible completed ticks. Eligibility is not interpreted as relay hold;
+checkpoint lines do not claim intermediate sampled values.
+
+CTest uses `--verify`: the same three strategies, per-tick checks and complete
+replay through tick120. The full900-tick study is separate from cross-platform
+behavior receiving; Debug's full study exceeded its initial180-second local
+bound. No full Debug result is inferred from the short check. The next tuning
+stop criterion is owned by [the selection](../../docs/decisions/phase9-selection.md).
+
+Stdout is JSONL: density
 records at ticks0,60,120,240,480,900 and one final full-state replay result per
 strategy. Capture it to an evidence file through the phase receiving workflow.
 Every density row includes all six current biomass ledger fields and requires

@@ -1,6 +1,7 @@
 # Phase 9: rules comparison and relay-density receiving
 
-Status: in progress, 2026-10-05. Architect accountable. Dispatch main is PR21 merge
+Status: investigation received locally; exact-head hosted acceptance and merge pending,
+2026-10-05. Architect accountable. Dispatch main is PR21 merge
 `a95c5111991f441a451df144fdf443d2379a0939`; recovered Phase8 source and concepts
 are present. [Review](../sprint-reviews/phase-09.md) owns findings and acceptance.
 
@@ -19,8 +20,10 @@ running; verify radius queries against owned-snapshot brute force, conservation 
 complete terminal replay. Inspect a visual derived from raw actual counts.
 
 The candidate relay (48.5,16.5), radius4, cost32 begins with49 eligible samples.
-Record deltas and consecutive eligibility rather than pretending a binary threshold
-proves that concentration is necessary. Negative/tuning evidence is a valid output.
+Record deltas, cumulative maxima/minima and consecutive eligibility rather than
+pretending that threshold proves concentration necessary. Actual passive max51
+versus radial max312 supports the selected64-member reference lattice; raw threshold32
+is retained as historical experiment input. Negative/tuning evidence is a valid output.
 
 ## Reassessed workstreams and ownership
 
@@ -34,7 +37,8 @@ proves that concentration is necessary. Negative/tuning evidence is a valid outp
 
 Baseline uses existing full pins, fixed ECS IDs, production Simulation,
 HeadlessSession and ScenarioSnapshot. New CMake option is off by default; CI enables
-the experiment for six desktop Debug/Release targets, headless and ASan/UBSan.
+the 120-tick behavior/replay check for six desktop Debug/Release targets, headless
+and ASan/UBSan; the full900-tick study is received separately in Release.
 No production gameplay behavior changes in this investigation.
 
 ## Sequence and receiving

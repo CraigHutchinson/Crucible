@@ -33,8 +33,9 @@ physical-device performance and iOS receiving remain open.
 
 The proposed **Secure the relay** loop makes concentration a tradeoff: mass anchored
 at an objective cannot reclaim elsewhere, and shattering loses material. Phase 9
-compares that structural loop with a local faction arena and runs a production-state
-relay-density experiment before selecting implementation rules. See the
+selects the structural loop after comparing a local faction arena and receiving
+actual relay-density evidence. The next reference lattice anchors64 identities;
+shatter returns48 and records16 lost. Implementation and full-loop receiving follow. See the
 [Phase 9 plan](docs/phases/phase9.md) and [review](docs/sprint-reviews/phase-09.md).
 Primitive cells, points, arrows and structure marks come before visual fidelity.
 

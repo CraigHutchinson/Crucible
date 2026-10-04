@@ -7,7 +7,7 @@
     <text x="58" y="98" font-size="14">A · human · nanite</text>
     <path d="M275 82L286 103H264Z" fill="#efb95a"/>
     <text x="300" y="98" font-size="14">B · local · nanite</text>
-    <rect x="514" y="84" width="18" height="18" fill="#dd75bc"/>
+    <path d="M523 82L534 93L523 104L512 93Z" fill="#b889ff"/>
     <text x="546" y="98" font-size="14">C · local · Blight</text>
   </g>
   <rect x="24" y="121" width="712" height="180" rx="4" fill="#243440" stroke="#617b8b"/>
@@ -21,20 +21,20 @@
   </g>
   <path d="M74 150Q202 174 332 212M316 198L332 212L310 214" fill="none" stroke="#64deef" stroke-width="3"/>
   <path d="M680 150Q548 174 410 212M426 198L410 212L432 214" fill="none" stroke="#efb95a" stroke-width="3"/>
-  <g fill="#b75599" stroke="#dd75bc" stroke-width="2">
+  <g fill="#7952ac" stroke="#b889ff" stroke-width="2">
     <rect x="316" y="254" width="22" height="22"/><rect x="342" y="254" width="22" height="22"/>
     <rect x="368" y="254" width="22" height="22"/><rect x="342" y="228" width="22" height="22"/>
   </g>
-  <g stroke="#f1c9e2" stroke-width="1">
+  <g stroke="#e7d8fa" stroke-width="1">
     <path d="M316 254L338 276M316 276L338 254M342 254L364 276M342 276L364 254M368 254L390 276M368 276L390 254M342 228L364 250M342 250L364 228"/>
   </g>
-  <rect x="342" y="199" width="22" height="22" fill="none" stroke="#dd75bc" stroke-dasharray="3 3"/>
-  <path d="M353 258V209L348 216M353 209L358 216" stroke="#dd75bc" stroke-width="3" fill="none"/>
+  <rect x="342" y="199" width="22" height="22" fill="none" stroke="#b889ff" stroke-dasharray="3 3"/>
+  <path d="M353 258V209L348 216M353 209L358 216" stroke="#b889ff" stroke-width="3" fill="none"/>
   <rect x="367" y="197" width="30" height="30" fill="none" stroke="white" stroke-width="2"/>
   <path d="M367 197L397 227M397 197L367 227" stroke="white"/>
   <g font-family="sans-serif" fill="#eef5fa" font-size="13">
     <text x="422" y="258">Crossed outline: contested contact</text>
-    <text x="422" y="281">Dashed magenta cell: growth candidate</text>
+    <text x="422" y="281">Dashed violet cell: growth candidate</text>
     <text x="24" y="331">HUD: active mass / reserve / loss • controller + kind • latched win / loss / draw</text>
   </g>
 </svg>

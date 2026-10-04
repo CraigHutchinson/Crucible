@@ -147,7 +147,7 @@ Both selected organism kinds need a headless schedule, desktop controls and a
 human task sheet. A recolored scene cannot satisfy these gates.
 
 The [primitive mock](phase9-arena-proposal.svg) uses A cyan circle badge,
-B amber triangle badge, C magenta square
+B amber triangle badge, C violet diamond
 badge; nanites are points/ribbons with their badge on field origins, Blight is
 crosshatched filled cells with square organism silhouettes. The HUD names
 controller and organism kind beside each badge, shows mass/reserve/loss and

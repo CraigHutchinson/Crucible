@@ -283,3 +283,12 @@ framework, pin change or physical-device claim. `cpp-write` and `cpp-review` are
 not present in the available catalog or searched workspace/skill directories;
 existing C++23 conventions and independent source review are used, with behavior,
 replay and supported sanitizer receiving retained.
+
+
+Phase9 local receiving: Debug/Release30 each pass, final extrema metadata receives
+its targeted spike rerun in each; full Release900 study/query oracle/conservation
+and all three complete replays pass. Initial full Debug180s timeout is recorded;
+normal local LSan preflight blocks on /proc, without suppression. Static plot and
+arena design mock inspected. Selected next contract64→48+16 from the frozen
+production count evidence; no structural implementation or human balance claim.
+Workers complete, shared CPU released; final hosted publication receiving active.
