@@ -1,0 +1,30 @@
+name: Bootstrap existing LFS payloads
+on:
+  push:
+    branches: [chore/lfs-upload]
+permissions:
+  contents: write
+jobs:
+  upload:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          lfs: false
+      - name: Store existing public PNG bytes as LFS objects
+        run: |
+          git lfs install --local
+          git lfs track '*.png'
+          git add .gitattributes
+          git add --renormalize docs/concepts
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git commit -m 'Local LFS payload preparation; no Git history publication'
+          git lfs fsck --pointers
+          git lfs fsck
+          git lfs ls-files --long
+          git lfs push origin HEAD
+      - name: Verify remote download in an empty LFS object store
+        run: |
+          git -c lfs.storage="${RUNNER_TEMP}/lfs-download-verification" lfs fetch origin HEAD
+          git -c lfs.storage="${RUNNER_TEMP}/lfs-download-verification" lfs fsck
