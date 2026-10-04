@@ -26,7 +26,8 @@ void Equal(const ScenarioSnapshot& a, const ScenarioSnapshot& b) {
     for (std::size_t i = 0; i < x.fields; ++i) {
         const auto p = a.GetFields()[i], q = b.GetFields()[i];
         Require(p.kind == q.kind && p.slot == q.slot && p.center.x == q.center.x && p.center.y == q.center.y &&
-                p.radius == q.radius && p.strength == q.strength);
+                p.radius == q.radius && p.strength == q.strength &&
+                p.end.x == q.end.x && p.end.y == q.end.y);
     }
     Require(std::ranges::equal(a.GetBlight(), b.GetBlight()));
     Require(std::ranges::equal(a.GetStocks(), b.GetStocks()));
@@ -48,7 +49,7 @@ void Dump(const ScenarioSnapshot& snapshot, std::ostream* output) {
     for (const auto& p : snapshot.GetSamples())
         *output << p.id.value << ' ' << p.position.x << ' ' << p.position.y << ' ' << p.velocity.x << ' ' << p.velocity.y << '\n';
     for (const auto& f : snapshot.GetFields())
-        *output << static_cast<int>(f.kind) << ' ' << f.slot << ' ' << f.center.x << ' ' << f.center.y << ' ' << f.radius << ' ' << f.strength << '\n';
+        *output << static_cast<int>(f.kind) << ' ' << f.slot << ' ' << f.center.x << ' ' << f.center.y << ' ' << f.radius << ' ' << f.strength << ' ' << f.end.x << ' ' << f.end.y << '\n';
     for (std::size_t i = 0; i < info.cells; ++i)
         *output << static_cast<int>(snapshot.GetBlight()[i]) << ' ' << snapshot.GetStocks()[i] << '\n';
 }

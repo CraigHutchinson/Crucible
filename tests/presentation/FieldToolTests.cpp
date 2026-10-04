@@ -38,6 +38,18 @@ bool Fixtures() {
             std::numeric_limits<float>::max()}, {}, 4);
         CHECK(extreme && extreme->IsValid(4));
     }
+    const auto flow = TryBuildFieldEdit({FieldTool::flow, 2, 8, 4}, {2, 3}, 4, {10, 3});
+    CHECK(flow && flow->kind == FieldEditKind::set_flow && flow->center.x == 2 && flow->end.x == 10 &&
+          flow->radius == 8 && flow->strength == 4 && flow->slot == 2);
+    CHECK(!TryBuildFieldEdit({FieldTool::flow, 0, 8, 4}, {2, 3}, 4, {2, 3}));
+    CHECK(!TryBuildFieldEdit({FieldTool::flow, 0, 8, 4}, {2, 3}, 4, {nan, 3}));
+    CHECK(!TryBuildFieldEdit({FieldTool::flow, 0, 8, 4}, {2, 3}, 4, {2, infinity}));
+    for (const float value : {0.F, -1.F, nan, infinity}) {
+        CHECK(!TryBuildFieldEdit({FieldTool::flow, 0, value, 4}, {2, 3}, 4, {10, 3}));
+        CHECK(!TryBuildFieldEdit({FieldTool::flow, 0, 8, value}, {2, 3}, 4, {10, 3}));
+    }
+    const auto radial = TryBuildFieldEdit({FieldTool::attract, 0, 8, 4}, {2, 3}, 4, {nan, infinity});
+    CHECK(radial && radial->end.x == 0 && radial->end.y == 0);
     const FieldToolSettings defaults{};
     CHECK(defaults.tool == FieldTool::attract && defaults.slot == 0 && defaults.radius == 8 && defaults.magnitude == 4);
     return true;

@@ -11,6 +11,7 @@
 #include <memory>
 #include <stdexcept>
 #include <cstdio>
+#include <string_view>
 
 namespace {
 using namespace crucible;
@@ -125,6 +126,65 @@ void RingsAndClipping(SoftwareCanvas& canvas) {
     Require(frame.TryCapture(tiny_world) && painter.TryDraw(*canvas.renderer, frame, tiny, {}), "tiny physical world safe double clipping");
 }
 
+void DirectionCuesAndFlow(SoftwareCanvas& canvas) {
+    const GridConfig grid{1, 1, 1};
+    Simulation simulation{0, {grid, 4, {}, ResourceSettings{}}};
+    ScenarioSnapshot frame{0, 4, 1};
+    Camera2D camera{grid, View};
+    ScenePainter painter{0, 1};
+    // Fit is independently known: origin380,96; scale520; center640,356.
+    // An east radial cue at60% of radius130 is centered718,356.
+    Require(simulation.TryApplyFieldEdit({FieldEditKind::set, 0, {.5F, .5F}, .25F, 4}) &&
+        frame.TryCapture(simulation) && painter.TryDraw(*canvas.renderer, frame, camera, {}), "inward cue fixture");
+    Require(canvas.Pixel(711, 356) != Red && canvas.Pixel(725, 356) == Red, "attract chevron points inward by shape");
+    Require(simulation.TryApplyFieldEdit({FieldEditKind::set, 0, {.5F, .5F}, .25F, -4}) &&
+        frame.TryCapture(simulation) && painter.TryDraw(*canvas.renderer, frame, camera, {}), "outward cue fixture");
+    Require(canvas.Pixel(711, 356) == Red && canvas.Pixel(725, 356) != Red, "repel chevron points outward by shape");
+    Require(simulation.TryApplyFieldEdit({FieldEditKind::set, 0, {.5F, .5F}, .25F, 0}) &&
+        frame.TryCapture(simulation) && painter.TryDraw(*canvas.renderer, frame, camera, {}), "zero-strength cue fixture");
+    Require(canvas.Pixel(711, 356) == Red && canvas.Pixel(725, 356) == Red, "zero strength draws no direction");
+    const FieldEdit forward{FieldEditKind::set_flow, 0, {.25F, .5F}, .1F, 4, {.75F, .5F}};
+    Require(simulation.TryApplyFieldEdit(forward) && frame.TryCapture(simulation) &&
+        painter.TryDraw(*canvas.renderer, frame, camera, {}), "forward flow fixture");
+    // Centerline510..770 at356, influence edges304/408, cap extrema458/822.
+    Require(canvas.Pixel(647, 356) != Red && canvas.Pixel(631, 356) == Red, "forward chevron points toward endpoint");
+    Require(canvas.Pixel(534, 304) != Red && canvas.Pixel(458, 356) != Red, "corridor shows width and end cap");
+    SceneUi ui{}; ui.selected_slot = 1;
+    SDL_ClearError();
+    Require(painter.TryDraw(*canvas.renderer, frame, camera, ui), "unselected flow fixture");
+    // Count coverage away from chevrons/caps instead of assuming fractional edge tie-breaking.
+    const auto coverage = [&canvas] {
+        int covered = 0;
+        for (int y = 300; y <= 308; ++y) if (canvas.Pixel(560, y) != Red) ++covered;
+        return covered;
+    };
+    const auto thin = coverage();
+    ui.selected_slot = 0;
+    Require(painter.TryDraw(*canvas.renderer, frame, camera, ui), "selected flow fixture");
+    Require(thin > 0 && coverage() > thin, "selected corridor covers more rows than unselected corridor");
+    Require(simulation.TryApplyFieldEdit({FieldEditKind::remove, 0}) && frame.TryCapture(simulation), "empty preview fixture");
+    ui.preview = forward;
+    Require(painter.TryDraw(*canvas.renderer, frame, camera, ui), "flow preview fixture");
+    const auto dashed = canvas.Pixel(514, 304);
+    Require(dashed[0] > 180 && dashed[1] > 180 && canvas.Pixel(534, 304) == Red,
+        "preview corridor is white dashed with independent gap");
+    Require(frame.GetFields()[0].kind == FieldEditKind::remove, "flow preview never mutates owned state");
+    ui.preview.reset();
+    const FieldEdit reverse{FieldEditKind::set_flow, 0, {.75F, .5F}, .1F, 4, {.25F, .5F}};
+    Require(simulation.TryApplyFieldEdit(reverse) && frame.TryCapture(simulation) &&
+        painter.TryDraw(*canvas.renderer, frame, camera, ui), "reverse flow fixture");
+    Require(canvas.Pixel(631, 356) != Red && canvas.Pixel(647, 356) == Red, "reversing endpoints reverses shape");
+    Require(camera.TryZoom({640, 356}, 2) && painter.TryDraw(*canvas.renderer, frame, camera, ui), "zoom flow fixture");
+    // Zoom2 keeps midpoint640,356; centerline380..900; radius104.
+    Require(canvas.Pixel(647, 356) == Red && canvas.Pixel(631, 356) != Red && canvas.Pixel(560, 252) != Red,
+        "zoom preserves direction and world influence width");
+    Require(camera.TryZoom({640, 356}, 8) && painter.TryDraw(*canvas.renderer, frame, camera, ui), "clipped flow fixture");
+    Require(canvas.Pixel(23, 356) == Background && canvas.Pixel(640, 617) == Background, "flow clipping stays inside viewport");
+    const auto maximum = std::numeric_limits<float>::max();
+    Require(simulation.TryApplyFieldEdit({FieldEditKind::set_flow, 1, {-maximum, maximum}, maximum, 4, {maximum, -maximum}}) &&
+        frame.TryCapture(simulation) && painter.TryDraw(*canvas.renderer, frame, camera, ui), "extreme flow stays rasterizer safe");
+}
+
 std::uint64_t RegionDigest(SoftwareCanvas& canvas, SDL_Rect region) {
     Require(SDL_FlushRenderer(canvas.renderer.get()), "region flush");
     const auto* pixels = static_cast<const std::uint8_t*>(canvas.surface->pixels);
@@ -169,7 +229,7 @@ void MissionHud(SoftwareCanvas& canvas) {
     constexpr std::array<std::uint8_t, 4> White{219, 232, 249, 255};
     TextMatches(canvas, oracle, "Recovered 3 / 6 | Ticks left 1 (simulation ticks)", {24, 44, 1200, 8}, White, 1);
     TextMatches(canvas, oracle,
-        "ACTIVE: Recover the quota before ticks run out. Attract/repel nanites with fields. R or RESTART: fresh challenge.",
+        "ACTIVE: Recover the quota before ticks run out. Drag FLOW or place ATTRACT/REPEL. R or RESTART: fresh challenge.",
         {24, 84, 1232, 8}, White, 1);
     Require(RegionDigest(canvas, {24, 96, 1232, 520}) == world &&
         RegionDigest(canvas, {24, 70, 1232, 8}) == ledger, "mission preserves world pass and conservation ledger");
@@ -231,6 +291,23 @@ void Export(SoftwareCanvas& canvas, const char* path) {
     Require(frame.TryCapture(simulation) && painter.TryDraw(*canvas.renderer, frame, camera, ui), "export frame");
     Require(SDL_FlushRenderer(canvas.renderer.get()) && SDL_SaveBMP(canvas.surface.get(), path), "optional export outside verified loop");
 }
+void ExportFlow(SoftwareCanvas& canvas, const char* path, bool zoom) {
+    const GridConfig grid{64, 32, 1};
+    Simulation simulation{2048, {grid, 4, SteeringSettings{}, ResourceSettings{}}};
+    Require(simulation.TryApplyFieldEdit({FieldEditKind::set_flow, 0, {12, 12}, 8, 4, {44, 12}}), "export applied flow");
+    Require(simulation.TryApplyFieldEdit({FieldEditKind::set, 1, {24, 24}, 8, 4}), "export inward field");
+    Require(simulation.TryApplyFieldEdit({FieldEditKind::set, 2, {52, 24}, 8, -4}), "export outward field");
+    for (int i = 0; i < 60; ++i) simulation.tick();
+    ScenarioSnapshot frame{2048, 4, 2048};
+    Camera2D camera{grid, View};
+    ScenePainter painter{2048, 2048};
+    if (zoom) Require(camera.TryZoom({640, 356}, 2), "export zoom");
+    SceneUi ui{}; ui.tool = FieldTool::flow; ui.selected_slot = 0;
+    ui.preview = FieldEdit{FieldEditKind::set_flow, 3, {18, 20}, 8, 4, {46, 28}};
+    ui.message = "Actual owned tick60 / solid applied FLOW / white dashed uncommitted preview";
+    Require(frame.TryCapture(simulation) && painter.TryDraw(*canvas.renderer, frame, camera, ui), "flow export frame");
+    Require(SDL_FlushRenderer(canvas.renderer.get()) && SDL_SaveBMP(canvas.surface.get(), path), "flow export save");
+}
 }
 int main(int argc, char** argv) {
     try {
@@ -239,8 +316,12 @@ int main(int argc, char** argv) {
         PaletteAndRetained(canvas);
         RejectionBeforeDraw(canvas);
         RingsAndClipping(canvas);
+        DirectionCuesAndFlow(canvas);
         MissionHud(canvas);
         if (argc == 2) Export(canvas, argv[1]);
+        else if (argc == 3 && std::string_view{argv[1]} == "--export-flow-fit") ExportFlow(canvas, argv[2], false);
+        else if (argc == 3 && std::string_view{argv[1]} == "--export-flow-zoom") ExportFlow(canvas, argv[2], true);
+        else if (argc != 1) throw std::invalid_argument("Expected output.bmp or --export-flow-fit/--export-flow-zoom output.bmp");
         return 0;
     } catch (const std::exception& error) {
         std::fprintf(stderr, "%s: %s\n", error.what(), SDL_GetError());

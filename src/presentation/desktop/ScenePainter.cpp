@@ -103,6 +103,89 @@ bool Ring(SDL_Renderer& renderer, const FieldEdit& field, ScreenPoint origin,
     return used == 0 || SDL_RenderGeometry(&renderer, nullptr, vertices.data(), static_cast<int>(used), nullptr, 0);
 }
 
+// Clipped strokes share the radial/corridor/arrow rasterization boundary.
+bool Stroke(SDL_Renderer& renderer, ScreenPoint a, ScreenPoint b, SDL_FColor color,
+            double thickness) noexcept {
+    if (!ClipLine(a, b)) return true;
+    const auto dx = b.x - a.x, dy = b.y - a.y;
+    const auto length = std::hypot(dx, dy);
+    if (length == 0) return true;
+    const auto nx = -dy / length * thickness, ny = dx / length * thickness;
+    const auto vertex = [color](double x, double y) {
+        return SDL_Vertex{{static_cast<float>(std::clamp(x, View.x, View.x + View.width)),
+                           static_cast<float>(std::clamp(y, View.y, View.y + View.height))}, color, {}};
+    };
+    const auto v0 = vertex(a.x + nx, a.y + ny), v1 = vertex(b.x + nx, b.y + ny);
+    const auto v2 = vertex(b.x - nx, b.y - ny), v3 = vertex(a.x - nx, a.y - ny);
+    const std::array vertices{v0, v1, v2, v0, v2, v3};
+    return SDL_RenderGeometry(&renderer, nullptr, vertices.data(), static_cast<int>(vertices.size()), nullptr, 0);
+}
+
+bool Arrow(SDL_Renderer& renderer, ScreenPoint center, ScreenPoint direction,
+           SDL_FColor color, double thickness) noexcept {
+    const ScreenPoint tip{center.x + direction.x * 8, center.y + direction.y * 8};
+    const ScreenPoint back{center.x - direction.x * 4, center.y - direction.y * 4};
+    return Stroke(renderer, {back.x - direction.y * 5, back.y + direction.x * 5}, tip, color, thickness) &&
+           Stroke(renderer, {back.x + direction.y * 5, back.y - direction.x * 5}, tip, color, thickness);
+}
+
+bool Field(SDL_Renderer& renderer, const FieldEdit& field, ScreenPoint origin,
+           double scale, bool preview, bool selected) noexcept {
+    if (field.kind == FieldEditKind::remove || field.radius == 0) return true;
+    const double cx = origin.x + static_cast<double>(field.center.x) * scale;
+    const double cy = origin.y + static_cast<double>(field.center.y) * scale;
+    const double radius = static_cast<double>(field.radius) * scale;
+    const auto color = preview ? Text : (field.strength >= 0 ? Attract : Repel);
+    const auto thickness = preview || selected ? 1.5 : .75;
+    if (field.kind == FieldEditKind::set) {
+        if (!Ring(renderer, field, origin, scale, preview, selected)) return false;
+        if (field.strength == 0) return true;
+        for (std::size_t i = 0; i < 8; ++i) {
+            const auto angle = 2 * std::numbers::pi * static_cast<double>(i) / 8;
+            const auto x = std::cos(angle), y = std::sin(angle);
+            const auto sign = field.strength > 0 ? -1. : 1.;
+            if (!Arrow(renderer, {cx + .6 * radius * x, cy + .6 * radius * y},
+                       {sign * x, sign * y}, color, thickness)) return false;
+        }
+        return true;
+    }
+    const ScreenPoint a{cx, cy};
+    const ScreenPoint b{origin.x + static_cast<double>(field.end.x) * scale,
+                        origin.y + static_cast<double>(field.end.y) * scale};
+    const auto dx = b.x - a.x, dy = b.y - a.y;
+    const auto length = std::hypot(dx, dy);
+    if (length == 0) return true;
+    const ScreenPoint direction{dx / length, dy / length};
+    const ScreenPoint normal{-direction.y * radius, direction.x * radius};
+    // Subdivision keeps preview boundaries dashed with a fixed, bounded amount of work.
+    for (std::size_t i = 0; i < 32; ++i) {
+        if (preview && (i / 2) % 2 != 0) continue;
+        const auto t0 = static_cast<double>(i) / 32, t1 = static_cast<double>(i + 1) / 32;
+        for (const auto sign : {-1., 1.}) {
+            if (!Stroke(renderer, {a.x + dx * t0 + sign * normal.x, a.y + dy * t0 + sign * normal.y},
+                        {a.x + dx * t1 + sign * normal.x, a.y + dy * t1 + sign * normal.y}, color, thickness)) return false;
+        }
+        const auto angle0 = std::numbers::pi * t0, angle1 = std::numbers::pi * t1;
+        for (const auto sign : {-1., 1.}) {
+            const auto center = sign < 0 ? a : b;
+            const auto cap = [&](double angle) {
+                return ScreenPoint{center.x + sign * direction.x * radius * std::sin(angle) + normal.x * std::cos(angle),
+                                   center.y + sign * direction.y * radius * std::sin(angle) + normal.y * std::cos(angle)};
+            };
+            if (!Stroke(renderer, cap(angle0), cap(angle1), color, thickness)) return false;
+        }
+    }
+    if (field.strength == 0) return true;
+    auto visible_a = a, visible_b = b;
+    if (!ClipLine(visible_a, visible_b)) return true;
+    for (const auto t : {.2, .5, .8}) {
+        const ScreenPoint center{visible_a.x + (visible_b.x - visible_a.x) * t,
+                                 visible_a.y + (visible_b.y - visible_a.y) * t};
+        if (!Arrow(renderer, center, direction, color, thickness)) return false;
+    }
+    return true;
+}
+
 bool Label(SDL_Renderer& renderer, float x, float y, const char* text, float scale = 1) noexcept {
     if (!SDL_SetRenderScale(&renderer, scale, scale)) return false;
     const bool drawn = SDL_RenderDebugText(&renderer, x / scale, y / scale, text);
@@ -204,8 +287,8 @@ bool ScenePainter::TryDraw(SDL_Renderer& renderer, const ScenarioSnapshot& frame
     if (!samples.empty() && !SDL_RenderGeometry(&renderer, nullptr, vertices_.data(),
             static_cast<int>(samples.size() * 4), indices_.data(), static_cast<int>(samples.size() * 6))) return false;
     for (const auto& field : fields)
-        if (!Ring(renderer, field, *origin, scale, false, field.slot == ui.selected_slot)) return false;
-    if (ui.preview && !Ring(renderer, *ui.preview, *origin, scale, true, true)) return false;
+        if (!Field(renderer, field, *origin, scale, false, field.slot == ui.selected_slot)) return false;
+    if (ui.preview && !Field(renderer, *ui.preview, *origin, scale, true, true)) return false;
     if (!SDL_SetRenderClipRect(&renderer, nullptr) || !Color(renderer, Text)) return false;
     if (!Label(renderer, 24, 16, "CRUCIBLE / FINITE RECLAMATION", 2)) return false;
     char line[192]{};
@@ -244,7 +327,7 @@ bool ScenePainter::TryDraw(SDL_Renderer& renderer, const ScenarioSnapshot& frame
     if (ui.mission) {
         switch (ui.mission->outcome) {
         case ReclamationMissionOutcome::active:
-            instruction = "ACTIVE: Recover the quota before ticks run out. Attract/repel nanites with fields. R or RESTART: fresh challenge.";
+            instruction = "ACTIVE: Recover the quota before ticks run out. Drag FLOW or place ATTRACT/REPEL. R or RESTART: fresh challenge.";
             break;
         case ReclamationMissionOutcome::won:
             instruction = "WON: Biomass quota recovered. Run stopped; inspect with pan/zoom. R or RESTART: play again.";
@@ -255,13 +338,15 @@ bool ScenePainter::TryDraw(SDL_Renderer& renderer, const ScenarioSnapshot& frame
         }
     }
     if (!Label(renderer, 24, 84, instruction)) return false;
-    const std::array labels{"1 ATTRACT", "2 REPEL", "3 ERASE", "TAB SLOT", ui.paused ? "RESUME" : "PAUSE", "RESTART", "FIT VIEW"};
+    const std::array labels{"1 ATTRACT", "2 REPEL", "3 ERASE", "TAB SLOT", ui.paused ? "RESUME" : "PAUSE", "RESTART", "FIT VIEW", "4 FLOW"};
+    static_assert(labels.size() == ToolbarButtonCount);
     for (std::size_t i = 0; i < labels.size(); ++i) {
         const auto bounds = ToolbarButton(i);
         const SDL_FRect button{static_cast<float>(bounds.x), static_cast<float>(bounds.y),
                                static_cast<float>(bounds.width), static_cast<float>(bounds.height)};
         const auto active = (i == 0 && ui.tool == FieldTool::attract) || (i == 1 && ui.tool == FieldTool::repel) ||
-                            (i == 2 && ui.tool == FieldTool::remove) || (i == 4 && ui.paused);
+                            (i == 2 && ui.tool == FieldTool::remove) || (i == 4 && ui.paused) ||
+                            (i == 7 && ui.tool == FieldTool::flow);
         if (!Color(renderer, active ? Stocked : Background) || !SDL_RenderFillRect(&renderer, &button) ||
             !Color(renderer, active ? Attract : Text) || !SDL_RenderRect(&renderer, &button) ||
             !Label(renderer, button.x + 8, button.y + 12, labels[i])) return false;
@@ -274,7 +359,7 @@ bool ScenePainter::TryDraw(SDL_Renderer& renderer, const ScenarioSnapshot& frame
     }
     line[length] = '\0';
     if (!Color(renderer, Text) || !Label(renderer, 24, 678, line) ||
-        !Label(renderer, 24, 702, "Click world: field | Middle drag: pan | Wheel: zoom | Space: pause | R: restart | F: fit | Del: erase | Esc: cancel")) return false;
+        !Label(renderer, 24, 702, "1/2 click: radial | 4 drag: FLOW | Middle drag: pan | Wheel: zoom | Space: pause | R: restart | F: fit | Del: erase | Esc: cancel")) return false;
     return true;
 }
 }

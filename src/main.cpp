@@ -29,7 +29,8 @@ bool HasEqualState(const crucible::presentation::ScenarioSnapshot& left,
                 x.velocity.x == y.velocity.x && x.velocity.y == y.velocity.y;
         }) && std::ranges::equal(left.GetFields(), right.GetFields(), [](const auto& x, const auto& y) {
             return x.kind == y.kind && x.slot == y.slot && x.center.x == y.center.x && x.center.y == y.center.y &&
-                x.radius == y.radius && x.strength == y.strength;
+                x.radius == y.radius && x.strength == y.strength &&
+                x.end.x == y.end.x && x.end.y == y.end.y;
         }) && std::ranges::equal(left.GetBlight(), right.GetBlight()) &&
         std::ranges::equal(left.GetStocks(), right.GetStocks());
 }
@@ -81,7 +82,7 @@ void ExportSvg(const crucible::presentation::ScenarioSnapshot& snapshot, const c
         << "<text x=\"24\" y=\"30\" fill=\"#edf6ff\" font-family=\"sans-serif\" font-size=\"20\">"
         << "CRUCIBLE / actual simulation state / tick " << info->completed_tick << "</text>\n"
         << "<defs><clipPath id=\"world\"><rect width=\"" << width << "\" height=\"" << height
-        << "\"/></clipPath></defs>\n<g transform=\"translate(24 52) scale("
+        << "\"/></clipPath><marker id=\"flow-arrow\" viewBox=\"0 0 10 10\" refX=\"10\" refY=\"5\" markerWidth=\"6\" markerHeight=\"6\" orient=\"auto\"><path d=\"M 0 0 L 10 5 L 0 10 z\" fill=\"#b49aff\"/></marker></defs>\n<g transform=\"translate(24 52) scale("
         << 832.0 / width << ' ' << 416.0 / height << ")\" clip-path=\"url(#world)\">\n"
         << "<rect width=\"" << width << "\" height=\"" << height << "\" fill=\"#162637\"/>\n";
     for (std::size_t i = 0; i < info->cells; ++i) {
@@ -92,6 +93,17 @@ void ExportSvg(const crucible::presentation::ScenarioSnapshot& snapshot, const c
             << "\" fill=\"#994552\"/>\n";
     }
     for (const auto& field : snapshot.GetFields()) {
+        if (field.kind == crucible::FieldEditKind::set_flow) {
+            if (field.radius == 0 || field.strength == 0) continue;
+            output << "<line x1=\"" << field.center.x << "\" y1=\"" << field.center.y
+                << "\" x2=\"" << field.end.x << "\" y2=\"" << field.end.y
+                << "\" stroke=\"#b49aff\" stroke-opacity=\"0.2\" stroke-linecap=\"round\" stroke-width=\""
+                << static_cast<double>(field.radius) * 2 << "\"/>\n"
+                << "<line x1=\"" << field.center.x << "\" y1=\"" << field.center.y
+                << "\" x2=\"" << field.end.x << "\" y2=\"" << field.end.y
+                << "\" stroke=\"#b49aff\" stroke-width=\"0.14\" marker-end=\"url(#flow-arrow)\"/>\n";
+            continue;
+        }
         if (field.kind != crucible::FieldEditKind::set) continue;
         output << "<circle cx=\"" << field.center.x << "\" cy=\"" << field.center.y
             << "\" r=\"" << field.radius << "\" fill=\"none\" stroke=\""
@@ -103,7 +115,7 @@ void ExportSvg(const crucible::presentation::ScenarioSnapshot& snapshot, const c
             << "\" r=\"" << info->grid.cell_size * 0.10 << "\" fill=\"#77ddff\"/>\n";
     }
     output << "</g>\n<text x=\"24\" y=\"493\" fill=\"#c6d9ea\" font-family=\"sans-serif\" font-size=\"15\">"
-        << "Cyan: " << info->samples << " nanite samples | red: Blight | ring: active radial field"
+        << "Cyan: " << info->samples << " nanite samples | red: Blight | ring: radial field | arrow: straight flow"
         << "</text>\n<text x=\"24\" y=\"513\" fill=\"#8199ae\" font-family=\"sans-serif\" font-size=\"12\">"
         << "Planar prototype / downwards +Y / ";
     if (info->biomass) {

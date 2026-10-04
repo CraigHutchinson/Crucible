@@ -37,7 +37,8 @@ void SameFrame(const presentation::ScenarioSnapshot& first, const presentation::
     for (std::size_t i = 0; i < fields_a.size(); ++i)
         Require(fields_a[i].kind == fields_b[i].kind && fields_a[i].slot == fields_b[i].slot &&
             fields_a[i].center.x == fields_b[i].center.x && fields_a[i].center.y == fields_b[i].center.y &&
-            fields_a[i].radius == fields_b[i].radius && fields_a[i].strength == fields_b[i].strength,
+            fields_a[i].radius == fields_b[i].radius && fields_a[i].strength == fields_b[i].strength &&
+            fields_a[i].end.x == fields_b[i].end.x && fields_a[i].end.y == fields_b[i].end.y,
             "mission full field replay");
 }
 
