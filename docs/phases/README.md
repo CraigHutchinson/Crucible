@@ -14,7 +14,9 @@ package is not a permanent agent assignment.
 | Interim | Owned instance-packet rendering spike | [Report](../../spikes/rendering/README.md); [PR 11](https://github.com/CraigHutchinson/Crucible/pull/11) at `0bc9731` |
 | 5 | Playable reclamation quota/deadline and instancing design | [Plan](phase5.md), [review](../sprint-reviews/phase-05.md); complete, [PR 12](https://github.com/CraigHutchinson/Crucible/pull/12) at `57c1da6` |
 | 6 | Real instancing foundation and mission receiving examples | [Plan](phase6.md), [review](../sprint-reviews/phase-06.md); optional foundation delivered, PR15 at `7317a03c8bca6848b17a352f0a192fb0d8e0e375`; fault/device gates open |
-| 7 | Controlled GPU fault/retirement receiving and mission timing investigation | [Plan](phase7.md), [review](../sprint-reviews/phase-07.md); dispatched |
+| 7 | Controlled GPU fault/retirement receiving and mission timing investigation | [Plan](phase7.md), [review](../sprint-reviews/phase-07.md); merged/recovered through PR19 at `50f61d8` |
+| 8 | Playable straight flow, primitive cues and resource/faction concepts | [Plan](phase8.md), [review](../sprint-reviews/phase-08.md); recovered/merged PR21 at `a95c511` |
+| 9 | Structural/arena rules comparison and production relay-density investigation | [Plan](phase9.md), [review](../sprint-reviews/phase-09.md); in progress |
 
 The [sprint-review archive](../sprint-reviews/README.md) tracks findings, follow-ups
 and delegation lessons for every completed increment.
@@ -121,5 +123,6 @@ End with a short retrospective: what was delivered, what was consolidated/deferr
 what review found, which uncertainty remains and how that changes the next division.
 The next phase begins by reassessing these facts rather than repeating the old team map.
 
-[Phase 8 proposal](phase8.md) reserves shader portability and field inspection;
-it is proposed, not dispatched, pending Phase 7 receiving/recovery and actual device gates.
+Current dispatch is [Phase 9](phase9.md). Shader portability and second-backend
+work retain their capability gates in the hardware backlog; they are not
+prerequisites for this SDL-free rules investigation.

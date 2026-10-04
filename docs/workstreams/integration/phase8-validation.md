@@ -1,6 +1,9 @@
 # Phase 8 receiving: straight flows and readable primitive tools
 
-Status: local receiving complete; publication and hosted acceptance blocked. Baseline
+Status: original local receiving complete; recovered source and LFS images merged
+in [PR 21](https://github.com/CraigHutchinson/Crucible/pull/21) at
+`a95c5111991f441a451df144fdf443d2379a0939`. Recovery did not rerun acceptance.
+Historical baseline
 `50f61d89bb1324d2f3bdaa09e1b16bcf34fec6d9` (merged PR19). Implementation source
 checkpoint `10cbd46` in isolated branch `phase8-isolated-receiving`.
 

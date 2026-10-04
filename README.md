@@ -1,171 +1,60 @@
 # Crucible
 
-Crucible is a macro RTS about directing a vast machine swarm to reclaim an industrial
-surface overtaken by cellular Blight. You paint currents, place attractors and
-repulsors, and concentrate thousands of autonomous nanites where they are needed.
-Gathered swarm mass can fuse into a stationary lattice, then shatter back into a
-smaller mobile swarm when the front shifts.
+Crucible is a macro RTS about shaping a machine swarm to reclaim an industrial
+surface overtaken by cellular Blight. Draw currents, place attractors and repulsors,
+and redirect autonomous nanites across a spreading frontier. The longer-term loop
+adds fusion into a holding lattice and shattering back into a smaller mobile swarm.
 
-![Crucible world concept: flowing nanite swarms reclaim a cellular frontier](docs/concepts/world-v1.png)
+![Resource concept: substrate stock, mobile mass, reserve and a future lattice](docs/concepts/resources-v2.png)
 
-*Generated world concept: a proposed visual direction, not a capture of the current executable.*
+*Generated resource study. Stock and infection are separate; mobile and reserve are
+forms of the same biomass. The lattice and shatter trail are future mechanics.*
 
-## What playing Crucible should feel like
+## Playable now
 
-You command a moving material. Silver ribbons stream across the map, gather around
-your fields, clear infected cells and harden into amber structures. Strategy comes
-from shaping routes and deciding where limited mass should remain mobile or become
-anchored. Blight keeps spreading while you plan; abandoning a front has consequences.
+The desktop prototype is a bounded reclamation challenge: recover **1,780 biomass
+quanta before tick 900**. Pause stops the deadline. Flow and radial tools change
+movement; the HUD reports progress, admission feedback and a latched win or loss.
+Restart begins a fresh run. The reference scenario has 2,048 samples and conserves
+`initial = remaining stock + mobile mass + reserve`.
 
-The core loop is **observe -> direct -> reclaim -> concentrate -> fuse or redeploy**.
-Spatial tools express your intent, and autonomous local behavior turns it into
-large formations. A readable top-down/high-oblique RTS view lets you pan, zoom,
-pause and inspect the frontier. Nanites, infected cells and structures must remain
-distinct when thousands of them fill the screen.
+![Actual Phase 8 software frame with applied flow and dashed uncommitted preview](docs/concepts/exports/phase8-flow-fit.png)
 
-## The first playable slice
+*Actual production SDL software export at tick 60. Direction arrows distinguish
+applied fields from the dashed preview. [Capture provenance](docs/workstreams/integration/phase8-validation.md).*
 
-The proposed first mission, **Secure the relay**, uses one bounded arena, one swarm,
-one Blight rule and one fused structure type. Guide the swarm through the infected
-frontier, reclaim a foothold and concentrate enough mass to form a lattice at the
-relay. Hold that objective while sustaining enough mobile mass to finish reclamation.
-Shattering lets you reposition a lattice's surviving mass, at a resource cost.
+Phase 8 was recovered and [merged in PR 21](https://github.com/CraigHutchinson/Crucible/pull/21).
+Its [review](docs/sprint-reviews/phase-08.md) separates original local validation from
+publication. The default desktop uses the concrete software painter; an optional
+Vulkan instancing receiver has separate readback and fault fixtures. Human usability,
+physical-device performance and iOS receiving remain open.
 
-Victory combines reclamation progress and holding the relay; defeat comes from
-losing the viable swarm before the objective is secured. Exact thresholds, spread
-cadence, consumption/attrition and conversion ratios need reference fixtures and
-playtesting. These are proposed design rules, not implemented outcomes.
+## Direction and next increment
 
-![Crucible concept screen with spatial tools, objective and minimap](docs/concepts/screen-v1.png)
+The proposed **Secure the relay** loop makes concentration a tradeoff: mass anchored
+at an objective cannot reclaim elsewhere, and shattering loses material. Phase 9
+compares that structural loop with a local faction arena and runs a production-state
+relay-density experiment before selecting implementation rules. See the
+[Phase 9 plan](docs/phases/phase9.md) and [review](docs/sprint-reviews/phase-09.md).
+Primitive cells, points, arrows and structure marks come before visual fidelity.
 
-*Concept HUD: spatial tools, a legible frontier, objective feedback and a tactical
-minimap. Terrain, values and effects are illustrative.*
+![Faction concept with four shape and color identities, both organism variants and a proposed deathmatch arena](docs/concepts/factions-deathmatch-v2.png)
 
-The initial slice is single-player and focuses on reclamation, concentration and
-redeployment. Campaign progression, multiplayer, a broad unit roster and planetary
-worlds are deferred. The first playable build needs usable input, display, pause,
-restart and visible win/loss feedback as well as a correct simulation.
+*Generated future-mode study. Circle/cyan, triangle/amber, diamond/violet and
+square/lime identify factions independently of nanite or Blight kind. “Last faction
+standing” is a proposal; authority, combat, elimination and networking are future rules.*
 
-Read the [game design and project intent](docs/game-design.md) for the player role,
-design pillars, commands, biomass economy, scenario, scope and open decisions.
-The [concept gallery](docs/concepts/README.md) also shows nanite, fused-lattice and
-Blight material studies, with the exact generation prompts recorded.
+The [game design](docs/game-design.md) owns product intent. The
+[concept gallery](docs/concepts/README.md) records art interpretation and provenance;
+the [architecture](docs/architecture.md) owns technical boundaries. Terrain height,
+mining and permanent bridges remain [later world work](docs/decisions/terrain-and-world-extension.md).
+The target of 100,000–150,000 entities at 60 FPS needs complete tick/frame measurements;
+it is not an achieved game result.
 
-## Project status
-
-**Status: interactive reclamation challenge with an optional GPU instancing receiver.**
-Bounded commands, full-state replay, steering, finite biomass conservation and pinned
-Sub0HexGrid H2 receiving remain intact. The desktop supports spatial tools, pause,
-restart and a quota/deadline outcome. Phase 6 adds an offscreen Vulkan instanced
-world pass, retained shader/readback fixtures and reproducible mission examples.
-See the [Phase 6 review](docs/sprint-reviews/phase-06.md) for acceptance and limits.
-The design target remains 100,000–150,000 entities at 60 FPS; this is not a measured
-complete-game result. Physical GPU/platform receiving and lifetime fault tests
-precede any default backend promotion.
-
-The sub0 ecosystem supplies the simulation foundation. Scale is useful when it makes
-the swarm feel continuous and alive; a clear, playable small scenario comes first.
-The next simulation packages lead toward reserve deployment and relay/fusion rules. [Architecture](docs/architecture.md) describes how those systems
-fit together; [work breakdown](docs/work-breakdown.md) assigns their implementation gates.
-
-Crucible also forges stronger reusable sub0 libraries: real application increments
-feed back clearer contracts, fixtures, integration examples and measured improvements.
-The [reuse catalog](docs/reuse/README.md) tracks existing libraries and extraction
-candidates, including [Sub0HexGrid groundwork](docs/reuse/Sub0HexGrid.md) for the likely
-hexagonal spatial direction. Gameplay policy stays in Crucible; extraction and
-upstream changes follow concrete consumer and validation gates.
-
-The visible world is a local patch. [Future terrain direction](docs/decisions/terrain-and-world-extension.md)
-preserves varying height, mining that forms depressions and permanent fused bridges,
-with possible spherical subdivision later. These remain future gameplay increments.
-
-## Build
+## Build and play
 
 Requires CMake 3.25+, Ninja, Git and a C++23 toolchain (GCC 13+ or current MSVC).
-
-```sh
-cmake --preset debug
-cmake --build --preset debug --parallel 4
-python scripts/run_tests.py --preset debug
-./build/debug/crucible
-```
-
-On Windows use a VS developer prompt and build/debug/crucible.exe.
-
-Dependencies use one verified CPM 0.42.1 bootstrap, namespaced targets and full
-commit pins in [cmake/DependencyPins.cmake](cmake/DependencyPins.cmake):
-Sub0ECS **v2**, Sub0Pub **v2**, Sub0Pipeline main, Sub0Log main and Sub0HexGrid H2. Dependency developer
-tools are disabled. Set CPM_SOURCE_CACHE for a reusable dependency source cache.
-
-See [CONTRIBUTING.md](CONTRIBUTING.md) for Debug, Release and sanitizer workflows,
-[benchmarking](docs/benchmarking.md) for reproducible evidence capture, and
-[architecture](docs/architecture.md) for the design and integration boundaries.
-Functional CI runs on Linux and Windows; benchmark CI is manual and advisory.
-
-The [workstream map and session guide](docs/workstreams/README.md) is the entry point
-for parallel development, with dedicated docs, source and test areas for each stream.
-The [agent work breakdown](docs/work-breakdown.md) maps the proposed architecture
-to implementation gates, ownership boundaries and team dispatch waves. Claim paths
-and long CPU runs in [the active work log](docs/ACTIVE_WORK_LOG.md).
-The [first-wave handoff](docs/workstreams/integration/wave1-validation.md) records
-the four agents' deliverables, review, validation and remaining gates.
-The [sprint-review archive](docs/sprint-reviews/README.md) records work delivered,
-findings, validation, lessons and follow-ups for each completed phase.
-Development proceeds through [reviewed phases](docs/phases/README.md), reassessing
-and consolidating workstreams at each phase start. The [phase 2 plan](docs/phases/phase2.md)
-prioritizes bounded steering, runtime observation and owned state inspection, with
-an actual-state visual export, now delivered. See the [phase 2 handoff](docs/workstreams/integration/phase2-validation.md)
-and [phase 3 delivery](docs/workstreams/integration/phase3-validation.md).
-
-Source layout: include/crucible and src for simulation, tests for behavior and
-stack integration, benchmarks for opt-in timing, cmake for dependencies, scripts
-for evidence capture. Dependency licenses remain with their projects; Crucible's
-own license has not yet been selected.
-
-## Inspect the implemented scenario
-
-```sh
-./build/release/crucible --export-svg docs/concepts/phase2-state.svg
-```
-
-On Windows use `build/release/crucible.exe`. The file is an owned tick-20 snapshot
-of the actual 2,048-sample scenario. It shows bounded movement, the remaining repulsive
-field and Blight spread. Exact full-state replay is covered by the integration fixture;
-the CLI checks complete state equality and prints replay diagnostics. This is a
-diagnostic view; the playable input loop and mission rules remain pending.
-
-![Actual phase 2 state](docs/concepts/phase2-state.png)
-
-[Open the SVG](docs/concepts/phase2-state.svg) or read [reproduction and visual evidence](docs/concepts/phase2-state.md).
-
-## Inspect finite reclamation
-
-```sh
-./build/release/crucible --reclamation --export-svg docs/concepts/phase3-state.svg
-```
-
-The reference scenario starts with four substrate quanta per rectangular Blight cell,
-one mass quantum per mobile sample, zero reserve and at most 64 successful actions
-per tick. Harvest removes stock and adds exactly the same amount to reserve; exhausted
-cells clear infection. Reinfection of exhausted material yields no extra mass.
-The CLI checks complete replay and prints the conservation equation.
-[Resource rules](docs/decisions/phase3-resource-rules.md) specify order and boundaries;
-[phase 3 evidence](docs/workstreams/integration/phase3-validation.md) records review,
-query parity and supported validation. Growth, attrition and fusion/shatter remain future work.
-
-[Open the actual tick-20 SVG](docs/concepts/phase3-state.svg).
-
-## Playable reclamation challenge
-
-The optional SDL3 prototype consumes owned ECS frames; it batches cells and nanites
-without per-entity rendering interfaces. See the [rendering decision](docs/decisions/phase4-rendering.md)
-and [phase 5](docs/phases/phase5.md). Recover 1,780 biomass quanta before completed
-tick 900 (15 simulation seconds); pause stops the deadline. The HUD shows progress,
-ticks left and latched win/loss. Terminal runs permit camera inspection and restart;
-field edits are denied. This initial tuning needs a human playtest. Relay/fusion is
-a later scenario. [Mission rules](docs/decisions/phase5-reclamation.md) define the
-boundary contract; [instancing design](docs/decisions/render-instancing.md) carries
-the CPU spike findings into future GPU work.
+For images and other binary assets, [install and fetch Git LFS](CONTRIBUTING.md).
 
 ```sh
 cmake --preset desktop-release
@@ -174,19 +63,15 @@ python scripts/run_tests.py --preset desktop-release
 ./build/desktop-release/src/desktop/crucible_desktop
 ```
 
-Windows executable suffix is `.exe`. Linux needs a native video SDK (X11 or Wayland)
-and a display. The normal `release` preset stays headless and does not fetch SDL.
-Use 1/2/3 for attract/repel/erase, or 4/FLOW to draw a straight current. Select a
-field slot with Tab; click for a radial edit or drag and release for FLOW. Escape
-cancels unfinished input. Middle drag pans, wheel zooms, F fits, Space pauses,
-R to restart, Delete to erase and Escape to cancel preview. Queued edits apply at
-a completed boundary; paused edits wait for resume. Restart discards the previous
-run and trace. macOS build/test coverage is included in CI; iOS packaging, touch
-input and physical-device validation remain future gates.
+Windows uses a VS developer prompt and `.exe` suffix. Linux needs X11 or Wayland
+development libraries and a display. Use **1/2/3** for Attract/Repel/Erase, **4** for
+Flow; **Tab** selects a field slot. Click for a radial edit, drag and release for a
+straight current. Middle drag pans, wheel zooms, **F** fits, **Space** pauses,
+**R** restarts, **Delete** erases and **Escape** cancels a preview. Admitted edits
+apply at the next tick boundary; paused edits wait for resume. Terminal runs permit
+camera inspection and restart, and refuse field edits.
 
-macOS requires the complete C++23 library used by Sub0Pipeline. The current Apple
-SDK library lacks `std::stop_token`/`std::jthread`; CI uses Homebrew LLVM21 with its
-matching libc++/libunwind, selected explicitly by the macOS presets:
+macOS CI uses Homebrew LLVM 21 and its matching C++23 standard library:
 
 ```sh
 brew install llvm@21
@@ -197,18 +82,43 @@ python scripts/run_tests.py --preset macos-release
 ./build/macos-release/src/desktop/crucible_desktop
 ```
 
-This developer build uses runtime paths into the LLVM installation. A redistributable
-Apple bundle and iOS toolchain require separate packaging/runtime validation.
+This is a developer build, with runtime paths into LLVM. Apple redistribution,
+iOS signing/touch and lifecycle validation need separate receiving.
 
-Run the same mission coordinator headlessly, with a passive or scripted field route:
+## Headless scenarios and investigations
+
+The default graph stays SDL-free:
 
 ```sh
+cmake --preset release
+cmake --build --preset release --parallel 4
+python scripts/run_tests.py --preset release
 ./build/release/crucible --mission
 ./build/release/crucible --mission --route
 ```
 
-The reference reports terminal tick, quota, conservation and full-state replay. The
-route sweeps a radius-8/strength-4 attractor once per 60 completed ticks through
-world positions (8,8), (24,8), (40,8), (56,8), then the same x positions at y=24,
-repeating until outcome. It uses the live tool's capabilities; its trace independently
-replays. These are reproducible tuning cases, not a human playtest or benchmark.
+The passive and swept-attractor cases report outcomes, conserved biomass and exact
+full-state replay. They are reproducible scenarios, not human playtests or benchmarks.
+Historical [movement](docs/concepts/phase2-state.md) and
+[finite reclamation](docs/decisions/phase3-resource-rules.md) exports remain available.
+The opt-in [relay-density investigation](spikes/structural/README.md) uses the same
+production Simulation, command ingress and owned snapshots; it adds no gameplay engine.
+
+## Development
+
+[CONTRIBUTING.md](CONTRIBUTING.md) covers presets, prerequisite checks, Debug/Release
+and ASan/UBSan. Functional CI covers Linux, Windows and macOS, SDL-free headless and
+software Vulkan receiving. [Benchmarking](docs/benchmarking.md) defines advisory
+measurement and reproducible evidence.
+
+Dependencies use a checksum-verified CPM bootstrap, namespaced targets and
+[full commit pins](cmake/DependencyPins.cmake): Sub0ECS v2, Sub0Pub v2, Sub0Pipeline,
+Sub0Log and Sub0HexGrid H2. Consumer builds disable dependency development tools.
+The [reuse catalog](docs/reuse/README.md) tracks concrete feedback to those libraries;
+game policy stays local until an independently consumed boundary justifies extraction.
+
+[Reviewed phases](docs/phases/README.md) select increments from the
+[capability backlog](docs/work-breakdown.md). The [workstream guide](docs/workstreams/README.md)
+defines ownership; the [active log](docs/ACTIVE_WORK_LOG.md) reserves paths and CPU.
+[Sprint reviews](docs/sprint-reviews/README.md) retain findings, evidence and follow-ups.
+The repository's own license remains undecided; dependency licenses stay with their projects.

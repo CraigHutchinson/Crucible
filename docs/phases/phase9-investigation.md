@@ -1,7 +1,8 @@
 # Next decision: structural reclamation or local faction arena
 
-Status: investigation brief, not dispatched implementation. Receive Phase 8's
-flow controls and visual evidence first. Keep a playable primitive increment as
+Status: investigation brief dispatched through [Phase 9](phase9.md), after
+Phase 8 recovery merge PR21. This brief defines the comparison; the phase plan
+owns current execution and the eventual reviewed selection. Keep a playable primitive increment as
 the goal; generated resource/faction art remains a later fidelity target.
 
 ## Reshape the team at the decision
