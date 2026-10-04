@@ -16,14 +16,16 @@ the guarantees actually checked. No upstream edits were made during this catalog
 | ID / area | Current placement/status | Reuse direction and phase action | Gate / evidence |
 |---|---|---|---|
 | R01: ECS storage and identity | Sub0ECS v2, consumed by Simulation | Feed bounded creation/identity and consumer integration findings into Sub0ECS; keep game entities/rules in Crucible | Pinned audit records 24-bit indices, generation reuse and lack of transactional creation guarantee; upstream changes need current-source reproduction and strict consumer checks |
-| R02: typed delivery | Sub0Pub v2, stack round-trip consumer | Improve callback lifetime examples and bounded ingress integration when a real input adapter arrives | Preserve explicit disconnect/drain ownership; the pinned audit is evidence, not a claim that every finding remains at current HEAD |
-| R03: execution and joining | Sub0Pipeline, sequential stack consumer | Feed concrete bounded executor/join/cancellation requirements upstream during W7; retain game phase policy locally | Exact-version join/failure fixtures before changing pins; no new concurrency work in phase 2 |
-| R04: compact observation | Sub0Log, stack decoded-record consumer | Use consumed runtime summaries to improve logging adapters, teardown examples and round-trip tests | Phase 2 summary first; logger adapter follows an actual caller and bounded storage/lifecycle evidence |
+| R02: typed delivery | Sub0Pub v2, test-only stack consumer | Improve callback lifetime examples and bounded ingress integration when a real input adapter arrives | Preserve explicit disconnect/drain ownership; the pinned audit is evidence, not a claim that every finding remains at current HEAD |
+| R03: execution and joining | Sub0Pipeline, test-only sequential stack consumer | Feed concrete bounded executor/join/cancellation requirements upstream during W7; retain game phase policy locally | Exact-version join/failure fixtures before changing pins; no new concurrency work in phase 2 |
+| R04: compact observation | Sub0Log, test-only decoded-record consumer | Use consumed runtime summaries to improve logging adapters, teardown examples and round-trip tests | Phase 2 summary first; logger adapter follows an actual caller and bounded storage/lifecycle evidence |
 | R05: hex topology and geometry | [Sub0HexGrid H2](Sub0HexGrid.md), finite regions/complete candidates delivered; consumed by Crucible spatial Grid | Phase 3 P3-02 preserves physical/query compatibility and delivers HX-07 receiving fixtures; hierarchy is separate research | Upstream PR 4 delivers package/numerical evidence; [Phase 3 evidence](../workstreams/integration/phase3-validation.md) records complete-query/lifetime/replay promotion gates |
 | R06: spatial bins and radius traversal | Crucible::Spatial, integrated hex geometry with private rectangular compatibility | Keep entity binning local for now; identify whether a geometry library can support it without owning SampleId/ECS or gameplay | Compare complete queries to brute force for the chosen topology; second demonstrated consumer before extracting a generic binning library |
 | R07: bounded input/trace/state exchange | Crucible::Runtime and planned owned read model | Record patterns that may improve Pub/Pipeline or justify later extraction; avoid a generic runtime framework | Concrete consumers and bounded lifetime/capacity tests; phase 2 only adds the owned copy it uses, not an unconsumed exchange |
 | R08: steering, Blight and resource rules | Crucible domain modules | Keep gameplay policy local; feed any general storage/math defect upstream with a minimal reproduction | Product-neutral boundary and independent reusable consumer required before extraction; game tuning remains in Crucible |
 | R09: paging/cache foundations | Sub0MemPage/Sub0TieredCache, future evaluation | Reuse existing libraries if a measured world/data residency requirement appears; simulation can supply real workloads and feedback | No current Crucible consumer or demonstrated residency bottleneck; postpone integration until measured need |
+| R11: finite viewport geometry | Crucible Camera2D and painter clipping | Retain local; independent camera/clipping package is a candidate | Second editor/viewer consumer, finite/edge/extreme fixtures, no SDL/ECS/game coupling |
+| R12: build capability tooling | Python prerequisite and CTest runners | Retain local; small shared Python package is a candidate | Second CMake repository, bounded probes/process ownership, configured-toolchain and failure receipts |
 | R10: surface height and terrain transitions | [Future world direction](../decisions/terrain-and-world-extension.md) | Preserve planar height/deformation and later spherical geometry; keep mining/material/fusion policy in Crucible until a reusable boundary has real consumers | Finite height/storage, traversal and material conservation fixtures; sourced spherical adjacency/metric specification before code |
 
 Status vocabulary: **consumed** means an actual caller exists, **proposed** means a
@@ -133,3 +135,23 @@ R01 retains startup identities and avoids unverified ECS allocation promises.
 No upstream defect, pin change, second generic consumer or controlled optimization
 justifies extraction. [Selection](../decisions/phase9-selection.md) carries the next
 consumed gates; experiment results do not claim a library speedup.
+
+## Phase 9 full-source reuse review
+
+The [sub0 adoption audit](phase9-sub0-adoption.md) distinguishes actual production
+and test-only callers, confirms full pins and prioritizes receiving opportunities.
+BUILD_TESTING=OFF now omits acquisition of Pub/Pipeline/Log; their existing stack
+integration remains tested. ECS/H2 and optional SDL stay production dependencies.
+
+The [extraction review](phase9-extraction-review.md) ranks bounded input handoff
+(R07, preferably an upstream Pub companion), finite viewport geometry (R11), and
+build capability tooling (R12). Keep all three local until a named independent
+consumer, minimal neutral contract, license/package decision and receiving fixtures
+justify promotion. Camera/game/GPU policy must not enter HexGrid. No new repository,
+pin or speculative adapter is introduced this sprint.
+
+At structural dispatch, reuse fixed ECS identities and existing complete queries;
+centralize the consumed full-state comparison as structural fields are added.
+Optional Log diagnostics follow a real bounded-record caller. Pub delivery and a
+Pipeline graph require an actual delivery/dependency need and explicit teardown/join
+receiving; library adoption alone is not a reason to add either wrapper.

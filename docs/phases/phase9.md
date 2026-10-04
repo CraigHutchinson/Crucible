@@ -52,7 +52,10 @@ No production gameplay behavior changes in this investigation.
    independent radius-boundary fixture, per-tick query parity, current ledger and full replay.
 4. Select one increment with scope, constants, uncertainty stop criteria and
    implementation packages in the [decision](../decisions/phase9-selection.md).
-5. Review actual results/visuals, run combined supported acceptance, publish source,
+5. Audit all production/test callers for [sub0 adoption](../reuse/phase9-sub0-adoption.md)
+   and [reusable seams](../reuse/phase9-extraction-review.md); remove unused production
+   dependency acquisition and retain concrete upstream receiving gates.
+6. Review actual results/visuals, run combined supported acceptance, publish source,
    receive exact-head hosted CI, merge and verify main. Record limits and merge receipt.
 
 ## Carried findings and reuse
@@ -68,3 +71,6 @@ their receiving gates. P07-F01 recovery is closed through PR19.
 R01 avoids allocation promises; R05/R06 reuse existing radius geometry/bins.
 R07/R08 remain local input/read-model/game policy. No new pin, extracted runtime,
 renderer abstraction or multiplayer framework has a demonstrated need.
+
+Next structural dispatch also receives snapshot-comparison consolidation; general
+Pub/Pipeline/Log adapters and standalone extraction wait for their catalog gates.

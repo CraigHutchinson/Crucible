@@ -2,4 +2,6 @@
 
 Owned public header area. See [workstream brief](../../../docs/workstreams/spatial/README.md).
 
-Reserved build boundary (INTERFACE target); algorithms and public APIs are pending.
+Implemented H2-backed stable-ID binning and complete radius queries, consumed
+by Simulation and steering. Crucible owns storage/IDs and exact filtering;
+private compatibility fallbacks preserve unsupported numerical domains.

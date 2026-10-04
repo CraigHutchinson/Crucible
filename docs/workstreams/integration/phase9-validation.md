@@ -77,6 +77,19 @@ by tick60; the remaining1,984 mobile identities preserve a reclamation populatio
 That is an automated concentration gate, not completed fusion, the harvest/hold
 mission or human balance. No timing number is a full-game performance claim.
 
+## Library receiving
+
+Two workers independently audited full-source sub0 consumption and reusable seams;
+architect reviewed the reports and corrected six stale implemented-module summaries.
+[Adoption](../../reuse/phase9-sub0-adoption.md) and
+[extraction](../../reuse/phase9-extraction-review.md) feed the catalog and next dispatch.
+A fresh BUILD_TESTING=OFF Release build fetched only ECS/H2, built successfully,
+and `crucible --mission --route` won at tick267 with conservation/full-state replay.
+Pub/Pipeline/Log source directories were absent. Test-off sanitizer configure passed;
+the local leak-runtime limitation above remains. Reconfigured test-on Release
+built successfully and stack_round_trip passed1/1. Hosted headless CI additionally
+receives the fresh production dependency graph and mission replay.
+
 ## Hosted receiving and publication
 
 Reviewed checkpoint `eefc8754c34982d6b006e0105996824344594cfd` was published to

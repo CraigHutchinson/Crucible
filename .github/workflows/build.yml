@@ -54,6 +54,14 @@ jobs:
       - run: python scripts/run_tests.py --preset release
       - name: SDL stays out of the ordinary dependency graph
         run: test ! -d build/release/_deps/sdl3-build
+      - name: Production build consumes only its used sub0 packages
+        run: |
+          cmake --preset release -B build/production -DBUILD_TESTING=OFF
+          cmake --build build/production --parallel 4
+          build/production/crucible --mission --route
+          test ! -d build/production/_deps/sub0pipeline-src
+          test ! -d build/production/_deps/sub0pub-src
+          test ! -d build/production/_deps/sub0log-src
   sanitize:
     runs-on: ubuntu-24.04
     steps:

@@ -45,7 +45,7 @@ oracle rather than introduce a broad parameter sweep or silently patch old evide
 
 | Phase 10 owner | Package after tuning freeze | Receiving gate |
 |---|---|---|
-| Architect / contracts + runtime | One concrete field/fuse/shatter command union and normal rule-rejection trace; optional structural mission; shared state copy | Cutoff/queue/trace atomicity, admission versus application, exact replay and legacy mission regression |
+| Architect / contracts + runtime | One concrete field/fuse/shatter command union and normal rule-rejection trace; optional structural mission; shared state copy and consumed full-state comparison | Cutoff/queue/trace atomicity, admission versus application, exact replay and legacy mission regression |
 | Simulation worker | Fixed identity activity, active-prefix steering/query/reclamation; one relay lattice, mass/loss, protection | Hand-calculated transfer/loss, insufficient/stale/overflow preservation, sparse ID parity, deterministic ordering and no source allocation |
 | Presentation worker | Primitive eligibility/anchor/shatter cues, typed actions and rejection feedback; human task sheet | Actual live fuse/shatter/redirect frames and events, retained-snapshot/restart behavior; human results remain separate |
 
@@ -54,3 +54,8 @@ Complete the full loop together; a headless transfer fixture alone does not clos
 playable fusion/relay. Core correctness/replay and supported Debug/Release/ASan+UBSan
 precede exact-head merge. Scale, networking, polished art, terrain and new backends
 remain their existing independent gates.
+
+The [reuse review](../reuse/README.md#phase-9-full-source-reuse-review) supplies
+parallel receiving gates: retain ECS/H2, keep field/mission policy local, and receive
+optional diagnostics/delivery/execution only when their production callers exist.
+Base-library candidates remain local hypotheses, not Phase10 dependencies.

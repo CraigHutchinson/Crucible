@@ -114,8 +114,10 @@ measurement and reproducible evidence.
 
 Dependencies use a checksum-verified CPM bootstrap, namespaced targets and
 [full commit pins](cmake/DependencyPins.cmake): Sub0ECS v2, Sub0Pub v2, Sub0Pipeline,
-Sub0Log and Sub0HexGrid H2. Consumer builds disable dependency development tools.
-The [reuse catalog](docs/reuse/README.md) tracks concrete feedback to those libraries;
+Sub0Log and Sub0HexGrid H2. Gameplay directly consumes ECS/H2; Pub/Pipeline/Log
+currently validate the stack in integration tests and are omitted when testing is
+disabled. Consumer builds disable dependency development tools.
+The [reuse catalog](docs/reuse/README.md) and [full-source adoption audit](docs/reuse/phase9-sub0-adoption.md) track concrete feedback and extraction candidates;
 game policy stays local until an independently consumed boundary justifies extraction.
 
 [Reviewed phases](docs/phases/README.md) select increments from the

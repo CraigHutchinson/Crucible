@@ -27,6 +27,8 @@ Structural allocation, factions, threaded gameplay and terrain remain future wor
 
 Core publicly exposes Contracts/ECS and project requirements; domain targets remain
 private. Runtime links Core; future Pub/Pipeline/Log adapters require real callers.
+Production builds with testing disabled fetch ECS/H2 and optional SDL only.
+Pub/Pipeline/Log are test-only until concrete runtime adapters consume them.
 Target-scoped CMake, explicit source lists and full pins keep builds and stream ownership
 reviewable. No stub API, copied geometry kernel or single-implementation interface is needed.
 
