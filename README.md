@@ -91,6 +91,7 @@ development libraries and a display. To receive optional diagnostics:
 ```sh
 cmake --preset desktop-release -DCRUCIBLE_ENABLE_DIAGNOSTICS=ON
 cmake --build --preset desktop-release --parallel 4
+python scripts/run_tests.py --preset desktop-release
 ./build/desktop-release/src/desktop/crucible_desktop --diagnostics
 ```
 

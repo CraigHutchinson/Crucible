@@ -86,7 +86,7 @@ stop gates and evidence handoff. An additional agent on this host supplies labor
 not additional hardware. Missing hardware leaves its gate open while independent
 portable work proceeds. Windows descendant-process timeout cleanup remains HW-01.
 
-## Binary assets and Git LFS
+## Interactive review
 
 For interactive work, pass the matching automated behavior/lifetime checks first,
 then provide [personal review steps and expected results](docs/playtests/phase12-personal-review.md)
@@ -95,6 +95,8 @@ receiving and synthetic fixtures remain distinct. Use computer control mainly
 to diagnose a reported failed step. Review README as a fresh viewer before closing
 an increment: features, launch, controls, optional prerequisites and limits must
 be readily discoverable.
+
+## Binary assets and Git LFS
 
 Install [Git LFS](https://git-lfs.com/) before cloning. For a new or existing
 checkout, run:
