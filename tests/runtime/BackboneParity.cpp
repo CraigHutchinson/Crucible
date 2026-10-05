@@ -7,10 +7,19 @@
 #include <chrono>
 #include <iostream>
 #include <stdexcept>
+#ifdef CRUCIBLE_TEST_DIAGNOSTICS
+#include <crucible/runtime/RuntimeDiagnostics.hpp>
+#include <sstream>
+#endif
 
 using namespace crucible;
 using namespace crucible::runtime;
 namespace {
+#ifdef CRUCIBLE_TEST_DIAGNOSTICS
+constexpr auto diagnostics = InspectorSession::Diagnostics::bounded;
+#else
+constexpr auto diagnostics = InspectorSession::Diagnostics::disabled;
+#endif
 void Require(bool condition, const char* message) {
     if (!condition) throw std::runtime_error(message);
 }
@@ -42,7 +51,8 @@ void Admission(CommandIngress::Admission a, CommandIngress::Admission b) {
         a.last_sequence == b.last_sequence, "admission receipt parity");
 }
 void Route(bool structural) {
-    InspectorSession live{2048, {64,4096}, ReclamationMissionSettings{}, structural};
+    InspectorSession live{2048, {64,4096}, ReclamationMissionSettings{}, structural,
+        InspectorSession::ExecutionPath::integrated, diagnostics};
     InspectorSession direct{2048, {64,4096}, ReclamationMissionSettings{}, structural,
         InspectorSession::ExecutionPath::direct};
     bool gathering{}, fused{};
@@ -74,7 +84,8 @@ void Route(bool structural) {
         << std::chrono::duration<double,std::milli>(end-begin).count() << '\n';
 }
 void Backpressure() {
-    InspectorSession live{64,{1,0},ReclamationMissionSettings{1780,4},true};
+    InspectorSession live{64,{1,0},ReclamationMissionSettings{1780,4},true,
+        InspectorSession::ExecutionPath::integrated, diagnostics};
     InspectorSession direct{64,{1,0},ReclamationMissionSettings{1780,4},true,
         InspectorSession::ExecutionPath::direct};
     Admission(live.TryFuseRelay(),direct.TryFuseRelay());
@@ -86,7 +97,8 @@ void Backpressure() {
     Equal(live,direct);
 }
 void Lifecycle() {
-    InspectorSession live{2048,{1,16},ReclamationMissionSettings{1780,4},true};
+    InspectorSession live{2048,{1,16},ReclamationMissionSettings{1780,4},true,
+        InspectorSession::ExecutionPath::integrated, diagnostics};
     InspectorSession direct{2048,{1,16},ReclamationMissionSettings{1780,4},true,InspectorSession::ExecutionPath::direct};
     live.Pause(); direct.Pause();
     Admission(live.TryFuseRelay(),direct.TryFuseRelay());
@@ -107,8 +119,56 @@ void Lifecycle() {
     InspectorSession peer{2048,{1,16},ReclamationMissionSettings{1780,4},true};
     Require(peer.GetSummary().ingress_pending == 0 && peer.GetTrace().empty(), "live domains isolated");
 }
+#ifdef CRUCIBLE_TEST_DIAGNOSTICS
+void ExhaustedDiagnostics() {
+    InspectorSession live{64,{1,16},ReclamationMissionSettings{1780,4},true,
+        InspectorSession::ExecutionPath::integrated, diagnostics};
+    InspectorSession plain{64,{1,16},ReclamationMissionSettings{1780,4},true};
+    live.Pause(); plain.Pause();
+    Admission(live.TryFuseRelay(), plain.TryFuseRelay());
+    for (int attempt = 0; attempt < 2000; ++attempt)
+        Admission(live.TryFuseRelay(), plain.TryFuseRelay());
+    Require(live.GetDiagnostics()->GetStatistics().dropped_records > 0,
+        "real admission consumer exhausts bounded diagnostics");
+    Equal(live, plain);
+    live.Resume(); plain.Resume();
+    static_cast<void>(live.TryPump(std::chrono::seconds{1}));
+    static_cast<void>(plain.TryPump(std::chrono::seconds{1}));
+    Equal(live, plain);
+    std::ostringstream output;
+    Require(live.GetDiagnostics()->WriteDecoded(output), "exhausted session prefix decodes");
+    live.Restart(); plain.Restart(); Equal(live, plain);
+    Require(live.GetDiagnostics()->GetStatistics().dropped_records > 0,
+        "restart preserves bounded session loss counters");
+}
+void MissionSummaryCadence() {
+    InspectorSession live{64,{1,16},ReclamationMissionSettings{1780,4},true,
+        InspectorSession::ExecutionPath::integrated, diagnostics};
+    for (int run = 0; run < 2; ++run) {
+        Require(live.TryPump(std::chrono::seconds{1}).advanced_ticks == 4, "terminal cadence fixture");
+        for (int attempt = 0; attempt < 3; ++attempt)
+            Require(live.TryPump(std::chrono::seconds{1}).advanced_ticks == 0, "closed pump cannot re-summarize");
+        if (run == 0) live.Restart();
+    }
+    std::ostringstream output;
+    Require(live.GetDiagnostics()->WriteDecoded(output), "terminal summaries decode");
+    const auto text = output.str();
+    const auto first = text.find("schema=1 event=3 run=1 tick=4");
+    const auto second = text.find("schema=1 event=3 run=2 tick=4");
+    Require(first != std::string::npos && second != std::string::npos &&
+        text.find("schema=1 event=3", second + 1) == std::string::npos &&
+        text.find("diagnostics decoded=2 ") != std::string::npos,
+        "exactly one summary per run despite catch-up and closed pumps");
+    std::cout << text;
+}
+#endif
 }
 int main() {
-    try { Backpressure(); Lifecycle(); Route(false); Route(true); }
+    try { Backpressure(); Lifecycle(); Route(false); Route(true);
+#ifdef CRUCIBLE_TEST_DIAGNOSTICS
+        ExhaustedDiagnostics();
+        MissionSummaryCadence();
+#endif
+    }
     catch (const std::exception& e) { std::cerr << e.what() << '\n'; return 1; }
 }

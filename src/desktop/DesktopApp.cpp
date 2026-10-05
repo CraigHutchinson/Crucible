@@ -1,4 +1,8 @@
 #include "DesktopApp.hpp"
+#if CRUCIBLE_ENABLE_DIAGNOSTICS
+#include <crucible/runtime/RuntimeDiagnostics.hpp>
+#include <iostream>
+#endif
 #include <crucible/presentation/FieldTool.hpp>
 #include <crucible/presentation/desktop/SceneUi.hpp>
 #include <cmath>
@@ -20,20 +24,35 @@ std::string_view StructuralFeedback(StructuralCommandResult result) noexcept {
     return "Unknown structural result";
 }
 }
-DesktopApp::DesktopApp(ReclamationMissionSettings mission, bool structural)
-    : session_(2048, {64, 4096}, mission, structural), structural_(structural) {
+DesktopApp::DesktopApp(ReclamationMissionSettings mission, bool structural,
+        runtime::InspectorSession::Diagnostics diagnostics)
+    : session_(2048, {64, 4096}, mission, structural,
+          runtime::InspectorSession::ExecutionPath::integrated, diagnostics), structural_(structural) {
+    if (diagnostics == runtime::InspectorSession::Diagnostics::bounded && !session_.GetDiagnostics())
+        SDL_Log("Bounded diagnostics unavailable; continuing without outcome logging");
     if (structural_) message_ = "Gather 64 at relay, F fuse, X shatter; quota plus 120 held ticks wins";
     window_.reset(SDL_CreateWindow(structural_ ? "Crucible - secure the relay" : "Crucible - reclamation challenge", 1280, 720,
         SDL_WINDOW_RESIZABLE | SDL_WINDOW_HIGH_PIXEL_DENSITY));
     Check(static_cast<bool>(window_));
     renderer_.reset(SDL_CreateRenderer(window_.get(), nullptr));
     Check(static_cast<bool>(renderer_));
+    SDL_Log("Crucible native renderer=%s, window pixel density=%.2f, display scale=%.2f",
+        SDL_GetRendererName(renderer_.get()), SDL_GetWindowPixelDensity(window_.get()),
+        SDL_GetWindowDisplayScale(window_.get()));
     Check(SDL_SetRenderLogicalPresentation(renderer_.get(), 1280, 720, SDL_LOGICAL_PRESENTATION_LETTERBOX));
     // Best effort pacing: software/dummy renderers may not support vertical sync.
     static_cast<void>(SDL_SetRenderVSync(renderer_.get(), 1));
     baseline_ = std::chrono::steady_clock::now();
 }
-DesktopApp::~DesktopApp() = default;
+DesktopApp::~DesktopApp() {
+#if CRUCIBLE_ENABLE_DIAGNOSTICS
+    if (const auto* diagnostics = session_.GetDiagnostics()) {
+        try {
+            if (!diagnostics->WriteDecoded(std::cout)) SDL_Log("Diagnostic decode/output failed");
+        } catch (const std::exception& error) { SDL_Log("Diagnostic export: %s", error.what()); }
+    }
+#endif
+}
 presentation::ScreenPoint DesktopApp::ToLogical(float x, float y) const {
     float lx{}, ly{};
     Check(SDL_RenderCoordinatesFromWindow(renderer_.get(), x, y, &lx, &ly));

@@ -1,5 +1,22 @@
 # Active work log
 
+## Phase 12 dedicated Windows receiving, 2026-10-05
+
+Baseline `835c781` (PR24 merged), clean main at dispatch; branch
+`phase12-runtime-diagnostics`. User requests resumed Phase12 and authorizes graphics,
+rendering and interactive playtesting on this dedicated machine. Retain two bounded
+packages; root owns shared wiring, plans/review, publication and all serial CPU/GPU
+runs. Existing worktrees and Phase2 build artifacts are preserved.
+
+| Owner | Exclusive paths/resources | Status |
+|---|---|---|
+| Architect/root | InspectorSession, desktop/main, manifests/CI, central docs/evidence; all build/test/measurement and graphics time | Active |
+| diagnostics | RuntimeDiagnostics header/source/test and phase12 diagnostic handoff only | Active; no builds/commits |
+| measurement | runtime_backbone benchmark, capture script and phase12 budget handoff only | Active; no builds/measurements/commits |
+
+Phase13 will be shaped by actual native capability/input/readability evidence.
+Automated interaction is identified separately from participant balance testing.
+
 Claim exclusive paths and heavy CPU runs before starting; update on completion.
 Check an old claim with its owner rather than assuming it expired. Benchmarks need
 an uncontended host even when files do not overlap.

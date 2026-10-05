@@ -2,6 +2,7 @@
 #include <crucible/runtime/ClockDriver.hpp>
 #include <crucible/contracts/ReclamationMission.hpp>
 #include <memory>
+namespace crucible::runtime { class RuntimeDiagnostics; }
 namespace crucible::presentation { class ScenarioSnapshot; }
 namespace crucible::runtime {
 /** Owns the interactive reference scenario, clock, bounded commands and display frame.
@@ -11,17 +12,25 @@ class InspectorSession {
 public:
     /// Direct is an explicit receiving/measurement comparator, sharing all game rules.
     enum class ExecutionPath { integrated, direct };
+    /// Bounded opts into a fixed session-lifetime log; requires the CMake feature.
+    enum class Diagnostics { disabled, bounded };
     /** Allocates the fixed 64x32, four-field finite-resource scenario and initial frame.
      * @param[in] samples Fixed population; no subsequent structural growth.
      * @param[in] limits Startup bounds for pending commands and completed trace.
      * @param[in] mission Optional positive quota/deadline challenge; quota must not
      * exceed startup substrate stock. Omission retains ordinary inspector behavior.
+     * @param[in] structural Enables the fixed relay mission and structural commands.
+     * @param[in] execution Production backbone or direct receiving comparator.
+     * @param[in] diagnostics Disabled by default; bounded requires the CMake feature.
+     * Diagnostic allocation failure disables the optional sink; GetDiagnostics()
+     * returns null and the desktop reports the failure without stopping the run.
      * @throws std::invalid_argument Invalid count/limits; allocation errors propagate.
      */
     explicit InspectorSession(std::size_t samples = 2048,
         HeadlessSession::Limits limits = {64, 4096},
         std::optional<ReclamationMissionSettings> mission = std::nullopt, bool structural = false,
-        ExecutionPath execution = ExecutionPath::integrated);
+        ExecutionPath execution = ExecutionPath::integrated,
+        Diagnostics diagnostics = Diagnostics::disabled);
     ~InspectorSession();
     InspectorSession(const InspectorSession&) = delete;
     InspectorSession& operator=(const InspectorSession&) = delete;
@@ -52,8 +61,11 @@ public:
     [[nodiscard]] const presentation::ScenarioSnapshot& GetSnapshot() const noexcept;
     /// Borrow expires on restart/destruction; completed trace prefix never changes.
     [[nodiscard]] std::span<const AppliedCommand> GetTrace() const noexcept;
+    /// Optional sink borrow expires on destruction; decode only while the coordinator is idle.
+    [[nodiscard]] const RuntimeDiagnostics* GetDiagnostics() const noexcept;
 private:
     struct Run;
+    [[nodiscard]] CommandIngress::Admission AdmitCommand(const BoundaryCommand& command);
     const std::size_t samples_;
     const HeadlessSession::Limits limits_;
     const std::optional<ReclamationMissionSettings> mission_;
@@ -61,5 +73,10 @@ private:
     const ExecutionPath execution_;
     std::uint64_t run_id_{1};
     std::unique_ptr<Run> run_;
+#if CRUCIBLE_ENABLE_DIAGNOSTICS
+    std::unique_ptr<RuntimeDiagnostics> diagnostics_;
+#endif
+    std::size_t diagnostic_trace_size_{};
+    bool mission_summary_recorded_{};
 };
 }

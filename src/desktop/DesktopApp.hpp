@@ -16,9 +16,13 @@ class DesktopApp {
 public:
     /** Allocates the reference challenge and SDL window/renderer.
      * @param[in] mission Positive quota/deadline tuning within startup substrate stock.
+     * @param[in] structural Enables the fixed relay challenge.
+     * @param[in] diagnostics Optional bounded outcome log, decoded to stdout at shutdown.
+     * Requires CRUCIBLE_ENABLE_DIAGNOSTICS; allocation failure is reported and disables logging.
      * @throws std::invalid_argument Invalid mission; startup/allocation errors propagate.
      */
-    explicit DesktopApp(ReclamationMissionSettings mission = {}, bool structural = false);
+    explicit DesktopApp(ReclamationMissionSettings mission = {}, bool structural = false,
+        runtime::InspectorSession::Diagnostics diagnostics = runtime::InspectorSession::Diagnostics::disabled);
     ~DesktopApp();
     DesktopApp(const DesktopApp&) = delete;
     DesktopApp& operator=(const DesktopApp&) = delete;
