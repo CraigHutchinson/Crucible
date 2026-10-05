@@ -1,0 +1,256 @@
+{
+  "schema": 1,
+  "stage": "test",
+  "ok": true,
+  "checks": [
+    {
+      "name": "python",
+      "status": "pass",
+      "required": true,
+      "detail": "Python >=3.10 required",
+      "version": "3.14.5",
+      "executable": "C:\\Users\\craig\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe"
+    },
+    {
+      "name": "display",
+      "status": "pass",
+      "required": true,
+      "detail": "Windows primary display candidate metrics: 2048x1280",
+      "returncode": 0,
+      "command": [
+        "C:\\Users\\craig\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "-c",
+        "import ctypes, sys\nuser32 = ctypes.WinDLL('user32', use_last_error=True)\nuser32.GetSystemMetrics.argtypes = [ctypes.c_int]\nuser32.GetSystemMetrics.restype = ctypes.c_int\nwidth = user32.GetSystemMetrics(0)\nheight = user32.GetSystemMetrics(1)\nif width <= 0 or height <= 0:\n    sys.exit(f'Windows primary display metrics unavailable: {width}x{height}')\nprint(f'Windows primary display candidate metrics: {width}x{height}')\n"
+      ],
+      "elapsed_seconds": 0.038,
+      "process_scope": "Windows direct child only",
+      "output_truncated": false,
+      "backend": "windows",
+      "scope": "Positive primary display candidate metrics only; SDL initialization remains a test gate; no physical-console, input or DPI acceptance"
+    },
+    {
+      "name": "vulkan",
+      "status": "pass",
+      "required": true,
+      "detail": "==========\r\nVULKANINFO\r\n==========\r\n\r\nVulkan Instance Version: 1.4.350\r\n\r\n\r\nInstance Extensions: count = 20\r\n-------------------------------\r\nVK_EXT_debug_report                    : extension revision 10\r\nVK_EXT_debug_utils                     : extension revision 2\r\nVK_EXT_direct_mode_display             : extension revision 1\r\nVK_EXT_surface_maintenance1            : extension revision 1\r\nVK_EXT_swapchain_colorspace            : extension revision 5\r\nVK_KHR_device_group_creation           : extension revision 1\r\nVK_KHR_display                         : extension revision 23\r\nVK_KHR_external_fence_capabilities     : extension revision 1\r\nVK_KHR_external_memory_capabilities    : extension revision 1\r\nVK_KHR_external_semaphore_capabilities : extension revision 1\r\nVK_KHR_get_display_properties2         : extension revision 1\r\nVK_KHR_get_physical_device_properties2 : extension revision 2\r\nVK_KHR_get_surface_capabilities2       : extension revision 1\r\nVK_KHR_portability_enumeration         : extension revision 1\r\nVK_KHR_surface                         : extension revision 25\r\nVK_KHR_surface_maintenance1            : extension revision 1\r\nVK_KHR_surface_protected_capabilities  : extension revision 1\r\nVK_KHR_win32_surface                   : extension revision 6\r\nVK_LUNARG_direct_driver_loading        : extension revision 1\r\nVK_NV_external_memory_capabilities     : extension revision 1\r\n\r\nInstance Layers: count = 13\r\n---------------------------\r\nVK_LAYER_KHRONOS_profiles         Khronos Profiles layer                                                                                            1.4.341  version 1\r\nVK_LAYER_KHRONOS_shader_object    Khronos Shader object layer                                                                                       1.4.341  version 1\r\nVK_LAYER_KHRONOS_synchronization2 Khronos Synchronization2 layer                                                                                    1.4.341  version 1\r\nVK_LAYER_KHRONOS_validation       Khronos Validation Layer                                                                                          1.4.341  version 1\r\nVK_LAYER_LUNARG_api_dump          LunarG API dump layer                                                                                             1.4.341  version 2\r\nVK_LAYER_LUNARG_crash_diagnostic  Crash Diagnostic Layer is a crash/hang debugging tool that helps determines GPU progress in a Vulkan application. 1.4.341  version 1\r\nVK_LAYER_LUNARG_gfxreconstruct    GFXReconstruct Capture Layer Version 1.0.5                                                                        1.4.341  version 4194309\r\nVK_LAYER_LUNARG_monitor           Execution Monitoring Layer                                                                                        1.4.341  version 1\r\nVK_LAYER_LUNARG_screenshot        LunarG image capture layer                                                                                        1.4.341  version 1\r\nVK_LAYER_NV_optimus               NVIDIA Optimus layer                                                                                              1.4.351  version 1\r\nVK_LAYER_NV_present               NVIDIA Presentation Layer                                                                                         1.4.351  version 1\r\nVK_LAYER_VALVE_steam_fossilize    Steam Pipeline Caching Layer                                                                                      1.4.303  version 1\r\nVK_LAYER_VALVE_steam_overlay      Steam Overlay Layer                                                                                               1.3.207  version 1\r\n\r\nDevices:\r\n========\r\nGPU0:\r\n\tapiVersion         = 1.4.356\r\n\tdriverVersion      = 101.9033\r\n\tvendorID           = 0x8086\r\n\tdeviceID           = 0x7d67\r\n\tdeviceType         = PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU\r\n\tdeviceName         = Intel(R) Graphics\r\n\tdriverID           = DRIVER_ID_INTEL_PROPRIETARY_WINDOWS\r\n\tdriverName         = Intel Corporation\r\n\tdriverInfo         = 101.9033\r\n\tconformanceVersion = 1.4.0.0\r\n\tdeviceUUID         = 8680677d-0600-0000-0002-000000000000\r\n\tdriverUUID         = 33322e30-2e31-3031-2e39-303333000000\r\nGPU1:\r\n\tapiVersion         = 1.4.351\r\n\tdriverVersion      = 617.14.0.0\r\n\tvendorID           = 0x10de\r\n\tdeviceID           = 0x2d58\r\n\tdeviceType         = PHYSICAL_DEVICE_TYPE_DISCRETE_GPU\r\n\tdeviceName         = NVIDIA GeForce RTX 5070 Laptop GPU\r\n\tdriverID           = DRIVER_ID_NVIDIA_PROPRIETARY\r\n\tdriverName         = NVIDIA\r\n\tdriverInfo         = 617.14\r\n\tconformanceVersion = 1.4.3.3\r\n\tdeviceUUID         = 764b2ed5-dd87-9e3e-de64-2614c242d3b3\r\n\tdriverUUID         = 7bae5eb3-92a1-5292-90f2-5ac28b6be181",
+      "returncode": 0,
+      "command": [
+        "vulkaninfo",
+        "--summary"
+      ],
+      "elapsed_seconds": 0.396,
+      "process_scope": "Windows direct child only",
+      "output_truncated": false,
+      "devices": [
+        {
+          "name": "Intel(R) Graphics",
+          "type": "PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU"
+        },
+        {
+          "name": "NVIDIA GeForce RTX 5070 Laptop GPU",
+          "type": "PHYSICAL_DEVICE_TYPE_DISCRETE_GPU"
+        }
+      ],
+      "backend": "Vulkan"
+    },
+    {
+      "name": "hardware_gpu",
+      "status": "pass",
+      "required": true,
+      "detail": "Complete inventory reports only integrated/discrete candidates; caller must isolate the required ICD",
+      "devices": [
+        {
+          "name": "Intel(R) Graphics",
+          "type": "PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU"
+        },
+        {
+          "name": "NVIDIA GeForce RTX 5070 Laptop GPU",
+          "type": "PHYSICAL_DEVICE_TYPE_DISCRETE_GPU"
+        }
+      ],
+      "scope": "Reported physical candidate inventory only; no physical readback, physical-console or performance acceptance"
+    },
+    {
+      "name": "spirv",
+      "status": "pass",
+      "required": true,
+      "detail": "D:\\Craig\\GitHub\\Crucible\\build\\phase12-release\\gpu-shaders\\world.vert.spv",
+      "test": "gpu_instanced_readback"
+    },
+    {
+      "name": "spirv",
+      "status": "pass",
+      "required": true,
+      "detail": "D:\\Craig\\GitHub\\Crucible\\build\\phase12-release\\gpu-shaders\\world.frag.spv",
+      "test": "gpu_instanced_readback"
+    }
+  ],
+  "selected_tests": [
+    "workflow_permissions",
+    "workflow_prerequisites",
+    "gpu_packet_numeric",
+    "gpu_slot_retirement",
+    "gpu_instanced_readback",
+    "scene_painter_software",
+    "structural_actual_frames",
+    "structural_desktop_events",
+    "simulation",
+    "stack_round_trip",
+    "scenario_integration",
+    "phase2_full_state",
+    "phase3_full_state",
+    "desktop_events",
+    "mission_strategy_examples",
+    "mission_timing_schedule",
+    "structural_route_cli",
+    "contracts_values",
+    "runtime_headless",
+    "runtime_ingress",
+    "runtime_session",
+    "runtime_clock",
+    "runtime_inspector",
+    "runtime_mission",
+    "runtime_reference_route",
+    "runtime_structural",
+    "runtime_intent_delivery",
+    "runtime_boundary_pipeline",
+    "runtime_backbone_parity",
+    "runtime_diagnostics",
+    "runtime_diagnostics_parity",
+    "spatial_grid",
+    "spatial_hex_queries",
+    "spatial_allocation_reuse",
+    "fields_sampling",
+    "blight_grid",
+    "swarm_steering",
+    "interactions_reclamation",
+    "interactions_reclamation_allocations",
+    "interactions_structural",
+    "camera_affine",
+    "field_tools"
+  ],
+  "scope": "Capability preflight only; no performance, physical-console or suite acceptance claim",
+  "capacity": {
+    "cpu_count": 24,
+    "memory_bytes": null,
+    "requirement": "No invented CPU/RAM minimum"
+  },
+  "compiler": "C:/Program Files/Microsoft Visual Studio/18/Community/VC/Tools/MSVC/14.51.36231/bin/Hostx64/x64/cl.exe",
+  "sanitizers": false,
+  "gpu_required": true,
+  "elapsed_seconds": 0.514
+}
+Test project D:/Craig/GitHub/Crucible/build/phase12-release
+      Start  1: workflow_permissions
+ 1/42 Test  #1: workflow_permissions ...................   Passed    0.09 sec
+      Start  2: workflow_prerequisites
+ 2/42 Test  #2: workflow_prerequisites .................   Passed    0.36 sec
+      Start  3: gpu_packet_numeric
+ 3/42 Test  #3: gpu_packet_numeric .....................   Passed    0.04 sec
+      Start  4: gpu_slot_retirement
+ 4/42 Test  #4: gpu_slot_retirement ....................   Passed    0.03 sec
+      Start  5: gpu_instanced_readback
+ 5/42 Test  #5: gpu_instanced_readback .................   Passed    1.19 sec
+      Start  6: scene_painter_software
+ 6/42 Test  #6: scene_painter_software .................   Passed    0.28 sec
+      Start  7: structural_actual_frames
+ 7/42 Test  #7: structural_actual_frames ...............   Passed    0.44 sec
+      Start  8: structural_desktop_events
+ 8/42 Test  #8: structural_desktop_events ..............   Passed    1.19 sec
+      Start  9: simulation
+ 9/42 Test  #9: simulation .............................   Passed    0.04 sec
+      Start 10: stack_round_trip
+10/42 Test #10: stack_round_trip .......................   Passed    0.07 sec
+      Start 11: scenario_integration
+11/42 Test #11: scenario_integration ...................   Passed    0.03 sec
+      Start 12: phase2_full_state
+12/42 Test #12: phase2_full_state ......................   Passed    0.42 sec
+      Start 13: phase3_full_state
+13/42 Test #13: phase3_full_state ......................   Passed    0.42 sec
+      Start 14: desktop_events
+14/42 Test #14: desktop_events .........................   Passed    0.36 sec
+      Start 15: mission_strategy_examples
+15/42 Test #15: mission_strategy_examples ..............   Passed   16.63 sec
+      Start 16: mission_timing_schedule
+16/42 Test #16: mission_timing_schedule ................   Passed    0.04 sec
+      Start 17: structural_route_cli
+17/42 Test #17: structural_route_cli ...................   Passed    2.56 sec
+      Start 18: contracts_values
+18/42 Test #18: contracts_values .......................   Passed    0.04 sec
+      Start 19: runtime_headless
+19/42 Test #19: runtime_headless .......................   Passed    0.03 sec
+      Start 20: runtime_ingress
+20/42 Test #20: runtime_ingress ........................   Passed    0.03 sec
+      Start 21: runtime_session
+21/42 Test #21: runtime_session ........................   Passed    0.03 sec
+      Start 22: runtime_clock
+22/42 Test #22: runtime_clock ..........................   Passed    0.03 sec
+      Start 23: runtime_inspector
+23/42 Test #23: runtime_inspector ......................   Passed    0.03 sec
+      Start 24: runtime_mission
+24/42 Test #24: runtime_mission ........................   Passed    0.06 sec
+      Start 25: runtime_reference_route
+25/42 Test #25: runtime_reference_route ................   Passed    0.03 sec
+      Start 26: runtime_structural
+26/42 Test #26: runtime_structural .....................   Passed    0.31 sec
+      Start 27: runtime_intent_delivery
+27/42 Test #27: runtime_intent_delivery ................   Passed    0.03 sec
+      Start 28: runtime_boundary_pipeline
+28/42 Test #28: runtime_boundary_pipeline ..............   Passed    0.31 sec
+      Start 29: runtime_backbone_parity
+29/42 Test #29: runtime_backbone_parity ................   Passed    3.82 sec
+      Start 30: runtime_diagnostics
+30/42 Test #30: runtime_diagnostics ....................   Passed    0.05 sec
+      Start 31: runtime_diagnostics_parity
+31/42 Test #31: runtime_diagnostics_parity .............   Passed    3.71 sec
+      Start 32: spatial_grid
+32/42 Test #32: spatial_grid ...........................   Passed    0.03 sec
+      Start 33: spatial_hex_queries
+33/42 Test #33: spatial_hex_queries ....................   Passed    0.31 sec
+      Start 34: spatial_allocation_reuse
+34/42 Test #34: spatial_allocation_reuse ...............   Passed    0.03 sec
+      Start 35: fields_sampling
+35/42 Test #35: fields_sampling ........................   Passed    0.03 sec
+      Start 36: blight_grid
+36/42 Test #36: blight_grid ............................   Passed    0.04 sec
+      Start 37: swarm_steering
+37/42 Test #37: swarm_steering .........................   Passed    0.31 sec
+      Start 38: interactions_reclamation
+38/42 Test #38: interactions_reclamation ...............   Passed    0.04 sec
+      Start 39: interactions_reclamation_allocations
+39/42 Test #39: interactions_reclamation_allocations ...   Passed    0.04 sec
+      Start 40: interactions_structural
+40/42 Test #40: interactions_structural ................   Passed    0.29 sec
+      Start 41: camera_affine
+41/42 Test #41: camera_affine ..........................   Passed    0.04 sec
+      Start 42: field_tools
+42/42 Test #42: field_tools ............................   Passed    0.03 sec
+
+100% tests passed, 0 tests failed out of 42
+
+Label Time Summary:
+blight          =   0.11 sec*proc (3 tests)
+contracts       =   0.04 sec*proc (1 test)
+desktop         =   1.83 sec*proc (3 tests)
+fields          =   0.03 sec*proc (1 test)
+gpu             =   1.26 sec*proc (3 tests)
+input           =   0.06 sec*proc (2 tests)
+integration     =  20.57 sec*proc (9 tests)
+interactions    =   0.36 sec*proc (3 tests)
+lifetime        =   1.27 sec*proc (3 tests)
+log             =   3.76 sec*proc (2 tests)
+mission         =  19.32 sec*proc (5 tests)
+numeric         =   0.04 sec*proc (1 test)
+pipeline        =   7.84 sec*proc (3 tests)
+presentation    =  19.98 sec*proc (15 tests)
+pub             =   3.84 sec*proc (2 tests)
+readback        =   1.19 sec*proc (1 test)
+resources       =   3.29 sec*proc (3 tests)
+runtime         =   8.45 sec*proc (13 tests)
+simulation      =   0.29 sec*proc (1 test)
+spatial         =   0.38 sec*proc (3 tests)
+structural      =   1.91 sec*proc (3 tests)
+swarm           =   0.31 sec*proc (1 test)
+workflow        =   0.45 sec*proc (2 tests)
+
+Total Test time (real) =  33.89 sec

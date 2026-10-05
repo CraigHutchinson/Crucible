@@ -4,7 +4,7 @@
 boundaries and the gates for changing them. [Concepts](concepts/README.md) guide
 material and shape readability. Art does not define resource rules or select a backend.
 
-Dispatch baseline is PR23 merge `262c4eba4211779042f17bf5a2da03d333c35a91`.
+Phase12 dispatch baseline is PR24 merge `835c781605c98c79f8d10e26e2b8aab63593101e`.
 [Phase10](phases/phase10.md) extends the sequential owned command loop with fixed
 mobile/anchored/lost participation, one relay lattice, protection and hold. No ECS
 allocation/destruction occurs after startup. FLOW remains a straight capsule current.
@@ -23,11 +23,12 @@ Factions, threaded gameplay, population growth and terrain remain future work.
 | Presentation | Camera2D/FieldTool and owned copied frames; concrete ScenePainter | No ECS views in drawing; no generic renderer hierarchy |
 | Optional GPU receiver | Owned InstancePacket, camera uniforms, three fence-retired slots and readback receipts | Explicit lifetime/generation checks; no default desktop promotion |
 | IntentDelivery / BoundaryPipeline | Production Pub v2 queue admission and Pipeline commit/capture/mission graph | Coordinator-only scoped delivery and untimed inline jobs; no ECS callback mutation |
-| Telemetry | Test-only Log record receiving | Bounded production diagnostics await a real consumer |
+| Telemetry | Optional RuntimeDiagnostics consumed by InspectorSession and desktop | Startup-owned64KiB image, numeric refusal/terminal records, counted drops, cold decode; scoped global logger restoration on coordinator only |
 
 Core publicly exposes Contracts/ECS and project requirements; domain targets remain
 private. Runtime links Core and production Pub/Pipeline privately. Builds with testing disabled
-fetch ECS/H2/Pub/Pipeline and optional SDL; Log remains test-only. Desktop, mission
+fetch ECS/H2/Pub/Pipeline and optional SDL; Log is acquired only when diagnostics
+are enabled. Desktop, mission
 routes and scenario exports consume the integrated path. Direct execution/replay
 remains a receiving comparator, sharing simulation/mission policy.
 Target-scoped CMake, explicit source lists and full pins keep builds and stream ownership

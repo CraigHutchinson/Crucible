@@ -1,6 +1,7 @@
 # Phase 12: runtime budgets and bounded diagnostics
 
-Status: dispatched 2026-10-05 from Phase11 PR24 merge `835c781`, on
+Status: receiving complete 2026-10-05; final-head CI/merge pending. Dispatched from
+Phase11 PR24 merge `835c781`, on
 `phase12-runtime-diagnostics`. [Review](../sprint-reviews/phase-12.md).
 Dedicated Windows machine; user permits native graphics/rendering and interactive
 playtesting. Capability must still be received against the actual build.

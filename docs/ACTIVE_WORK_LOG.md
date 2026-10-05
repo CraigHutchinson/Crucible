@@ -10,9 +10,9 @@ runs. Existing worktrees and Phase2 build artifacts are preserved.
 
 | Owner | Exclusive paths/resources | Status |
 |---|---|---|
-| Architect/root | InspectorSession, desktop/main, manifests/CI, central docs/evidence; all build/test/measurement and graphics time | Active |
-| diagnostics | RuntimeDiagnostics header/source/test and phase12 diagnostic handoff only | Active; no builds/commits |
-| measurement | runtime_backbone benchmark, capture script and phase12 budget handoff only | Active; no builds/measurements/commits |
+| Architect/root | InspectorSession, desktop/main, manifests/CI, central docs/evidence; all build/test/measurement and graphics time | Receiving complete; hardware released; publication/merge pending |
+| diagnostics | RuntimeDiagnostics header/source/test and phase12 diagnostic handoff only | Complete; handed off and independently reviewed |
+| measurement | runtime_backbone benchmark, capture script and phase12 budget handoff only | Complete; five paired captures/evidence received |
 
 Phase13 will be shaped by actual native capability/input/readability evidence.
 Automated interaction is identified separately from participant balance testing.

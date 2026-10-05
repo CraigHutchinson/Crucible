@@ -18,7 +18,7 @@ the guarantees actually checked. No upstream edits were made during this catalog
 | R01: ECS storage and identity | Sub0ECS v2, consumed by Simulation | Feed bounded creation/identity and consumer integration findings into Sub0ECS; keep game entities/rules in Crucible | Pinned audit records 24-bit indices, generation reuse and lack of transactional creation guarantee; upstream changes need current-source reproduction and strict consumer checks |
 | R02: typed delivery | Sub0Pub v2, production scoped synchronous input | Improve callback lifetime examples and bounded ingress integration when a real input adapter arrives | Preserve explicit disconnect/drain ownership; the pinned audit is evidence, not a claim that every finding remains at current HEAD |
 | R03: execution and joining | Sub0Pipeline, production sequential boundary graph | Feed concrete bounded executor/join/cancellation requirements upstream during W7; retain game phase policy locally | Exact-version join/failure fixtures before changing pins; no new concurrency work in phase 2 |
-| R04: compact observation | Sub0Log, test-only decoded-record consumer | Use consumed runtime summaries to improve logging adapters, teardown examples and round-trip tests | Phase 2 summary first; logger adapter follows an actual caller and bounded storage/lifecycle evidence |
+| R04: compact observation | Sub0Log, optional bounded RuntimeDiagnostics | Numeric refused commands and terminal summaries; existing upstream API suffices | Phase12 receives decode, exhaustion/drop accounting, scoped binding, restart and full-state parity |
 | R05: hex topology and geometry | [Sub0HexGrid H2](Sub0HexGrid.md), finite regions/complete candidates delivered; consumed by Crucible spatial Grid | Phase 3 P3-02 preserves physical/query compatibility and delivers HX-07 receiving fixtures; hierarchy is separate research | Upstream PR 4 delivers package/numerical evidence; [Phase 3 evidence](../workstreams/integration/phase3-validation.md) records complete-query/lifetime/replay promotion gates |
 | R06: spatial bins and radius traversal | Crucible::Spatial, integrated hex geometry with private rectangular compatibility | Keep entity binning local for now; identify whether a geometry library can support it without owning SampleId/ECS or gameplay | Compare complete queries to brute force for the chosen topology; second demonstrated consumer before extracting a generic binning library |
 | R07: bounded input/trace/state exchange | Crucible::Runtime and planned owned read model | Record patterns that may improve Pub/Pipeline or justify later extraction; avoid a generic runtime framework | Concrete consumers and bounded lifetime/capacity tests; phase 2 only adds the owned copy it uses, not an unconsumed exchange |
@@ -168,5 +168,7 @@ coordinator. Current APIs suffice, full pins retained after exact-source compari
 R07 receipt/mission/cutoff policy remains local application glue; no umbrella or
 bounded broker/executor copy. R01 fixed identities remain received; dynamic creation
 and recycling retain upstream capacity/provenance/generation/failure gates. R04
-bounded diagnostics and measured R03 run allocation budgets are proposed Phase12
-consumers. No extraction or measured speedup is claimed.
+bounded diagnostics and measured R03 run allocation budgets are received in Phase12.
+Warmed integrated pumps allocate3 times/96 requested bytes; admission and diagnostic
+emission allocate zero replaceable C++ objects. Retain exact pins and existing graph:
+no demonstrated need for new storage APIs. No extraction or measured speedup is claimed.

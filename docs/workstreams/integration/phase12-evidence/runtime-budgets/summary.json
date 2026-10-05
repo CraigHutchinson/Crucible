@@ -1,0 +1,1586 @@
+[
+  {
+    "workload": "diagnostic_inspector_startup",
+    "entities": 64,
+    "arm": "direct",
+    "processes": 5,
+    "median_us": {
+      "median": 165.3,
+      "min": 133,
+      "max": 204.4
+    },
+    "p95_us": {
+      "median": 165.3,
+      "min": 133,
+      "max": 204.4
+    },
+    "p99_us": {
+      "median": 165.3,
+      "min": 133,
+      "max": 204.4
+    },
+    "total_us": {
+      "median": 165.3,
+      "min": 133,
+      "max": 204.4
+    },
+    "new_calls": {
+      "median": 88,
+      "min": 88,
+      "max": 88
+    },
+    "new_bytes": {
+      "median": 254822,
+      "min": 254822,
+      "max": 254822
+    }
+  },
+  {
+    "workload": "diagnostic_inspector_startup",
+    "entities": 64,
+    "arm": "integrated",
+    "processes": 5,
+    "median_us": {
+      "median": 160.5,
+      "min": 136.6,
+      "max": 213.2
+    },
+    "p95_us": {
+      "median": 160.5,
+      "min": 136.6,
+      "max": 213.2
+    },
+    "p99_us": {
+      "median": 160.5,
+      "min": 136.6,
+      "max": 213.2
+    },
+    "total_us": {
+      "median": 160.5,
+      "min": 136.6,
+      "max": 213.2
+    },
+    "new_calls": {
+      "median": 105,
+      "min": 105,
+      "max": 105
+    },
+    "new_bytes": {
+      "median": 278661,
+      "min": 278661,
+      "max": 278661
+    }
+  },
+  {
+    "workload": "diagnostic_refusal_first",
+    "entities": 64,
+    "arm": "direct",
+    "processes": 5,
+    "median_us": {
+      "median": 0.7,
+      "min": 0.6,
+      "max": 10.1
+    },
+    "p95_us": {
+      "median": 0.7,
+      "min": 0.6,
+      "max": 10.1
+    },
+    "p99_us": {
+      "median": 0.7,
+      "min": 0.6,
+      "max": 10.1
+    },
+    "total_us": {
+      "median": 0.7,
+      "min": 0.6,
+      "max": 10.1
+    },
+    "new_calls": {
+      "median": 0,
+      "min": 0,
+      "max": 0
+    },
+    "new_bytes": {
+      "median": 0,
+      "min": 0,
+      "max": 0
+    }
+  },
+  {
+    "workload": "diagnostic_refusal_first",
+    "entities": 64,
+    "arm": "integrated",
+    "processes": 5,
+    "median_us": {
+      "median": 0.6,
+      "min": 0.5,
+      "max": 0.7
+    },
+    "p95_us": {
+      "median": 0.6,
+      "min": 0.5,
+      "max": 0.7
+    },
+    "p99_us": {
+      "median": 0.6,
+      "min": 0.5,
+      "max": 0.7
+    },
+    "total_us": {
+      "median": 0.6,
+      "min": 0.5,
+      "max": 0.7
+    },
+    "new_calls": {
+      "median": 0,
+      "min": 0,
+      "max": 0
+    },
+    "new_bytes": {
+      "median": 0,
+      "min": 0,
+      "max": 0
+    }
+  },
+  {
+    "workload": "diagnostic_refusal_to_exhaustion",
+    "entities": 64,
+    "arm": "direct",
+    "processes": 5,
+    "median_us": {
+      "median": 0.1,
+      "min": 0.1,
+      "max": 0.1
+    },
+    "p95_us": {
+      "median": 0.1,
+      "min": 0.1,
+      "max": 0.1
+    },
+    "p99_us": {
+      "median": 0.1,
+      "min": 0.1,
+      "max": 0.1
+    },
+    "total_us": {
+      "median": 158.59999999999525,
+      "min": 150.3999999999957,
+      "max": 171.6999999999945
+    },
+    "new_calls": {
+      "median": 0,
+      "min": 0,
+      "max": 0
+    },
+    "new_bytes": {
+      "median": 0,
+      "min": 0,
+      "max": 0
+    }
+  },
+  {
+    "workload": "diagnostic_refusal_to_exhaustion",
+    "entities": 64,
+    "arm": "integrated",
+    "processes": 5,
+    "median_us": {
+      "median": 0.1,
+      "min": 0.1,
+      "max": 0.2
+    },
+    "p95_us": {
+      "median": 0.2,
+      "min": 0.2,
+      "max": 0.2
+    },
+    "p99_us": {
+      "median": 0.2,
+      "min": 0.2,
+      "max": 0.2
+    },
+    "total_us": {
+      "median": 256.39999999999156,
+      "min": 214.79999999999222,
+      "max": 329.69999999999465
+    },
+    "new_calls": {
+      "median": 0,
+      "min": 0,
+      "max": 0
+    },
+    "new_bytes": {
+      "median": 0,
+      "min": 0,
+      "max": 0
+    }
+  },
+  {
+    "workload": "inspector_startup",
+    "entities": 64,
+    "arm": "direct",
+    "processes": 5,
+    "median_us": {
+      "median": 206.9,
+      "min": 204,
+      "max": 225
+    },
+    "p95_us": {
+      "median": 206.9,
+      "min": 204,
+      "max": 225
+    },
+    "p99_us": {
+      "median": 206.9,
+      "min": 204,
+      "max": 225
+    },
+    "total_us": {
+      "median": 206.9,
+      "min": 204,
+      "max": 225
+    },
+    "new_calls": {
+      "median": 85,
+      "min": 85,
+      "max": 85
+    },
+    "new_bytes": {
+      "median": 523599,
+      "min": 523599,
+      "max": 523599
+    }
+  },
+  {
+    "workload": "inspector_startup",
+    "entities": 64,
+    "arm": "integrated",
+    "processes": 5,
+    "median_us": {
+      "median": 218.9,
+      "min": 210.7,
+      "max": 261.3
+    },
+    "p95_us": {
+      "median": 218.9,
+      "min": 210.7,
+      "max": 261.3
+    },
+    "p99_us": {
+      "median": 218.9,
+      "min": 210.7,
+      "max": 261.3
+    },
+    "total_us": {
+      "median": 218.9,
+      "min": 210.7,
+      "max": 261.3
+    },
+    "new_calls": {
+      "median": 102,
+      "min": 102,
+      "max": 102
+    },
+    "new_bytes": {
+      "median": 547438,
+      "min": 547438,
+      "max": 547438
+    }
+  },
+  {
+    "workload": "inspector_startup",
+    "entities": 2048,
+    "arm": "direct",
+    "processes": 5,
+    "median_us": {
+      "median": 478.2,
+      "min": 446.8,
+      "max": 577.7
+    },
+    "p95_us": {
+      "median": 478.2,
+      "min": 446.8,
+      "max": 577.7
+    },
+    "p99_us": {
+      "median": 478.2,
+      "min": 446.8,
+      "max": 577.7
+    },
+    "total_us": {
+      "median": 478.2,
+      "min": 446.8,
+      "max": 577.7
+    },
+    "new_calls": {
+      "median": 124,
+      "min": 124,
+      "max": 124
+    },
+    "new_bytes": {
+      "median": 1216240,
+      "min": 1216240,
+      "max": 1216240
+    }
+  },
+  {
+    "workload": "inspector_startup",
+    "entities": 2048,
+    "arm": "integrated",
+    "processes": 5,
+    "median_us": {
+      "median": 497.7,
+      "min": 474,
+      "max": 850.4
+    },
+    "p95_us": {
+      "median": 497.7,
+      "min": 474,
+      "max": 850.4
+    },
+    "p99_us": {
+      "median": 497.7,
+      "min": 474,
+      "max": 850.4
+    },
+    "total_us": {
+      "median": 497.7,
+      "min": 474,
+      "max": 850.4
+    },
+    "new_calls": {
+      "median": 141,
+      "min": 141,
+      "max": 141
+    },
+    "new_bytes": {
+      "median": 1303606,
+      "min": 1303606,
+      "max": 1303606
+    }
+  },
+  {
+    "workload": "production_admission_steady",
+    "entities": 64,
+    "arm": "direct",
+    "processes": 5,
+    "median_us": {
+      "median": 0.15,
+      "min": 0.1,
+      "max": 0.15
+    },
+    "p95_us": {
+      "median": 0.3,
+      "min": 0.2,
+      "max": 0.3
+    },
+    "p99_us": {
+      "median": 0.3,
+      "min": 0.2,
+      "max": 0.3
+    },
+    "total_us": {
+      "median": 0.3,
+      "min": 0.2,
+      "max": 0.3
+    },
+    "new_calls": {
+      "median": 0,
+      "min": 0,
+      "max": 0
+    },
+    "new_bytes": {
+      "median": 0,
+      "min": 0,
+      "max": 0
+    }
+  },
+  {
+    "workload": "production_admission_steady",
+    "entities": 64,
+    "arm": "integrated",
+    "processes": 5,
+    "median_us": {
+      "median": 0.25,
+      "min": 0.1,
+      "max": 0.6499999999999999
+    },
+    "p95_us": {
+      "median": 0.3,
+      "min": 0.1,
+      "max": 0.7
+    },
+    "p99_us": {
+      "median": 0.3,
+      "min": 0.1,
+      "max": 0.7
+    },
+    "total_us": {
+      "median": 0.5,
+      "min": 0.2,
+      "max": 1.2999999999999998
+    },
+    "new_calls": {
+      "median": 0,
+      "min": 0,
+      "max": 0
+    },
+    "new_bytes": {
+      "median": 0,
+      "min": 0,
+      "max": 0
+    }
+  },
+  {
+    "workload": "production_admission_steady",
+    "entities": 2048,
+    "arm": "direct",
+    "processes": 5,
+    "median_us": {
+      "median": 0.55,
+      "min": 0.35,
+      "max": 0.9
+    },
+    "p95_us": {
+      "median": 0.8,
+      "min": 0.5,
+      "max": 0.9
+    },
+    "p99_us": {
+      "median": 0.8,
+      "min": 0.5,
+      "max": 0.9
+    },
+    "total_us": {
+      "median": 1.1,
+      "min": 0.7,
+      "max": 1.8
+    },
+    "new_calls": {
+      "median": 0,
+      "min": 0,
+      "max": 0
+    },
+    "new_bytes": {
+      "median": 0,
+      "min": 0,
+      "max": 0
+    }
+  },
+  {
+    "workload": "production_admission_steady",
+    "entities": 2048,
+    "arm": "integrated",
+    "processes": 5,
+    "median_us": {
+      "median": 1.5,
+      "min": 0.9,
+      "max": 1.75
+    },
+    "p95_us": {
+      "median": 1.8,
+      "min": 1.3,
+      "max": 2
+    },
+    "p99_us": {
+      "median": 1.8,
+      "min": 1.3,
+      "max": 2
+    },
+    "total_us": {
+      "median": 3,
+      "min": 1.8,
+      "max": 3.5
+    },
+    "new_calls": {
+      "median": 0,
+      "min": 0,
+      "max": 0
+    },
+    "new_bytes": {
+      "median": 0,
+      "min": 0,
+      "max": 0
+    }
+  },
+  {
+    "workload": "pub_admission_first",
+    "entities": 0,
+    "arm": "direct",
+    "processes": 5,
+    "median_us": {
+      "median": 3.4,
+      "min": 3.2,
+      "max": 3.7
+    },
+    "p95_us": {
+      "median": 3.4,
+      "min": 3.2,
+      "max": 3.7
+    },
+    "p99_us": {
+      "median": 3.4,
+      "min": 3.2,
+      "max": 3.7
+    },
+    "total_us": {
+      "median": 3.4,
+      "min": 3.2,
+      "max": 3.7
+    },
+    "new_calls": {
+      "median": 0,
+      "min": 0,
+      "max": 0
+    },
+    "new_bytes": {
+      "median": 0,
+      "min": 0,
+      "max": 0
+    }
+  },
+  {
+    "workload": "pub_admission_first",
+    "entities": 0,
+    "arm": "integrated",
+    "processes": 5,
+    "median_us": {
+      "median": 3.5,
+      "min": 3,
+      "max": 5.5
+    },
+    "p95_us": {
+      "median": 3.5,
+      "min": 3,
+      "max": 5.5
+    },
+    "p99_us": {
+      "median": 3.5,
+      "min": 3,
+      "max": 5.5
+    },
+    "total_us": {
+      "median": 3.5,
+      "min": 3,
+      "max": 5.5
+    },
+    "new_calls": {
+      "median": 0,
+      "min": 0,
+      "max": 0
+    },
+    "new_bytes": {
+      "median": 0,
+      "min": 0,
+      "max": 0
+    }
+  },
+  {
+    "workload": "pub_admission_steady",
+    "entities": 0,
+    "arm": "direct",
+    "processes": 5,
+    "median_us": {
+      "median": 0,
+      "min": 0,
+      "max": 0
+    },
+    "p95_us": {
+      "median": 0.1,
+      "min": 0.1,
+      "max": 0.1
+    },
+    "p99_us": {
+      "median": 0.1,
+      "min": 0.1,
+      "max": 0.1
+    },
+    "total_us": {
+      "median": 287.999999999997,
+      "min": 286.1999999999966,
+      "max": 297.7999999999992
+    },
+    "new_calls": {
+      "median": 0,
+      "min": 0,
+      "max": 0
+    },
+    "new_bytes": {
+      "median": 0,
+      "min": 0,
+      "max": 0
+    }
+  },
+  {
+    "workload": "pub_admission_steady",
+    "entities": 0,
+    "arm": "integrated",
+    "processes": 5,
+    "median_us": {
+      "median": 0.1,
+      "min": 0.1,
+      "max": 0.1
+    },
+    "p95_us": {
+      "median": 0.1,
+      "min": 0.1,
+      "max": 0.1
+    },
+    "p99_us": {
+      "median": 0.1,
+      "min": 0.1,
+      "max": 0.1
+    },
+    "total_us": {
+      "median": 682.6000000000872,
+      "min": 674.5000000000848,
+      "max": 700.6000000000886
+    },
+    "new_calls": {
+      "median": 0,
+      "min": 0,
+      "max": 0
+    },
+    "new_bytes": {
+      "median": 0,
+      "min": 0,
+      "max": 0
+    }
+  },
+  {
+    "workload": "pub_route_startup",
+    "entities": 0,
+    "arm": "direct",
+    "processes": 5,
+    "median_us": {
+      "median": 0,
+      "min": 0,
+      "max": 0.1
+    },
+    "p95_us": {
+      "median": 0,
+      "min": 0,
+      "max": 0.1
+    },
+    "p99_us": {
+      "median": 0,
+      "min": 0,
+      "max": 0.1
+    },
+    "total_us": {
+      "median": 0,
+      "min": 0,
+      "max": 0.1
+    },
+    "new_calls": {
+      "median": 0,
+      "min": 0,
+      "max": 0
+    },
+    "new_bytes": {
+      "median": 0,
+      "min": 0,
+      "max": 0
+    }
+  },
+  {
+    "workload": "pub_route_startup",
+    "entities": 0,
+    "arm": "integrated",
+    "processes": 5,
+    "median_us": {
+      "median": 4.6,
+      "min": 4.2,
+      "max": 5.4
+    },
+    "p95_us": {
+      "median": 4.6,
+      "min": 4.2,
+      "max": 5.4
+    },
+    "p99_us": {
+      "median": 4.6,
+      "min": 4.2,
+      "max": 5.4
+    },
+    "total_us": {
+      "median": 4.6,
+      "min": 4.2,
+      "max": 5.4
+    },
+    "new_calls": {
+      "median": 2,
+      "min": 2,
+      "max": 2
+    },
+    "new_bytes": {
+      "median": 232,
+      "min": 232,
+      "max": 232
+    }
+  },
+  {
+    "workload": "reference_admission",
+    "entities": 2048,
+    "arm": "direct",
+    "processes": 5,
+    "median_us": {
+      "median": 0.4,
+      "min": 0.3,
+      "max": 0.6
+    },
+    "p95_us": {
+      "median": 0.7,
+      "min": 0.5,
+      "max": 0.9
+    },
+    "p99_us": {
+      "median": 0.7,
+      "min": 0.5,
+      "max": 0.9
+    },
+    "total_us": {
+      "median": 2.3000000000000003,
+      "min": 1.6,
+      "max": 2.5
+    },
+    "new_calls": {
+      "median": 0,
+      "min": 0,
+      "max": 0
+    },
+    "new_bytes": {
+      "median": 0,
+      "min": 0,
+      "max": 0
+    }
+  },
+  {
+    "workload": "reference_admission",
+    "entities": 2048,
+    "arm": "integrated",
+    "processes": 5,
+    "median_us": {
+      "median": 1.4,
+      "min": 0.5,
+      "max": 1.5
+    },
+    "p95_us": {
+      "median": 1.9,
+      "min": 1.7,
+      "max": 2.1
+    },
+    "p99_us": {
+      "median": 1.9,
+      "min": 1.7,
+      "max": 2.1
+    },
+    "total_us": {
+      "median": 6.4,
+      "min": 4.800000000000001,
+      "max": 6.699999999999999
+    },
+    "new_calls": {
+      "median": 0,
+      "min": 0,
+      "max": 0
+    },
+    "new_bytes": {
+      "median": 0,
+      "min": 0,
+      "max": 0
+    }
+  },
+  {
+    "workload": "reference_complete_mission",
+    "entities": 2048,
+    "arm": "direct",
+    "processes": 5,
+    "median_us": {
+      "median": 720205.9,
+      "min": 657718.7,
+      "max": 776724.8
+    },
+    "p95_us": {
+      "median": 720205.9,
+      "min": 657718.7,
+      "max": 776724.8
+    },
+    "p99_us": {
+      "median": 720205.9,
+      "min": 657718.7,
+      "max": 776724.8
+    },
+    "total_us": {
+      "median": 720205.9,
+      "min": 657718.7,
+      "max": 776724.8
+    },
+    "new_calls": {
+      "median": 0,
+      "min": 0,
+      "max": 0
+    },
+    "new_bytes": {
+      "median": 0,
+      "min": 0,
+      "max": 0
+    }
+  },
+  {
+    "workload": "reference_complete_mission",
+    "entities": 2048,
+    "arm": "integrated",
+    "processes": 5,
+    "median_us": {
+      "median": 706333.9,
+      "min": 621157.4,
+      "max": 764084.7
+    },
+    "p95_us": {
+      "median": 706333.9,
+      "min": 621157.4,
+      "max": 764084.7
+    },
+    "p99_us": {
+      "median": 706333.9,
+      "min": 621157.4,
+      "max": 764084.7
+    },
+    "total_us": {
+      "median": 706333.9,
+      "min": 621157.4,
+      "max": 764084.7
+    },
+    "new_calls": {
+      "median": 804,
+      "min": 804,
+      "max": 804
+    },
+    "new_bytes": {
+      "median": 25660,
+      "min": 25660,
+      "max": 25660
+    }
+  },
+  {
+    "workload": "reference_startup",
+    "entities": 2048,
+    "arm": "direct",
+    "processes": 5,
+    "median_us": {
+      "median": 573.9,
+      "min": 486.5,
+      "max": 854.6
+    },
+    "p95_us": {
+      "median": 573.9,
+      "min": 486.5,
+      "max": 854.6
+    },
+    "p99_us": {
+      "median": 573.9,
+      "min": 486.5,
+      "max": 854.6
+    },
+    "total_us": {
+      "median": 573.9,
+      "min": 486.5,
+      "max": 854.6
+    },
+    "new_calls": {
+      "median": 124,
+      "min": 124,
+      "max": 124
+    },
+    "new_bytes": {
+      "median": 1216240,
+      "min": 1216240,
+      "max": 1216240
+    }
+  },
+  {
+    "workload": "reference_startup",
+    "entities": 2048,
+    "arm": "integrated",
+    "processes": 5,
+    "median_us": {
+      "median": 563.9,
+      "min": 455.1,
+      "max": 744.7
+    },
+    "p95_us": {
+      "median": 563.9,
+      "min": 455.1,
+      "max": 744.7
+    },
+    "p99_us": {
+      "median": 563.9,
+      "min": 455.1,
+      "max": 744.7
+    },
+    "total_us": {
+      "median": 563.9,
+      "min": 455.1,
+      "max": 744.7
+    },
+    "new_calls": {
+      "median": 141,
+      "min": 141,
+      "max": 141
+    },
+    "new_bytes": {
+      "median": 1303606,
+      "min": 1303606,
+      "max": 1303606
+    }
+  },
+  {
+    "workload": "reference_tick_capture_mission",
+    "entities": 2048,
+    "arm": "direct",
+    "processes": 5,
+    "median_us": {
+      "median": 2707.7,
+      "min": 2373.3,
+      "max": 2834.1
+    },
+    "p95_us": {
+      "median": 3346.6,
+      "min": 3223.8,
+      "max": 4735.2
+    },
+    "p99_us": {
+      "median": 3744.5,
+      "min": 3462.3,
+      "max": 6446.7
+    },
+    "total_us": {
+      "median": 720185.6999999998,
+      "min": 657692.4,
+      "max": 776685.7000000002
+    },
+    "new_calls": {
+      "median": 0,
+      "min": 0,
+      "max": 0
+    },
+    "new_bytes": {
+      "median": 0,
+      "min": 0,
+      "max": 0
+    }
+  },
+  {
+    "workload": "reference_tick_capture_mission",
+    "entities": 2048,
+    "arm": "integrated",
+    "processes": 5,
+    "median_us": {
+      "median": 2530.2,
+      "min": 2227.5,
+      "max": 2952
+    },
+    "p95_us": {
+      "median": 3221.1,
+      "min": 2761.2,
+      "max": 3936
+    },
+    "p99_us": {
+      "median": 3335.3,
+      "min": 2974.4,
+      "max": 5207.1
+    },
+    "total_us": {
+      "median": 706314.2999999997,
+      "min": 621132.4000000001,
+      "max": 764045.6000000001
+    },
+    "new_calls": {
+      "median": 804,
+      "min": 804,
+      "max": 804
+    },
+    "new_bytes": {
+      "median": 25660,
+      "min": 25660,
+      "max": 25660
+    }
+  },
+  {
+    "workload": "structural_admission",
+    "entities": 2048,
+    "arm": "direct",
+    "processes": 5,
+    "median_us": {
+      "median": 0.4,
+      "min": 0.3,
+      "max": 0.5
+    },
+    "p95_us": {
+      "median": 0.8,
+      "min": 0.6,
+      "max": 1.4
+    },
+    "p99_us": {
+      "median": 0.8,
+      "min": 0.6,
+      "max": 1.4
+    },
+    "total_us": {
+      "median": 3.6,
+      "min": 2.4000000000000004,
+      "max": 3.9999999999999996
+    },
+    "new_calls": {
+      "median": 0,
+      "min": 0,
+      "max": 0
+    },
+    "new_bytes": {
+      "median": 0,
+      "min": 0,
+      "max": 0
+    }
+  },
+  {
+    "workload": "structural_admission",
+    "entities": 2048,
+    "arm": "integrated",
+    "processes": 5,
+    "median_us": {
+      "median": 1.2,
+      "min": 0.7,
+      "max": 1.4
+    },
+    "p95_us": {
+      "median": 2.2,
+      "min": 1.5,
+      "max": 2.6
+    },
+    "p99_us": {
+      "median": 2.2,
+      "min": 1.5,
+      "max": 2.6
+    },
+    "total_us": {
+      "median": 8.6,
+      "min": 7.199999999999999,
+      "max": 10.100000000000001
+    },
+    "new_calls": {
+      "median": 0,
+      "min": 0,
+      "max": 0
+    },
+    "new_bytes": {
+      "median": 0,
+      "min": 0,
+      "max": 0
+    }
+  },
+  {
+    "workload": "structural_complete_mission",
+    "entities": 2048,
+    "arm": "direct",
+    "processes": 5,
+    "median_us": {
+      "median": 1345868.7,
+      "min": 1239298.3,
+      "max": 1367675.2
+    },
+    "p95_us": {
+      "median": 1345868.7,
+      "min": 1239298.3,
+      "max": 1367675.2
+    },
+    "p99_us": {
+      "median": 1345868.7,
+      "min": 1239298.3,
+      "max": 1367675.2
+    },
+    "total_us": {
+      "median": 1345868.7,
+      "min": 1239298.3,
+      "max": 1367675.2
+    },
+    "new_calls": {
+      "median": 0,
+      "min": 0,
+      "max": 0
+    },
+    "new_bytes": {
+      "median": 0,
+      "min": 0,
+      "max": 0
+    }
+  },
+  {
+    "workload": "structural_complete_mission",
+    "entities": 2048,
+    "arm": "integrated",
+    "processes": 5,
+    "median_us": {
+      "median": 1281245.2,
+      "min": 1163601.5,
+      "max": 1332651.8
+    },
+    "p95_us": {
+      "median": 1281245.2,
+      "min": 1163601.5,
+      "max": 1332651.8
+    },
+    "p99_us": {
+      "median": 1281245.2,
+      "min": 1163601.5,
+      "max": 1332651.8
+    },
+    "total_us": {
+      "median": 1281245.2,
+      "min": 1163601.5,
+      "max": 1332651.8
+    },
+    "new_calls": {
+      "median": 1347,
+      "min": 1347,
+      "max": 1347
+    },
+    "new_bytes": {
+      "median": 43036,
+      "min": 43036,
+      "max": 43036
+    }
+  },
+  {
+    "workload": "structural_startup",
+    "entities": 2048,
+    "arm": "direct",
+    "processes": 5,
+    "median_us": {
+      "median": 592.9,
+      "min": 448,
+      "max": 670.4
+    },
+    "p95_us": {
+      "median": 592.9,
+      "min": 448,
+      "max": 670.4
+    },
+    "p99_us": {
+      "median": 592.9,
+      "min": 448,
+      "max": 670.4
+    },
+    "total_us": {
+      "median": 592.9,
+      "min": 448,
+      "max": 670.4
+    },
+    "new_calls": {
+      "median": 125,
+      "min": 125,
+      "max": 125
+    },
+    "new_bytes": {
+      "median": 1224471,
+      "min": 1224471,
+      "max": 1224471
+    }
+  },
+  {
+    "workload": "structural_startup",
+    "entities": 2048,
+    "arm": "integrated",
+    "processes": 5,
+    "median_us": {
+      "median": 561.9,
+      "min": 492,
+      "max": 647.9
+    },
+    "p95_us": {
+      "median": 561.9,
+      "min": 492,
+      "max": 647.9
+    },
+    "p99_us": {
+      "median": 561.9,
+      "min": 492,
+      "max": 647.9
+    },
+    "total_us": {
+      "median": 561.9,
+      "min": 492,
+      "max": 647.9
+    },
+    "new_calls": {
+      "median": 142,
+      "min": 142,
+      "max": 142
+    },
+    "new_bytes": {
+      "median": 1311837,
+      "min": 1311837,
+      "max": 1311837
+    }
+  },
+  {
+    "workload": "structural_tick_capture_mission",
+    "entities": 2048,
+    "arm": "direct",
+    "processes": 5,
+    "median_us": {
+      "median": 2949.75,
+      "min": 2667.95,
+      "max": 3042.05
+    },
+    "p95_us": {
+      "median": 3827.6,
+      "min": 3691.1,
+      "max": 4410.2
+    },
+    "p99_us": {
+      "median": 4464.8,
+      "min": 3867.7,
+      "max": 6457.3
+    },
+    "total_us": {
+      "median": 1345829.900000001,
+      "min": 1239241.2000000002,
+      "max": 1367634.5999999996
+    },
+    "new_calls": {
+      "median": 0,
+      "min": 0,
+      "max": 0
+    },
+    "new_bytes": {
+      "median": 0,
+      "min": 0,
+      "max": 0
+    }
+  },
+  {
+    "workload": "structural_tick_capture_mission",
+    "entities": 2048,
+    "arm": "integrated",
+    "processes": 5,
+    "median_us": {
+      "median": 2691.7,
+      "min": 2626.1,
+      "max": 3067.85
+    },
+    "p95_us": {
+      "median": 3651.3,
+      "min": 3050.5,
+      "max": 3763.6
+    },
+    "p99_us": {
+      "median": 3886.1,
+      "min": 3199.8,
+      "max": 4222.4
+    },
+    "total_us": {
+      "median": 1281189.5000000002,
+      "min": 1163562.6999999993,
+      "max": 1332616.2000000018
+    },
+    "new_calls": {
+      "median": 1347,
+      "min": 1347,
+      "max": 1347
+    },
+    "new_bytes": {
+      "median": 43036,
+      "min": 43036,
+      "max": 43036
+    }
+  },
+  {
+    "workload": "tick_capture_first",
+    "entities": 64,
+    "arm": "direct",
+    "processes": 5,
+    "median_us": {
+      "median": 57.3,
+      "min": 56.4,
+      "max": 90
+    },
+    "p95_us": {
+      "median": 57.3,
+      "min": 56.4,
+      "max": 90
+    },
+    "p99_us": {
+      "median": 57.3,
+      "min": 56.4,
+      "max": 90
+    },
+    "total_us": {
+      "median": 57.3,
+      "min": 56.4,
+      "max": 90
+    },
+    "new_calls": {
+      "median": 0,
+      "min": 0,
+      "max": 0
+    },
+    "new_bytes": {
+      "median": 0,
+      "min": 0,
+      "max": 0
+    }
+  },
+  {
+    "workload": "tick_capture_first",
+    "entities": 64,
+    "arm": "integrated",
+    "processes": 5,
+    "median_us": {
+      "median": 58.4,
+      "min": 56.3,
+      "max": 60
+    },
+    "p95_us": {
+      "median": 58.4,
+      "min": 56.3,
+      "max": 60
+    },
+    "p99_us": {
+      "median": 58.4,
+      "min": 56.3,
+      "max": 60
+    },
+    "total_us": {
+      "median": 58.4,
+      "min": 56.3,
+      "max": 60
+    },
+    "new_calls": {
+      "median": 6,
+      "min": 6,
+      "max": 6
+    },
+    "new_bytes": {
+      "median": 124,
+      "min": 124,
+      "max": 124
+    }
+  },
+  {
+    "workload": "tick_capture_first",
+    "entities": 2048,
+    "arm": "direct",
+    "processes": 5,
+    "median_us": {
+      "median": 2091.1,
+      "min": 1950.5,
+      "max": 2401.9
+    },
+    "p95_us": {
+      "median": 2091.1,
+      "min": 1950.5,
+      "max": 2401.9
+    },
+    "p99_us": {
+      "median": 2091.1,
+      "min": 1950.5,
+      "max": 2401.9
+    },
+    "total_us": {
+      "median": 2091.1,
+      "min": 1950.5,
+      "max": 2401.9
+    },
+    "new_calls": {
+      "median": 0,
+      "min": 0,
+      "max": 0
+    },
+    "new_bytes": {
+      "median": 0,
+      "min": 0,
+      "max": 0
+    }
+  },
+  {
+    "workload": "tick_capture_first",
+    "entities": 2048,
+    "arm": "integrated",
+    "processes": 5,
+    "median_us": {
+      "median": 1985.6,
+      "min": 1901.4,
+      "max": 3486.7
+    },
+    "p95_us": {
+      "median": 1985.6,
+      "min": 1901.4,
+      "max": 3486.7
+    },
+    "p99_us": {
+      "median": 1985.6,
+      "min": 1901.4,
+      "max": 3486.7
+    },
+    "total_us": {
+      "median": 1985.6,
+      "min": 1901.4,
+      "max": 3486.7
+    },
+    "new_calls": {
+      "median": 6,
+      "min": 6,
+      "max": 6
+    },
+    "new_bytes": {
+      "median": 124,
+      "min": 124,
+      "max": 124
+    }
+  },
+  {
+    "workload": "tick_capture_steady",
+    "entities": 64,
+    "arm": "direct",
+    "processes": 5,
+    "median_us": {
+      "median": 45.9,
+      "min": 44,
+      "max": 57.05
+    },
+    "p95_us": {
+      "median": 49.5,
+      "min": 49,
+      "max": 60.2
+    },
+    "p99_us": {
+      "median": 53.6,
+      "min": 51.8,
+      "max": 88
+    },
+    "total_us": {
+      "median": 5700.799999999999,
+      "min": 5483.100000000005,
+      "max": 6623.300000000002
+    },
+    "new_calls": {
+      "median": 0,
+      "min": 0,
+      "max": 0
+    },
+    "new_bytes": {
+      "median": 0,
+      "min": 0,
+      "max": 0
+    }
+  },
+  {
+    "workload": "tick_capture_steady",
+    "entities": 64,
+    "arm": "integrated",
+    "processes": 5,
+    "median_us": {
+      "median": 45.95,
+      "min": 44.6,
+      "max": 56.05
+    },
+    "p95_us": {
+      "median": 51.5,
+      "min": 48.4,
+      "max": 65.6
+    },
+    "p99_us": {
+      "median": 52.8,
+      "min": 50,
+      "max": 186.9
+    },
+    "total_us": {
+      "median": 5855.599999999999,
+      "min": 5437.600000000002,
+      "max": 6508.799999999997
+    },
+    "new_calls": {
+      "median": 360,
+      "min": 360,
+      "max": 360
+    },
+    "new_bytes": {
+      "median": 11520,
+      "min": 11520,
+      "max": 11520
+    }
+  },
+  {
+    "workload": "tick_capture_steady",
+    "entities": 2048,
+    "arm": "direct",
+    "processes": 5,
+    "median_us": {
+      "median": 2271.8,
+      "min": 1963.2,
+      "max": 2418.7
+    },
+    "p95_us": {
+      "median": 2639.3,
+      "min": 2114.2,
+      "max": 3222.1
+    },
+    "p99_us": {
+      "median": 2699.2,
+      "min": 2181.5,
+      "max": 4260.4
+    },
+    "total_us": {
+      "median": 276101.50000000006,
+      "min": 235569.69999999998,
+      "max": 286576.29999999993
+    },
+    "new_calls": {
+      "median": 0,
+      "min": 0,
+      "max": 0
+    },
+    "new_bytes": {
+      "median": 0,
+      "min": 0,
+      "max": 0
+    }
+  },
+  {
+    "workload": "tick_capture_steady",
+    "entities": 2048,
+    "arm": "integrated",
+    "processes": 5,
+    "median_us": {
+      "median": 2176.75,
+      "min": 1942.75,
+      "max": 2468.3
+    },
+    "p95_us": {
+      "median": 2544.3,
+      "min": 2072.4,
+      "max": 3334.7
+    },
+    "p99_us": {
+      "median": 2602.6,
+      "min": 2110,
+      "max": 4219.8
+    },
+    "total_us": {
+      "median": 258353.49999999997,
+      "min": 233745.40000000005,
+      "max": 302575.0000000001
+    },
+    "new_calls": {
+      "median": 360,
+      "min": 360,
+      "max": 360
+    },
+    "new_bytes": {
+      "median": 11520,
+      "min": 11520,
+      "max": 11520
+    }
+  }
+]

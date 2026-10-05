@@ -1,5 +1,31 @@
 # Crucible repository guidance
 
+## Standing design methodology: top-down and bottom-up
+
+User direction, 2026-10-05: develop the end-consumer experience and technical
+foundations together, iterating until they meet at consumed contracts. Every phase
+must balance both directions; technical groundwork alone is not the product plan.
+
+Start top-down with a bounded concept or playable spike of the intended Crucible
+experience: graphics, player interactions/UI and sound as applicable. Record the
+observable behavior, fidelity, feedback, timing and ownership the consumer needs.
+Use actual rendering, native interaction and audio receiving where supported;
+identify conceptual/synthetic examples and participant evidence separately.
+
+Work bottom-up from verified ECS, delivery, orchestration, diagnostics, geometry
+and other existing sub0 capabilities. Feed measured costs, capacity/lifetime
+limits and failure behavior back into the consumer concept. Weigh the intended
+experience and engineering evidence together; revise either side as needed.
+
+Meet in the middle through the smallest useful vertical slice: named consumer,
+explicit interface/storage/ordering/error contract, end-to-end receiving and
+review. Feed concrete product-neutral requirements and minimal reproductions
+upstream to the appropriate Sub0 library; keep game policy local. Do not add
+unconsumed APIs, copied infrastructure or speculative fidelity merely to match a
+concept. Each phase plan/review records both directions, their reconciliation,
+open requirements and how the findings shape the next iteration. Follow
+docs/phases/README.md for the phase contract.
+
 The first milestone is validated integration of the sub0 stack. Resolve dependency,
 toolchain, API, lifetime and build failures before adding gameplay systems.
 
