@@ -25,7 +25,8 @@ applied fields from the dashed preview. [Capture provenance](docs/workstreams/in
 
 Phase 8 was recovered and [merged in PR 21](https://github.com/CraigHutchinson/Crucible/pull/21).
 Its [review](docs/sprint-reviews/phase-08.md) separates original local validation from
-publication. The default desktop uses the concrete software painter; an optional
+publication. The default desktop uses the concrete SDL painter; software capture
+fixtures are separate. An optional
 Vulkan instancing receiver has separate readback and fault fixtures. Human usability,
 physical-device performance and iOS receiving remain open.
 
@@ -117,8 +118,9 @@ measurement and reproducible evidence.
 Dependencies use a checksum-verified CPM bootstrap, namespaced targets and
 [full commit pins](cmake/DependencyPins.cmake): Sub0ECS v2, Sub0Pub v2, Sub0Pipeline,
 Sub0Log and Sub0HexGrid H2. Gameplay directly consumes ECS/H2; live input uses Pub v2 and completed boundaries
-use a sequential Pipeline graph. Log remains test-only and is omitted when testing
-is disabled. [Phase11](docs/phases/phase11.md) records scoped delivery, owned frame
+use a sequential Pipeline graph. Log supplies optional bounded runtime diagnostics
+when `CRUCIBLE_ENABLE_DIAGNOSTICS=ON`; production builds omit it by default.
+[Phase11](docs/phases/phase11.md) records scoped delivery, owned frame
 publication, direct-path parity and lifetime receiving. Consumer builds disable dependency development tools.
 The [owned sub0 roadmap](docs/reuse/sub0-roadmap.md) names upstream evolution requirements and receiving owners.
 The [reuse catalog](docs/reuse/README.md) and [full-source adoption audit](docs/reuse/phase9-sub0-adoption.md) track concrete feedback and extraction candidates;
@@ -130,5 +132,6 @@ defines ownership; the [active log](docs/ACTIVE_WORK_LOG.md) reserves paths and 
 [Sprint reviews](docs/sprint-reviews/README.md) retain findings, evidence and follow-ups.
 The repository's own license remains undecided; dependency licenses stay with their projects.
 
-Next: [Phase12](docs/phases/phase12.md) receives runtime budgets and opt-in bounded
-diagnostics before measured upstream optimization.
+Current: [Phase12](docs/phases/phase12.md) receives runtime budgets and opt-in bounded
+diagnostics. [Phase13](docs/phases/phase13.md) proposes a balanced presentation,
+interaction and sound slice, shaped by native receiving and measured limits.

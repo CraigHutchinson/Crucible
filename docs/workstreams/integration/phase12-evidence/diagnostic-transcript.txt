@@ -1,0 +1,8 @@
+Actual Release MissionSummaryCadence fixture output at source 1eef613:
+diagnostics valid=1 dropped=0 truncated=0
+schema=1 event=3 run=1 tick=4 status=2 reclaimed=0 target=1780 deadline=4
+schema=1 event=3 run=2 tick=4 status=2 reclaimed=0 target=1780 deadline=4
+
+These are executed synthetic four-tick missions, not native participant runs.
+The fixture pumps each closed run repeatedly and verifies exactly one summary
+per run across restart. Refusal/exhaustion/full-state parity are separate tests.

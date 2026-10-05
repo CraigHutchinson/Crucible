@@ -39,6 +39,16 @@ if not display:
 lib.XCloseDisplay(display)
 print('XOpenDisplay connected')
 """
+WINDOWS_DISPLAY_PROBE = """import ctypes, sys
+user32 = ctypes.WinDLL('user32', use_last_error=True)
+user32.GetSystemMetrics.argtypes = [ctypes.c_int]
+user32.GetSystemMetrics.restype = ctypes.c_int
+width = user32.GetSystemMetrics(0)
+height = user32.GetSystemMetrics(1)
+if width <= 0 or height <= 0:
+    sys.exit(f'Windows primary display metrics unavailable: {width}x{height}')
+print(f'Windows primary display candidate metrics: {width}x{height}')
+"""
 
 
 def split_arguments(value: str) -> list[str]:
@@ -324,8 +334,12 @@ def check_prerequisites(build_dir: Path | None = None, tests: list[dict] | None 
                 record("display", execute("display", [sys.executable, "-c", X11_PROBE]),
                        backend="x11", display=environment.get("DISPLAY"),
                        scope="XOpenDisplay in the same execution namespace; SDL initialization remains a test gate")
+            elif platform.system() == "Windows" and backend in {"", "windows"}:
+                record("display", execute("display", [sys.executable, "-c", WINDOWS_DISPLAY_PROBE]),
+                       backend="windows",
+                       scope="Positive primary display candidate metrics only; SDL initialization remains a test gate; no physical-console, input or DPI acceptance")
             else:
-                add("display", "unknown", "Receiver requires SDL video; this diagnostic verifies Linux X11 only. Dummy/Wayland/other backends require a dedicated supported session.",
+                add("display", "unknown", "Receiver requires SDL video; this diagnostic verifies Linux X11 or Windows display candidates only. Dummy/Wayland/other backends require a dedicated supported session.",
                     backend=backend or "unknown")
         result = execute("vulkan", ["vulkaninfo", "--summary"])
         devices = parse_vulkan_devices(result.get("output", ""))

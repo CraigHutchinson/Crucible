@@ -12,6 +12,7 @@ option(CRUCIBLE_BUILD_RULE_SPIKE "Build the bounded production-state relay inves
 option(CRUCIBLE_BUILD_GPU_RECEIVER "Build the optional Vulkan instancing receiver" OFF)
 option(CRUCIBLE_BUILD_DESKTOP "Build the optional SDL interactive prototype" OFF)
 option(CRUCIBLE_ENABLE_SANITIZERS "Enable AddressSanitizer and UBSan" OFF)
+option(CRUCIBLE_ENABLE_DIAGNOSTICS "Enable startup-bounded runtime outcome diagnostics" OFF)
 include(cmake/Dependencies.cmake)
 if(CRUCIBLE_BUILD_DESKTOP OR CRUCIBLE_BUILD_GPU_RECEIVER)
     include(cmake/DesktopDependencies.cmake)

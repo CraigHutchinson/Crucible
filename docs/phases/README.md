@@ -20,7 +20,8 @@ package is not a permanent agent assignment.
 | 10 | Playable fixed-identity relay lattice, loss/protection/hold and owned replay | [Plan](phase10.md), [review](../sprint-reviews/phase-10.md); merged PR23 at `262c4eb` |
 | 11 | Forge ECS/Pub v2 and Pipeline into the production backbone; upstream API evolution | [Plan](phase11.md), [review](../sprint-reviews/phase-11.md); local receiving complete, [PR24 receipt](https://github.com/CraigHutchinson/Crucible/pull/24) |
 
-| 12 | Runtime budgets and opt-in bounded diagnostics | [Proposal](phase12.md); dispatch after Phase11 merge |
+| 12 | Runtime budgets and opt-in bounded diagnostics | [Plan](phase12.md), [review](../sprint-reviews/phase-12.md); receiving complete, PR25 publication |
+| 13 | Consumer presentation/input/sound reconciled with measured foundations | [Proposal](phase13.md); not dispatched |
 
 The [sprint-review archive](../sprint-reviews/README.md) tracks findings, follow-ups
 and delegation lessons for every completed increment.
@@ -30,6 +31,35 @@ sanitizer CI passed. Agent worktrees remain retained with their prior artifacts;
 they are not active phase 2 claims.
 
 ## Phase start: review the division of work
+
+### Standing two-way design loop
+
+Every phase develops the intended consumer and its technical foundations together.
+This is standing user direction from 2026-10-05, recorded in AGENTS.md. A library
+backlog alone cannot choose the next product increment, and a visual concept alone
+cannot establish backend feasibility or rules.
+
+1. **Top-down:** choose one observable player task and a bounded end-consumer
+   concept/spike. Explore graphics, interaction/UI and sound together where they
+   affect that task. State desired fidelity, feedback, latency, cadence and failure
+   behavior. Name what actual rendering/input/audio and participant evidence can
+   answer; distinguish generated concepts and synthetic probes.
+2. **Bottom-up:** inventory the actual consumed sub0/runtime capabilities. Receive
+   storage bounds, ordering, lifetime, performance and failure behavior. Feed these
+   verified limits forward into the consumer's design rather than treating the
+   existing implementation as the final experience by default.
+3. **Reconcile:** map each demonstrated consumer requirement to an existing
+   capability, a bounded local interface or a justified upstream requirement.
+   Record trade-offs, evidence and disposition. Feed product-neutral reproductions
+   to the owned library; keep game rules and UX policy local. No speculative APIs.
+4. **Meet in a vertical slice:** freeze only the contracts the slice consumes,
+   implement and play/render/listen to it, then receive full behavior/lifecycle and
+   review quality. Update both the consumer concept and foundation from findings.
+
+At start, name both directions and the intended reconciliation; at close, report
+what each taught us, which requirements were met or revised and the next useful
+consumer-led slice. These are design directions, not permanent worker assignments.
+Balance their scope within the existing quota and serial measurement rules.
 
 Read the latest [sprint review](../sprint-reviews/README.md), carry unresolved follow-up
 IDs into the new plan and create its in-progress review from the template.
@@ -127,6 +157,6 @@ End with a short retrospective: what was delivered, what was consolidated/deferr
 what review found, which uncertainty remains and how that changes the next division.
 The next phase begins by reassessing these facts rather than repeating the old team map.
 
-Current dispatch is [Phase11](phase11.md); [Phase12](phase12.md) proposes measured budgets and bounded diagnostics. Shader portability and second-backend
+Current increment is [Phase12](phase12.md); [Phase13](phase13.md) shapes a balanced consumer slice. Shader portability and second-backend
 work retain their capability gates in the hardware backlog; they are not
-prerequisites for this SDL-free rules investigation.
+prerequisites for the received runtime diagnostics or proposed consumer slice.

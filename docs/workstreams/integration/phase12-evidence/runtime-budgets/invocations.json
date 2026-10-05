@@ -1,0 +1,122 @@
+[
+  {
+    "pair": 0,
+    "order": 0,
+    "arm": "integrated",
+    "command": [
+      "D:\\Craig\\GitHub\\Crucible\\build\\phase12-release\\benchmarks\\crucible_runtime_backbone_bench.exe",
+      "--arm",
+      "integrated"
+    ],
+    "returncode": 0,
+    "wall_seconds": 2.390807900000027
+  },
+  {
+    "pair": 0,
+    "order": 1,
+    "arm": "direct",
+    "command": [
+      "D:\\Craig\\GitHub\\Crucible\\build\\phase12-release\\benchmarks\\crucible_runtime_backbone_bench.exe",
+      "--arm",
+      "direct"
+    ],
+    "returncode": 0,
+    "wall_seconds": 2.447126199999957
+  },
+  {
+    "pair": 1,
+    "order": 0,
+    "arm": "direct",
+    "command": [
+      "D:\\Craig\\GitHub\\Crucible\\build\\phase12-release\\benchmarks\\crucible_runtime_backbone_bench.exe",
+      "--arm",
+      "direct"
+    ],
+    "returncode": 0,
+    "wall_seconds": 2.478307500000028
+  },
+  {
+    "pair": 1,
+    "order": 1,
+    "arm": "integrated",
+    "command": [
+      "D:\\Craig\\GitHub\\Crucible\\build\\phase12-release\\benchmarks\\crucible_runtime_backbone_bench.exe",
+      "--arm",
+      "integrated"
+    ],
+    "returncode": 0,
+    "wall_seconds": 2.354444199999989
+  },
+  {
+    "pair": 2,
+    "order": 0,
+    "arm": "integrated",
+    "command": [
+      "D:\\Craig\\GitHub\\Crucible\\build\\phase12-release\\benchmarks\\crucible_runtime_backbone_bench.exe",
+      "--arm",
+      "integrated"
+    ],
+    "returncode": 0,
+    "wall_seconds": 2.0766763000001447
+  },
+  {
+    "pair": 2,
+    "order": 1,
+    "arm": "direct",
+    "command": [
+      "D:\\Craig\\GitHub\\Crucible\\build\\phase12-release\\benchmarks\\crucible_runtime_backbone_bench.exe",
+      "--arm",
+      "direct"
+    ],
+    "returncode": 0,
+    "wall_seconds": 2.1909411999999975
+  },
+  {
+    "pair": 3,
+    "order": 0,
+    "arm": "direct",
+    "command": [
+      "D:\\Craig\\GitHub\\Crucible\\build\\phase12-release\\benchmarks\\crucible_runtime_backbone_bench.exe",
+      "--arm",
+      "direct"
+    ],
+    "returncode": 0,
+    "wall_seconds": 2.423413800000162
+  },
+  {
+    "pair": 3,
+    "order": 1,
+    "arm": "integrated",
+    "command": [
+      "D:\\Craig\\GitHub\\Crucible\\build\\phase12-release\\benchmarks\\crucible_runtime_backbone_bench.exe",
+      "--arm",
+      "integrated"
+    ],
+    "returncode": 0,
+    "wall_seconds": 2.2486331000000064
+  },
+  {
+    "pair": 4,
+    "order": 0,
+    "arm": "integrated",
+    "command": [
+      "D:\\Craig\\GitHub\\Crucible\\build\\phase12-release\\benchmarks\\crucible_runtime_backbone_bench.exe",
+      "--arm",
+      "integrated"
+    ],
+    "returncode": 0,
+    "wall_seconds": 2.3456599000001006
+  },
+  {
+    "pair": 4,
+    "order": 1,
+    "arm": "direct",
+    "command": [
+      "D:\\Craig\\GitHub\\Crucible\\build\\phase12-release\\benchmarks\\crucible_runtime_backbone_bench.exe",
+      "--arm",
+      "direct"
+    ],
+    "returncode": 0,
+    "wall_seconds": 2.4010754999999335
+  }
+]

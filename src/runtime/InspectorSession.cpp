@@ -1,6 +1,9 @@
 #include <crucible/runtime/InspectorSession.hpp>
 #include <crucible/runtime/IntentDelivery.hpp>
 #include <crucible/runtime/BoundaryPipeline.hpp>
+#if CRUCIBLE_ENABLE_DIAGNOSTICS
+#include <crucible/runtime/RuntimeDiagnostics.hpp>
+#endif
 #include <limits>
 #include <crucible/presentation/ScenarioSnapshot.hpp>
 #include <crucible/simulation.hpp>
@@ -89,10 +92,21 @@ struct InspectorSession::Run {
     }
 };
 InspectorSession::InspectorSession(std::size_t samples, HeadlessSession::Limits limits,
-        std::optional<ReclamationMissionSettings> mission, bool structural, ExecutionPath execution)
+        std::optional<ReclamationMissionSettings> mission, bool structural, ExecutionPath execution,
+        Diagnostics diagnostics)
     : samples_(samples), limits_(limits), mission_(structural && !mission ? std::optional{ReclamationMissionSettings{}} : mission),
       structural_(structural), execution_(execution),
-      run_(std::make_unique<Run>(samples, limits, mission_, structural, execution, run_id_)) {}
+      run_(std::make_unique<Run>(samples, limits, mission_, structural, execution, run_id_)) {
+#if CRUCIBLE_ENABLE_DIAGNOSTICS
+    if (diagnostics == Diagnostics::bounded) {
+        try { diagnostics_ = std::make_unique<RuntimeDiagnostics>(); }
+        catch (const std::bad_alloc&) { diagnostics_.reset(); }
+    }
+#else
+    if (diagnostics != Diagnostics::disabled)
+        throw std::invalid_argument("bounded diagnostics require CRUCIBLE_ENABLE_DIAGNOSTICS=ON");
+#endif
+}
 InspectorSession::~InspectorSession() = default;
 ClockDriver::PumpResult InspectorSession::TryPump(std::chrono::nanoseconds elapsed) {
     const auto result = run_->clock.TryPump(elapsed);
@@ -100,20 +114,43 @@ ClockDriver::PumpResult InspectorSession::TryPump(std::chrono::nanoseconds elaps
         run_->clock.Close();
         throw std::logic_error("inspector frame capacity invariant");
     }
+#if CRUCIBLE_ENABLE_DIAGNOSTICS
+    if (diagnostics_) {
+        const auto trace = run_->session.GetTrace();
+        for (const auto& applied : trace.subspan(diagnostic_trace_size_))
+            if (applied.command.action != BoundaryAction::field &&
+                applied.result != StructuralCommandResult::applied)
+                diagnostics_->RecordStructuralRefusal({run_id_, applied.tick}, applied.command, applied.result);
+        diagnostic_trace_size_ = trace.size();
+        if (run_->mission && run_->mission->outcome != ReclamationMissionOutcome::active &&
+            !mission_summary_recorded_) {
+            diagnostics_->RecordMissionSummary(run_id_, *run_->mission);
+            mission_summary_recorded_ = true;
+        }
+    }
+#endif
     return result;
+}
+CommandIngress::Admission InspectorSession::AdmitCommand(const BoundaryCommand& command) {
+    const auto receipt = run_->Admit(std::span{&command, 1});
+#if CRUCIBLE_ENABLE_DIAGNOSTICS
+    if (diagnostics_ && receipt.status != CommandIngress::AdmissionStatus::accepted)
+        diagnostics_->RecordAdmissionRefusal({run_id_, run_->session.GetCompletedTick()}, command, receipt.status);
+#endif
+    return receipt;
 }
 CommandIngress::Admission InspectorSession::TryAdmitFieldEdit(const FieldEdit& edit) {
     const auto command = BoundaryCommand{edit};
-    return run_->Admit(std::span{&command, 1});
+    return AdmitCommand(command);
 }
 CommandIngress::Admission InspectorSession::TryFuseRelay() {
     const auto command = BoundaryCommand::Fuse();
-    return run_->Admit(std::span{&command, 1});
+    return AdmitCommand(command);
 }
 CommandIngress::Admission InspectorSession::TryShatterRelay() {
     const auto structure = run_->simulation.GetStructuralState();
     const auto command = BoundaryCommand::Shatter(structure ? structure->generation : 0);
-    return run_->Admit(std::span{&command, 1});
+    return AdmitCommand(command);
 }
 std::optional<StructuralCommandResult> InspectorSession::GetLastStructuralResult() const noexcept {
     const auto trace = run_->session.GetTrace();
@@ -131,10 +168,19 @@ void InspectorSession::Restart() {
     run_->clock.Close();
     run_.swap(replacement);
     ++run_id_;
+    diagnostic_trace_size_ = 0;
+    mission_summary_recorded_ = false;
 }
 ClockDriver::Status InspectorSession::GetStatus() const noexcept { return run_->clock.GetStatus(); }
 ClockDriver::Summary InspectorSession::GetSummary() const { return run_->clock.GetSummary(); }
 std::optional<ReclamationMissionProgress> InspectorSession::GetMission() const noexcept { return run_->mission; }
 const presentation::ScenarioSnapshot& InspectorSession::GetSnapshot() const noexcept { return run_->Frame(); }
 std::span<const AppliedCommand> InspectorSession::GetTrace() const noexcept { return run_->session.GetTrace(); }
+const RuntimeDiagnostics* InspectorSession::GetDiagnostics() const noexcept {
+#if CRUCIBLE_ENABLE_DIAGNOSTICS
+    return diagnostics_.get();
+#else
+    return nullptr;
+#endif
+}
 }

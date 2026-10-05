@@ -10,11 +10,14 @@ SDL_AppResult SDL_AppInit(void** state, int argc, char** argv) {
         if (!SDL_Init(SDL_INIT_VIDEO | SDL_INIT_EVENTS)) return SDL_APP_FAILURE;
         // SDL owns the callback token until SDL_AppQuit reclaims it.
         bool structural = false;
+        auto diagnostics = crucible::runtime::InspectorSession::Diagnostics::disabled;
         for (int i = 1; i < argc; ++i) {
             if (std::string_view{argv[i]} == "--structural") structural = true;
+            else if (std::string_view{argv[i]} == "--diagnostics")
+                diagnostics = crucible::runtime::InspectorSession::Diagnostics::bounded;
             else { SDL_Log("Unknown option: %s", argv[i]); return SDL_APP_FAILURE; }
         }
-        *state = std::make_unique<crucible::desktop::DesktopApp>(crucible::ReclamationMissionSettings{}, structural).release();
+        *state = std::make_unique<crucible::desktop::DesktopApp>(crucible::ReclamationMissionSettings{}, structural, diagnostics).release();
         return SDL_APP_CONTINUE;
     } catch (const std::exception& e) { SDL_Log("Crucible startup: %s", e.what()); return SDL_APP_FAILURE; }
 }

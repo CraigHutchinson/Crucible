@@ -1,5 +1,6 @@
 """Capability-selection and bounded failure receipts, with no native suite execution."""
 import importlib.util
+import ctypes
 from contextlib import redirect_stderr, redirect_stdout
 import io
 import json
@@ -339,14 +340,99 @@ class PrerequisiteTests(unittest.TestCase):
         self.assertFalse(receipt["ok"])
         self.assertIn("64 KiB", receipt["checks"][-1]["detail"])
 
-    def test_mac_and_windows_display_capability_remains_unknown(self):
-        for system in ("Darwin", "Windows"):
+    def test_unsupported_platform_display_capability_remains_unknown(self):
+        for system in ("Darwin", "unsupported"):
             with self.subTest(system=system), patch.object(prerequisites.platform, "system", return_value=system):
                 receipt = self.check(self.gpu_tests())
             self.assertFalse(receipt["ok"])
             display = next(row for row in receipt["checks"] if row["name"] == "display")
             self.assertEqual("unknown", display["status"])
             self.assertNotIn("display", [call[0] for call in self.calls])
+
+    def test_windows_selected_receiver_uses_bounded_candidate_probe(self):
+        for backend in ("", "windows"):
+            self.calls.clear()
+            with self.subTest(backend=backend), patch.object(prerequisites.platform, "system", return_value="Windows"):
+                receipt = prerequisites.check_prerequisites(self.build, self.gpu_tests(), probe=self.probe,
+                    env={"SDL_VIDEO_DRIVER": backend})
+            self.assertTrue(receipt["ok"])
+            display_call = next(call for call in self.calls if call[0] == "display")
+            self.assertEqual([sys.executable, "-c", prerequisites.WINDOWS_DISPLAY_PROBE], display_call[1])
+            self.assertLessEqual(display_call[2], 10)
+            display = next(row for row in receipt["checks"] if row["name"] == "display")
+            self.assertEqual("windows", display["backend"])
+            self.assertIn("SDL initialization remains a test gate", display["scope"])
+            self.assertIn("no physical-console, input or DPI acceptance", display["scope"])
+
+    def test_windows_portable_selection_does_not_probe_display(self):
+        with patch.object(prerequisites.platform, "system", return_value="Windows"):
+            receipt = self.check([{"name": "gpu_numeric"}])
+        self.assertTrue(receipt["ok"])
+        self.assertEqual([], self.calls)
+
+    def test_windows_display_fail_or_unknown_blocks_even_physical_candidate(self):
+        for status in ("fail", "unknown"):
+            def probe(name, command, **kwargs):
+                result = self.probe(name, command, **kwargs)
+                if name == "display":
+                    result.update(status=status, output="No usable primary display metrics")
+                if name == "vulkan":
+                    result["output"] = "GPU0:\n deviceName = Intel Arc\n deviceType = PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU\n"
+                return result
+            with self.subTest(status=status), patch.object(prerequisites.platform, "system", return_value="Windows"):
+                receipt = prerequisites.check_prerequisites(self.build, self.gpu_tests(), require_hardware=True,
+                    probe=probe, env={})
+            self.assertFalse(receipt["ok"])
+            self.assertEqual(status, next(row["status"] for row in receipt["checks"] if row["name"] == "display"))
+            self.assertEqual("pass", next(row["status"] for row in receipt["checks"] if row["name"] == "hardware_gpu"))
+
+    def test_windows_display_candidate_preserves_physical_gpu_requirement(self):
+        with patch.object(prerequisites.platform, "system", return_value="Windows"):
+            receipt = prerequisites.check_prerequisites(self.build, self.gpu_tests(), require_hardware=True,
+                probe=self.probe, env={})
+        self.assertFalse(receipt["ok"])
+        self.assertEqual("pass", next(row["status"] for row in receipt["checks"] if row["name"] == "display"))
+        self.assertEqual("fail", next(row["status"] for row in receipt["checks"] if row["name"] == "hardware_gpu"))
+
+    def test_windows_physical_inventory_and_display_candidate_can_receive(self):
+        def probe(name, command, **kwargs):
+            result = self.probe(name, command, **kwargs)
+            if name == "vulkan":
+                result["output"] = "GPU0:\n deviceName = Intel Arc\n deviceType = PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU\n"
+            return result
+        with patch.object(prerequisites.platform, "system", return_value="Windows"):
+            receipt = prerequisites.check_prerequisites(self.build, self.gpu_tests(), require_hardware=True,
+                probe=probe, env={})
+        self.assertTrue(receipt["ok"])
+        self.assertIn("no physical readback", next(row["scope"] for row in receipt["checks"] if row["name"] == "hardware_gpu"))
+
+    def test_windows_unsupported_backend_remains_unknown_without_probe(self):
+        for backend in ("dummy", "wayland", "x11"):
+            self.calls.clear()
+            with self.subTest(backend=backend), patch.object(prerequisites.platform, "system", return_value="Windows"):
+                receipt = prerequisites.check_prerequisites(self.build, self.gpu_tests(), probe=self.probe,
+                    env={"SDL_VIDEO_DRIVER": backend, "SDL_VIDEODRIVER": "windows"})
+            self.assertFalse(receipt["ok"])
+            self.assertEqual("unknown", next(row["status"] for row in receipt["checks"] if row["name"] == "display"))
+            self.assertNotIn("display", [call[0] for call in self.calls])
+
+    def test_windows_display_probe_checks_primary_dimensions_without_native_calls(self):
+        from unittest.mock import Mock, call
+        for width, height in ((1920, 1080), (0, 1080), (1920, 0), (-1, 1080)):
+            metrics = Mock(side_effect=[width, height])
+            with self.subTest(width=width, height=height), \
+                    patch.object(ctypes, "WinDLL", return_value=SimpleNamespace(GetSystemMetrics=metrics), create=True) as load, \
+                    redirect_stdout(io.StringIO()) as output:
+                if width > 0 and height > 0:
+                    exec(prerequisites.WINDOWS_DISPLAY_PROBE, {})
+                    self.assertIn("1920x1080", output.getvalue())
+                else:
+                    with self.assertRaises(SystemExit):
+                        exec(prerequisites.WINDOWS_DISPLAY_PROBE, {})
+            load.assert_called_once_with("user32", use_last_error=True)
+            self.assertEqual([call(0), call(1)], metrics.call_args_list)
+            self.assertEqual([ctypes.c_int], metrics.argtypes)
+            self.assertIs(ctypes.c_int, metrics.restype)
 
     def test_windows_existing_cached_compiler_path_remains_one_argument(self):
         from unittest.mock import patch
