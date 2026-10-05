@@ -1,132 +1,91 @@
-# Phase 11: forge the sub0 production backbone
+# Phase 11: production sub0 backbone
 
-Status: planned, 2026-10-05. Dispatch only after Phase10 exact-head merge. Architect
-owns the integration contract and records the actual merged baseline at dispatch.
-This phase promotes Pub/Pipeline from stack examples to the live structural
-backbone and strengthens receiving of the already production-consumed ECS. It is implementation work,
-not another indefinite "adopt when needed" note. Use ECS/Pub v2; evolve neutral APIs
-upstream where receiving exposes missing guarantees.
+Status: implemented; final receiving in progress, 2026-10-05. Baseline is
+Phase10 [PR23](https://github.com/CraigHutchinson/Crucible/pull/23) merge
+`262c4eba4211779042f17bf5a2da03d333c35a91`, after nine exact-head jobs.
+[Review](../sprint-reviews/phase-11.md) records acceptance and remaining limits.
 
-## Shipped outcome
+## One consumed increment
 
-One production path carries owned field/fuse/shatter intent through Sub0Pub v2 into
-the existing bounded admission boundary. A startup-built Sub0Pipeline graph runs
-completed boundaries, publishes the owned frame and evaluates mission/summary with
-explicit dependencies. Sub0ECS v2 remains the authoritative world queried/mutated
-only by its exclusive coordinator. CLI route and desktop input consume this path.
+Desktop input, scripted mission routes and the scenario exporter use synchronous
+Sub0Pub v2 delivery into the existing bounded admission queue. A startup-built
+Sub0Pipeline graph executes boundary commit → owned frame capture → mission
+evaluation/publication. Sub0ECS v2 remains the authoritative world under one
+exclusive coordinator. Game rules, queue cutoff and replay schema have one source.
 
-The direct path is the controlled receiving comparator while promotion is underway;
-it is not a second rules implementation. Both call the same Simulation and queue.
-Make the integrated path the normal production choice after parity/lifetime/build
-receiving passes; retain direct execution only as a narrow test/benchmark baseline.
-No mandatory threading, generic service locator, new umbrella framework or copied
-broker/executor/ECS. Build dependencies follow actual consuming targets/options.
+The integrated path is the default. `InspectorSession::ExecutionPath::direct` is
+a narrow receiving/measurement comparator using the same simulation and mission
+calculation. Trace replay is deliberately direct: it receives recorded application,
+not Pub delivery. No mandatory threads, service locator or umbrella framework.
 
-| Boundary | Library responsibility | Crucible responsibility |
+## Dispatch and ownership
+
+| Owner | Package | Division decision |
 |---|---|---|
-| Typed intent delivery | Pub owns registration, typed routing, callback/disconnect lifetime and delivery policy | Concrete command payload, owned-copy adapter, all-or-nothing batch admission, accepted/full/closed receipts; callbacks never mutate ECS |
-| Tick graph | Pipeline owns task dependency/dispatch/completion/failure/join contracts | Cutoff/trace capacity, actual boundary → owned observation → mission/summary jobs; declared exclusive world and scratch ownership |
-| State store | ECS owns query/storage/identity/capacity guarantees | Fixed game identities/activity, biomass/faction policy, gather/order and full replay schema |
-| Observation | Log may consume bounded diagnostics independently | HUD/mission values remain owned; dropping diagnostics cannot change simulation |
+| Architect | Clock/Inspector/CLI wiring, contracts, full-state parity, builds/docs/publication | Consolidate unchanged simulation/presentation rules and their receiving |
+| Delivery worker | IntentDelivery source/header, receiving fixtures and API handoff | Split at stable ingress boundary; no ECS mutation |
+| Execution/state worker | BoundaryPipeline source/header, failure/lifetime fixtures and ECS/API audit | Split at stable session/frame boundary; sequential execution only |
 
-## Same team and staged packages
+Workers own disjoint files; architect owns shared manifests and all serial build/test
+CPU. Defer concurrent producers/executors, Log without a bounded consumer, dynamic
+ECS growth, terrain, factions and physical/human receiving. Retain prior artifacts.
 
-| Owner | Concrete package | Gate |
+## Received contracts
+
+| Boundary | Library owns | Crucible owns |
 |---|---|---|
-| Architect / contracts + receiving | Freeze typed intent/admission receipts and coordinator graph inputs/outputs; production wiring, direct comparator, docs/build/pins and merge | Queue/cutoff/trace semantics unchanged; complete scenario/terminal/restart equality and exact-head CI |
-| Delivery worker | Inspect latest Pub v2, implement one owned sink consumed by desktop and scripted route; improve neutral upstream adapter/example where appropriate | Explicit most-derived subscribe/disconnect, joined producers, full/closed/batch/capacity and source-mutation receiving; delivery is not application |
-| Execution/state worker | Inspect Pipeline and ECS v2; startup-owned sequential graph around the existing boundary and observation, explicit data access and teardown | Actual ECS structural scenario, graph failure/dispatch/completion callback/join fixtures, retained frames, truthful allocation and identity guarantees |
+| Intent | Pub scoped routing, explicit registration/disconnection and synchronous delivery | One private domain/sink per run; queue copies whole batch; receipt owns run/request IDs and status/sequence range |
+| Execution | Pipeline dependency order, untimed caller-thread dispatch and run result | Commit → staging capture → mission staging → frame publication; concrete boundary status and fail-stop |
+| State | ECS component/query storage and identity | Fixed retained game identities, activity/resource rules, exclusive access and full-state comparison |
+| Observation | Optional future Log storage/decoding | Owned HUD/mission values; diagnostic loss must never alter rules |
 
-Reassess paths at dispatch and keep architect plus two workers. Review upstream
-PRs and pin promotion separately from game receiving. No worker mutates fetched
-CPM checkouts or runs shared builds. Upstream work lives in its project with its
-own instructions/package tests; Crucible receives the reviewed full commit.
+Pub's typed envelope borrows its batch only during synchronous publish. The sink
+immediately performs the existing owned queue copy; no span survives the call.
+This refinement avoids redundant intermediate buffers and preserves oversized/invalid
+validation precedence and rejection counters. Delivery/admission/application remain
+distinct. Requests are coordinator-only; a broker lock does not make adapter
+receipts concurrent. Callers quiesce before teardown; sink disconnects while ingress
+and domain remain alive. Registration failure blocks startup; identifiers never wrap.
 
-1. **Source/API shootout:** compare current pinned APIs with current ECS/Pub v2 and
-   Pipeline main; read changes, not just tags. Build the minimum production receiving
-   example with two actual intent sources and an owned sequential graph. Freeze
-   adapter placement and API requirements; no performance promise from a checksum.
-2. **Contract evolution:** implement/review necessary upstream changes with neutral
-   fixtures. Existing APIs suffice where they already meet the receiving contract.
-   Require failures and teardown to be representable without throwing from callback
-   paths or leaving borrowed inputs alive in orphan work.
-3. **Production receiving:** desktop + CLI route use the integrated path. Exercise
-   field, fuse, shatter, normal refusal, pause, late admission/cutoff, full queue/trace,
-   terminal and restart. Compare every sample/activity/field endpoint/stock/infection/
-   member/generation/ledger/hold/outcome with direct execution.
-4. **Promotion:** upstream package tests and consumer packaging pass; promote full
-   pins atomically with adapters, supported Debug/Release/ASan+UBSan and exact-head CI.
-   Remove unused intermediate adapters/examples. Keep failure/teardown fixtures.
+Graph jobs run inline without timers or orphan work. Paused/closed/trace-full skips
+capture and evaluation, preserves pending commands and returns the real status.
+Two startup-sized frames retain the last good publication if a later stage fails.
+Unexpected failure closes admission and propagates or reports application_failed;
+committed simulation work is not rolled back. Mission progress stages from the
+new owned frame and commits after graph success. Terminal closure happens before
+another clock catch-up boundary; evaluation is never duplicated.
 
-## Contracts frozen before dispatch
+## Source/API decision
 
-- Each run has a distinct Pub domain/route and exactly one command-admission sink.
-  Two live inspectors cannot cross-deliver intent. Restart constructs/registers a
-  replacement without exposing old callbacks; quiesce publishers and disconnect
-  the old most-derived sink while its ingress/storage remains alive. Receive
-  registration/table-full failure before declaring the run usable.
-- An owned admission receipt correlates a run/request ID with the whole batch,
-  accepted sequence range or normal full/closed/invalid refusal. Delivery success
-  is distinct from queue admission and later application result. Exactly one sink
-  resolves the receipt; no borrowed callback payload or unbounded reply queue.
-- Build/run the graph per attempted completed boundary inside clock catch-up.
-  Boundary status paused/closed/trace_full skips capture and mission evaluation;
-  unexpected failure preserves the last published good frame and fail-stops.
-  Trace-full must not drain input. No partially completed frame is published.
-- Order is boundary commit → owned state capture → mission/summary. Mission reads
-  that completed frame, publishes its matching progress/outcome and closes input
-  before the clock can run another catch-up boundary. Current direct evaluation
-  is before capture but reads the same quiescent committed values; differential
-  receiving proves equivalent outcomes and tick/admission stop semantics. Do not
-  keep both stop callbacks or evaluate a completed boundary twice.
-- A graph owns stable startup context and returns a concrete boundary status;
-  paused/backpressure are normal results, never false task-success advancing the
-  clock. Teardown joins dispatched bodies and completion callbacks before releasing
-  borrowed ECS/ingress/frame state. No timed/orphan work in the first production path.
+Pinned Pub `2cd3daf` broker/config match latest v2 discovery `b1166d9`. Pinned
+Pipeline `f6f54c6` supplies repeatable `run_inline`; latest `1c50051` adds examples/docs
+without changing execution. Pinned ECS `8391f81` and latest v2 `6028591` share the
+capacity/generation limitations relevant here. Full pins remain in
+[DependencyPins](../../cmake/DependencyPins.cmake); no upstream edit or pin promotion
+is necessary for this sequential consumer. See the worker
+[delivery](../workstreams/runtime/phase11-delivery.md) and
+[execution](../workstreams/runtime/phase11-execution.md) audits.
 
-## Upstream requirements to resolve rather than work around
+Pipeline run bookkeeping may allocate. No allocation-free or speedup promise;
+[Phase12](phase12.md) selects measured budgets before upstream optimization. ECS
+growth/recycling still needs checked capacity, world provenance, generation
+exhaustion and failure/rollback fixtures in ECS itself. Keep domain policy local;
+no reusable-library extraction without an independent consumer.
 
-- **Pub:** bounded typed ingress receiving and explicit admission receipts; registration
-  failure, concurrent disconnect and producer ownership. Decide whether the neutral
-  sink fits an opt-in Pub extension, a Pipeline adapter, or should remain concrete
-  application glue after inspecting both APIs. Cross-project coupling stays opt-in.
-- **Pipeline:** repeatable startup-built graph, visible run/body/dispatch failure,
-  completion-callback-inclusive wait and guaranteed owned teardown. Measure steady
-  boundary allocations before promising bounded execution. If current run storage
-  allocates, evolve reusable traversal/executor storage with independent fixtures.
-  State access declarations must be consumed by execution/review; cosmetic tags do
-  not establish scheduling safety. Timed work cannot escape capture lifetime.
-- **ECS v2:** confirm query/view lifetime, capacity/index limits, generation reuse and
-  reserve/create behavior against the selected exact source. Fixed Phase10 identity
-  retention remains sufficient; growth/destruction promises wait for checked capacity,
-  provenance/liveness and fault-injected rollback receiving in ECS itself.
+## Acceptance and stop gates
 
-Parallelism is a bounded stretch after sequential parity: only a genuinely independent
-read-only geometry/observation or disjoint scratch partition, with joined mutation,
-race/lifetime tests and measured end-to-end benefit. Do not dispatch ECS mutation
-from Pub callbacks or hide unsafe storage access behind a DAG.
+- Actual Pub field/fuse/shatter source-copy, correlated receipts, live-domain
+  isolation, restart/disconnect, full/closed/invalid/batch and exact counter parity.
+- Actual graph structural transitions, repeated epochs, skipped jobs/backpressure,
+  terminal closure and exception/retained-frame fixtures.
+- Every completed state, command/result trace, mission and clock summary matches
+  direct execution through quota win, relay win, pause/full/refusal/restart and
+  catch-up terminal loss. Independent arithmetic/query oracles remain.
+- Supported Debug/Release and normal ASan/UBSan; BUILD_TESTING=OFF includes real
+  Pub/Pipeline callers and omits Log; nine exact-head hosted jobs before guarded merge.
+- Actual scenario export and software structural receiving where viable; routing
+  itself changes no visual design. No image implies physical/human acceptance.
 
-## Evidence and stop criteria
-
-Receive actual live structural frames and route/replay through the integrated path,
-full-state differential tests, teardown/failure stress, no-allocation counts where
-promised, and a controlled direct-versus-integrated tick/build-cost comparison.
-Measure Pub delivery/admission separately from graph dispatch and full tick/frame
-work. Label tests that traverse live Pub versus direct trace replay; replay alone
-does not prove delivery isolation or teardown. Report overhead honestly; integration benefit is the consumed ownership/composition
-contract, not an assumed speedup. Verify licensing/package options before new pins.
-
-A discovered upstream gap is a named requirement with a minimal fixture and owner;
-complete its receiving fix before promoting the corresponding path. If a boundary
-cannot be safely received within the sprint, retain the working baseline and report
-that specific blocker rather than claim the backbone shipped. Human comprehension,
-physical GPU/iOS and world streaming remain separate gates.
-
-## Source discovery checkpoint
-
-GitHub branch metadata checked 2026-10-05: ECS v2
-`60285914ee8925f0ce20ac5426511604fb0c6529`; Pub v2
-`b1166d908dbbd35eb56ca617bf1ee51d72e6e21f`; Pipeline main
-`1c50051fe4a5d4d06766d53624542b0025573be1`. These are discovery revisions,
-not audited/promoted pins or a claim that latest code satisfies the contracts.
-Refresh and inspect them at dispatch. Existing Phase10 pins remain unchanged.
+Unresolved upstream requirements are named with exact source, fixture and owner;
+never hide an unsafe contract behind a DAG. A blocked required gate retains the
+working baseline and the specific blocker rather than declaring completion.

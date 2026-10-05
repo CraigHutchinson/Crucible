@@ -37,3 +37,18 @@ add_executable(crucible_structural_session_tests StructuralSession.cpp)
 target_link_libraries(crucible_structural_session_tests PRIVATE Crucible::Runtime Crucible::Presentation)
 add_test(NAME runtime_structural COMMAND crucible_structural_session_tests)
 set_tests_properties(runtime_structural PROPERTIES LABELS "runtime;presentation;resources" TIMEOUT 180)
+
+add_executable(crucible_intent_delivery_tests IntentDelivery.cpp)
+target_link_libraries(crucible_intent_delivery_tests PRIVATE Crucible::Runtime)
+add_test(NAME runtime_intent_delivery COMMAND crucible_intent_delivery_tests)
+set_tests_properties(runtime_intent_delivery PROPERTIES LABELS "runtime;pub")
+
+add_executable(crucible_boundary_pipeline_tests BoundaryPipeline.cpp)
+target_link_libraries(crucible_boundary_pipeline_tests PRIVATE Crucible::Runtime Crucible::Presentation)
+add_test(NAME runtime_boundary_pipeline COMMAND crucible_boundary_pipeline_tests)
+set_tests_properties(runtime_boundary_pipeline PROPERTIES LABELS "runtime;pipeline")
+
+add_executable(crucible_backbone_parity_tests BackboneParity.cpp)
+target_link_libraries(crucible_backbone_parity_tests PRIVATE Crucible::Runtime Crucible::Presentation)
+add_test(NAME runtime_backbone_parity COMMAND crucible_backbone_parity_tests)
+set_tests_properties(runtime_backbone_parity PROPERTIES LABELS "runtime;pub;pipeline" TIMEOUT 180)

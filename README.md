@@ -31,11 +31,11 @@ physical-device performance and iOS receiving remain open.
 
 ## Direction and next increment
 
-**Secure the relay** adds a real mobility tradeoff: gather64 mobile identities at
-the relay, fuse, hold120 completed ticks and harvest1,780 by tick900. Shatter
-returns48 identities and records16 permanently lost. Conservation includes anchored
+**Secure the relay** adds a real mobility tradeoff: gather 64 mobile identities at
+the relay, fuse, hold 120 completed ticks and harvest 1,780 by tick 900. Shatter
+returns 48 identities and records 16 permanently lost. Conservation includes anchored
 and lost mass; rejection, restart and complete replay are received separately from
-human tuning. Phase9 selected the rules; [Phase10](docs/phases/phase10.md) implements
+human tuning. Phase9 selected the rules; [Phase10](docs/phases/phase10.md), merged in PR23, implements
 the live primitive loop. F fuses and X shatters in `--structural` desktop mode.
 Primitive cells, points, arrows and lattice marks come before visual fidelity.
 
@@ -116,9 +116,10 @@ measurement and reproducible evidence.
 
 Dependencies use a checksum-verified CPM bootstrap, namespaced targets and
 [full commit pins](cmake/DependencyPins.cmake): Sub0ECS v2, Sub0Pub v2, Sub0Pipeline,
-Sub0Log and Sub0HexGrid H2. Gameplay directly consumes ECS/H2; Pub/Pipeline/Log
-currently validate the stack in integration tests and are omitted when testing is
-disabled. Consumer builds disable dependency development tools.
+Sub0Log and Sub0HexGrid H2. Gameplay directly consumes ECS/H2; live input uses Pub v2 and completed boundaries
+use a sequential Pipeline graph. Log remains test-only and is omitted when testing
+is disabled. [Phase11](docs/phases/phase11.md) records scoped delivery, owned frame
+publication, direct-path parity and lifetime receiving. Consumer builds disable dependency development tools.
 The [owned sub0 roadmap](docs/reuse/sub0-roadmap.md) names upstream evolution requirements and receiving owners.
 The [reuse catalog](docs/reuse/README.md) and [full-source adoption audit](docs/reuse/phase9-sub0-adoption.md) track concrete feedback and extraction candidates;
 game policy stays local until an independently consumed boundary justifies extraction.
@@ -129,5 +130,5 @@ defines ownership; the [active log](docs/ACTIVE_WORK_LOG.md) reserves paths and 
 [Sprint reviews](docs/sprint-reviews/README.md) retain findings, evidence and follow-ups.
 The repository's own license remains undecided; dependency licenses stay with their projects.
 
-Next: [Phase11](docs/phases/phase11.md) forges the production ECS/Pub v2/Pipeline
-backbone and evolves owned APIs through independent upstream and consumer receiving.
+Next: [Phase12](docs/phases/phase12.md) receives runtime budgets and opt-in bounded
+diagnostics before measured upstream optimization.

@@ -36,11 +36,14 @@ public:
      * @param[in] session Exclusive coordinator session, outliving the driver.
      * @param[in] stop_after_boundary Invoked after every successful tick; true closes
      * admission and discards remaining time before another tick. Empty preserves ordinary pumping.
+     * @param[in] step_boundary Optional production graph replacing direct TryStep;
+     * returns the real boundary result, on this coordinator, without reentry.
      * @note Callback runs on the coordinator, must not reenter this driver, and must
      * not outlive any state it borrows. A throwing callback latches blocked and propagates.
      */
     explicit ClockDriver(HeadlessSession& session,
-        std::function<bool()> stop_after_boundary = {}) noexcept;
+        std::function<bool()> stop_after_boundary = {},
+        std::function<HeadlessSession::StepResult()> step_boundary = {}) noexcept;
     ClockDriver(const ClockDriver&) = delete;
     ClockDriver& operator=(const ClockDriver&) = delete;
 
@@ -65,6 +68,7 @@ private:
 
     HeadlessSession& session_; // non-owning; exclusive coordinator borrow
     std::function<bool()> stop_after_boundary_;
+    std::function<HeadlessSession::StepResult()> step_boundary_;
     Status status_{Status::running};
     std::uint64_t remainder_{}, discarded_{};
 };

@@ -307,3 +307,24 @@ docs/roadmap and evidence/publication. structural_rules explicitly owns shared
 StructuralState/SampleState/BiomassLedger/StateCopy and Simulation plus interactions
 paths/tests. arena_rules owns presentation/desktop and presentation tests. All work
 on phase10-structural-relay, disjoint paths; no worker builds or stages others' files.
+
+
+## Phase 11 dispatch, 2026-10-05
+
+Verified baseline PR23 merge `262c4eba4211779042f17bf5a2da03d333c35a91`;
+reviewed tree `57c36aee978ff0cfd30697de90beff86a970792b` and nine exact-head
+jobs passed in run37247900294. Fresh isolated clone; prior artifacts preserved.
+Branch `phase11-sub0-backbone`; user authorizes commit/push/merge.
+
+| Owner | Exclusive paths | Status |
+|---|---|---|
+| Architect | Shared runtime wiring/ClockDriver/InspectorSession, CMake/CI, differential receiving, central docs; all serial configure/build/test CPU | Active |
+| delivery | IntentDelivery header/source/test; runtime phase11-delivery handoff | Active |
+| execution | BoundaryPipeline header/source/test; runtime phase11-execution handoff; pinned ECS/API audit | Active |
+
+Simulation/presentation rules consolidate under architect receiving; delivery and
+execution split at the existing ingress/session and owned-frame contracts. No
+workers run builds or edit shared manifests. Deferred: threaded ECS/graph, Log
+adapter without a bounded consumer, GPU/device/iOS/human gates, world growth.
+`cpp-write`/`cpp-review` remain absent from available catalog and searched skill
+directories; source conventions and independent worker/architect review retained.

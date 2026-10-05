@@ -12,6 +12,8 @@
 #include <crucible/runtime/headless.hpp>
 #include <crucible/runtime/HeadlessSession.hpp>
 #include <crucible/runtime/ClockDriver.hpp>
+#include <crucible/runtime/IntentDelivery.hpp>
+#include <crucible/runtime/BoundaryPipeline.hpp>
 #include <crucible/runtime/InspectorSession.hpp>
 #include <crucible/runtime/ReferenceMissionRoute.hpp>
 #include <crucible/presentation/ScenarioSnapshot.hpp>
@@ -164,14 +166,14 @@ void RunScenario(const char* export_path, std::optional<crucible::ResourceSettin
     const Simulation::ScenarioOptions options{{64, 32, 1.0F}, 2, SteeringSettings{}, resources};
     Simulation scenario{2048, options};
     HeadlessSession session{scenario, {8, 8}};
-    runtime::ClockDriver clock{session};
-    presentation::ScenarioSnapshot snapshot{2048, 2, 2048};
-    if (!snapshot.TryCapture(scenario)) throw std::runtime_error("Initial capture failed");
-    const auto initial_ledger = snapshot.GetInfo()->biomass;
+    runtime::IntentDelivery delivery{session.GetIngress(), 1};
+    runtime::BoundaryPipeline graph{session, scenario, 2048, 2, 2048};
+    runtime::ClockDriver clock{session, {}, [&] { return graph.TryStep(); }};
+    const auto initial_ledger = graph.GetFrame().GetInfo()->biomass;
     const std::array paint{
-        FieldEdit{FieldEditKind::set, 0, {24, 16}, 20, 4},
-        FieldEdit{FieldEditKind::set, 1, {48, 8}, 8, -2}};
-    if (session.GetIngress().TryAdmit(paint).status != runtime::CommandIngress::AdmissionStatus::accepted)
+        BoundaryCommand{FieldEdit{FieldEditKind::set, 0, {24, 16}, 20, 4}},
+        BoundaryCommand{FieldEdit{FieldEditKind::set, 1, {48, 8}, 8, -2}}};
+    if (delivery.TryAdmitCommands(paint).admission.status != runtime::CommandIngress::AdmissionStatus::accepted)
         throw std::runtime_error("Scenario paint admission failed");
     clock.Pause();
     if (clock.TryPump(std::chrono::milliseconds{100}).status != runtime::ClockDriver::Status::paused)
@@ -179,8 +181,8 @@ void RunScenario(const char* export_path, std::optional<crucible::ResourceSettin
     clock.Resume();
     for (int tick = 0; tick < 20; ++tick) {
         if (tick == 10) {
-            const std::array remove{FieldEdit{FieldEditKind::remove, 0}};
-            if (session.GetIngress().TryAdmit(remove).status != runtime::CommandIngress::AdmissionStatus::accepted)
+            const std::array remove{BoundaryCommand{FieldEdit{FieldEditKind::remove, 0}}};
+            if (delivery.TryAdmitCommands(remove).admission.status != runtime::CommandIngress::AdmissionStatus::accepted)
                 throw std::runtime_error("Scenario removal admission failed");
         }
         if (clock.TryPump(std::chrono::nanoseconds{16'666'667}).advanced_ticks != 1)
@@ -190,8 +192,9 @@ void RunScenario(const char* export_path, std::optional<crucible::ResourceSettin
     Simulation replayed{2048, options};
     HeadlessSession replay{replayed, {8, 8}};
     presentation::ScenarioSnapshot replay_snapshot{2048, 2, 2048};
+    const auto& snapshot = graph.GetFrame();
     if (replay.TryReplay(session.GetTrace(), 20).status != HeadlessSession::StepStatus::advanced ||
-        !snapshot.TryCapture(scenario) || !replay_snapshot.TryCapture(replayed) ||
+        !replay_snapshot.TryCapture(replayed) ||
         !snapshot.HasEqualState(replay_snapshot))
         throw std::runtime_error("Scenario replay diverged");
     const auto neighbors = scenario.TryCountNeighbors({32, 16}, 3);
