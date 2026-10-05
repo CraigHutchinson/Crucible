@@ -31,7 +31,7 @@ accounting are received; human balance/comprehension and contact combat are open
 
 ## Verification, reuse and follow-ups
 
-Debug33/33, Release33/33 plus final allocation1/1, desktop Release37/37 pass.
+Debug33/33, Release33/33 plus final allocation1/1, desktop Release37/37 plus newly enabled structural mission1/1 pass (38 registered).
 Full-Simulation fuse/empty/sparse transition path has zero watched ordinary new/new[]
 after startup. See receiving for exact scope, source/hash provenance and actual frames.
 No speedup or scale claim. Hosted normal ASan/UBSan and all nine exact-head jobs

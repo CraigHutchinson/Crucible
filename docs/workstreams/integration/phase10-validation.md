@@ -23,7 +23,8 @@ Linux x86_64 GCC13.3 / CMake4.4.4 / Ninja1.13.2:
 
 - Release33/33; after extending whole-Simulation allocation receiving, targeted
   allocation1/1 passed again.
-- Debug33/33 including that extension; desktop Release37/37.
+- Debug33/33 including that extension; desktop Release37/37, then the newly
+  enabled complete structural mission CLI passed1/1 there (38 registered tests).
 - Whole-Simulation watched path: fuse64, empty-mobile steering/tick/query/copy,
   shatter48/loss16, sparse48 steering/reclamation/tick/copy with zero ordinary
   new/new[] after startup. This is the bounded received path, not an allocator or
