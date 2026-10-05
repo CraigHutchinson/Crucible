@@ -16,8 +16,12 @@ presented before tuning them.
 Top-down work starts with a small screen/interaction/sound concept for that task:
 readable objective and controls, visible tool/slot selection, an unclipped FLOW
 action, clear queue/application/refusal feedback and a legible relay hold/result.
-Compare one or two layouts at the actual smaller window and a larger native
-window. Audition a short bounded background layer and distinct cue patterns for
+User direction: evaluate borderless fullscreen as the default launch experience,
+with an explicit toggle/escape to a usable window. Compare one or two layouts at
+the actual fullscreen monitor size and the smaller window. The current fixed
+1280x720 letterboxed canvas may become more legible when enlarged, but receive
+physical text size and hit geometry rather than assuming fullscreen resolves
+readability. Audition a short bounded background layer and distinct cue patterns for
 application, refusal and terminal outcome. Generated concepts or synthetic audio
 can help choose direction; they cannot establish executable behavior or participant
 comprehension. Desired feedback is prompt and consistent with published state;
@@ -76,8 +80,10 @@ it has independent upload, retirement, compatibility and frame-budget gates.
 ## Consumed contracts to freeze at dispatch
 
 - Presentation geometry must be shared by drawing and hit testing. Define a
-  supported window/DPI range and a minimum usable window behavior from native
-  evidence. A starting target is body text at least12 physical pixels at the
+  supported fullscreen/window/DPI range and a minimum usable window behavior
+  from native evidence. Receive fullscreen startup, returning to a window,
+  focus changes and restored window geometry before selecting the default.
+  A starting target is body text at least12 physical pixels at the
   received 1026x607 window, subject to concept/actual capture review. Fit or wrap
   controls; never silently clip a clickable label. Keep coordinate conversion
   authoritative across resize and display scaling.
@@ -107,8 +113,9 @@ it has independent upload, retirement, compatibility and frame-budget gates.
 1. **Consumer concept reconciled:** record selected layout and sound patterns,
    rejected alternatives, supported sizes and feedback/lifecycle policy. Map
    every proposed requirement to an existing capability or a consumed local seam.
-2. **Readable real input:** capture before/after native screenshots at1026x607
-   and a larger supported window, with reported renderer, window/output sizes
+2. **Readable real input:** compare native fullscreen and windowed launch,
+   including before/after screenshots at1026x607 and the actual monitor size,
+   with reported renderer, window/output sizes
    and scaling. Exercise toolbar and keyboard FLOW, queued pause, resume/application,
    refusal, fuse/shatter, terminal result and restart. Verify actual drawing and
    hit testing agree; native resize/DPI receiving is separate from software pixels.

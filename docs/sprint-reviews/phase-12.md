@@ -68,7 +68,8 @@ provenance is Git-backed. Final documentation-head CI is the merge gate.
 Bottom-up receiving establishes ordering, owned frame publication, bounded log
 loss and exact allocation costs. Top-down native interaction exposes a readable
 state headline but insufficiently large detailed HUD and edge-constrained tools.
-The next slice prioritizes understandable command/status feedback and a bounded
+The next slice evaluates fullscreen as the default with a windowed toggle and
+actual display-scale receiving, then prioritizes command/status feedback and a bounded
 sound prototype, weighing fidelity against verified ownership/timing/lifecycle.
 Physical offscreen graphics do not justify switching the desktop backend yet.
 Keep policy local; demonstrated neutral missing contracts require a minimal
