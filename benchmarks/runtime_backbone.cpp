@@ -2,6 +2,9 @@
 #include <crucible/runtime/IntentDelivery.hpp>
 #include <crucible/runtime/ReferenceMissionRoute.hpp>
 #include <crucible/presentation/ScenarioSnapshot.hpp>
+#if CRUCIBLE_ENABLE_DIAGNOSTICS
+#include <crucible/runtime/RuntimeDiagnostics.hpp>
+#endif
 #include <algorithm>
 #include <array>
 #include <chrono>
@@ -237,6 +240,34 @@ void MissionBenchmark(Arm arm,std::string_view name,bool structural) {
     Emit(name,structural ? "structural_admission" : "reference_admission",population,std::span{admissions}.first(admitted));
     EmitState(name,label,population,*run);
 }
+#if CRUCIBLE_ENABLE_DIAGNOSTICS
+void DiagnosticsBenchmark(Arm arm, std::string_view name) {
+    std::unique_ptr<InspectorSession> run;
+    EmitOne(name, "diagnostic_inspector_startup", 64, Measure([&] {
+        run = std::make_unique<InspectorSession>(64, HeadlessSession::Limits{1,16},
+            std::nullopt, true, arm, InspectorSession::Diagnostics::bounded);
+    }));
+    Require(run->GetDiagnostics() && run->GetDiagnostics()->GetStatistics().valid,
+        "bounded diagnostic benchmark initialized");
+    run->Pause();
+    Accepted(run->TryFuseRelay());
+    const auto refuse = [&] {
+        Require(run->TryFuseRelay().status == CommandIngress::AdmissionStatus::full,
+            "diagnostic benchmark preserves full refusal");
+    };
+    EmitOne(name, "diagnostic_refusal_first", 64, Measure(refuse));
+    std::array<Measurement,2000> refusals{};
+    for (auto& result : refusals) result = Measure(refuse);
+    Emit(name, "diagnostic_refusal_to_exhaustion", 64, refusals);
+    const auto statistics = run->GetDiagnostics()->GetStatistics();
+    Require(statistics.dropped_records > 0 && statistics.truncated_records == 0,
+        "diagnostic benchmark reaches counted exhaustion");
+    std::cout << "{\"arm\":\"" << name
+        << "\",\"workload\":\"diagnostic_state\",\"entities\":64,\"dropped\":"
+        << statistics.dropped_records << ",\"completed_tick\":"
+        << run->GetSnapshot().GetInfo()->completed_tick << "}\n";
+}
+#endif
 }
 int main(int argc,char** argv) {
     try {
@@ -249,6 +280,9 @@ int main(int argc,char** argv) {
         std::cout << std::setprecision(17);
         AdmissionBenchmark(arm,name);
         for (const auto population : {64U,2048U}) OrdinaryBenchmark(arm,name,population);
+#if CRUCIBLE_ENABLE_DIAGNOSTICS
+        DiagnosticsBenchmark(arm,name);
+#endif
         if (argc==3) { MissionBenchmark(arm,name,false); MissionBenchmark(arm,name,true); }
     } catch (const std::exception& error) { std::cerr << error.what() << '\n'; return 1; }
 }
