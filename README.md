@@ -86,7 +86,15 @@ python scripts/run_tests.py --preset desktop-release
 ```
 
 Windows uses a VS developer prompt and `.exe` suffix. Linux needs X11 or Wayland
-development libraries and a display. Use **1/2/3** for Attract/Repel/Erase, **4** for
+development libraries and a display. To receive optional diagnostics:
+
+```sh
+cmake --preset desktop-release -DCRUCIBLE_ENABLE_DIAGNOSTICS=ON
+cmake --build --preset desktop-release --parallel 4
+./build/desktop-release/src/desktop/crucible_desktop --diagnostics
+```
+
+Windows adds `.exe` to the launch command. Use **1/2/3** for Attract/Repel/Erase, **4** for
 Flow; **Tab** selects a field slot. Click for a radial edit, drag and release for a
 straight current. Middle drag pans, wheel zooms, **F** fits (fuses in structural mode), **X** shatters in structural mode, **Space** pauses,
 **R** restarts, **Delete** erases and **Escape** cancels a preview. Admitted edits
@@ -150,6 +158,6 @@ defines ownership; the [active log](docs/ACTIVE_WORK_LOG.md) reserves paths and 
 [Sprint reviews](docs/sprint-reviews/README.md) retain findings, evidence and follow-ups.
 The repository's own license remains undecided; dependency licenses stay with their projects.
 
-Current: [Phase12](docs/phases/phase12.md) receives runtime budgets and opt-in bounded
-diagnostics. [Phase13](docs/phases/phase13.md) proposes a balanced presentation,
+Delivered: [Phase12](docs/phases/phase12.md) received runtime budgets and opt-in bounded
+diagnostics and merged in PR25. [Phase13](docs/phases/phase13.md) proposes a balanced presentation,
 interaction and sound slice, shaped by native receiving and measured limits.

@@ -88,6 +88,14 @@ portable work proceeds. Windows descendant-process timeout cleanup remains HW-01
 
 ## Binary assets and Git LFS
 
+For interactive work, pass the matching automated behavior/lifetime checks first,
+then provide [personal review steps and expected results](docs/playtests/phase12-personal-review.md)
+for the exact build. Manual review addresses comprehension/presentation; native
+receiving and synthetic fixtures remain distinct. Use computer control mainly
+to diagnose a reported failed step. Review README as a fresh viewer before closing
+an increment: features, launch, controls, optional prerequisites and limits must
+be readily discoverable.
+
 Install [Git LFS](https://git-lfs.com/) before cloning. For a new or existing
 checkout, run:
 
