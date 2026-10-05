@@ -159,4 +159,4 @@ The next phase begins by reassessing these facts rather than repeating the old t
 
 Current increment is [Phase12](phase12.md); [Phase13](phase13.md) shapes a balanced consumer slice. Shader portability and second-backend
 work retain their capability gates in the hardware backlog; they are not
-prerequisites for this SDL-free rules investigation.
+prerequisites for the received runtime diagnostics or proposed consumer slice.

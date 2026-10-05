@@ -37,7 +37,7 @@ Release capture provenance and explicit one-summary-per-run cadence fixture.
 [Production budgets and raw evidence](../workstreams/runtime/phase12-budgets.md)
 cover five uncontended alternating independent-process pairs at64/2048 samples,
 267/448-tick WON missions, startup/first/steady/admission and diagnostic exhaustion.
-Admissions and diagnostic emissions allocate zero replaceable C++ objects.
+Admissions and diagnostic refusal emissions allocate zero replaceable C++ objects.
 Timings are advisory: probe/timer resolution, OS load and unmeasured thermal state
 prevent throughput/default-promotion conclusions. Rendering is excluded.
 

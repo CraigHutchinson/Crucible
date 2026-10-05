@@ -39,7 +39,7 @@ Follow the [standing design loop](README.md#standing-two-way-design-loop).
 Phase12 native Windows operator receiving exercised restart, pause, FLOW admission
 while paused at tick456, application after resume at tick486 and a later pause at
 tick891. Its 1026x607 screenshot exposed tiny HUD body text (approximately6px) and
-a FLOW label clipped near the right edge. This is useful actual input/rendering
+an edge-constrained FLOW toolbar. This is useful actual input/rendering
 evidence; it is not a participant accessibility, balance or comprehension result.
 Link the exact captures and provenance from the completed Phase12 review at
 dispatch, rather than treating this summary as a new acceptance receipt.
@@ -83,6 +83,8 @@ it has independent upload, retirement, compatibility and frame-budget gates.
   supported fullscreen/window/DPI range and a minimum usable window behavior
   from native evidence. Receive fullscreen startup, returning to a window,
   focus changes and restored window geometry before selecting the default.
+  Provide a visible way to leave fullscreen and a usable fallback if it fails;
+  preserve camera/tool, command receipts and mission/pause state across toggles.
   A starting target is body text at least12 physical pixels at the
   received 1026x607 window, subject to concept/actual capture review. Fit or wrap
   controls; never silently clip a clickable label. Keep coordinate conversion

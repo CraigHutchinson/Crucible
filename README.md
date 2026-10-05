@@ -25,7 +25,8 @@ applied fields from the dashed preview. [Capture provenance](docs/workstreams/in
 
 Phase 8 was recovered and [merged in PR 21](https://github.com/CraigHutchinson/Crucible/pull/21).
 Its [review](docs/sprint-reviews/phase-08.md) separates original local validation from
-publication. The default desktop uses the concrete software painter; an optional
+publication. The default desktop uses the concrete SDL painter; software capture
+fixtures are separate. An optional
 Vulkan instancing receiver has separate readback and fault fixtures. Human usability,
 physical-device performance and iOS receiving remain open.
 

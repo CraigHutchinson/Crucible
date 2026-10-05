@@ -26,7 +26,7 @@ Factions, threaded gameplay, population growth and terrain remain future work.
 | Telemetry | Optional RuntimeDiagnostics consumed by InspectorSession and desktop | Startup-owned64KiB image, numeric refusal/terminal records, counted drops, cold decode; scoped global logger restoration on coordinator only |
 
 Core publicly exposes Contracts/ECS and project requirements; domain targets remain
-private. Runtime links Core and production Pub/Pipeline privately. Builds with testing disabled
+private. Runtime links Core publicly and production Pub/Pipeline privately. Builds with testing disabled
 fetch ECS/H2/Pub/Pipeline and optional SDL; Log is acquired only when diagnostics
 are enabled. Desktop, mission
 routes and scenario exports consume the integrated path. Direct execution/replay

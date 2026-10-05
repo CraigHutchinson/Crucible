@@ -170,5 +170,5 @@ bounded broker/executor copy. R01 fixed identities remain received; dynamic crea
 and recycling retain upstream capacity/provenance/generation/failure gates. R04
 bounded diagnostics and measured R03 run allocation budgets are received in Phase12.
 Warmed integrated pumps allocate3 times/96 requested bytes; admission and diagnostic
-emission allocate zero replaceable C++ objects. Retain exact pins and existing graph:
+refusal emission allocate zero replaceable C++ objects. Retain exact pins and existing graph:
 no demonstrated need for new storage APIs. No extraction or measured speedup is claimed.
