@@ -16,7 +16,9 @@ consider. Read the latest review before planning or delegating another sprint.
 | 7 | Controlled GPU failure/retirement and mission timing; merged and original evidence recovered | [Phase 7 review](phase-07.md), [plan](../phases/phase7.md) | PR17 `d2fda2a`; recovery PR19 `50f61d8` |
 | 8 | Straight flow, primitive cues and concepts; recovered/merged, original local evidence retained | [Phase 8 review](phase-08.md), [plan](../phases/phase8.md) | `a95c511`, PR21 |
 | 9 | Rules shootout and actual relay-density spike; investigative scope delivered | [Phase 9 review](phase-09.md), [plan](../phases/phase9.md) | Dispatch `a95c511`; [PR22 acceptance/merge receipt](https://github.com/CraigHutchinson/Crucible/pull/22) |
-| 10 | Fixed-identity relay loop, conserved loss/protection/hold and live owned receiving | [Phase10 review](phase-10.md), [plan](../phases/phase10.md) | Dispatch fc9a468; final Phase10 PR receipt |
+| 10 | Fixed-identity relay loop, conserved loss/protection/hold and live owned receiving | [Phase10 review](phase-10.md), [plan](../phases/phase10.md) | `262c4eb`, [PR23](https://github.com/CraigHutchinson/Crucible/pull/23) |
+
+| 11 | Production Pub/Pipeline backbone; local receiving complete | [Review](phase-11.md), [plan](../phases/phase11.md) | Dispatch `262c4eb`; [PR24 publication receipt](https://github.com/CraigHutchinson/Crucible/pull/24) |
 
 ## Review procedure
 

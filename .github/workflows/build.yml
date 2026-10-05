@@ -69,8 +69,8 @@ jobs:
           cmake --preset release -B build/production -DBUILD_TESTING=OFF
           cmake --build build/production --parallel 4
           build/production/crucible --mission --route
-          test ! -d build/production/_deps/sub0pipeline-src
-          test ! -d build/production/_deps/sub0pub-src
+          test -d build/production/_deps/sub0pipeline-src
+          test -d build/production/_deps/sub0pub-src
           test ! -d build/production/_deps/sub0log-src
   sanitize:
     runs-on: ubuntu-24.04

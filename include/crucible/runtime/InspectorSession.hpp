@@ -9,6 +9,8 @@ namespace crucible::runtime {
  */
 class InspectorSession {
 public:
+    /// Direct is an explicit receiving/measurement comparator, sharing all game rules.
+    enum class ExecutionPath { integrated, direct };
     /** Allocates the fixed 64x32, four-field finite-resource scenario and initial frame.
      * @param[in] samples Fixed population; no subsequent structural growth.
      * @param[in] limits Startup bounds for pending commands and completed trace.
@@ -18,7 +20,8 @@ public:
      */
     explicit InspectorSession(std::size_t samples = 2048,
         HeadlessSession::Limits limits = {64, 4096},
-        std::optional<ReclamationMissionSettings> mission = std::nullopt, bool structural = false);
+        std::optional<ReclamationMissionSettings> mission = std::nullopt, bool structural = false,
+        ExecutionPath execution = ExecutionPath::integrated);
     ~InspectorSession();
     InspectorSession(const InspectorSession&) = delete;
     InspectorSession& operator=(const InspectorSession&) = delete;
@@ -55,6 +58,8 @@ private:
     const HeadlessSession::Limits limits_;
     const std::optional<ReclamationMissionSettings> mission_;
     const bool structural_;
+    const ExecutionPath execution_;
+    std::uint64_t run_id_{1};
     std::unique_ptr<Run> run_;
 };
 }

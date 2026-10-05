@@ -17,8 +17,10 @@ package is not a permanent agent assignment.
 | 7 | Controlled GPU fault/retirement receiving and mission timing investigation | [Plan](phase7.md), [review](../sprint-reviews/phase-07.md); merged/recovered through PR19 at `50f61d8` |
 | 8 | Playable straight flow, primitive cues and resource/faction concepts | [Plan](phase8.md), [review](../sprint-reviews/phase-08.md); recovered/merged PR21 at `a95c511` |
 | 9 | Structural/arena rules comparison and production relay-density investigation | [Plan](phase9.md), [review](../sprint-reviews/phase-09.md); investigation delivered, [PR22 publication receipt](https://github.com/CraigHutchinson/Crucible/pull/22) |
-| 10 | Playable fixed-identity relay lattice, loss/protection/hold and owned replay | [Plan](phase10.md), [review](../sprint-reviews/phase-10.md); receiving in progress |
-| 11 | Forge ECS/Pub v2 and Pipeline into the production backbone; upstream API evolution | [Plan](phase11.md); planned after Phase10 merge |
+| 10 | Playable fixed-identity relay lattice, loss/protection/hold and owned replay | [Plan](phase10.md), [review](../sprint-reviews/phase-10.md); merged PR23 at `262c4eb` |
+| 11 | Forge ECS/Pub v2 and Pipeline into the production backbone; upstream API evolution | [Plan](phase11.md), [review](../sprint-reviews/phase-11.md); local receiving complete, [PR24 receipt](https://github.com/CraigHutchinson/Crucible/pull/24) |
+
+| 12 | Runtime budgets and opt-in bounded diagnostics | [Proposal](phase12.md); dispatch after Phase11 merge |
 
 The [sprint-review archive](../sprint-reviews/README.md) tracks findings, follow-ups
 and delegation lessons for every completed increment.
@@ -125,6 +127,6 @@ End with a short retrospective: what was delivered, what was consolidated/deferr
 what review found, which uncertainty remains and how that changes the next division.
 The next phase begins by reassessing these facts rather than repeating the old team map.
 
-Current dispatch is [Phase10](phase10.md); [Phase11](phase11.md) plans the owned sub0 backbone. Shader portability and second-backend
+Current dispatch is [Phase11](phase11.md); [Phase12](phase12.md) proposes measured budgets and bounded diagnostics. Shader portability and second-backend
 work retain their capability gates in the hardware backlog; they are not
 prerequisites for this SDL-free rules investigation.

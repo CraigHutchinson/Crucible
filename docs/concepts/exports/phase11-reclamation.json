@@ -1,0 +1,19 @@
+{
+  "source_head": "473e4b46cbefd30ac2675723f5e1123dd7984375",
+  "source_tree": "ced68890a6baabdf701b2c149ae34a67dfa3dde2",
+  "dirty": false,
+  "command": "./build/release/crucible --reclamation --export-svg phase11-reclamation.svg",
+  "toolchain": "Linux GCC 13.3 / CMake 4.4.4 / Ninja 1.13.2",
+  "backend": "owned-state SVG export, CairoSVG raster inspected at 880x520",
+  "scenario": "fixed 2048 samples, 64x32 cells, 2 radial slots; paint at startup, erase slot0 before boundary11; completed tick20",
+  "tick": 20,
+  "stock": 7238,
+  "mobile": 2048,
+  "reserve": 954,
+  "initial": 10240,
+  "commands": 3,
+  "replay": "full-state equal",
+  "svg_sha256": "3a2e85a9908705c43773222fe4ccca56ee7d321e484f056d7c01052bf3f006fd",
+  "executable_sha256": "3635a8272c1d29f3d02becf3ea86325aa9c0a27a4db79376239114a65ec8a2dc",
+  "visual_check": "Cyan sample field, remaining amber repulsor, red infection, tick20 and conserved ledger legible; no physical or human acceptance claim"
+}

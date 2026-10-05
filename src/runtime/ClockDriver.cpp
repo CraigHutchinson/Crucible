@@ -5,8 +5,10 @@
 
 namespace crucible::runtime {
 
-ClockDriver::ClockDriver(HeadlessSession& session, std::function<bool()> stop_after_boundary) noexcept
-    : session_(session), stop_after_boundary_(std::move(stop_after_boundary)) {}
+ClockDriver::ClockDriver(HeadlessSession& session, std::function<bool()> stop_after_boundary,
+        std::function<HeadlessSession::StepResult()> step_boundary) noexcept
+    : session_(session), stop_after_boundary_(std::move(stop_after_boundary)),
+      step_boundary_(std::move(step_boundary)) {}
 
 void ClockDriver::DiscardTime(std::uint64_t scaled_nanoseconds) noexcept {
     constexpr auto maximum = std::numeric_limits<std::uint64_t>::max();
@@ -42,7 +44,7 @@ ClockDriver::PumpResult ClockDriver::TryPump(std::chrono::nanoseconds elapsed) {
     while (remainder_ >= tick_units && advanced < 4) {
         HeadlessSession::StepResult result;
         try {
-            result = session_.TryStep();
+            result = step_boundary_ ? step_boundary_() : session_.TryStep();
         } catch (...) {
             status_ = Status::blocked;
             throw;

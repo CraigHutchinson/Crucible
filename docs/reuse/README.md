@@ -16,8 +16,8 @@ the guarantees actually checked. No upstream edits were made during this catalog
 | ID / area | Current placement/status | Reuse direction and phase action | Gate / evidence |
 |---|---|---|---|
 | R01: ECS storage and identity | Sub0ECS v2, consumed by Simulation | Feed bounded creation/identity and consumer integration findings into Sub0ECS; keep game entities/rules in Crucible | Pinned audit records 24-bit indices, generation reuse and lack of transactional creation guarantee; upstream changes need current-source reproduction and strict consumer checks |
-| R02: typed delivery | Sub0Pub v2, test-only stack consumer | Improve callback lifetime examples and bounded ingress integration when a real input adapter arrives | Preserve explicit disconnect/drain ownership; the pinned audit is evidence, not a claim that every finding remains at current HEAD |
-| R03: execution and joining | Sub0Pipeline, test-only sequential stack consumer | Feed concrete bounded executor/join/cancellation requirements upstream during W7; retain game phase policy locally | Exact-version join/failure fixtures before changing pins; no new concurrency work in phase 2 |
+| R02: typed delivery | Sub0Pub v2, production scoped synchronous input | Improve callback lifetime examples and bounded ingress integration when a real input adapter arrives | Preserve explicit disconnect/drain ownership; the pinned audit is evidence, not a claim that every finding remains at current HEAD |
+| R03: execution and joining | Sub0Pipeline, production sequential boundary graph | Feed concrete bounded executor/join/cancellation requirements upstream during W7; retain game phase policy locally | Exact-version join/failure fixtures before changing pins; no new concurrency work in phase 2 |
 | R04: compact observation | Sub0Log, test-only decoded-record consumer | Use consumed runtime summaries to improve logging adapters, teardown examples and round-trip tests | Phase 2 summary first; logger adapter follows an actual caller and bounded storage/lifecycle evidence |
 | R05: hex topology and geometry | [Sub0HexGrid H2](Sub0HexGrid.md), finite regions/complete candidates delivered; consumed by Crucible spatial Grid | Phase 3 P3-02 preserves physical/query compatibility and delivers HX-07 receiving fixtures; hierarchy is separate research | Upstream PR 4 delivers package/numerical evidence; [Phase 3 evidence](../workstreams/integration/phase3-validation.md) records complete-query/lifetime/replay promotion gates |
 | R06: spatial bins and radius traversal | Crucible::Spatial, integrated hex geometry with private rectangular compatibility | Keep entity binning local for now; identify whether a geometry library can support it without owning SampleId/ECS or gameplay | Compare complete queries to brute force for the chosen topology; second demonstrated consumer before extracting a generic binning library |
@@ -158,3 +158,15 @@ receiving; library adoption alone is not a reason to add either wrapper.
 
 The [owned-library roadmap](sub0-roadmap.md) makes long-term sub0 evolution and
 upstream requirement/pin-promotion ownership explicit.
+
+
+## Phase 11 disposition
+
+R02/R03 now have real desktop, route and export callers. Pub scoped delivery copies
+through the existing queue; Pipeline orders commit/capture/mission under one
+coordinator. Current APIs suffice, full pins retained after exact-source comparison.
+R07 receipt/mission/cutoff policy remains local application glue; no umbrella or
+bounded broker/executor copy. R01 fixed identities remain received; dynamic creation
+and recycling retain upstream capacity/provenance/generation/failure gates. R04
+bounded diagnostics and measured R03 run allocation budgets are proposed Phase12
+consumers. No extraction or measured speedup is claimed.

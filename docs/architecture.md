@@ -4,7 +4,7 @@
 boundaries and the gates for changing them. [Concepts](concepts/README.md) guide
 material and shape readability. Art does not define resource rules or select a backend.
 
-Dispatch baseline is PR22 merge `fc9a4689992e0f803faf07d4315ddb1bf8d78ce1`.
+Dispatch baseline is PR23 merge `262c4eba4211779042f17bf5a2da03d333c35a91`.
 [Phase10](phases/phase10.md) extends the sequential owned command loop with fixed
 mobile/anchored/lost participation, one relay lattice, protection and hold. No ECS
 allocation/destruction occurs after startup. FLOW remains a straight capsule current.
@@ -19,15 +19,17 @@ Factions, threaded gameplay, population growth and terrain remain future work.
 | Spatial / Fields / Swarm | Pinned H2 geometry and local bins; field sampling; bounded separation/steering | Immutable tick input, startup-sized output; complete-query and independent numerical oracles |
 | Blight / Interactions | Cardinal current/next infection buffers; deterministic stock-to-reserve arbitration | Stock is independent of infection; atomic resource publication, not whole-tick rollback |
 | HeadlessSession | Borrowed Simulation, bounded ingress, completed command trace | Simulation outlives session; only ingress supports producer threads |
-| InspectorSession | Owns Simulation/session/clock and a reusable ScenarioSnapshot | Restart constructs a full replacement first; failed construction preserves the old run |
+| InspectorSession | Owns Simulation/session, isolated intent route, boundary graph/clock and mission | Restart constructs a full replacement first; failed construction preserves the old run |
 | Presentation | Camera2D/FieldTool and owned copied frames; concrete ScenePainter | No ECS views in drawing; no generic renderer hierarchy |
 | Optional GPU receiver | Owned InstancePacket, camera uniforms, three fence-retired slots and readback receipts | Explicit lifetime/generation checks; no default desktop promotion |
-| Scheduling / Telemetry | Sequential stack integration and reserved future adapters | Folder/INTERFACE targets do not imply a production threaded scheduler or logger |
+| IntentDelivery / BoundaryPipeline | Production Pub v2 queue admission and Pipeline commit/capture/mission graph | Coordinator-only scoped delivery and untimed inline jobs; no ECS callback mutation |
+| Telemetry | Test-only Log record receiving | Bounded production diagnostics await a real consumer |
 
 Core publicly exposes Contracts/ECS and project requirements; domain targets remain
-private. Runtime links Core; future Pub/Pipeline/Log adapters require real callers.
-Production builds with testing disabled fetch ECS/H2 and optional SDL only.
-Pub/Pipeline/Log are test-only until concrete runtime adapters consume them.
+private. Runtime links Core and production Pub/Pipeline privately. Builds with testing disabled
+fetch ECS/H2/Pub/Pipeline and optional SDL; Log remains test-only. Desktop, mission
+routes and scenario exports consume the integrated path. Direct execution/replay
+remains a receiving comparator, sharing simulation/mission policy.
 Target-scoped CMake, explicit source lists and full pins keep builds and stream ownership
 reviewable. No stub API, copied geometry kernel or single-implementation interface is needed.
 
@@ -62,6 +64,23 @@ The optional radial-only path precedes the bounded steering setting. Resource-di
 scenarios retain ordinary spread; the legacy ECS-only constructor retains its isolated
 integration workload. Future parallel phases must declare reads/writes, use disjoint
 scratch and join before structural mutation. A DAG alone does not make ECS or Pub safe.
+
+## Production delivery and graph publication
+
+Each run owns a private typed Pub domain, one sink and publisher. A batch span is
+borrowed only for synchronous delivery; the sink copies through CommandIngress,
+which remains the sole admission policy. Receipts own run/request IDs and admission
+status/sequence range. No duplicate broker, reply queue or intermediate payload
+allocation. The adapter and restart are coordinator-only.
+
+A startup-built Pipeline graph orders TryStep, capture and mission evaluation.
+Normal pause/close/trace exhaustion skips descendants without draining input.
+Two owned frame buffers preserve the last good publication on failure. Mission
+progress stages from that same completed frame and commits after graph success;
+terminal admission closes before another catch-up boundary. Inline untimed jobs
+have no orphan work; exceptions fail-stop without rolling back committed world
+state. Runtime bookkeeping may allocate; startup-sized simulation storage does
+not imply an allocation-free graph. See [Phase11](phases/phase11.md).
 
 ## Resource and structural rules
 
@@ -102,8 +121,8 @@ physical loss/performance and a second backend remain separate gates. See
 [Phase 7 review](sprint-reviews/phase-07.md).
 
 Teardown closes admission, stops boundaries and joins producers/readers before
-releasing borrowed storage. Future Pub callbacks must disconnect/drain while ingress
-still exists; future executor jobs must join before their captures die. GPU resources
+releasing borrowed storage. Pub sinks explicitly disconnect while ingress and domain still exist; inline graph
+jobs cannot outlive a call. Concurrent producers/readers still require joining. GPU resources
 remain until fence/drain policy permits release. World replacement needs the same
 quiescence. No silent continuation after an unexpected tick failure.
 
@@ -118,7 +137,9 @@ quiescence. No silent continuation after an unexpected tick failure.
 - Sub0HexGrid H2 supplies checked assignment/conservative candidates. Crucible owns
   IDs, bins and exact filtering, with private rectangular and exact-scan fallbacks
   for unsupported geometry/radius domains. Blight still uses cardinal adjacency.
-- Pub lifetime/threaded delivery needs exact-version receiving before production use.
+- Pub scoped synchronous delivery is received in Phase11; concurrent adapter calls
+  remain unsupported. Most-derived registration/disconnection and owned queue copy
+  are explicit. Threaded delivery still needs separate exact-version receiving.
   [Pinned audit](workstreams/integration/wave1-pinned-audit.md) and the
   [reuse catalog](reuse/README.md) record what has actually been checked.
 

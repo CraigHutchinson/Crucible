@@ -53,3 +53,11 @@ Optional Log diagnostics follow; no speculative umbrella/runtime extraction.
 Merge requires nine final-head jobs and a head-guarded PR, then verify accepted tree
 and clean local main. Claims close with that receipt; source/docs/artifacts preserved,
 no prior worktree cleanup. Read-only capture steps retain repository permissions.
+
+
+Publication received: [PR23](https://github.com/CraigHutchinson/Crucible/pull/23),
+head `915c8b53e7ebef3d766425f6f9d19b72371bce67`, tree
+`57c36aee978ff0cfd30697de90beff86a970792b`; all nine jobs passed in
+[run37247900294](https://github.com/CraigHutchinson/Crucible/actions/runs/37247900294).
+Merged to `262c4eba4211779042f17bf5a2da03d333c35a91` with the same tree.
+Phase11 starts from that independently cloned baseline.
