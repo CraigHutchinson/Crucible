@@ -26,25 +26,31 @@ CommandIngress::Admission CommandIngress::RejectAdmission(AdmissionStatus status
     return {status, 0, 0};
 }
 
-CommandIngress::Admission CommandIngress::TryAdmit(std::span<const FieldEdit> edits) {
-    const std::scoped_lock lock{mutex_};
+template<class Payload>
+CommandIngress::Admission CommandIngress::TryAdmitLocked(std::span<const Payload> commands) {
     if (closed_) return RejectAdmission(AdmissionStatus::closed);
-    if (edits.empty() || !std::ranges::all_of(edits, [this](const FieldEdit& edit) {
-            return edit.IsValid(field_capacity_);
-        })) return RejectAdmission(AdmissionStatus::invalid);
-    if (edits.size() > ring_.size() - pending_) return RejectAdmission(AdmissionStatus::full);
-    if (edits.size() > std::numeric_limits<std::uint64_t>::max() - last_sequence_)
+    if (commands.empty() || !std::ranges::all_of(commands, [this](const auto& command) {
+        return command.IsValid(field_capacity_);
+    })) return RejectAdmission(AdmissionStatus::invalid);
+    if (commands.size() > ring_.size() - pending_) return RejectAdmission(AdmissionStatus::full);
+    if (commands.size() > std::numeric_limits<std::uint64_t>::max() - last_sequence_)
         return RejectAdmission(AdmissionStatus::sequence_exhausted);
-
-    const auto first_sequence = last_sequence_ + 1;
-    for (const auto& edit : edits) {
-        // Subtract before adding so even capacities near size_t's limit cannot wrap.
+    const auto first = last_sequence_ + 1;
+    for (const auto& command : commands) {
         const auto tail = pending_ < ring_.size() - head_
             ? head_ + pending_ : pending_ - (ring_.size() - head_);
-        ring_[tail] = {edit, ++last_sequence_};
+        ring_[tail] = {BoundaryCommand{command}, ++last_sequence_};
         ++pending_;
     }
-    return {AdmissionStatus::accepted, first_sequence, last_sequence_};
+    return {AdmissionStatus::accepted, first, last_sequence_};
+}
+CommandIngress::Admission CommandIngress::TryAdmit(std::span<const FieldEdit> commands) {
+    const std::scoped_lock lock{mutex_};
+    return TryAdmitLocked(commands);
+}
+CommandIngress::Admission CommandIngress::TryAdmitCommands(std::span<const BoundaryCommand> commands) {
+    const std::scoped_lock lock{mutex_};
+    return TryAdmitLocked(commands);
 }
 
 CommandIngress::Cutoff CommandIngress::CaptureCutoff() const {

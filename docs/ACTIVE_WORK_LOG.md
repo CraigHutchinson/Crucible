@@ -297,3 +297,13 @@ Final publication is tracked by [PR22](https://github.com/CraigHutchinson/Crucib
 reviewed head/tree, nine-job exact-head acceptance and actual merge/main receipt.
 Path/CPU work is complete; publication claim closes with that receipt. No retained
 historical worktree/branch/artifact cleanup was performed.
+
+## Phase 10 structural loop, 2026-10-05
+
+Baseline PR22 merge fc9a468. User renews implementation/commit/push/merge permission.
+Architect plus the same two workers; root owns all serial build/test CPU.
+Architect owns runtime/contracts (BoundaryCommand), mission/main, root inventories,
+docs/roadmap and evidence/publication. structural_rules explicitly owns shared
+StructuralState/SampleState/BiomassLedger/StateCopy and Simulation plus interactions
+paths/tests. arena_rules owns presentation/desktop and presentation tests. All work
+on phase10-structural-relay, disjoint paths; no worker builds or stages others' files.

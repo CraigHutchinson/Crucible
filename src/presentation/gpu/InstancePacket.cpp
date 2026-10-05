@@ -42,6 +42,8 @@ bool InstancePacket::TryCapture(const ScenarioSnapshot& frame, std::span<const O
     for (const auto& color : colors) if (!ValidColor(color)) return false;
     for (const auto& color : marker_colors) if (!ValidColor(color)) return false;
     for (const auto& sample : samples) {
+        if (sample.activity != SampleActivity::mobile && sample.activity != SampleActivity::anchored &&
+            sample.activity != SampleActivity::lost) return false;
         const auto p = sample.position;
         if (!std::isfinite(p.x) || !std::isfinite(p.y) || p.x < 0 || p.y < 0 ||
             p.x > extent->width || p.y > extent->height) return false;
@@ -57,11 +59,14 @@ bool InstancePacket::TryCapture(const ScenarioSnapshot& frame, std::span<const O
         cells_[i] = {{static_cast<float>(x), static_cast<float>(y), static_cast<float>(half_x), static_cast<float>(half_y)},
             colors.empty() ? CellColor(blight[i] != 0, stocks.empty() || stocks[i] != 0) : colors[i]};
     }
-    for (std::size_t i = 0; i < samples.size(); ++i)
-        markers_[i] = {{static_cast<float>(static_cast<double>(samples[i].position.x) / extent->width),
+    std::size_t mobile_count = 0;
+    for (std::size_t i = 0; i < samples.size(); ++i) {
+        if (samples[i].activity != SampleActivity::mobile) continue;
+        markers_[mobile_count++] = {{static_cast<float>(static_cast<double>(samples[i].position.x) / extent->width),
             static_cast<float>(static_cast<double>(samples[i].position.y) / extent->height), 0, 0},
             marker_colors.empty() ? OpaqueColor{119 / 255.F, 221 / 255.F, 1, 1} : marker_colors[i]};
-    cell_count_ = blight.size(); sample_count_ = samples.size(); grid_ = info->grid; tick_ = info->completed_tick;
+    }
+    cell_count_ = blight.size(); sample_count_ = mobile_count; grid_ = info->grid; tick_ = info->completed_tick;
     return true;
 }
 std::optional<Projection> TryMakeProjection(const InstancePacket& packet, const Camera2D& camera) noexcept {

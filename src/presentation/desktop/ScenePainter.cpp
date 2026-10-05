@@ -23,6 +23,7 @@ constexpr SDL_FColor Nanite{119 / 255.F, 221 / 255.F, 255 / 255.F, 1};
 constexpr SDL_FColor Attract{115 / 255.F, 227 / 255.F, 173 / 255.F, 1};
 constexpr SDL_FColor Repel{1, 199 / 255.F, 107 / 255.F, 1};
 constexpr SDL_FColor Text{.86F, .91F, .98F, 1};
+constexpr SDL_FColor Lattice{1, .76F, .32F, 1};
 constexpr ScreenRect View{24, 96, 1232, 520};
 
 bool Color(SDL_Renderer& renderer, SDL_FColor color) noexcept {
@@ -119,6 +120,31 @@ bool Stroke(SDL_Renderer& renderer, ScreenPoint a, ScreenPoint b, SDL_FColor col
     const auto v2 = vertex(b.x - nx, b.y - ny), v3 = vertex(a.x - nx, a.y - ny);
     const std::array vertices{v0, v1, v2, v0, v2, v3};
     return SDL_RenderGeometry(&renderer, nullptr, vertices.data(), static_cast<int>(vertices.size()), nullptr, 0);
+}
+
+bool Relay(SDL_Renderer& renderer, const StructuralState& state, ScreenPoint origin, double scale) noexcept {
+    const ScreenPoint center{origin.x + state.settings.relay_center.x * scale,
+                             origin.y + state.settings.relay_center.y * scale};
+    const auto circle = [&](double radius, SDL_FColor color, bool dashed) {
+        for (std::size_t i = 0; i < 64; ++i) {
+            if (dashed && (i / 2) % 2 != 0) continue;
+            const auto a = 2 * std::numbers::pi * static_cast<double>(i) / 64;
+            const auto b = 2 * std::numbers::pi * static_cast<double>(i + 1) / 64;
+            if (!Stroke(renderer, {center.x + radius * std::cos(a), center.y + radius * std::sin(a)},
+                {center.x + radius * std::cos(b), center.y + radius * std::sin(b)}, color, .75)) return false;
+        }
+        return true;
+    };
+    if (!circle(state.settings.eligibility_radius * scale,
+        state.eligible_mobile >= StructuralSettings::cost ? Attract : Text, true)) return false;
+    if (state.occupied && !circle(state.settings.protection_radius * scale, Lattice, false)) return false;
+    const auto half = std::clamp(scale * .6, 6., 24.);
+    const std::array points{ScreenPoint{center.x, center.y - half}, ScreenPoint{center.x + half, center.y},
+                           ScreenPoint{center.x, center.y + half}, ScreenPoint{center.x - half, center.y}};
+    for (std::size_t i = 0; i < points.size(); ++i)
+        if (!Stroke(renderer, points[i], points[(i + 1) % points.size()], state.occupied ? Lattice : Text, 1.5)) return false;
+    return !state.occupied ||
+        (Stroke(renderer, points[0], points[2], Lattice, 1) && Stroke(renderer, points[1], points[3], Lattice, 1));
 }
 
 bool Arrow(SDL_Renderer& renderer, ScreenPoint center, ScreenPoint direction,
@@ -236,8 +262,18 @@ bool ScenePainter::TryDraw(SDL_Renderer& renderer, const ScenarioSnapshot& frame
         view.width != View.width || view.height != View.height || !origin || !std::isfinite(scale) || scale <= 0 ||
         !camera.TryToScreen({extent->width, extent->height}))
         return reject("camera geometry does not match canvas/frame");
-    for (const auto& sample : samples)
+    for (const auto& sample : samples) {
+        if (sample.activity != SampleActivity::mobile && sample.activity != SampleActivity::anchored &&
+            sample.activity != SampleActivity::lost) return reject("invalid sample activity");
         if (!camera.TryToScreen(sample.position)) return reject("invalid sample projection");
+    }
+    if (info->structural) {
+        const auto& structure = *info->structural;
+        if (!info->biomass || !camera.TryToScreen(structure.settings.relay_center) ||
+            !std::isfinite(structure.settings.eligibility_radius) || structure.settings.eligibility_radius < 0 ||
+            !std::isfinite(structure.settings.protection_radius) || structure.settings.protection_radius < 0 ||
+            structure.settings.hold_ticks == 0) return reject("invalid structural observation");
+    }
     for (const auto value : blight) if (value > 1) return reject("invalid infection value");
     for (std::size_t i = 0; i < fields.size(); ++i)
         if (fields[i].slot != i || !fields[i].IsValid(fields.size())) return reject("invalid committed field");
@@ -249,16 +285,21 @@ bool ScenePainter::TryDraw(SDL_Renderer& renderer, const ScenarioSnapshot& frame
             mission.settings.target_reclaimed == 0 || mission.settings.deadline_ticks == 0 ||
             mission.reclaimed > info->biomass->reserve) return reject("mission does not match captured boundary");
         const bool quota = mission.reclaimed >= mission.settings.target_reclaimed;
+        const bool held = !info->structural || (info->structural->occupied &&
+            info->structural->hold_ticks >= info->structural->settings.hold_ticks);
+        const bool won = quota && held;
+        const bool starved = info->structural && info->biomass->mobile_mass +
+            (info->structural->occupied ? StructuralSettings::refund : 0) < StructuralSettings::cost;
         const bool deadline = mission.completed_tick >= mission.settings.deadline_ticks;
         switch (mission.outcome) {
         case ReclamationMissionOutcome::active:
-            if (quota || deadline) return reject("active mission has reached an outcome");
+            if (won || deadline || starved) return reject("active mission has reached an outcome");
             break;
         case ReclamationMissionOutcome::won:
-            if (!quota || mission.completed_tick > mission.settings.deadline_ticks) return reject("invalid winning mission");
+            if (!won || mission.completed_tick > mission.settings.deadline_ticks) return reject("invalid winning mission");
             break;
         case ReclamationMissionOutcome::lost:
-            if (quota || mission.completed_tick != mission.settings.deadline_ticks) return reject("invalid losing mission");
+            if (won || (!starved && mission.completed_tick != mission.settings.deadline_ticks)) return reject("invalid losing mission");
             break;
         default: return reject("invalid mission outcome");
         }
@@ -279,18 +320,21 @@ bool ScenePainter::TryDraw(SDL_Renderer& renderer, const ScenarioSnapshot& frame
     if (!blight.empty() && !SDL_RenderGeometry(&renderer, nullptr, vertices_.data(),
             static_cast<int>(blight.size() * 4), indices_.data(), static_cast<int>(blight.size() * 6))) return false;
     const auto half = std::clamp(scale * .08, 2., 5.);
-    for (std::size_t i = 0; i < samples.size(); ++i) {
-        const auto point = *camera.TryToScreen(samples[i].position);
-        (void)Quad(vertices_.data() + i * 4, point.x - half, point.y - half,
+    std::size_t mobile_count = 0;
+    for (const auto& sample : samples) {
+        if (sample.activity != SampleActivity::mobile) continue;
+        const auto point = *camera.TryToScreen(sample.position);
+        (void)Quad(vertices_.data() + mobile_count++ * 4, point.x - half, point.y - half,
                    point.x + half, point.y + half, Nanite);
     }
-    if (!samples.empty() && !SDL_RenderGeometry(&renderer, nullptr, vertices_.data(),
-            static_cast<int>(samples.size() * 4), indices_.data(), static_cast<int>(samples.size() * 6))) return false;
+    if (mobile_count && !SDL_RenderGeometry(&renderer, nullptr, vertices_.data(),
+            static_cast<int>(mobile_count * 4), indices_.data(), static_cast<int>(mobile_count * 6))) return false;
+    if (info->structural && !Relay(renderer, *info->structural, *origin, scale)) return false;
     for (const auto& field : fields)
         if (!Field(renderer, field, *origin, scale, false, field.slot == ui.selected_slot)) return false;
     if (ui.preview && !Field(renderer, *ui.preview, *origin, scale, true, true)) return false;
     if (!SDL_SetRenderClipRect(&renderer, nullptr) || !Color(renderer, Text)) return false;
-    if (!Label(renderer, 24, 16, "CRUCIBLE / FINITE RECLAMATION", 2)) return false;
+    if (!Label(renderer, 24, 16, info->structural ? "CRUCIBLE / SECURE THE RELAY" : "CRUCIBLE / FINITE RECLAMATION", 2)) return false;
     char line[192]{};
     if (ui.mission) {
         const auto& mission = *ui.mission;
@@ -315,12 +359,12 @@ bool ScenePainter::TryDraw(SDL_Renderer& renderer, const ScenarioSnapshot& frame
     const char* run_state = ui.mission && ui.mission->outcome != ReclamationMissionOutcome::active
         ? "STOPPED" : (ui.paused ? "PAUSED" : "RUNNING");
     SDL_snprintf(line, sizeof line, "Tick %" PRIu64 " | Nanites %zu | %s%s | Slot %zu", info->completed_tick,
-                 samples.size(), run_state, ui.blocked ? " / BLOCKED" : "", ui.selected_slot + 1);
+                 mobile_count, run_state, ui.blocked ? " / BLOCKED" : "", ui.selected_slot + 1);
     if (!Label(renderer, 24, ui.mission ? 56.F : 44.F, line, ui.mission ? 1.F : 1.5F)) return false;
     if (info->biomass) {
         const auto& mass = *info->biomass;
-        SDL_snprintf(line, sizeof line, "Mass: initial %" PRIu64 " = stock %" PRIu64 " + mobile %" PRIu64 " + reserve %" PRIu64,
-                     mass.initial_total, mass.remaining_stock, mass.mobile_mass, mass.reserve);
+        SDL_snprintf(line, sizeof line, "Mass: initial %" PRIu64 " = stock %" PRIu64 " + mobile %" PRIu64 " + reserve %" PRIu64 " + lattice %" PRIu64 " + lost %" PRIu64,
+                     mass.initial_total, mass.remaining_stock, mass.mobile_mass, mass.reserve, mass.structure_mass, mass.lost_mass);
     } else SDL_snprintf(line, sizeof line, "Mass ledger unavailable in this scenario");
     if (!Label(renderer, 24, 70, line)) return false;
     const char* instruction = "Cells: red infected+stock | ochre infected+empty | green reclaimed | cyan nanites | white dashed preview";
@@ -337,7 +381,26 @@ bool ScenePainter::TryDraw(SDL_Renderer& renderer, const ScenarioSnapshot& frame
             break;
         }
     }
+    if (info->structural && ui.mission) {
+        switch (ui.mission->outcome) {
+        case ReclamationMissionOutcome::active:
+            instruction = "ACTIVE: Recover quota AND hold lattice for 120 ticks. Dashed ring: gather64. Solid amber ring: protection. X redeploys48, loses16.";
+            break;
+        case ReclamationMissionOutcome::won:
+            instruction = "WON: Quota and relay hold secured. Inspect with pan/zoom; R restarts.";
+            break;
+        case ReclamationMissionOutcome::lost:
+            instruction = "LOST: Deadline or insufficient recoverable mass. Inspect with pan/zoom; R restarts.";
+            break;
+        }
+    }
     if (!Label(renderer, 24, 84, instruction)) return false;
+    if (info->structural) {
+        const auto& state = *info->structural;
+        SDL_snprintf(line, sizeof line, "Relay: eligible %zu/64 | %s | Held %" PRIu64 "/%" PRIu64 " ticks | F fuse64 | X refund48/loss16 | FIT VIEW: camera",
+            state.eligible_mobile, state.occupied ? "ANCHORED" : "EMPTY", state.hold_ticks, state.settings.hold_ticks);
+        if (!Label(renderer, 24, 622, line)) return false;
+    }
     const std::array labels{"1 ATTRACT", "2 REPEL", "3 ERASE", "TAB SLOT", ui.paused ? "RESUME" : "PAUSE", "RESTART", "FIT VIEW", "4 FLOW"};
     static_assert(labels.size() == ToolbarButtonCount);
     for (std::size_t i = 0; i < labels.size(); ++i) {
@@ -359,7 +422,9 @@ bool ScenePainter::TryDraw(SDL_Renderer& renderer, const ScenarioSnapshot& frame
     }
     line[length] = '\0';
     if (!Color(renderer, Text) || !Label(renderer, 24, 678, line) ||
-        !Label(renderer, 24, 702, "1/2 click: radial | 4 drag: FLOW | Middle drag: pan | Wheel: zoom | Space: pause | R: restart | F: fit | Del: erase | Esc: cancel")) return false;
+        !Label(renderer, 24, 702, info->structural
+            ? "1/2 radial | 4 FLOW | Middle pan | Wheel zoom | Space pause | R restart | F fuse relay | X shatter | FIT VIEW camera | Del erase | Esc cancel"
+            : "1/2 click: radial | 4 drag: FLOW | Middle drag: pan | Wheel: zoom | Space: pause | R: restart | F: fit | Del: erase | Esc: cancel")) return false;
     return true;
 }
 }

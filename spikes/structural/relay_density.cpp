@@ -55,25 +55,6 @@ void SpatialFixture() {
     }
 }
 
-bool SameFrame(const presentation::ScenarioSnapshot& actual,
-               const presentation::ScenarioSnapshot& replay) {
-    const auto a = actual.GetInfo();
-    const auto b = replay.GetInfo();
-    if (!a || !b || a->completed_tick != b->completed_tick || a->samples != b->samples ||
-        a->fields != b->fields || a->cells != b->cells || a->biomass != b->biomass ||
-        a->grid.columns != b->grid.columns || a->grid.rows != b->grid.rows ||
-        a->grid.cell_size != b->grid.cell_size) return false;
-    return std::ranges::equal(actual.GetSamples(), replay.GetSamples(), [](const auto& x, const auto& y) {
-        return x.id == y.id && x.position.x == y.position.x && x.position.y == y.position.y &&
-            x.velocity.x == y.velocity.x && x.velocity.y == y.velocity.y;
-    }) && std::ranges::equal(actual.GetFields(), replay.GetFields(), [](const auto& x, const auto& y) {
-        return x.kind == y.kind && x.slot == y.slot && x.center.x == y.center.x &&
-            x.center.y == y.center.y && x.radius == y.radius && x.strength == y.strength &&
-            x.end.x == y.end.x && x.end.y == y.end.y;
-    }) && std::ranges::equal(actual.GetBlight(), replay.GetBlight()) &&
-        std::ranges::equal(actual.GetStocks(), replay.GetStocks());
-}
-
 void Run(std::string_view strategy, std::optional<FieldEdit> edit, std::uint64_t horizon) {
     Simulation simulation{Population, Options};
     runtime::HeadlessSession session{simulation, {8, 8}};
@@ -133,7 +114,7 @@ void Run(std::string_view strategy, std::optional<FieldEdit> edit, std::uint64_t
     presentation::ScenarioSnapshot replay_frame{Population, 4, 2048};
     Require(replay_session.TryReplay(trace, horizon).status ==
         runtime::HeadlessSession::StepStatus::advanced && replay_frame.TryCapture(replay_simulation) &&
-        SameFrame(frame, replay_frame), "full-state replay through final boundary");
+        frame.HasEqualState(replay_frame), "full-state replay through final boundary");
     std::cout << "{\"kind\":\"replay\",\"strategy\":\"" << strategy << "\",\"tick\":"
         << horizon << ",\"commands\":" << trace.size() << ",\"status\":\"full-state-pass\"}\n";
 }

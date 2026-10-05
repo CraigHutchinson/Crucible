@@ -18,7 +18,7 @@ public:
      */
     explicit InspectorSession(std::size_t samples = 2048,
         HeadlessSession::Limits limits = {64, 4096},
-        std::optional<ReclamationMissionSettings> mission = std::nullopt);
+        std::optional<ReclamationMissionSettings> mission = std::nullopt, bool structural = false);
     ~InspectorSession();
     InspectorSession(const InspectorSession&) = delete;
     InspectorSession& operator=(const InspectorSession&) = delete;
@@ -33,6 +33,9 @@ public:
      * @return Accepted sequence or all-or-nothing rejection from CommandIngress.
      */
     [[nodiscard]] CommandIngress::Admission TryAdmitFieldEdit(const FieldEdit& edit);
+    [[nodiscard]] CommandIngress::Admission TryFuseRelay();
+    [[nodiscard]] CommandIngress::Admission TryShatterRelay();
+    [[nodiscard]] std::optional<StructuralCommandResult> GetLastStructuralResult() const noexcept;
     void Pause() noexcept;
     void Resume() noexcept;
     void Close();
@@ -51,6 +54,7 @@ private:
     const std::size_t samples_;
     const HeadlessSession::Limits limits_;
     const std::optional<ReclamationMissionSettings> mission_;
+    const bool structural_;
     std::unique_ptr<Run> run_;
 };
 }

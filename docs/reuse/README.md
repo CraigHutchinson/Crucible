@@ -155,3 +155,6 @@ centralize the consumed full-state comparison as structural fields are added.
 Optional Log diagnostics follow a real bounded-record caller. Pub delivery and a
 Pipeline graph require an actual delivery/dependency need and explicit teardown/join
 receiving; library adoption alone is not a reason to add either wrapper.
+
+The [owned-library roadmap](sub0-roadmap.md) makes long-term sub0 evolution and
+upstream requirement/pin-promotion ownership explicit.

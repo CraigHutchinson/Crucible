@@ -1,6 +1,7 @@
 #pragma once
 
 #include <crucible/runtime/CommandIngress.hpp>
+#include <crucible/contracts/StructuralState.hpp>
 #include <cstddef>
 #include <cstdint>
 #include <span>
@@ -10,10 +11,11 @@ namespace crucible { class Simulation; }
 
 namespace crucible::runtime {
 
-/// An admitted edit applied at the start of a successfully completed tick.
+/// An admitted command attempt at a completed tick, including normal domain refusal.
 struct AppliedCommand {
-    FieldEdit edit{};
+    BoundaryCommand command{};
     std::uint64_t sequence{}, tick{};
+    StructuralCommandResult result{StructuralCommandResult::applied};
 };
 
 /** Sequential headless boundaries with bounded input and an owned replay trace.
@@ -29,7 +31,7 @@ public:
     enum class StepStatus {
         advanced, paused, closed, trace_full, application_failed, tick_exhausted, replay_invalid
     };
-    /// Tick is the count of completed ticks; applied_commands reports this operation.
+    /// Tick counts completed ticks; applied_commands counts processed attempts, including normal refusals.
     struct StepResult {
         StepStatus status{};
         std::uint64_t tick{};
@@ -48,7 +50,7 @@ public:
     /// Queued edits become eligible at the next boundary.
     void Resume() noexcept;
     /** Advances one tick after applying only its captured admission prefix.
-     * Trace exhaustion leaves input and simulation untouched. Unexpected edit
+     * Trace exhaustion leaves input and simulation untouched. Normal structure refusals are traced and do not stop ticking. Unexpected field
      * rejection closes admission and stops without ticking or recording a completed boundary.
      * A throwing simulation tick also stops the session, then propagates the error.
      */
@@ -57,7 +59,7 @@ public:
     [[nodiscard]] std::span<const AppliedCommand> GetTrace() const noexcept;
     /** Replays a capacity-bounded trace on a fresh matching Simulation.
      * Requires a pristine, unpaused session and quiescent producers. Validates the
-     * entire input (consecutive sequences, ordered ticks, valid edits) before any
+     * entire input (consecutive sequences, ordered ticks, valid payloads and possible results) before any
      * mutation, then closes admission and runs exactly target_ticks boundaries.
      * Simulation's initial state and configuration must match the original run.
      */
@@ -78,6 +80,7 @@ private:
     CommandIngress ingress_;
     std::vector<AdmittedCommand> boundary_;
     std::vector<AppliedCommand> trace_;
+    std::vector<StructuralCommandResult> results_;
     std::size_t trace_size_{};
     std::uint64_t tick_{};
     bool paused_{}, failed_{};

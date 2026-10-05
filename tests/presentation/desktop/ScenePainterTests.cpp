@@ -69,6 +69,30 @@ void PaletteAndRetained(SoftwareCanvas& canvas) {
     Require(canvas.Pixel(400, 116) == Green, "cleared exhausted cell green");
 }
 
+void StructuralPixels(SoftwareCanvas& canvas) {
+    const GridConfig grid{16, 8, 1};
+    StructuralSettings settings{}; settings.relay_center = {8.5F, 4.5F}; settings.eligibility_radius = 32;
+    Simulation simulation{128, {grid, 4, {}, ResourceSettings{0, 1, 0, 0}, settings}};
+    ScenarioSnapshot frame{128, 4, 128};
+    Camera2D camera{grid, View}; ScenePainter painter{128, 128};
+    Require(frame.TryCapture(simulation) && painter.TryDraw(*canvas.renderer, frame, camera, {}), "structural startup pixels");
+    // Independent fit for16x8: scale65, origin120,96. ID1 center152.5,128.5.
+    Require(canvas.Pixel(152, 128) == Cyan, "mobile startup identity drawn");
+    Require(simulation.TryFuseRelay() == StructuralCommandResult::applied && frame.TryCapture(simulation) &&
+        painter.TryDraw(*canvas.renderer, frame, camera, {}), "primitive fuse frame");
+    Require(canvas.Pixel(152, 128) != Cyan, "anchored ID1 is removed from mobile drawing");
+    // Relay center672.5,388.5 is crossed by occupied amber lattice.
+    const auto amber = canvas.Pixel(672, 388);
+    Require(amber[0] > 200 && amber[1] > 140 && amber[2] < 120, "occupied lattice amber crossbars");
+    const auto generation = frame.GetInfo()->structural->generation;
+    Require(simulation.TryShatterRelay(generation) == StructuralCommandResult::applied, "pixel shatter transition");
+    Require(painter.TryDraw(*canvas.renderer, frame, camera, {}) && canvas.Pixel(672, 388) == amber,
+        "retained occupied image survives later live shatter");
+    Require(frame.TryCapture(simulation) && painter.TryDraw(*canvas.renderer, frame, camera, {}), "new shatter frame");
+    Require(canvas.Pixel(672, 388) == Cyan && !frame.GetInfo()->structural->occupied &&
+        frame.GetInfo()->biomass->lost_mass == 16, "returned particles replace occupied crossbars; lost remain hidden");
+}
+
 void RejectionBeforeDraw(SoftwareCanvas& canvas) {
     const GridConfig grid{2, 1, 1};
     Simulation simulation{1, {grid, 4, {}, ResourceSettings{}}};
@@ -314,6 +338,7 @@ int main(int argc, char** argv) {
         // Software rendering needs no window/display initialization. Host owns this scope.
         SoftwareCanvas canvas;
         PaletteAndRetained(canvas);
+        StructuralPixels(canvas);
         RejectionBeforeDraw(canvas);
         RingsAndClipping(canvas);
         DirectionCuesAndFlow(canvas);

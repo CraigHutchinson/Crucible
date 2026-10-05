@@ -1,6 +1,6 @@
 # Crucible: game intent and first playable design
 
-Product direction updated after Phase8 recovery, 2026-10-05. This develops the existing swarm/Blight/fusion premise
+Product direction updated for Phase10, 2026-10-05. This develops the existing swarm/Blight/fusion premise
 into a concrete proposed game. New mission, resource and visual choices below are
 design proposals for iteration, not claims of implemented or playtested behavior.
 Read this before the technical [architecture](architecture.md) or work packages.
@@ -148,8 +148,8 @@ Blight is the first opposition. A local spread rule creates pressure on unattend
 territory; the swarm can consume it, but handling a contested cell carries a defined
 attrition cost. That cost must be tunable and visible, with a short fixture proving
 no resource is created by contention or a failed transition. Finite reclamation now
-uses a conserved stock/mobile/reserve ledger. Attrition, growth and structural
-allocation remain later parts of this loop.
+uses a conserved stock/mobile/reserve/structure/lost ledger. Fixed-identity
+fusion/shatter is implemented; contact attrition and population growth remain later.
 
 The important tension is keeping enough mobile mass to reclaim while anchoring enough
 to secure the objective. Difficulty comes initially from map geometry, infection
@@ -218,9 +218,9 @@ or final production assets, and do not select a renderer.
 | Stage | What it establishes |
 |---|---|
 | Implemented increment | Straight drag FLOW and radial edits, bounded ingress/replay/clock, bounded steering, spatial diagnostics, finite ledger and live SDL display |
-| Current mission increment | Reference quota/deadline challenge with progress/outcome/restart; relay/fusion remains later |
-| Current investigation | Structural/arena comparison and actual relay-density evidence; next numerical rules remain gated before implementation |
-| Gameplay gate | Consumption/attrition ledger, one lattice, fusion/shatter, objective and outcome in a sequential reference scenario |
+| Current mission increment | Quota/deadline challenge and optional one-relay fusion/protection/hold/shatter with progress/outcome/restart |
+| Current investigation | Phase9 selected64→48+16 from actual density evidence; Phase10 receives the structural loop |
+| Gameplay gate | One-lattice conservation/protection/hold received; future contact attrition and human tuning have separate gates |
 | First playable gate | Snapshot display, input tools, pause/restart, objective feedback and a visual win/loss |
 | Scale gate | Full tick/frame workload measured at small, 100K and 150K populations with rendering/uploads included |
 

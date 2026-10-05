@@ -55,3 +55,9 @@ if(CRUCIBLE_BUILD_DESKTOP)
     set_tests_properties(mission_timing_schedule PROPERTIES
         LABELS "integration;mission;presentation" TIMEOUT 60)
 endif()
+
+if(NOT CRUCIBLE_BUILD_DESKTOP)
+    add_test(NAME structural_route_cli COMMAND crucible --structural --route)
+    set_tests_properties(structural_route_cli PROPERTIES LABELS "integration;mission;resources"
+        TIMEOUT 900 PASS_REGULAR_EXPRESSION "WON tick=.*hold=120 .*conserved=1 replay=full-state")
+endif()

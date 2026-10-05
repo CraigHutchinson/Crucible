@@ -112,7 +112,7 @@ int main(int argc, char** argv) {
         for (const auto& command : run.GetTrace()) {
             if (!first_command) metadata << ',';
             first_command = false;
-            const auto& edit = command.edit;
+            const auto& edit = command.command.field;
             metadata << "{\"sequence\":" << command.sequence << ",\"applied_tick\":" << command.tick
                 << ",\"kind\":\"" << (edit.kind == FieldEditKind::set ? "set" :
                     edit.kind == FieldEditKind::set_flow ? "set_flow" : "remove")

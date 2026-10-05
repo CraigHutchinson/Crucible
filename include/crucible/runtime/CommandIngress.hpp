@@ -1,6 +1,6 @@
 #pragma once
 
-#include <crucible/contracts/FieldEdit.hpp>
+#include <crucible/contracts/BoundaryCommand.hpp>
 #include <cstddef>
 #include <cstdint>
 #include <mutex>
@@ -12,7 +12,7 @@ namespace crucible::runtime {
 
 /// An owned edit tagged with its successful admission order.
 struct AdmittedCommand {
-    FieldEdit edit{};
+    BoundaryCommand command{};
     std::uint64_t sequence{};
 };
 
@@ -46,6 +46,7 @@ public:
 
     /// Copies an entire nonempty batch or rejects it without changing the ring.
     [[nodiscard]] Admission TryAdmit(std::span<const FieldEdit> edits);
+    [[nodiscard]] Admission TryAdmitCommands(std::span<const BoundaryCommand> commands);
     [[nodiscard]] Cutoff CaptureCutoff() const;
     /** Copies and removes the prefix through cutoff into caller-owned storage.
      * Returns nullopt without removing anything when output is too small. The
@@ -58,6 +59,8 @@ public:
     [[nodiscard]] Statistics GetStatistics() const;
 
 private:
+    template<class Payload>
+    [[nodiscard]] Admission TryAdmitLocked(std::span<const Payload> commands);
     [[nodiscard]] Admission RejectAdmission(AdmissionStatus status) noexcept;
 
     std::vector<AdmittedCommand> ring_;

@@ -3,6 +3,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <span>
+#include <optional>
 #include <vector>
 
 #include <crucible/contracts/BiomassLedger.hpp>
@@ -20,7 +21,7 @@ class Reclamation {
 public:
     /** Initializes uniform substrate and externally supplied mobile/reserve mass.
      * @param[in] config Physical rectangular contact geometry.
-     * @param[in] sample_capacity Fixed active population, with IDs exactly 1..capacity.
+     * @param[in] sample_capacity Startup identity capacity; mobile inputs may be sparse prefixes.
      * @param[in] settings Integer quanta and successful work budget.
      * @throws std::invalid_argument Invalid geometry or zero mass_per_sample.
      * @throws std::overflow_error Startup products or totals exceed uint64.
@@ -35,11 +36,17 @@ public:
 
     /** Atomically publishes proposed spread, bounded clearing/harvest and its ledger.
      * @param[in,out] blight Matching geometry, with no outstanding prepared lease.
-     * @param[in] samples Exactly the fixed active IDs, unique; finite post-move positions clamp to world bounds.
+     * @param[in] samples Unique mobile IDs within the startup identity domain; finite positions clamp to bounds.
      * @return False on invalid inputs/geometry, busy Blight or arithmetic exhaustion, preserving committed state.
      * @note No allocation; no input borrows survive the call. This is not whole-tick ECS rollback.
      */
-    [[nodiscard]] bool TryStep(blight::Grid& blight, std::span<const SampleState> samples) noexcept;
+    struct ProtectedArea { Position center; float radius; };
+    [[nodiscard]] bool TryStep(blight::Grid& blight, std::span<const SampleState> samples,
+                              std::optional<ProtectedArea> protection = {}) noexcept;
+    /// Ledger-only atomic transfer; caller owns identity participation changes.
+    [[nodiscard]] bool TryAnchor(std::uint64_t mass) noexcept;
+    /// Transfer anchored mass into recovered mobile mass and explicit cumulative loss.
+    [[nodiscard]] bool TryRelease(std::uint64_t mass, std::uint64_t recovered) noexcept;
 
     /// Returns all conserved buckets and cumulative diagnostics by value.
     [[nodiscard]] constexpr BiomassLedger GetLedger() const noexcept { return ledger_; }

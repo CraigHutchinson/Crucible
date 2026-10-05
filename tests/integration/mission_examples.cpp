@@ -112,7 +112,7 @@ void Run(Strategy strategy, std::string_view name, std::ostream& out, const std:
     for (const auto& command : run.GetTrace()) {
         if (!first) out << ',';
         first = false;
-        const auto& edit = command.edit;
+        const auto& edit = command.command.field;
         out << "{\"sequence\":" << command.sequence << ",\"applied_tick\":" << command.tick
             << ",\"kind\":\"" << (edit.kind == FieldEditKind::set ? "set" :
                     edit.kind == FieldEditKind::set_flow ? "set_flow" : "remove")

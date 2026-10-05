@@ -83,10 +83,10 @@ void CheckBoundariesSchedulesAndReplay() {
         a.GetTrace()[0].tick == 1 && a.GetTrace()[1].tick == 61,
         "requests zero/sixty apply at boundaries one/sixty-one");
     const std::array trace_oracle{
-        AppliedCommand{{FieldEditKind::set, 0, {8, 8}, 8, 4}, 1, 1},
-        AppliedCommand{{FieldEditKind::set, 0, {24, 8}, 8, 4}, 2, 61}};
+        AppliedCommand{FieldEdit{FieldEditKind::set, 0, {8, 8}, 8, 4}, 1, 1},
+        AppliedCommand{FieldEdit{FieldEditKind::set, 0, {24, 8}, 8, 4}, 2, 61}};
     const auto same_command = [](const AppliedCommand& p, const AppliedCommand& q) {
-        return p.sequence == q.sequence && p.tick == q.tick && SameEdit(p.edit, q.edit);
+        return p.sequence == q.sequence && p.tick == q.tick && SameEdit(p.command.field, q.command.field);
     };
     Require(std::ranges::equal(a.GetTrace(), trace_oracle, same_command) &&
         std::ranges::equal(b.GetTrace(), trace_oracle, same_command), "independent applied route trace");
