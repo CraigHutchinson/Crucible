@@ -18,7 +18,9 @@ package is not a permanent agent assignment.
 | 8 | Playable straight flow, primitive cues and resource/faction concepts | [Plan](phase8.md), [review](../sprint-reviews/phase-08.md); recovered/merged PR21 at `a95c511` |
 | 9 | Structural/arena rules comparison and production relay-density investigation | [Plan](phase9.md), [review](../sprint-reviews/phase-09.md); investigation delivered, [PR22 publication receipt](https://github.com/CraigHutchinson/Crucible/pull/22) |
 | 10 | Playable fixed-identity relay lattice, loss/protection/hold and owned replay | [Plan](phase10.md), [review](../sprint-reviews/phase-10.md); merged PR23 at `262c4eb` |
-| 11 | Forge ECS/Pub v2 and Pipeline into the production backbone; upstream API evolution | [Plan](phase11.md), [review](../sprint-reviews/phase-11.md); active receiving |
+| 11 | Forge ECS/Pub v2 and Pipeline into the production backbone; upstream API evolution | [Plan](phase11.md), [review](../sprint-reviews/phase-11.md); local receiving complete, [PR24 receipt](https://github.com/CraigHutchinson/Crucible/pull/24) |
+
+| 12 | Runtime budgets and opt-in bounded diagnostics | [Proposal](phase12.md); dispatch after Phase11 merge |
 
 The [sprint-review archive](../sprint-reviews/README.md) tracks findings, follow-ups
 and delegation lessons for every completed increment.

@@ -328,3 +328,13 @@ workers run builds or edit shared manifests. Deferred: threaded ECS/graph, Log
 adapter without a bounded consumer, GPU/device/iOS/human gates, world growth.
 `cpp-write`/`cpp-review` remain absent from available catalog and searched skill
 directories; source conventions and independent worker/architect review retained.
+
+
+Phase11 local receiving complete: Debug35/35, Release35/35, final graph/route
+Release2/2 and graph-reuse Debug receiving. Normal local LSan canary blocked by
+/proc/task without leak suppression; hosted normal sanitizer required. Worker claims
+complete, architect owns publication. Source checkpoint473e4b4/treeced6889 preserved
+in [PR24](https://github.com/CraigHutchinson/Crucible/pull/24). Actual integrated
+reclamation SVG/provenance visually inspected; phase review owns findings/follow-ups.
+Shell HTTPS push lacks credentials; connected GitHub app publishes the identical
+reviewed tree. No binary LFS workflow or permission escalation required.

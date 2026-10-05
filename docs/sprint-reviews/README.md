@@ -18,7 +18,7 @@ consider. Read the latest review before planning or delegating another sprint.
 | 9 | Rules shootout and actual relay-density spike; investigative scope delivered | [Phase 9 review](phase-09.md), [plan](../phases/phase9.md) | Dispatch `a95c511`; [PR22 acceptance/merge receipt](https://github.com/CraigHutchinson/Crucible/pull/22) |
 | 10 | Fixed-identity relay loop, conserved loss/protection/hold and live owned receiving | [Phase10 review](phase-10.md), [plan](../phases/phase10.md) | `262c4eb`, [PR23](https://github.com/CraigHutchinson/Crucible/pull/23) |
 
-| 11 | Production Pub/Pipeline backbone; receiving in progress | [Review](phase-11.md), [plan](../phases/phase11.md) | Dispatch `262c4eb`; pending final receipt |
+| 11 | Production Pub/Pipeline backbone; local receiving complete | [Review](phase-11.md), [plan](../phases/phase11.md) | Dispatch `262c4eb`; [PR24 publication receipt](https://github.com/CraigHutchinson/Crucible/pull/24) |
 
 ## Review procedure
 
