@@ -69,8 +69,8 @@ void ScheduleFixtures() {
         }
         const auto trace = run.GetTrace();
         Require(trace.size() == 2 && trace[0].tick == boundaries[i][0] && trace[1].tick == boundaries[i][1] &&
-            trace[0].edit.center.x == 8 && trace[0].edit.center.y == 8 &&
-            trace[1].edit.center.x == 24 && trace[1].edit.center.y == 8, "independent actual application fixture");
+            trace[0].command.field.center.x == 8 && trace[0].command.field.center.y == 8 &&
+            trace[1].command.field.center.x == 24 && trace[1].command.field.center.y == 8, "independent actual application fixture");
     }
 }
 void VerifyReplay(const runtime::InspectorSession& run) {
@@ -160,7 +160,7 @@ void Run(Schedule schedule, std::ostream& out, const std::filesystem::path& dire
     first = true;
     for (std::size_t i = 0; i < run.GetTrace().size(); ++i) {
         const auto& command = run.GetTrace()[i];
-        const auto& edit = command.edit;
+        const auto& edit = command.command.field;
         Require(command.tick == requests[i] + 1 && command.sequence == i + 1,
             "all request/application boundaries match");
         if (!first) out << ',';

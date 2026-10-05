@@ -43,7 +43,7 @@ void CheckAtomicAdmission() {
     const auto drained = ingress.TryDrainThrough(ingress.CaptureCutoff(), output);
     Require(drained && drained->size() == 3, "accepted batch drain");
     for (std::size_t index{}; index < output.size(); ++index)
-        Require(output[index].sequence == index + 1 && output[index].edit.slot == index,
+        Require(output[index].sequence == index + 1 && output[index].command.field.slot == index,
             "batch order preserved");
     const auto stats = ingress.GetStatistics();
     Require(stats.pending == 0 && stats.accepted == 3 && stats.rejected == 3,
@@ -93,7 +93,7 @@ void CheckCloseAndValidation() {
     Require(ingress.TryAdmit(value).status == Status::closed, "closed admission rejected");
     std::array<AdmittedCommand, 1> output{};
     const auto drained = ingress.TryDrainThrough(ingress.CaptureCutoff(), output);
-    Require(drained && drained->size() == 1 && output[0].edit.center.x == 1.0F,
+    Require(drained && drained->size() == 1 && output[0].command.field.center.x == 1.0F,
         "close retains owned pre-close command");
     CommandIngress removals{{1, 1}};
     value[0] = {FieldEditKind::remove, 0, {}, std::numeric_limits<float>::quiet_NaN(), 0};
@@ -120,9 +120,9 @@ void CheckOwnedAtomicFlowAdmission() {
     Require(ingress.TryAdmit(erase).last_sequence == 3, "flow overflow consumes no sequence");
     std::array<AdmittedCommand, 3> output{};
     const auto drained = ingress.TryDrainThrough(ingress.CaptureCutoff(), output);
-    Require(drained && drained->size() == 3 && output[0].edit.kind == FieldEditKind::set_flow &&
-        output[0].edit.center.x == 2 && output[0].edit.end.x == 10 && output[0].edit.end.y == 3 &&
-        output[1].edit.end.x == 2 && output[2].edit.kind == FieldEditKind::remove,
+    Require(drained && drained->size() == 3 && output[0].command.field.kind == FieldEditKind::set_flow &&
+        output[0].command.field.center.x == 2 && output[0].command.field.end.x == 10 && output[0].command.field.end.y == 3 &&
+        output[1].command.field.end.x == 2 && output[2].command.field.kind == FieldEditKind::remove,
         "flow admission owns both endpoints and preserves FIFO erase");
 }
 
@@ -158,7 +158,7 @@ void CheckJoinedProducerConsumerLifetime() {
         Require(drained.has_value(), "concurrent drain capacity");
         for (const auto& command : *drained) {
             Require(command.sequence == consumed + 1 &&
-                command.edit.center.x == static_cast<float>(consumed),
+                command.command.field.center.x == static_cast<float>(consumed),
                 "concurrent FIFO owns producer values");
             ++consumed;
         }

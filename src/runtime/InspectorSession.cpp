@@ -11,8 +11,9 @@ struct InspectorSession::Run {
     ClockDriver clock;
     presentation::ScenarioSnapshot frame;
     Run(std::size_t samples, HeadlessSession::Limits limits,
-            std::optional<ReclamationMissionSettings> settings)
-        : simulation(samples, {{64, 32, 1.0F}, 4, SteeringSettings{}, ResourceSettings{}}),
+            std::optional<ReclamationMissionSettings> settings, bool structural)
+        : simulation(samples, {{64, 32, 1.0F}, 4, SteeringSettings{}, ResourceSettings{},
+              structural ? std::optional{StructuralSettings{}} : std::nullopt}),
           session(simulation, limits),
           clock(session, settings ? std::function<bool()>{[this] { return EvaluateMission(); }}
                                   : std::function<bool()>{}), frame(samples, 4, 2048) {
@@ -31,19 +32,22 @@ struct InspectorSession::Run {
         const auto ledger = simulation.GetBiomassLedger();
         if (!mission || !ledger || ledger->reserve < startup_reserve)
             throw std::logic_error("mission reserve invariant");
-        mission->reclaimed = ledger->reserve - startup_reserve;
+        const auto structure = simulation.GetStructuralState();
+        mission->reclaimed = structure ? ledger->harvested : ledger->reserve - startup_reserve;
         mission->completed_tick = session.GetCompletedTick();
-        if (mission->reclaimed >= mission->settings.target_reclaimed)
+        if (mission->reclaimed >= mission->settings.target_reclaimed &&
+            (!structure || (structure->occupied && structure->hold_ticks >= structure->settings.hold_ticks)))
             mission->outcome = ReclamationMissionOutcome::won;
-        else if (mission->completed_tick >= mission->settings.deadline_ticks)
+        else if (mission->completed_tick >= mission->settings.deadline_ticks ||
+            (structure && ledger->mobile_mass + (structure->occupied ? StructuralSettings::refund : 0) < StructuralSettings::cost))
             mission->outcome = ReclamationMissionOutcome::lost;
         return mission->outcome != ReclamationMissionOutcome::active;
     }
 };
 InspectorSession::InspectorSession(std::size_t samples, HeadlessSession::Limits limits,
-        std::optional<ReclamationMissionSettings> mission)
-    : samples_(samples), limits_(limits), mission_(mission),
-      run_(std::make_unique<Run>(samples, limits, mission)) {}
+        std::optional<ReclamationMissionSettings> mission, bool structural)
+    : samples_(samples), limits_(limits), mission_(structural && !mission ? std::optional{ReclamationMissionSettings{}} : mission),
+      structural_(structural), run_(std::make_unique<Run>(samples, limits, mission_, structural)) {}
 InspectorSession::~InspectorSession() = default;
 ClockDriver::PumpResult InspectorSession::TryPump(std::chrono::nanoseconds elapsed) {
     const auto result = run_->clock.TryPump(elapsed);
@@ -56,11 +60,26 @@ ClockDriver::PumpResult InspectorSession::TryPump(std::chrono::nanoseconds elaps
 CommandIngress::Admission InspectorSession::TryAdmitFieldEdit(const FieldEdit& edit) {
     return run_->session.GetIngress().TryAdmit(std::span{&edit, 1});
 }
+CommandIngress::Admission InspectorSession::TryFuseRelay() {
+    const auto command = BoundaryCommand::Fuse();
+    return run_->session.GetIngress().TryAdmitCommands(std::span{&command, 1});
+}
+CommandIngress::Admission InspectorSession::TryShatterRelay() {
+    const auto structure = run_->simulation.GetStructuralState();
+    const auto command = BoundaryCommand::Shatter(structure ? structure->generation : 0);
+    return run_->session.GetIngress().TryAdmitCommands(std::span{&command, 1});
+}
+std::optional<StructuralCommandResult> InspectorSession::GetLastStructuralResult() const noexcept {
+    const auto trace = run_->session.GetTrace();
+    for (auto index = trace.size(); index > 0; --index)
+        if (trace[index - 1].command.action != BoundaryAction::field) return trace[index - 1].result;
+    return std::nullopt;
+}
 void InspectorSession::Pause() noexcept { run_->clock.Pause(); }
 void InspectorSession::Resume() noexcept { run_->clock.Resume(); }
 void InspectorSession::Close() { run_->clock.Close(); }
 void InspectorSession::Restart() {
-    auto replacement = std::make_unique<Run>(samples_, limits_, mission_);
+    auto replacement = std::make_unique<Run>(samples_, limits_, mission_, structural_);
     run_->clock.Close();
     run_.swap(replacement);
 }

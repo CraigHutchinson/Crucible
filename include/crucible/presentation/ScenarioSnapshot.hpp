@@ -16,6 +16,8 @@ public:
     ScenarioSnapshot& operator=(ScenarioSnapshot&&) = delete;
     /// Rejection preserves the previous frame and metadata; no allocation during capture.
     [[nodiscard]] bool TryCapture(Simulation& simulation) noexcept;
+    /// Exact owned-state replay comparison, including activity and structural state.
+    [[nodiscard]] bool HasEqualState(const ScenarioSnapshot& other) const noexcept;
     [[nodiscard]] std::optional<ScenarioStateInfo> GetInfo() const noexcept { return m_Info; }
     [[nodiscard]] std::span<const SampleState> GetSamples() const noexcept;
     [[nodiscard]] std::span<const FieldEdit> GetFields() const noexcept;

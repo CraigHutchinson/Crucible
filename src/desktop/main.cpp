@@ -3,12 +3,18 @@
 #include "DesktopApp.hpp"
 #include <exception>
 #include <memory>
-SDL_AppResult SDL_AppInit(void** state, int, char**) {
+#include <string_view>
+SDL_AppResult SDL_AppInit(void** state, int argc, char** argv) {
     *state = nullptr;
     try {
         if (!SDL_Init(SDL_INIT_VIDEO | SDL_INIT_EVENTS)) return SDL_APP_FAILURE;
         // SDL owns the callback token until SDL_AppQuit reclaims it.
-        *state = std::make_unique<crucible::desktop::DesktopApp>().release();
+        bool structural = false;
+        for (int i = 1; i < argc; ++i) {
+            if (std::string_view{argv[i]} == "--structural") structural = true;
+            else { SDL_Log("Unknown option: %s", argv[i]); return SDL_APP_FAILURE; }
+        }
+        *state = std::make_unique<crucible::desktop::DesktopApp>(crucible::ReclamationMissionSettings{}, structural).release();
         return SDL_APP_CONTINUE;
     } catch (const std::exception& e) { SDL_Log("Crucible startup: %s", e.what()); return SDL_APP_FAILURE; }
 }

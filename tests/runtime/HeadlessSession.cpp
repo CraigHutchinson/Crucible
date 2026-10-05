@@ -28,10 +28,10 @@ FieldEdit Edit(std::size_t slot) { return {FieldEditKind::set, slot, {0, 0}, 10.
 
 bool SameRecord(const AppliedCommand& left, const AppliedCommand& right) {
     return left.sequence == right.sequence && left.tick == right.tick &&
-        left.edit.kind == right.edit.kind && left.edit.slot == right.edit.slot &&
-        left.edit.center.x == right.edit.center.x && left.edit.center.y == right.edit.center.y &&
-        left.edit.radius == right.edit.radius && left.edit.strength == right.edit.strength &&
-        left.edit.end.x == right.edit.end.x && left.edit.end.y == right.edit.end.y;
+        left.command.field.kind == right.command.field.kind && left.command.field.slot == right.command.field.slot &&
+        left.command.field.center.x == right.command.field.center.x && left.command.field.center.y == right.command.field.center.y &&
+        left.command.field.radius == right.command.field.radius && left.command.field.strength == right.command.field.strength &&
+        left.command.field.end.x == right.command.field.end.x && left.command.field.end.y == right.command.field.end.y;
 }
 
 void CheckPauseResumeAndReplay() {
@@ -51,7 +51,7 @@ void CheckPauseResumeAndReplay() {
     const auto first = session.TryStep();
     Require(first.status == StepStatus::advanced && first.tick == 1 && first.applied_commands == 1,
         "resume applies queued command");
-    Require(session.GetTrace()[0].edit.strength == 1.0F && session.GetTrace()[0].tick == 1,
+    Require(session.GetTrace()[0].command.field.strength == 1.0F && session.GetTrace()[0].tick == 1,
         "trace owns admitted value and applied tick");
     const std::array changes{FieldEdit{FieldEditKind::remove, 0, {}, 0, 0}, Edit(1)};
     Require(session.GetIngress().TryAdmit(changes).status == CommandIngress::AdmissionStatus::accepted,
@@ -97,7 +97,7 @@ void CheckFlowFullReplay(bool steering) {
     session.Resume();
     Require(session.TryStep().status == StepStatus::advanced && first.TryCapture(live) &&
         first.GetFields()[0].end.x == 3.5F && first.GetFields()[0].end.y == .5F &&
-        session.GetTrace()[0].edit.end.x == 3.5F, "completed flow owns admitted endpoint");
+        session.GetTrace()[0].command.field.end.x == 3.5F, "completed flow owns admitted endpoint");
     if (!steering) {
         const auto sample = first.GetSamples()[0];
         constexpr double dt = 1.0 / 60.0;
@@ -129,7 +129,7 @@ void CheckFlowFullReplay(bool steering) {
         std::ranges::equal(final.GetStocks(), expected.GetStocks()), "flow full replay samples/fields/infection/stock");
     Require(std::ranges::equal(session.GetTrace(), replay.GetTrace(), SameRecord), "flow full replay applied commands");
     auto invalid_trace = std::array{session.GetTrace()[0], session.GetTrace()[1]};
-    invalid_trace[0].edit.end = invalid_trace[0].edit.center;
+    invalid_trace[0].command.field.end = invalid_trace[0].command.field.center;
     Simulation untouched{3, options};
     HeadlessSession invalid_replay{untouched, {8, 8}};
     const auto before = untouched.checksum();
@@ -171,9 +171,9 @@ void CheckReplayValidation() {
     trace[1].tick = 0;
     Require(session.TryReplay(trace, 2).status == StepStatus::replay_invalid, "zero tick rejected");
     trace[1].tick = 2;
-    trace[1].edit.slot = 2;
+    trace[1].command.field.slot = 2;
     Require(session.TryReplay(trace, 2).status == StepStatus::replay_invalid, "invalid slot rejected");
-    trace[1].edit.slot = 1;
+    trace[1].command.field.slot = 1;
     Require(session.TryReplay(trace, 1).status == StepStatus::replay_invalid, "short replay rejected");
     Require(simulation.checksum() == before && session.GetTrace().empty() &&
         !session.GetIngress().CaptureCutoff().closed, "invalid replay leaves pristine state open");

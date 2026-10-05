@@ -73,7 +73,7 @@ multiplayer are not implemented by this image. The displayed minimap is concept 
 These images are later fidelity targets. Phase 8 delivers flat cells, simple marks and arrows with straight drag flow
 in the existing challenge. [Phase 9](../phases/phase9.md) compares structural
 reclamation and a local arena before the next primitive gameplay increment. Arbitrary curved flows,
-resource ownership, fusion, terrain/traversal and deathmatch require their named
+resource ownership, population growth, terrain/traversal and deathmatch require their named
 consumed rules. Textures, meshes and visual flair follow a usable small game.
 Both boards were visually inspected for resource distinction, organism silhouettes,
 four color+shape identities, labels and preview/direction affordances. Their exact
@@ -124,3 +124,6 @@ Phase 7 original captures are received in
 unchanged PNGs, independent hosted ZIP/hash/pixel comparison and reconciled main.
 PR19 merged after nine exact-head jobs; this resolves P07-F01 recovery while physical
 GPU/full-frame, human, iOS and faction/combat gates remain independently open.
+
+[Phase10](../phases/phase10.md) now consumes primitive one-relay fusion/shatter;
+the generated material treatment remains a visual target, not an executable frame.

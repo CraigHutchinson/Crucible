@@ -5,7 +5,7 @@ authority. A reserved folder/target does not mean its gameplay package is implem
 Read [game design](../game-design.md) for player intent and the first playable slice;
 use [concepts](../concepts/README.md) as visual exploration rather than game rules.
 Active assignments are phase-specific: see the [phase workflow](../phases/README.md)
-and [phase 5 ownership review](../phases/phase5.md). Retain these module folders while
+and [current structural dispatch](../phases/phase10.md). Retain these module folders while
 consolidating small coupled packages under a single phase owner when useful.
 
 ## Ownership map
@@ -115,3 +115,14 @@ Foundation is separate from package completion: richer steering,
 resource interactions, workers, snapshot leases and rendering still require gates.
 Handoff records SHAs/paths, consumer
 wiring, actual test results, evidence, shared patches and limits. Update claims.
+
+## Sub0 evolution ownership
+
+Use the [owned-library roadmap](../reuse/sub0-roadmap.md) at every dispatch. Integration
+owns ECS/pin promotion; Spatial carries HexGrid numerical/terrain requirements;
+Runtime owns Pub bounded receiving; Scheduling owns Pipeline dispatch/join evidence;
+Telemetry owns Log bounded diagnostic receiving. Each handoff names a real consumer,
+neutral requirement and exact-version fixture. Architect prioritizes upstream work
+alongside gameplay; current test-only adoption is a baseline, not a permanent design.
+Paging/cache requirements come from measured world storage/residency, with lifetime
+and eviction receiving before adoption. Game rules stay outside library APIs.

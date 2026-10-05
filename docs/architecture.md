@@ -4,19 +4,18 @@
 boundaries and the gates for changing them. [Concepts](concepts/README.md) guide
 material and shape readability. Art does not define resource rules or select a backend.
 
-Baseline: Phase 8 merged in [PR 21](https://github.com/CraigHutchinson/Crucible/pull/21)
-at `a95c5111991f441a451df144fdf443d2379a0939`. The current loop is sequential:
-owned field edits, bounded steering, finite reclamation, quota/deadline, replay and
-an optional SDL display. FLOW is a straight capsule current with owned endpoints.
-Structural allocation, factions, threaded gameplay and terrain remain future work.
-[Phase 9](phases/phase9.md) tests relay-density feasibility and freezes the next rules.
+Dispatch baseline is PR22 merge `fc9a4689992e0f803faf07d4315ddb1bf8d78ce1`.
+[Phase10](phases/phase10.md) extends the sequential owned command loop with fixed
+mobile/anchored/lost participation, one relay lattice, protection and hold. No ECS
+allocation/destruction occurs after startup. FLOW remains a straight capsule current.
+Factions, threaded gameplay, population growth and terrain remain future work.
 
 ## Ownership and consumers
 
 | Boundary | Implemented owner and consumer | Constraint |
 |---|---|---|
 | Simulation | ECS state, stable sample IDs, fields, Blight, spatial bins and scratch; consumed by Runtime and headless scenarios | One exclusive coordinator; no platform, Pub callback or Log-global dependency |
-| Contracts | Grid/settings, FieldEdit, identities, ledger and state-copy values | Standard C++ value types; add fields only with a receiving caller |
+| Contracts | Grid/settings, BoundaryCommand, identities/activity, ledger and state-copy values | Standard C++ value types; add fields only with a receiving caller |
 | Spatial / Fields / Swarm | Pinned H2 geometry and local bins; field sampling; bounded separation/steering | Immutable tick input, startup-sized output; complete-query and independent numerical oracles |
 | Blight / Interactions | Cardinal current/next infection buffers; deterministic stock-to-reserve arbitration | Stock is independent of infection; atomic resource publication, not whole-tick rollback |
 | HeadlessSession | Borrowed Simulation, bounded ingress, completed command trace | Simulation outlives session; only ingress supports producer threads |
@@ -40,21 +39,24 @@ A full ring rejects newest. Closing is out-of-band; shutdown never needs queue s
 Pause stops ticks while bounded admission remains open.
 
 At a boundary, HeadlessSession captures a sequence cutoff and drains only that
-prefix. Trace capacity failure preserves the boundary. Valid field edits apply before
-movement; successful completion records payload, sequence and tick. Unexpected
+prefix. Trace capacity failure preserves the boundary. Field/fuse/shatter commands apply in sequence against committed state before
+movement; earlier actions are visible to later actions. Normal structural refusals
+are recorded without stopping. Completion records payload, sequence, tick and result. Unexpected
 application/tick failure stops the session; already applied edits are not rolled back.
 Replay prevalidates a fresh matching scenario's entire trace, then applies it at the
 same boundaries. Exact checks include IDs, positions/velocities, flow endpoints,
-infection, every stock cell and all ledger diagnostics.
+activity, infection, every stock cell, structure settings/members/generation/hold
+and all ledger diagnostics. A shared owned-state comparison is consumed by CLI/spike
+and structural receiving; independent geometry/arithmetic oracles remain separate.
 
 | Current tick order | Reads | Writes |
 |---|---|---|
-| Apply boundary field edits | Admitted owned prefix | Field slots |
-| Gather / rebuild / steer | Tick-start samples, fields and complete bins | Reusable sorted input and next-state scratch |
+| Apply boundary commands | Admitted owned prefix, committed mobile positions | Fields, participation, membership and mass/loss |
+| Gather / rebuild / steer | Tick-start mobile samples, fields and complete bins | Reusable sorted input and next-state scratch |
 | Publish movement | Computed next position/velocity | Existing ECS component values; world edges clamp |
 | Prepare cardinal spread | Committed infection | Leased next infection buffer |
-| Arbitrate reclamation | Post-move contacts in cell/ID order, next infection | Pending stock/ledger and clearing, then joint resource commit |
-| Rebuild / complete / observe | Moved state and committed resources | Current spatial bins, completed tick and owned snapshot |
+| Arbitrate reclamation | Post-move contacts in cell/ID order, next infection | Pending stock/ledger and clearing; clear protected centers after harvest, then joint commit |
+| Rebuild / complete / observe | Moved state and committed resources | Mobile bins, completed tick/hold/mission and owned snapshot |
 
 The optional radial-only path precedes the bounded steering setting. Resource-disabled
 scenarios retain ordinary spread; the legacy ECS-only constructor retains its isolated
@@ -63,18 +65,17 @@ scratch and join before structural mutation. A DAG alone does not make ECS or Pu
 
 ## Resource and structural rules
 
-Current conservation is `initial = remaining stock + mobile mass + reserve`.
-`harvested` and `work_actions` are cumulative diagnostics, not extra buckets.
-Each sample has fixed startup mass; exhausted material can be reinfected but yields
-no new biomass. [Phase 3 rules](decisions/phase3-resource-rules.md) own contact and
-arithmetic behavior; [Phase 5](decisions/phase5-reclamation.md) owns quota/deadline.
-
-The [resource board](concepts/resources-v2.png) represents these existing buckets.
-The future lattice introduces anchored and lost mass and must extend conservation
-explicitly. Fixed ECS identities can remain while participation becomes mobile,
-anchored or lost; active-only spatial/steering input needs separate receiving,
-particularly Reclamation's fixed-population validation and reusable scratch prefixes.
-No allocation/growth or identity-reuse guarantee follows from that design.
+Conservation is `initial = remaining stock + mobile + reserve + structure + lost`.
+`harvested` and `work_actions` are diagnostics. Existing resource-disabled and legacy
+quota modes remain unchanged. The [structural rule](decisions/phase9-structural-proposal.md)
+selects the lowest64 eligible IDs, anchors them at the relay and refunds the lowest48
+on shatter, losing16. Empty/stale/insufficient requests do not mutate rule state.
+Only mobile identities steer, query and reclaim; all identities are retained in owned
+state. Protection clears pending infection after harvest; committed infection can
+emit one final wave on the fusion tick. Hold advances only on completed boundaries.
+Victory checks harvested quota plus120 hold before deadline/starvation defeat;
+terminal outcome closes admission and restart replaces the entire run. This fixed
+identity design does not imply allocator, dynamic-growth or ECS rollback guarantees.
 
 Kind, allegiance, controller and presentation are distinct future concepts. The
 [faction board](concepts/factions-deathmatch-v2.png) establishes color-plus-shape
@@ -130,3 +131,14 @@ coverage or an explicit limitation. Physical GPU, iOS and human tests require
 The 100K–150K / 60 FPS target needs full tick and upload/presentation-inclusive frame
 measurements under the [benchmark protocol](benchmarking.md). Isolated ECS timing,
 a rendered image and a software Vulkan pass establish different facts.
+
+## Longer-term owned-library integration
+
+The [sub0 roadmap](reuse/sub0-roadmap.md) assigns upstream requirements and receiving
+ownership. Pins are reproducibility checkpoints; missing neutral capabilities should
+be specified and evolved upstream before new game behavior depends on them. ECS
+owns capacity/identity/creation guarantees, HexGrid geometry, Pub delivery lifetime,
+Pipeline dispatch/join, and Log bounded observation. Runtime retains command cutoff
+and domain rejection; simulation retains biomass/faction rules. MemPage/TieredCache
+await measured backing/residency consumers. Introduce a consumed adapter once, with
+package fixtures, explicit failure/lifetime contracts and exact-pin game receiving.

@@ -17,24 +17,6 @@
 #include <crucible/presentation/ScenarioSnapshot.hpp>
 
 namespace {
-bool HasEqualState(const crucible::presentation::ScenarioSnapshot& left,
-                   const crucible::presentation::ScenarioSnapshot& right) {
-    const auto a = left.GetInfo(), b = right.GetInfo();
-    if (!a || !b || a->completed_tick != b->completed_tick || a->biomass != b->biomass ||
-        a->grid.columns != b->grid.columns || a->grid.rows != b->grid.rows ||
-        a->grid.cell_size != b->grid.cell_size || a->samples != b->samples ||
-        a->fields != b->fields || a->cells != b->cells) return false;
-    return std::ranges::equal(left.GetSamples(), right.GetSamples(), [](const auto& x, const auto& y) {
-            return x.id == y.id && x.position.x == y.position.x && x.position.y == y.position.y &&
-                x.velocity.x == y.velocity.x && x.velocity.y == y.velocity.y;
-        }) && std::ranges::equal(left.GetFields(), right.GetFields(), [](const auto& x, const auto& y) {
-            return x.kind == y.kind && x.slot == y.slot && x.center.x == y.center.x && x.center.y == y.center.y &&
-                x.radius == y.radius && x.strength == y.strength &&
-                x.end.x == y.end.x && x.end.y == y.end.y;
-        }) && std::ranges::equal(left.GetBlight(), right.GetBlight()) &&
-        std::ranges::equal(left.GetStocks(), right.GetStocks());
-}
-
 enum class MissionInput { none, sweeping_attractor };
 void RunMission(MissionInput input) {
     using namespace crucible;
@@ -58,13 +40,59 @@ void RunMission(MissionInput input) {
     runtime::HeadlessSession replay{oracle, {64, 4096}};
     presentation::ScenarioSnapshot expected{2048, 4, 2048};
     if (replay.TryReplay(run.GetTrace(), mission.completed_tick).status != runtime::HeadlessSession::StepStatus::advanced ||
-        !expected.TryCapture(oracle) || !HasEqualState(run.GetSnapshot(), expected))
+        !expected.TryCapture(oracle) || !run.GetSnapshot().HasEqualState(expected))
         throw std::runtime_error("Reference challenge full-state replay failed");
     std::cout << "Crucible reference challenge ("
         << (input == MissionInput::none ? "no field input" : "swept attractor") << "): "
         << (mission.outcome == ReclamationMissionOutcome::won ? "WON" : "LOST")
         << " tick=" << mission.completed_tick << " recovered=" << mission.reclaimed
         << " target=" << mission.settings.target_reclaimed << " deadline=" << mission.settings.deadline_ticks
+        << " commands=" << run.GetTrace().size() << " conserved=1 replay=full-state\n";
+}
+
+void RunStructuralMission() {
+    using namespace crucible;
+    runtime::InspectorSession run{2048, {64, 4096}, ReclamationMissionSettings{}, true};
+    bool gathering{}, fused{};
+    while (run.GetMission()->outcome == ReclamationMissionOutcome::active) {
+        const auto tick = run.GetMission()->completed_tick;
+        if (!gathering && run.GetMission()->reclaimed < 1780) {
+            if (const auto edit = runtime::GetReferenceMissionRouteEdit(tick))
+                if (run.TryAdmitFieldEdit(*edit).status != runtime::CommandIngress::AdmissionStatus::accepted)
+                    throw std::runtime_error("Structural harvest route admission failed");
+        } else if (!gathering) {
+            const FieldEdit gather{FieldEditKind::set, 0, {48.5F,16.5F}, 8, 4};
+            if (run.TryAdmitFieldEdit(gather).status != runtime::CommandIngress::AdmissionStatus::accepted)
+                throw std::runtime_error("Structural gathering admission failed");
+            gathering = true;
+        }
+        const auto structure = run.GetSnapshot().GetInfo()->structural;
+        if (gathering && !fused && structure->eligible_mobile >= StructuralSettings::cost) {
+            if (run.TryFuseRelay().status != runtime::CommandIngress::AdmissionStatus::accepted)
+                throw std::runtime_error("Structural fuse admission failed");
+            fused = true;
+        }
+        if (run.TryPump(std::chrono::nanoseconds{16'666'667}).advanced_ticks != 1)
+            throw std::runtime_error("Structural mission boundary failed");
+    }
+    const auto mission = *run.GetMission();
+    const auto info = *run.GetSnapshot().GetInfo();
+    const auto ledger = *info.biomass;
+    if (run.GetStatus() != runtime::ClockDriver::Status::closed ||
+        ledger.initial_total != ledger.remaining_stock + ledger.mobile_mass + ledger.reserve +
+            ledger.structure_mass + ledger.lost_mass)
+        throw std::runtime_error("Structural terminal conservation failed");
+    Simulation oracle{2048, {{64,32,1},4,SteeringSettings{},ResourceSettings{},StructuralSettings{}}};
+    runtime::HeadlessSession replay{oracle,{64,4096}};
+    presentation::ScenarioSnapshot expected{2048,4,2048};
+    if (replay.TryReplay(run.GetTrace(),mission.completed_tick).status != runtime::HeadlessSession::StepStatus::advanced ||
+        !expected.TryCapture(oracle) || !run.GetSnapshot().HasEqualState(expected))
+        throw std::runtime_error("Structural full-state replay failed");
+    std::cout << "Crucible structural challenge: "
+        << (mission.outcome == ReclamationMissionOutcome::won ? "WON" : "LOST")
+        << " tick=" << mission.completed_tick << " harvested=" << mission.reclaimed
+        << " hold=" << info.structural->hold_ticks << " mobile=" << ledger.mobile_mass
+        << " structure=" << ledger.structure_mass << " lost=" << ledger.lost_mass
         << " commands=" << run.GetTrace().size() << " conserved=1 replay=full-state\n";
 }
 
@@ -164,7 +192,7 @@ void RunScenario(const char* export_path, std::optional<crucible::ResourceSettin
     presentation::ScenarioSnapshot replay_snapshot{2048, 2, 2048};
     if (replay.TryReplay(session.GetTrace(), 20).status != HeadlessSession::StepStatus::advanced ||
         !snapshot.TryCapture(scenario) || !replay_snapshot.TryCapture(replayed) ||
-        !HasEqualState(snapshot, replay_snapshot))
+        !snapshot.HasEqualState(replay_snapshot))
         throw std::runtime_error("Scenario replay diverged");
     const auto neighbors = scenario.TryCountNeighbors({32, 16}, 3);
     if (!neighbors) throw std::runtime_error("Scenario neighbor query failed");
@@ -191,6 +219,10 @@ void RunScenario(const char* export_path, std::optional<crucible::ResourceSettin
 
 int main(int argc, char** argv) {
     try {
+        if (argc == 3 && std::string_view{argv[1]} == "--structural" && std::string_view{argv[2]} == "--route") {
+            RunStructuralMission();
+            return 0;
+        }
         if ((argc == 2 || (argc == 3 && std::string_view{argv[2]} == "--route")) &&
                 std::string_view{argv[1]} == "--mission") {
             RunMission(argc == 2 ? MissionInput::none : MissionInput::sweeping_attractor);

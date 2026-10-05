@@ -32,3 +32,8 @@ add_executable(crucible_reference_route_tests ReferenceMissionRoute.cpp)
 target_link_libraries(crucible_reference_route_tests PRIVATE Crucible::Runtime Crucible::Presentation)
 add_test(NAME runtime_reference_route COMMAND crucible_reference_route_tests)
 set_tests_properties(runtime_reference_route PROPERTIES LABELS "runtime;presentation;mission")
+
+add_executable(crucible_structural_session_tests StructuralSession.cpp)
+target_link_libraries(crucible_structural_session_tests PRIVATE Crucible::Runtime Crucible::Presentation)
+add_test(NAME runtime_structural COMMAND crucible_structural_session_tests)
+set_tests_properties(runtime_structural PROPERTIES LABELS "runtime;presentation;resources" TIMEOUT 180)

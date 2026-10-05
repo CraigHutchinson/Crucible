@@ -23,6 +23,7 @@ public:
         std::size_t field_capacity{};
         std::optional<SteeringSettings> steering{};
         std::optional<ResourceSettings> resources{}; ///< Enables finite reclamation; absent preserves legacy spread.
+        std::optional<StructuralSettings> structural{}; ///< Unit-mass fixed-identity relay mode; requires resources.
     };
 
     /// Legacy ECS-only workload; no fields, grid or Blight state is constructed.
@@ -43,6 +44,11 @@ public:
     /// legacy workload has zero slots and rejects every edit.
     [[nodiscard]] bool TryApplyFieldEdit(const FieldEdit& edit) noexcept;
     [[nodiscard]] std::size_t GetFieldCapacity() const noexcept;
+    /// Boundary-only atomic transitions; normal refusal leaves simulation state unchanged.
+    [[nodiscard]] StructuralCommandResult TryFuseRelay() noexcept;
+    [[nodiscard]] StructuralCommandResult TryShatterRelay(std::uint64_t generation) noexcept;
+    /// Owned observation with current mobile eligibility; no retained ECS/query borrow.
+    [[nodiscard]] std::optional<StructuralState> GetStructuralState() const noexcept;
     /// Completed scenario observations; return zero for the legacy workload.
     [[nodiscard]] std::size_t GetBlightInfectedCount() const noexcept;
     [[nodiscard]] std::size_t GetOccupiedCellCount() const noexcept;

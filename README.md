@@ -2,13 +2,13 @@
 
 Crucible is a macro RTS about shaping a machine swarm to reclaim an industrial
 surface overtaken by cellular Blight. Draw currents, place attractors and repulsors,
-and redirect autonomous nanites across a spreading frontier. The longer-term loop
-adds fusion into a holding lattice and shattering back into a smaller mobile swarm.
+and redirect autonomous nanites across a spreading frontier. The structural mode fuses a gathered swarm into a holding lattice and shatters it
+back into a smaller mobile swarm.
 
 ![Resource concept: substrate stock, mobile mass, reserve and a future lattice](docs/concepts/resources-v2.png)
 
 *Generated resource study. Stock and infection are separate; mobile and reserve are
-forms of the same biomass. The lattice and shatter trail are future mechanics.*
+forms of the same biomass. The lattice/shatter rule now has a primitive prototype; this illustration remains a visual target.*
 
 ## Playable now
 
@@ -31,13 +31,13 @@ physical-device performance and iOS receiving remain open.
 
 ## Direction and next increment
 
-The proposed **Secure the relay** loop makes concentration a tradeoff: mass anchored
-at an objective cannot reclaim elsewhere, and shattering loses material. Phase 9
-selects the structural loop after comparing a local faction arena and receiving
-actual relay-density evidence. The next reference lattice anchors64 identities;
-shatter returns48 and records16 lost. Implementation and full-loop receiving follow. See the
-[Phase 9 plan](docs/phases/phase9.md) and [review](docs/sprint-reviews/phase-09.md).
-Primitive cells, points, arrows and structure marks come before visual fidelity.
+**Secure the relay** adds a real mobility tradeoff: gather64 mobile identities at
+the relay, fuse, hold120 completed ticks and harvest1,780 by tick900. Shatter
+returns48 identities and records16 permanently lost. Conservation includes anchored
+and lost mass; rejection, restart and complete replay are received separately from
+human tuning. Phase9 selected the rules; [Phase10](docs/phases/phase10.md) implements
+the live primitive loop. F fuses and X shatters in `--structural` desktop mode.
+Primitive cells, points, arrows and lattice marks come before visual fidelity.
 
 ![Faction concept with four shape and color identities, both organism variants and a proposed deathmatch arena](docs/concepts/factions-deathmatch-v2.png)
 
@@ -62,12 +62,14 @@ cmake --preset desktop-release
 cmake --build --preset desktop-release --parallel 4
 python scripts/run_tests.py --preset desktop-release
 ./build/desktop-release/src/desktop/crucible_desktop
+# Structural relay mission:
+./build/desktop-release/src/desktop/crucible_desktop --structural
 ```
 
 Windows uses a VS developer prompt and `.exe` suffix. Linux needs X11 or Wayland
 development libraries and a display. Use **1/2/3** for Attract/Repel/Erase, **4** for
 Flow; **Tab** selects a field slot. Click for a radial edit, drag and release for a
-straight current. Middle drag pans, wheel zooms, **F** fits, **Space** pauses,
+straight current. Middle drag pans, wheel zooms, **F** fits (fuses in structural mode), **X** shatters in structural mode, **Space** pauses,
 **R** restarts, **Delete** erases and **Escape** cancels a preview. Admitted edits
 apply at the next tick boundary; paused edits wait for resume. Terminal runs permit
 camera inspection and restart, and refuse field edits.
@@ -117,6 +119,7 @@ Dependencies use a checksum-verified CPM bootstrap, namespaced targets and
 Sub0Log and Sub0HexGrid H2. Gameplay directly consumes ECS/H2; Pub/Pipeline/Log
 currently validate the stack in integration tests and are omitted when testing is
 disabled. Consumer builds disable dependency development tools.
+The [owned sub0 roadmap](docs/reuse/sub0-roadmap.md) names upstream evolution requirements and receiving owners.
 The [reuse catalog](docs/reuse/README.md) and [full-source adoption audit](docs/reuse/phase9-sub0-adoption.md) track concrete feedback and extraction candidates;
 game policy stays local until an independently consumed boundary justifies extraction.
 
@@ -125,3 +128,6 @@ game policy stays local until an independently consumed boundary justifies extra
 defines ownership; the [active log](docs/ACTIVE_WORK_LOG.md) reserves paths and CPU.
 [Sprint reviews](docs/sprint-reviews/README.md) retain findings, evidence and follow-ups.
 The repository's own license remains undecided; dependency licenses stay with their projects.
+
+Next: [Phase11](docs/phases/phase11.md) forges the production ECS/Pub v2/Pipeline
+backbone and evolves owned APIs through independent upstream and consumer receiving.

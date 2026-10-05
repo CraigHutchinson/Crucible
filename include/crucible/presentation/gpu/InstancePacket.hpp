@@ -43,7 +43,8 @@ public:
     /** Packs an owned captured frame; false preserves every previous record/metadata.
      * @param[in] frame Completed snapshot; no borrow survives the call.
      * @param[in] cells Optional exact-length opaque colors, copied during this call.
-     * @param[in] markers Optional exact-length opaque colors, copied during this call.
+     * @param[in] markers Optional colors for every captured identity, copied for mobile records only.
+     * Anchored/lost identities are omitted from markers without changing their snapshot IDs.
      * Empty color spans use the production palette. Nonfinite/out-of-range RGB or
      * alpha other than one is rejected. Colors describe presentation, not factions.
      */

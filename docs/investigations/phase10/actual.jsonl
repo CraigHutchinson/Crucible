@@ -1,0 +1,4 @@
+{"frame":"gather-tick60","tick":60,"mobile":2048,"structure":0,"lost":0,"stock":6439,"reserve":1753,"hold":0,"eligible":74,"generation":0,"commands":1}
+{"frame":"fuse-tick61","tick":61,"mobile":1984,"structure":64,"lost":0,"stock":6439,"reserve":1753,"hold":1,"eligible":10,"generation":1,"commands":2}
+{"frame":"shatter-tick62","tick":62,"mobile":2032,"structure":0,"lost":16,"stock":6439,"reserve":1753,"hold":0,"eligible":59,"generation":1,"commands":3}
+{"frame":"redirect-tick63","tick":63,"mobile":2032,"structure":0,"lost":16,"stock":6434,"reserve":1758,"hold":0,"eligible":59,"generation":1,"commands":4}

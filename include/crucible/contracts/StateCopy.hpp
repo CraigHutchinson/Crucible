@@ -3,6 +3,7 @@
 #include <crucible/contracts/FieldEdit.hpp>
 #include <crucible/contracts/GridConfig.hpp>
 #include <crucible/contracts/BiomassLedger.hpp>
+#include <crucible/contracts/StructuralState.hpp>
 #include <cstdint>
 #include <optional>
 #include <span>
@@ -21,5 +22,6 @@ struct ScenarioStateInfo {
     std::uint64_t completed_tick{};
     std::size_t samples{}, fields{}, cells{};
     std::optional<BiomassLedger> biomass{}; ///< Present only for the finite reclamation scenario.
+    std::optional<StructuralState> structural{}; ///< Owned fixed-relay state, when enabled.
 };
 }

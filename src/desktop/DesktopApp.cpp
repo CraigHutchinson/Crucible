@@ -7,10 +7,23 @@
 namespace crucible::desktop {
 namespace {
 void Check(bool ok) { if (!ok) throw std::runtime_error(SDL_GetError()); }
+std::string_view StructuralFeedback(StructuralCommandResult result) noexcept {
+    switch (result) {
+    case StructuralCommandResult::applied: return "Structure action applied at completed boundary";
+    case StructuralCommandResult::disabled: return "Structure actions unavailable in this run";
+    case StructuralCommandResult::occupied: return "Fuse refused: lattice already occupied";
+    case StructuralCommandResult::insufficient_mass: return "Fuse refused: gather 64 mobile nanites inside the relay ring";
+    case StructuralCommandResult::empty: return "Shatter refused: relay has no lattice";
+    case StructuralCommandResult::stale_generation: return "Shatter refused: target generation has changed";
+    case StructuralCommandResult::generation_exhausted: return "Structure generation exhausted: restart";
+    }
+    return "Unknown structural result";
 }
-DesktopApp::DesktopApp(ReclamationMissionSettings mission)
-    : session_(2048, {64, 4096}, mission) {
-    window_.reset(SDL_CreateWindow("Crucible - reclamation challenge", 1280, 720,
+}
+DesktopApp::DesktopApp(ReclamationMissionSettings mission, bool structural)
+    : session_(2048, {64, 4096}, mission, structural), structural_(structural) {
+    if (structural_) message_ = "Gather 64 at relay, F fuse, X shatter; quota plus 120 held ticks wins";
+    window_.reset(SDL_CreateWindow(structural_ ? "Crucible - secure the relay" : "Crucible - reclamation challenge", 1280, 720,
         SDL_WINDOW_RESIZABLE | SDL_WINDOW_HIGH_PIXEL_DENSITY));
     Check(static_cast<bool>(window_));
     renderer_.reset(SDL_CreateRenderer(window_.get(), nullptr));
@@ -80,12 +93,16 @@ void DesktopApp::Act(Action action) {
         baseline_ = std::chrono::steady_clock::now();
         break;
     case Action::restart:
-        session_.Restart(); camera_.ResetFit(); CancelGesture(); admitted_preview_.reset(); admitted_sequence_ = 0; admission_.reset();
-        message_ = "Fresh challenge - recover biomass before the deadline";
+        session_.Restart(); camera_.ResetFit(); CancelGesture(); admitted_preview_.reset(); admitted_sequence_ = 0; admission_.reset(); structural_admission_.reset();
+        message_ = structural_ ? "Fresh relay: gather 64, F fuse, hold 120 ticks and recover quota" : "Fresh challenge - recover biomass before the deadline";
         if (suspended_) { restore_running_ = true; session_.Pause(); }
         baseline_ = std::chrono::steady_clock::now();
         break;
     case Action::fit: CancelGesture(); camera_.ResetFit(); break;
+    case Action::fuse:
+        CancelGesture(); structural_admission_ = session_.TryFuseRelay(); break;
+    case Action::shatter:
+        CancelGesture(); structural_admission_ = session_.TryShatterRelay(); break;
     }
 }
 SDL_AppResult DesktopApp::HandleEvent(const SDL_Event& event) {
@@ -117,7 +134,8 @@ SDL_AppResult DesktopApp::HandleEvent(const SDL_Event& event) {
         case SDLK_TAB: Act(Action::slot); break;
         case SDLK_SPACE: Act(Action::pause); break;
         case SDLK_R: Act(Action::restart); break;
-        case SDLK_F: Act(Action::fit); break;
+        case SDLK_F: Act(structural_ ? Action::fuse : Action::fit); break;
+        case SDLK_X: if (structural_) Act(Action::shatter); break;
         case SDLK_ESCAPE: CancelGesture(); break;
         case SDLK_DELETE: CancelGesture(); Admit({FieldEditKind::remove, slot_, {}, 0, 0}); break;
         default: break;
@@ -192,6 +210,22 @@ SDL_AppResult DesktopApp::Iterate() {
         case Status::sequence_exhausted: message = "Sequence exhausted - restart"; break;
         }
     }
+    if (structural_admission_) {
+        using Status = runtime::CommandIngress::AdmissionStatus;
+        switch (structural_admission_->status) {
+        case Status::accepted:
+            if (session_.GetTrace().size() >= structural_admission_->last_sequence) {
+                const auto result = session_.GetLastStructuralResult();
+                message_ = result ? StructuralFeedback(*result) : "Structure boundary completed";
+                message = message_; structural_admission_.reset();
+            } else message = "Structure action queued - waiting for completed boundary";
+            break;
+        case Status::full: message = "Queue full - retry structure action"; break;
+        case Status::closed: message = "Run stopped - restart for structure actions"; break;
+        case Status::invalid: message = "Invalid structure action"; break;
+        case Status::sequence_exhausted: message = "Sequence exhausted - restart"; break;
+        }
+    }
     if (session_.GetStatus() == runtime::ClockDriver::Status::blocked) message = "Trace full - boundary blocked; restart";
     const auto mission = session_.GetMission();
     if (mission && mission->outcome != ReclamationMissionOutcome::active) {
@@ -200,8 +234,8 @@ SDL_AppResult DesktopApp::Iterate() {
             message = "Run stopped - field edits disabled; R or RESTART to edit";
         else
             message = mission->outcome == ReclamationMissionOutcome::won
-                ? "Quota secured - press R or RESTART for a fresh challenge"
-                : "Deadline reached - press R or RESTART to try another route";
+                ? (structural_ ? "Quota and relay hold secured - R or RESTART for a fresh run" : "Quota secured - press R or RESTART for a fresh challenge")
+                : (structural_ ? "Deadline or insufficient recoverable mass - R or RESTART to retry" : "Deadline reached - press R or RESTART to try another route");
     }
     const presentation::desktop::SceneUi ui{
         session_.GetStatus() == runtime::ClockDriver::Status::paused,

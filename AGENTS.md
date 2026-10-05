@@ -28,8 +28,8 @@ division and record retain/consolidate/split/defer decisions, a small consumed
 increment, shared contracts, core gates and bounded stretch in the phase plan.
 Phases 1–8 have published increments; Phase8 recovered source/concept images merged
 in PR21. Read docs/phases/README.md for current publication and receiving scope.
-Phase9 compares structural and arena rules and receives actual relay-density
-behavior before structural implementation. No backlog implies dispatch.
+Phase9 investigation merged in PR22. Phase10 receives the selected structural loop;
+read its current plan and the owned-library roadmap. No backlog implies dispatch.
 Read docs/sprint-reviews/README.md and the latest review
 before the next phase; carry unresolved follow-up IDs into its plan. Create an
 in-progress phase-NN.md from the review template and complete it at phase close

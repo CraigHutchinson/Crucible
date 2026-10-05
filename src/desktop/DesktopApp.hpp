@@ -18,7 +18,7 @@ public:
      * @param[in] mission Positive quota/deadline tuning within startup substrate stock.
      * @throws std::invalid_argument Invalid mission; startup/allocation errors propagate.
      */
-    explicit DesktopApp(ReclamationMissionSettings mission = {});
+    explicit DesktopApp(ReclamationMissionSettings mission = {}, bool structural = false);
     ~DesktopApp();
     DesktopApp(const DesktopApp&) = delete;
     DesktopApp& operator=(const DesktopApp&) = delete;
@@ -41,7 +41,7 @@ public:
 private:
     struct WindowDelete { void operator()(SDL_Window* p) const noexcept { SDL_DestroyWindow(p); } };
     struct RendererDelete { void operator()(SDL_Renderer* p) const noexcept { SDL_DestroyRenderer(p); } };
-    enum class Action { attract, repel, erase, slot, pause, restart, fit, flow };
+    enum class Action { attract, repel, erase, slot, pause, restart, fit, flow, fuse, shatter };
     void Act(Action action);
     void Admit(FieldEdit edit);
     void Preview(presentation::ScreenPoint point);
@@ -60,6 +60,8 @@ private:
     std::uint64_t admitted_sequence_{};
     std::optional<Position> flow_start_;
     std::optional<runtime::CommandIngress::Admission> admission_;
+    std::optional<runtime::CommandIngress::Admission> structural_admission_;
+    const bool structural_;
     presentation::ScreenPoint last_pointer_{};
     bool dragging_{}, suspended_{}, restore_running_{}, background_{}, minimized_{};
     std::string_view message_{"Recover biomass before the deadline - click world to steer"};
