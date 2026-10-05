@@ -1,6 +1,9 @@
 # Phase 8 receiving: straight flows and readable primitive tools
 
-Status: local receiving complete; publication and hosted acceptance blocked. Baseline
+Status: original local receiving complete; recovered source and LFS images merged
+in [PR 21](https://github.com/CraigHutchinson/Crucible/pull/21) at
+`a95c5111991f441a451df144fdf443d2379a0939`. Recovery did not rerun acceptance.
+Historical baseline
 `50f61d89bb1324d2f3bdaa09e1b16bcf34fec6d9` (merged PR19). Implementation source
 checkpoint `10cbd46` in isolated branch `phase8-isolated-receiving`.
 
@@ -68,16 +71,15 @@ zoomed geometry stays clipped to the arena while the toolbar/HUD remain visible.
 Only documentation was dirty during capture; painter/fixture match 10cbd46 exactly.
 The generated resource and four-faction/deathmatch boards are separate art targets.
 
-## Publication blocker and next action
+## Recovery publication
 
-Automatic approval review rejected both dry-run push and concept-tree publication,
-stating that trustworthy explicit authorization for those payloads/destination was
-missing despite the carried-forward push/merge request. No rejected upload was
-retried via another route. Branch creation succeeded, but no sprint tree, PR or CI
-was published. After local evidence is complete, obtain explicit confirmation to
-publish these reviewed changes to CraigHutchinson/Crucible; then verify tree
-identity, run exact-head CI, merge and reconcile main. This sprint is not merged.
+The original session's automatic approval review rejected publication. Later the
+user explicitly authorized archive recovery and as-is merge; PR21 published the
+recovered source and LFS payloads at `a95c5111991f441a451df144fdf443d2379a0939`.
+That receipt closes the publication blocker without rewriting the historical
+local validation above or inferring a new exact-head acceptance run. Current
+behavior is rechecked in Phase9's hosted acceptance.
 
-See [next investigation brief](../../phases/phase9-investigation.md) and the
+See [next investigation](../../phases/phase9.md) and the
 [human preparation](../../playtests/reclamation-phase8.md). No physical device,
 human comprehension, faction combat, networking or full-frame speed is established.

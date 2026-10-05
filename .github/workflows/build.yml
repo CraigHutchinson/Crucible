@@ -34,7 +34,7 @@ jobs:
         run: sudo apt-get update && sudo apt-get install -y libx11-dev libxext-dev libxrandr-dev libxcursor-dev libxi-dev libxfixes-dev libxss-dev libxtst-dev xvfb xauth
       - name: Development prerequisites before configure/build
         run: python scripts/check_prerequisites.py --stage development --timeout ${{ runner.os == 'Windows' && '30' || '10' }} --budget 60
-      - run: cmake --preset ${{ env.BUILD_PRESET }} -DCRUCIBLE_BUILD_RENDER_SPIKE=ON
+      - run: cmake --preset ${{ env.BUILD_PRESET }} -DCRUCIBLE_BUILD_RENDER_SPIKE=ON -DCRUCIBLE_BUILD_RULE_SPIKE=ON
       - run: cmake --build --preset ${{ env.BUILD_PRESET }} --parallel 4
       - run: python scripts/run_tests.py --preset ${{ env.BUILD_PRESET }}
       - name: Native X11 window event smoke
@@ -49,11 +49,19 @@ jobs:
         with:
           lfs: true
       - run: python scripts/check_prerequisites.py --stage development
-      - run: cmake --preset release
+      - run: cmake --preset release -DCRUCIBLE_BUILD_RULE_SPIKE=ON
       - run: cmake --build --preset release --parallel 4
       - run: python scripts/run_tests.py --preset release
       - name: SDL stays out of the ordinary dependency graph
         run: test ! -d build/release/_deps/sdl3-build
+      - name: Production build consumes only its used sub0 packages
+        run: |
+          cmake --preset release -B build/production -DBUILD_TESTING=OFF
+          cmake --build build/production --parallel 4
+          build/production/crucible --mission --route
+          test ! -d build/production/_deps/sub0pipeline-src
+          test ! -d build/production/_deps/sub0pub-src
+          test ! -d build/production/_deps/sub0log-src
   sanitize:
     runs-on: ubuntu-24.04
     steps:
@@ -62,7 +70,7 @@ jobs:
           lfs: true
       - run: sudo apt-get update && sudo apt-get install -y libx11-dev libxext-dev libxrandr-dev libxcursor-dev libxi-dev libxfixes-dev libxss-dev libxtst-dev
       - run: python scripts/check_prerequisites.py --stage development --sanitize
-      - run: cmake --preset desktop-sanitize -DCRUCIBLE_BUILD_RENDER_SPIKE=ON
+      - run: cmake --preset desktop-sanitize -DCRUCIBLE_BUILD_RENDER_SPIKE=ON -DCRUCIBLE_BUILD_RULE_SPIKE=ON
       - run: cmake --build --preset desktop-sanitize --parallel 4
       - run: python scripts/run_tests.py --preset desktop-sanitize
 

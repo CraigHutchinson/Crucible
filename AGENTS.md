@@ -26,13 +26,11 @@ Do not claim 100K+ entities at 60 FPS from an isolated integration loop.
 Follow docs/phases/README.md. At every phase start reassess active workstream
 division and record retain/consolidate/split/defer decisions, a small consumed
 increment, shared contracts, core gates and bounded stretch in the phase plan.
-Phases 1/2 are delivered; phase 3 implements finite reclamation and pinned H2
-spatial reuse. See docs/phases/phase3.md and its delivery/review for publication state.
-Phase 4 adds sequential interactive input/display; see docs/phases/phase4.md and its
-review for validation/publication state. Future dispatch remains explicit; do not
-infer dispatch from a backlog.
-Phase 5 adds a bounded reclamation challenge; docs/phases/phase5.md and its review
-record its outcome and open relay/fusion/instancing gates. Read docs/sprint-reviews/README.md and the latest review
+Phases 1–8 have published increments; Phase8 recovered source/concept images merged
+in PR21. Read docs/phases/README.md for current publication and receiving scope.
+Phase9 compares structural and arena rules and receives actual relay-density
+behavior before structural implementation. No backlog implies dispatch.
+Read docs/sprint-reviews/README.md and the latest review
 before the next phase; carry unresolved follow-up IDs into its plan. Create an
 in-progress phase-NN.md from the review template and complete it at phase close
 with findings, evidence, retrospective, follow-up owner/gates and merge baseline.

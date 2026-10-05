@@ -1,6 +1,6 @@
 # Crucible: game intent and first playable design
 
-Design baseline, 2026-10-01. This develops the existing swarm/Blight/fusion premise
+Product direction updated after Phase8 recovery, 2026-10-05. This develops the existing swarm/Blight/fusion premise
 into a concrete proposed game. New mission, resource and visual choices below are
 design proposals for iteration, not claims of implemented or playtested behavior.
 Read this before the technical [architecture](architecture.md) or work packages.
@@ -161,8 +161,8 @@ The [phase 5 reference challenge](decisions/phase5-reclamation.md) precedes this
 scenario: recover a visible biomass quota before a completed-tick deadline, with
 latched outcomes and restart. It uses the live field tools and ledger without adding
 structures or protection rules. Difficulty/comprehension require a human playtest.
-The [instancing design](decisions/render-instancing.md) carries measured extraction
-learning into future graphics work; GPU instancing is proposed, not implemented.
+The optional [GPU receiver](decisions/phase6-gpu.md) implements instancing and
+readback receiving; the default desktop still uses the established software painter.
 
 A compact bounded arena begins with a finite swarm, an infected frontier and one
 relay marker beyond it. The player learns to gather the swarm, route it through the
@@ -201,6 +201,13 @@ Shapes and motion reinforce colors: points/ribbons for swarm, contiguous crust f
 Blight, rigid interlocked geometry for structures. Keep material detail subordinate
 to strategic readability. Overlays should be separable from the rendered world.
 
+The [resource board](concepts/resources-v2.png) distinguishes stock, mobile mass,
+reserve and a future lattice. The [faction/deathmatch board](concepts/factions-deathmatch-v2.png)
+uses four color-plus-shape identities and variants of both organism kinds. The
+[Phase9 comparison](phases/phase9.md) receives rule and actual concentration evidence
+before selecting further gameplay. These material studies guide later fidelity;
+primitive readable interaction comes first.
+
 See the [visual concept gallery](concepts/README.md) for world, unit/material and
 screen renders. These images are generated design explorations. Their HUD values,
 terrain and visual effects are illustrative; they are not captures of the executable
@@ -210,9 +217,9 @@ or final production assets, and do not select a renderer.
 
 | Stage | What it establishes |
 |---|---|
-| Implemented increment | Owned field edits, bounded ingress/replay/clock, bounded steering, spatial diagnostics, finite reclamation ledger and live SDL display |
+| Implemented increment | Straight drag FLOW and radial edits, bounded ingress/replay/clock, bounded steering, spatial diagnostics, finite ledger and live SDL display |
 | Current mission increment | Reference quota/deadline challenge with progress/outcome/restart; relay/fusion remains later |
-| Next simulation work | Structural fusion/protection rules and tuning; owned snapshots remain the drawing boundary |
+| Current investigation | Structural/arena comparison and actual relay-density evidence; next numerical rules remain gated before implementation |
 | Gameplay gate | Consumption/attrition ledger, one lattice, fusion/shatter, objective and outcome in a sequential reference scenario |
 | First playable gate | Snapshot display, input tools, pause/restart, objective feedback and a visual win/loss |
 | Scale gate | Full tick/frame workload measured at small, 100K and 150K populations with rendering/uploads included |

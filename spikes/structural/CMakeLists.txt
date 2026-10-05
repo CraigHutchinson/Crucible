@@ -1,0 +1,6 @@
+add_executable(crucible_relay_density relay_density.cpp)
+target_link_libraries(crucible_relay_density PRIVATE Crucible::Runtime Crucible::Presentation)
+if(BUILD_TESTING)
+    add_test(NAME relay_density_investigation COMMAND crucible_relay_density --verify)
+    set_tests_properties(relay_density_investigation PROPERTIES LABELS "integration;spike;resources" TIMEOUT 180)
+endif()

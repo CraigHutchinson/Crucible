@@ -261,3 +261,39 @@ using a repository-scoped Actions token; no Git history was pushed by that job.
 passed upload, download into an empty LFS object store, and integrity verification.
 The bootstrap workflow is excluded from the setup PR and merged main.
 Final configuration/pointers await exact-head hosted CI and merge.
+
+
+## Phase 9 rules and concept integration, 2026-10-05
+
+Dispatch baseline PR21 merge `a95c5111991f441a451df144fdf443d2379a0939`,
+independently cloned; no existing workspace/worktree modified. User explicitly
+permits commit, push and merge. Repository guidance limits the team to architect
+plus two workers, with root owning shared surfaces and all build/test CPU.
+
+| Owner | Exclusive claim | Status |
+|---|---|---|
+| Architect | README, architecture/game-design, phase/review indexes, CMake/CI, evidence and publication; serial CPU | Active |
+| structural_rules | Structural proposal; `spikes/structural/relay_density.cpp` and README | Delivered; root receiving |
+| arena_rules | Arena proposal/SVG; independent structural/spike review | Delivered; fixes sent to owner |
+
+Phase9 scope is the bounded investigation already requested by the prior plan:
+compare exact rules and execute current production state, then choose the next
+consumed increment. No parallel simulation model, structure command API, faction
+framework, pin change or physical-device claim. `cpp-write` and `cpp-review` are
+not present in the available catalog or searched workspace/skill directories;
+existing C++23 conventions and independent source review are used, with behavior,
+replay and supported sanitizer receiving retained.
+
+
+Phase9 local receiving: Debug/Release30 each pass, final extrema metadata receives
+its targeted spike rerun in each; full Release900 study/query oracle/conservation
+and all three complete replays pass. Initial full Debug180s timeout is recorded;
+normal local LSan preflight blocks on /proc, without suppression. Static plot and
+arena design mock inspected. Selected next contract64→48+16 from the frozen
+production count evidence; no structural implementation or human balance claim.
+Workers complete, shared CPU released; final hosted publication receiving active.
+
+Final publication is tracked by [PR22](https://github.com/CraigHutchinson/Crucible/pull/22):
+reviewed head/tree, nine-job exact-head acceptance and actual merge/main receipt.
+Path/CPU work is complete; publication claim closes with that receipt. No retained
+historical worktree/branch/artifact cleanup was performed.

@@ -1,6 +1,7 @@
 # Phase 8 sprint review: playable flow before fidelity
 
-Status: local receiving complete; publication blocked, not merged, 2026-10-04.
+Status: recovered and merged in [PR 21](https://github.com/CraigHutchinson/Crucible/pull/21),
+2026-10-04, at `a95c5111991f441a451df144fdf443d2379a0939`.
 Architect accountable.
 Baseline PR19 merge `50f61d89bb1324d2f3bdaa09e1b16bcf34fec6d9`, all nine exact-head
 jobs passed; local main matches remote. See [plan](../phases/phase8.md) and
@@ -31,7 +32,7 @@ found no remaining behavior blocker after the fixes below.
 | SceneUi documentation attached to toolbar function | Reattach type block and document toolbar index/result | None identified |
 | Earlier session continued recovered-tree edits | Immutable 828ecc4 snapshot; isolated receiving worktree; original edits preserved | Reconcile later external changes before publication |
 | X11 SDK/Xvfb absent; LeakSanitizer `/proc` inaccessible | Explicit software profile and blocked normal sanitizer preflight | Hosted native/platform/sanitizer gates required |
-| Automatic approval review rejected publication | Retain reviewed local commits; request explicit confirmation | No sprint PR/CI/merge yet |
+| Original session publication was rejected | Later explicit recovery authorization; PR21 merged source and uploaded LFS payloads | Recovery did not rerun builds/tests |
 
 ## Verification and artifacts
 
@@ -58,7 +59,7 @@ flow framework or upstream extraction is justified by this consumer.
 
 | Stable ID | Next gate | Status / owner |
 |---|---|---|
-| P08-F01 | Publish reviewed tree, exact-head hosted CI, merge/reconcile main | Blocked / architect; explicit publication confirmation |
+| P08-F01 | Publish recovered source, hosted acceptance and reconcile main | Publication/recovery closed by PR21; Phase9 reruns retained behavior in its acceptance; original exact-head receipt not inferred |
 | P05-F01 / P04-F02 | [Human FLOW/radial tasks](../playtests/reclamation-phase8.md), physical DPI/input-to-present | Open / presentation |
 | P06-F01 | [Faction versus structural rules shootout](../phases/phase9-investigation.md): identity, authority, ownership, contested ordering and ties | Groundwork / contracts |
 | P01-F03/F04/F05 | Structural allocation/fusion/relay and full-scale workload | Open / simulation |
@@ -70,8 +71,10 @@ flow framework or upstream extraction is justified by this consumer.
 
 ## Closure
 
-Local source is retained in phase8-isolated-receiving; original Phase8 worktree and
-prior artifacts remain intact. This sprint is not merged. The reviewed
-[next investigation](../phases/phase9-investigation.md) is preparation, not a
-dispatched implementation sprint. Publication remains blocked by automatic
-approval review until explicit authorization; hosted acceptance is still required.
+PR21 merged the recovered Phase8 source and LFS images at
+`a95c5111991f441a451df144fdf443d2379a0939`, with immediate as-is recovery merge
+explicitly authorized by the user. Original local results above remain historical;
+no new acceptance was claimed by that recovery operation. Phase9 starts from this
+verified main baseline and carries existing behavior into its own exact-head CI.
+The [next investigation](../phases/phase9.md) compares rules and uses an actual
+production-state density spike before further structural implementation.

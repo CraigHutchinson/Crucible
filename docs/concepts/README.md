@@ -70,9 +70,9 @@ connect art direction to spatial decisions. The candidate deathmatch objective
 "Last faction standing" is a rules proposal; combat, elimination, alliances and
 multiplayer are not implemented by this image. The displayed minimap is concept UI.
 
-These images are later fidelity targets. The next production milestone uses flat
-cells, simple marks/triangles and arrows to make the existing challenge playable
-with a straight drag flow; see [Phase 8](../phases/phase8.md). Arbitrary curved flows,
+These images are later fidelity targets. Phase 8 delivers flat cells, simple marks and arrows with straight drag flow
+in the existing challenge. [Phase 9](../phases/phase9.md) compares structural
+reclamation and a local arena before the next primitive gameplay increment. Arbitrary curved flows,
 resource ownership, fusion, terrain/traversal and deathmatch require their named
 consumed rules. Textures, meshes and visual flair follow a usable small game.
 Both boards were visually inspected for resource distinction, organism silhouettes,
@@ -87,7 +87,9 @@ exports at tick60: solid applied current with direction chevrons, inward/outward
 radial cues and a white dashed uncommitted flow. Primitive geometry is the playable
 milestone; the generated boards above are later fidelity targets. See
 [receiving/provenance](../workstreams/integration/phase8-validation.md).
-Publication and hosted acceptance remain blocked; these are local evidence.
+Source and images were recovered and merged in
+[PR 21](https://github.com/CraigHutchinson/Crucible/pull/21). These captures retain
+their original local provenance; publication did not itself rerun acceptance.
 
 [Phase 2 SVG and rendered preview](phase2-state.md) show a real owned tick-20
 simulation frame, with reproduction and visual validation. Keep it distinct from

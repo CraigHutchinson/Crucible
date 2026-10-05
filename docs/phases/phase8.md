@@ -1,9 +1,11 @@
 # Phase 8: playable flow before visual fidelity
 
-Status: local receiving complete 2026-10-04; publication blocked, not merged.
+Status: recovered and merged 2026-10-04 in [PR 21](https://github.com/CraigHutchinson/Crucible/pull/21),
+merge `a95c5111991f441a451df144fdf443d2379a0939`. Original local receiving is preserved;
+the recovery merge did not rerun builds/tests.
 Architect accountable. See [receiving](../workstreams/integration/phase8-validation.md)
 and [review](../sprint-reviews/phase-08.md). The reviewed
-[next rules investigation](phase9-investigation.md) remains undispatched.
+[next rules investigation](phase9-investigation.md) is dispatched in [Phase 9](phase9.md).
 Baseline PR19 merge `50f61d89bb1324d2f3bdaa09e1b16bcf34fec6d9`, independently fetched
 and reconciled locally after all nine exact-head jobs passed at 8f94b6f.
 Consume [Phase 7 review](../sprint-reviews/phase-07.md),
