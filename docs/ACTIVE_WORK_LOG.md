@@ -10,7 +10,7 @@ runs. Existing worktrees and Phase2 build artifacts are preserved.
 
 | Owner | Exclusive paths/resources | Status |
 |---|---|---|
-| Architect/root | InspectorSession, desktop/main, manifests/CI, central docs/evidence; all build/test/measurement and graphics time | Receiving complete; hardware released; publication/merge pending |
+| Architect/root | InspectorSession, desktop/main, manifests/CI, central docs/evidence; all build/test/measurement and graphics time | Complete; all9 final-head CI jobs passed; PR25 merged c4ae9c0; hardware released |
 | diagnostics | RuntimeDiagnostics header/source/test and phase12 diagnostic handoff only | Complete; handed off and independently reviewed |
 | measurement | runtime_backbone benchmark, capture script and phase12 budget handoff only | Complete; five paired captures/evidence received |
 

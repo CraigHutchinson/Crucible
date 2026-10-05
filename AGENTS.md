@@ -26,6 +26,14 @@ concept. Each phase plan/review records both directions, their reconciliation,
 open requirements and how the findings shape the next iteration. Follow
 docs/phases/README.md for the phase contract.
 
+Interactive review follows automated receiving. Before the user's next run,
+provide concise steps, expected results and the matching passed automated gates.
+Use manual sessions to review comprehension, presentation and usability; reserve
+computer control mainly for diagnosing a failed manual workflow. Clearly identify
+any behavior whose automation or native receiving is still pending. Review root
+docs as a fresh viewer: include a short, complete feature/usage checklist, launch
+and controls, optional capabilities and their prerequisites, limits and review links.
+
 The first milestone is validated integration of the sub0 stack. Resolve dependency,
 toolchain, API, lifetime and build failures before adding gameplay systems.
 

@@ -1,6 +1,7 @@
 # Phase 12 sprint review: runtime budgets and bounded diagnostics
 
-Status: receiving complete, 2026-10-05; final documentation-head CI/merge pending.
+Status: complete, 2026-10-05. PR25 merged at
+`c4ae9c032fe7b556cc0835c3bc81ac13be45c238`; local main received the exact merge.
 Architect accountable. [PR25](https://github.com/CraigHutchinson/Crucible/pull/25).
 
 ## Intent, baseline and scope
@@ -61,7 +62,10 @@ At implementation source `1eef613c08d72535975aac9c7ce01c31f98efb9c`:
   synthetic two-run terminal summary cadence, separately from native operator runs.
 
 Local logs/preflight receipts remain under `build/phase12`; meaningful paired raw
-provenance is Git-backed. Final documentation-head CI is the merge gate.
+provenance is Git-backed. [Final-head CI run99](https://github.com/CraigHutchinson/Crucible/actions/runs/37292463631)
+passed all9 jobs at `5bd3184363d2cbd29b3bb714f7da8a85b69cffc8` before merge.
+The [personal review checklist](../playtests/phase12-personal-review.md) maps
+user steps to passed automated gates; computer control is mainly diagnostic.
 
 ## Two-way reconciliation and retrospective
 
@@ -90,4 +94,4 @@ live renderer promotion/second backend/device-fault scope retains its own gates.
 
 Worker file and CPU claims release after handoff. Historical worktrees, branches,
 builds and sibling work remain preserved. PR25 final-head CI/merge/local-main
-receipt will be recorded at closure; do not use an unmerged phase as next baseline.
+receipts are complete; Phase13 starts from `c4ae9c0` plus documentation closure.

@@ -1,6 +1,6 @@
 # Phase 13 proposal: readable secure-relay play with bounded sound
 
-Status: proposed, not dispatched. Start only from the verified Phase12 merge
+Status: proposed, not dispatched. Phase12 merged at `c4ae9c0`. Start from this verified merge
 baseline and its completed [review](../sprint-reviews/phase-12.md); record the
 actual merge SHA, active claims and an in-progress review at dispatch. This plan
 selects no new backend, dependency pin or public library API.
@@ -145,7 +145,10 @@ it has independent upload, retirement, compatibility and frame-budget gates.
    task protocol: find the objective/tool, distinguish queued/applied, secure
    the relay and explain the terminal result. Record observations and resulting
    decisions. If absent, leave human/accessibility/balance acceptance open;
-   automated operator work cannot close it.
+   automated operator work cannot close it. Supply personal steps/expected results
+   only after matching automated behavior checks pass; use computer control mainly
+   to diagnose reported manual failures. Review root docs from a fresh viewer's
+   perspective with a short, complete feature/usage checklist.
 
 Retain screenshots, interaction receipts, sound recordings where applicable and
 raw measurement output with source revision/dirty state, scenario/seed, tick,

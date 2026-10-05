@@ -19,7 +19,7 @@ consider. Read the latest review before planning or delegating another sprint.
 | 10 | Fixed-identity relay loop, conserved loss/protection/hold and live owned receiving | [Phase10 review](phase-10.md), [plan](../phases/phase10.md) | `262c4eb`, [PR23](https://github.com/CraigHutchinson/Crucible/pull/23) |
 
 | 11 | Production Pub/Pipeline backbone; complete | [Review](phase-11.md), [plan](../phases/phase11.md) | `835c781`; [PR24](https://github.com/CraigHutchinson/Crucible/pull/24) |
-| 12 | Measured runtime budgets and bounded diagnostics; receiving complete | [Review](phase-12.md), [plan](../phases/phase12.md) | [PR25](https://github.com/CraigHutchinson/Crucible/pull/25); merge receipt follows final-head CI |
+| 12 | Measured runtime budgets and bounded diagnostics; complete | [Review](phase-12.md), [plan](../phases/phase12.md) | `c4ae9c0`, [PR25](https://github.com/CraigHutchinson/Crucible/pull/25) |
 
 ## Review procedure
 

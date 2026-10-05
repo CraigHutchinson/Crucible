@@ -12,6 +12,24 @@ forms of the same biomass. The lattice/shatter rule now has a primitive prototyp
 
 ## Playable now
 
+- **Play:** build/test `desktop-release`, then launch `crucible_desktop` (`.exe`
+  on Windows); add `--structural` for the secure-relay mission. See commands below.
+- **Steer:**1/2/3 attract/repel/erase,4 FLOW drag; Tab chooses one of four slots.
+  Space pauses, R restarts; queued edits apply on the next completed boundary.
+- **Inspect:** middle drag pans, wheel zooms, FIT VIEW restores the camera.
+  F fits in normal mode and fuses in structural mode; X shatters there.
+- **Diagnostics:** configure `-DCRUCIBLE_ENABLE_DIAGNOSTICS=ON`, rebuild, then
+  launch with `--diagnostics`; shutdown prints bounded decoded refusals/summaries.
+  Default production builds omit Log; drops are counted and decoding is cold work.
+- **Automate first, then review:** [personal steps and expected results](docs/playtests/phase12-personal-review.md)
+  map to passed tests. Manual review covers usability; computer control diagnoses failures.
+- **Limits:** fixed2048-sample prototype, windowed SDL desktop; maximize for larger
+  text. Fullscreen default and sound are Phase13 proposals. Physical Vulkan
+  offscreen receiving is separate from desktop renderer promotion and frame performance.
+- **Develop:** [prerequisites, LFS and supported checks](CONTRIBUTING.md),
+  [headless scenarios](#headless-scenarios-and-investigations), and
+  [phase12 evidence](docs/sprint-reviews/phase-12.md).
+
 The desktop prototype is a bounded reclamation challenge: recover **1,780 biomass
 quanta before tick 900**. Pause stops the deadline. Flow and radial tools change
 movement; the HUD reports progress, admission feedback and a latched win or loss.
