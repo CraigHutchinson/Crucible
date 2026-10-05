@@ -41,6 +41,10 @@ while paused at tick456, application after resume at tick486 and a later pause a
 tick891. Its 1026x607 screenshot exposed tiny HUD body text (approximately6px) and
 an edge-constrained FLOW toolbar. This is useful actual input/rendering
 evidence; it is not a participant accessibility, balance or comprehension result.
+After the user's fullscreen suggestion, a maximized2048x1280 comparison roughly
+doubled body text size and was easier for the operator to read. This supports
+the fullscreen candidate; maximized windowed rendering does not receive
+borderless fullscreen startup or its lifecycle/toggle behavior.
 Link the exact captures and provenance from the completed Phase12 review at
 dispatch, rather than treating this summary as a new acceptance receipt.
 

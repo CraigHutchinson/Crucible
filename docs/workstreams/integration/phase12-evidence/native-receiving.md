@@ -33,3 +33,20 @@ and recognizable queued/applied/refused feedback at actual display scale.
 This is actual rendering/input operator evidence, not participant comprehension,
 balance, accessibility or audio evidence. Structural input was not exercised in
 this retry; synthetic/full-state structural receiving is recorded separately.
+
+## Larger-window comparison after user feedback
+
+User suggested fullscreen as the default. Relaunched the same unchanged Release
+binary without arguments and clicked the native maximize button. The settled
+window capture is2048x1280; terminal LOST tick900/recovered1774 is retained.
+The enlarged letterboxed canvas roughly doubles body glyph height and makes the
+HUD appreciably easier for this operator to read. All eight toolbar labels are
+visible. The observed console reported renderer=direct3d11, pixel density1.00,
+display scale1.25 for this launch. Closed with Alt+F4 after capture.
+
+![Maximized native comparison](native-maximized.jpg)
+
+This is maximized windowed rendering, not borderless fullscreen acceptance. It
+supports evaluating fullscreen startup as the Phase13 default while preserving
+windowed scaling, explicit exit/toggle, focus/input and failure fallback gates.
+Source remains1eef613; only documentation/evidence changed after its build.
