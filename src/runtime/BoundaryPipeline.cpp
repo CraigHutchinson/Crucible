@@ -54,7 +54,7 @@ struct BoundaryPipeline::Impl {
         if (terminal) return {Status::closed, session.GetCompletedTick(), 0};
         result = {Status::application_failed, session.GetCompletedTick(), 0};
         try {
-            const auto run = graph.run_inline();
+            const auto run = graph.runInline();
             if (run) return result;
             if (result.status == Status::paused || result.status == Status::closed ||
                 result.status == Status::trace_full) return result;

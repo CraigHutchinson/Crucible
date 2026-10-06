@@ -30,7 +30,8 @@ if(CRUCIBLE_ENABLE_SANITIZERS)
     # Keep Debug assertions/symbols; avoid unoptimized instrumentation dominating replay.
     target_compile_options(crucible_options INTERFACE -O1 -fsanitize=address,undefined -fno-omit-frame-pointer -fno-optimize-sibling-calls)
     target_link_options(crucible_options INTERFACE -fsanitize=address,undefined)
-    foreach(dependency IN ITEMS Sub0Pipeline Sub0Pipeline_Headless)
+    # Sub0Pipeline is the only compiled dependency; its SequentialExecutor is header-only.
+    foreach(dependency IN ITEMS Sub0Pipeline)
         if(TARGET ${dependency})
             target_compile_options(${dependency} PRIVATE -O1 -fsanitize=address,undefined -fno-omit-frame-pointer -fno-optimize-sibling-calls)
             target_link_options(${dependency} PUBLIC -fsanitize=address,undefined)
