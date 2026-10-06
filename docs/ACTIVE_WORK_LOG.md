@@ -8,8 +8,13 @@ and deleted upstream), adapt the two Pipeline call sites and manifests, refresh
 current-state docs. Root owns pins, CMake, BoundaryPipeline call site, stack test
 and all serial Debug/Release build/test CPU. Status: local receiving complete in
 fresh trees (MSVC 19.51 Debug 35/35; Release with diagnostics and benchmarks 37/37);
-CPU released. Sanitizer receiving is hosted-only (the preset needs GCC or Clang);
-published as a PR for exact-head CI before merge.
+CPU released. Sanitizer receiving is hosted-only (the preset needs GCC or Clang).
+Complete: PR26 merged `c550fbc` after all nine exact-head jobs passed.
+
+Follow-up, same day, branch `chore/sub0ecs-audit-pin`: Sub0ECS master `1b1114a`
+(header-audit correctness fixes). Simulation's population guard now uses
+`Entity::kMaxEntities`; the previous bound admitted one population the new
+allocator terminates on.
 
 ## Phase 12 dedicated Windows receiving, 2026-10-05
 
