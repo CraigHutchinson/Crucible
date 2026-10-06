@@ -125,6 +125,20 @@ consumed workload requiring zero run allocations must receive its neutral upstre
 solution with repeat-run, failure/cancellation and package fixtures before changing
 the full pin.
 
+### Pin promotion, 2026-10-06
+
+The pin moved to Pipeline main `bf2ecce80545d2fcef94e73f2da6ed425153ba46`, where
+plain jobs keep their stop state between runs. One Release process per arm of the
+same probe, MSVC 19.51, now counts 0 calls / 0 bytes for the 120 warmed pumps at
+both 64 and 2,048 samples (was 360 / 11,520), and 4 calls / 40 bytes for the first
+pump and for each complete mission (was 804 / 25,660 reference and 1,347 / 43,036
+structural). The `3*N + 3` budget above therefore describes the Phase12 pin only;
+the integrated graph's observed budget is now the 4 first-pump calls. Terminal
+ticks 267/448, reclaimed 1,780/1,794 and all four integrated state checksums are unchanged from
+the Phase12 capture; both mission checksums equal the direct arm. The tables and evidence in this document remain the
+Phase12 capture and were not re-recorded; the host was shared during this run, so
+no timing is reported.
+
 ## Advisory timing observations
 
 Each entry is the median of five process medians, with the observed process-median

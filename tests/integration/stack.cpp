@@ -49,8 +49,8 @@ int main() {
         pipeline.emplace([&] {
             sub0log_info(sub0log::SubsystemId{1}, "tick checksum={}", simulation.checksum());
         }).name("telemetry").succeed(integrate);
-        auto executor = sub0pipeline::makeSequentialExecutor();
-        if (!pipeline.run(*executor) || inbox.pending) {
+        sub0pipeline::SequentialExecutor executor;
+        if (!pipeline.run(executor) || inbox.pending) {
             std::cerr << "Pipeline did not complete the admitted tick\n";
             return 1;
         }
