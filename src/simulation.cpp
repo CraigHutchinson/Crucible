@@ -19,8 +19,8 @@
 namespace crucible {
 namespace {
 std::size_t ValidatePopulation(std::size_t count) {
-    // The pinned ECS allocator masks indices to 24 bits without an overflow result.
-    if (count > (std::size_t{1} << 24)) throw std::length_error("Population exceeds ECS identity domain");
+    // World::create terminates once every handle is live; refuse before populating.
+    if (count > sub0ecs::Entity::kMaxEntities) throw std::length_error("Population exceeds ECS identity domain");
     return count;
 }
 
