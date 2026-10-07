@@ -44,8 +44,10 @@ upstream library correctness and game receiving are distinct receipts.
 5. **Growth/world increment:** improve ECS and geometry guarantees before dynamic
    population/terrain; evaluate paging/cache only after recorded residency demand.
 
-The diagnostics increment is a proposed next package, not a promise to block the
-playable loop on logging. Reassess ordering at each sprint close with current need.
+Phase12 delivered the diagnostics increment with bounded lifecycle and parity
+receiving. Phase13 P13-01 now improves the readable desktop consumer; P13-02 sound
+requires its own SDL audio/device contract. Reassess further neutral requirements
+from those real callers before advancing the remaining library roadmap.
 
 ## Requirement and promotion record
 

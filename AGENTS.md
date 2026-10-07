@@ -1,5 +1,15 @@
 # Crucible repository guidance
 
+style-profile: sub0
+overlay: none
+
+Use the sub0 profile for C++ authoring and review. New declarations and files
+follow its decided rules; review pre-existing deviations explicitly and migrate
+them through bounded consumer-audited changes, rather than silently renaming the
+whole project during an unrelated package. Crucible keeps its project namespace,
+CRUCIBLE_ options and Crucible:: target aliases; those are the application forms
+of the profile's library-prefix rules. Existing C++23 and error contracts remain.
+
 ## Standing design methodology: top-down and bottom-up
 
 User direction, 2026-10-05: develop the end-consumer experience and technical

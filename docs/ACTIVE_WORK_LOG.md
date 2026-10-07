@@ -1,5 +1,20 @@
 # Active work log
 
+## Phase 13 P13-01 readable controls, 2026-10-07
+
+Root owns `phase13-readable-controls`, based on clean main `5b84ccd` (PR28).
+Coherence review precedes implementation: current pins/ownership are retained;
+delivered structure, SDL and diagnostics records are reconciled. Exclusive claim:
+SceneUi/ScenePainter, DesktopApp/main, affected desktop tests/exporters, central
+phase/design/workstream/reuse/review docs and serial build/test CPU. Existing
+worktrees and builds remain untouched. Fresh `build/phase13-*` trees only.
+Presentation/input/shared wiring consolidate under root. Sound is the separate
+P13-02 package, pending an SDL audio-enabled prerequisite and lifecycle contract.
+No performance measurement, dependency edit or concurrent simulation dispatch.
+Status: alignment and P13-01 implementation/code review complete; Release42/42,
+Debug42/42 plus final affected4/4 passed. Shared CPU released; publication/hosted
+CI receiving next. Native DPI/participant and sound gates remain explicit.
+
 ## Sub0 pin refresh, 2026-10-06
 
 Baseline `c195f8d` clean main; branch `chore/sub0-pin-refresh`. Integrator-only:

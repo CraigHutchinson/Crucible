@@ -18,13 +18,17 @@ forms of the same biomass. The lattice/shatter rule now has a primitive prototyp
   Space pauses, R restarts; queued edits apply on the next completed boundary.
 - **Inspect:** middle drag pans, wheel zooms, FIT VIEW restores the camera.
   F fits in normal mode and fuses in structural mode; X shatters there.
+  The two-row toolbar includes fuse/shatter. **F11** or **F11 FULL/WIN** toggles
+  borderless fullscreen; **Escape** cancels a gesture and returns to a window.
+  Add `--fullscreen` to request fullscreen at launch; windowed remains default.
 - **Diagnostics:** configure `-DCRUCIBLE_ENABLE_DIAGNOSTICS=ON`, rebuild, then
   launch with `--diagnostics`; shutdown prints bounded decoded refusals/summaries.
   Default production builds omit Log; drops are counted and decoding is cold work.
 - **Automate first, then review:** [personal steps and expected results](docs/playtests/phase12-personal-review.md)
   map to passed tests. Manual review covers usability; computer control diagnoses failures.
-- **Limits:** fixed2048-sample prototype, windowed SDL desktop; maximize for larger
-  text. Fullscreen default and sound are Phase13 proposals. Physical Vulkan
+- **Limits:** fixed2048-sample prototype, SDL desktop with enlarged text and
+  wrapped feedback. Sound and fullscreen-default promotion retain separate gates.
+  Physical Vulkan
   offscreen receiving is separate from desktop renderer promotion and frame performance.
 - **Develop:** [prerequisites, LFS and supported checks](CONTRIBUTING.md),
   [headless scenarios](#headless-scenarios-and-investigations), and
@@ -160,5 +164,5 @@ defines ownership; the [active log](docs/ACTIVE_WORK_LOG.md) reserves paths and 
 The repository's own license remains undecided; dependency licenses stay with their projects.
 
 Delivered: [Phase12](docs/phases/phase12.md) received runtime budgets and opt-in bounded
-diagnostics and merged in PR25. [Phase13](docs/phases/phase13.md) proposes a balanced presentation,
+diagnostics and merged in PR25. [Phase13](docs/phases/phase13.md) dispatches readable controls in P13-01,
 interaction and sound slice, shaped by native receiving and measured limits.

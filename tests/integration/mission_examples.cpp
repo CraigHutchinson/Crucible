@@ -1,13 +1,6 @@
 // Runs four fixed, live-tool strategies through the production mission coordinator.
 // Compares each terminal snapshot to an independent trace replay and optionally
 // exports actual painter frames plus raw checkpoints; no difficulty claim follows.
-#include <crucible/runtime/ReferenceMissionRoute.hpp>
-#include <crucible/runtime/InspectorSession.hpp>
-#include <crucible/presentation/ScenarioSnapshot.hpp>
-#include <crucible/presentation/desktop/ScenePainter.hpp>
-#include <crucible/presentation/desktop/SceneUi.hpp>
-#include <crucible/simulation.hpp>
-#include <SDL3/SDL.h>
 #include <algorithm>
 #include <array>
 #include <chrono>
@@ -17,8 +10,16 @@
 #include <iostream>
 #include <memory>
 #include <optional>
+#include <SDL3/SDL.h>
 #include <stdexcept>
 #include <string_view>
+
+#include "crucible/presentation/desktop/ScenePainter.hpp"
+#include "crucible/presentation/desktop/SceneUi.hpp"
+#include "crucible/presentation/ScenarioSnapshot.hpp"
+#include "crucible/runtime/InspectorSession.hpp"
+#include "crucible/runtime/ReferenceMissionRoute.hpp"
+#include "crucible/simulation.hpp"
 
 namespace {
 using namespace crucible;
@@ -59,7 +60,7 @@ void VerifyReplay(const runtime::InspectorSession& run) {
 }
 void Capture(const runtime::InspectorSession& run, const std::filesystem::path& file, std::string_view name) {
     std::unique_ptr<SDL_Surface, decltype(&SDL_DestroySurface)> surface{
-        SDL_CreateSurface(1280, 720, SDL_PIXELFORMAT_RGBA32), SDL_DestroySurface};
+        SDL_CreateSurface(crucible::presentation::desktop::CanvasWidth, crucible::presentation::desktop::CanvasHeight, SDL_PIXELFORMAT_RGBA32), SDL_DestroySurface};
     Require(surface != nullptr, "example surface");
     std::unique_ptr<SDL_Renderer, decltype(&SDL_DestroyRenderer)> renderer{
         SDL_CreateSoftwareRenderer(surface.get()), SDL_DestroyRenderer};

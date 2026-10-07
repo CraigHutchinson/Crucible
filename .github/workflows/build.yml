@@ -45,6 +45,19 @@ jobs:
       - name: Capture actual structural software frames
         if: matrix.os == 'ubuntu-24.04' && matrix.preset == 'release'
         run: build/desktop-release/tests/presentation/desktop/crucible_structural_examples "$RUNNER_TEMP/structural-frames" > "$RUNNER_TEMP/structural-frames.jsonl"
+      - name: Capture readable desktop output at receiving sizes
+        if: matrix.os == 'ubuntu-24.04' && matrix.preset == 'release'
+        run: |
+          mkdir -p "$RUNNER_TEMP/readable-controls"
+          build/desktop-release/tests/presentation/desktop/crucible_readable_controls_test "$RUNNER_TEMP/readable-controls" > "$RUNNER_TEMP/readable-controls/receiving.txt"
+          git rev-parse HEAD > "$RUNNER_TEMP/readable-controls/source.txt"
+          git status --porcelain > "$RUNNER_TEMP/readable-controls/worktree.txt"
+      - uses: actions/upload-artifact@v4
+        if: matrix.os == 'ubuntu-24.04' && matrix.preset == 'release'
+        with:
+          name: readable-desktop-controls
+          retention-days: 90
+          path: ${{ runner.temp }}/readable-controls
       - uses: actions/upload-artifact@v4
         if: matrix.os == 'ubuntu-24.04' && matrix.preset == 'release'
         with:

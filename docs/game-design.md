@@ -1,9 +1,16 @@
 # Crucible: game intent and first playable design
 
-Product direction updated for Phase10, 2026-10-05. This develops the existing swarm/Blight/fusion premise
+Product direction reconciled for Phase13 P13-01, 2026-10-07. This develops the existing swarm/Blight/fusion premise
 into a concrete proposed game. New mission, resource and visual choices below are
 design proposals for iteration, not claims of implemented or playtested behavior.
 Read this before the technical [architecture](architecture.md) or work packages.
+
+Current reference: fixed2048 identities, straight FLOW/radial fields and the
+optional secure-relay loop are implemented. That mode requires 1780 reclaimed by
+tick900 plus a lattice held120 consecutive completed ticks; fuse invests64,
+shatter returns48 and loses16. Broader visual/terrain/UI ideas below are proposals.
+The [Phase13 coherence review](decisions/phase13-coherence.md) aligns that consumer
+with current dependency/ownership receiving before readability work proceeds.
 
 ## The game we are making
 
@@ -219,10 +226,10 @@ or final production assets, and do not select a renderer.
 |---|---|
 | Implemented increment | Straight drag FLOW and radial edits, bounded ingress/replay/clock, bounded steering, spatial diagnostics, finite ledger and live SDL display |
 | Current mission increment | Quota/deadline challenge and optional one-relay fusion/protection/hold/shatter with progress/outcome/restart |
-| Current investigation | Phase9 selected64→48+16 from actual density evidence; Phase10 receives the structural loop |
+| Current increment | Phase13 P13-01 readable HUD/shared toolbar/fullscreen controls; P13-02 audio remains undispatched |
 | Gameplay gate | One-lattice conservation/protection/hold received; future contact attrition and human tuning have separate gates |
 | First playable gate | Snapshot display, input tools, pause/restart, objective feedback and a visual win/loss |
-| Scale gate | Full tick/frame workload measured at small, 100K and 150K populations with rendering/uploads included |
+| Scale gate, unreceived | Requires full tick/frame workloads at small, 100K and 150K populations with rendering/uploads included |
 
 For the first slice, defer campaign progression, networking, persistence, scripting,
 procedural planetary worlds, an editor, a broad unit roster and multiple graphics

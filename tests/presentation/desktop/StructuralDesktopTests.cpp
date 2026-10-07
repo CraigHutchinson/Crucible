@@ -1,10 +1,11 @@
 // Exercises real SDL key/radial input and the production desktop coordinator.
 // Admission while paused is distinct from completion; normal refusal stays live.
-#include "DesktopApp.hpp"
-#include <crucible/presentation/ScenarioSnapshot.hpp>
-#include <SDL3/SDL.h>
 #include <iostream>
+#include <SDL3/SDL.h>
 #include <stdexcept>
+
+#include "crucible/presentation/ScenarioSnapshot.hpp"
+#include "desktop/DesktopApp.hpp"
 
 namespace {
 using namespace crucible;

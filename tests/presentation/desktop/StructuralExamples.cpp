@@ -1,20 +1,21 @@
 // Receives gather/fuse/shatter/redirect through the production InspectorSession,
 // painter and GPU packet. Optional exports are actual software frames. Checks
 // fixed identities, retained snapshots and full replay; no human-playtest claim.
-#include <crucible/runtime/InspectorSession.hpp>
-#include <crucible/presentation/ScenarioSnapshot.hpp>
-#include <crucible/presentation/Camera2D.hpp>
-#include <crucible/presentation/desktop/ScenePainter.hpp>
-#include <crucible/presentation/desktop/SceneUi.hpp>
-#include <crucible/presentation/gpu/InstancePacket.hpp>
-#include <crucible/simulation.hpp>
-#include <SDL3/SDL.h>
 #include <algorithm>
 #include <chrono>
 #include <filesystem>
 #include <iostream>
 #include <memory>
+#include <SDL3/SDL.h>
 #include <stdexcept>
+
+#include "crucible/presentation/Camera2D.hpp"
+#include "crucible/presentation/desktop/ScenePainter.hpp"
+#include "crucible/presentation/desktop/SceneUi.hpp"
+#include "crucible/presentation/gpu/InstancePacket.hpp"
+#include "crucible/presentation/ScenarioSnapshot.hpp"
+#include "crucible/runtime/InspectorSession.hpp"
+#include "crucible/simulation.hpp"
 
 namespace {
 using namespace crucible;
@@ -24,7 +25,7 @@ void Step(runtime::InspectorSession& run) {
 }
 void Capture(const runtime::InspectorSession& run, const std::filesystem::path& directory, const char* name) {
     std::unique_ptr<SDL_Surface, decltype(&SDL_DestroySurface)> surface{
-        SDL_CreateSurface(1280, 720, SDL_PIXELFORMAT_RGBA32), SDL_DestroySurface};
+        SDL_CreateSurface(crucible::presentation::desktop::CanvasWidth, crucible::presentation::desktop::CanvasHeight, SDL_PIXELFORMAT_RGBA32), SDL_DestroySurface};
     Require(surface != nullptr, "structural software surface");
     std::unique_ptr<SDL_Renderer, decltype(&SDL_DestroyRenderer)> renderer{
         SDL_CreateSoftwareRenderer(surface.get()), SDL_DestroyRenderer};

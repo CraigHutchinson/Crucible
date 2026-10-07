@@ -6,7 +6,9 @@ Own exact resource/identity validation, arbitration and bounded proposals. Spati
 
 See the [application responsibility map](../hierarchy-boundaries.md) for defining owners, read/write sets, lifetimes, bounded progress and cross-project handoffs.
 
-Finite reclamation provider (STATIC target); fusion/shatter remain pending.
+Finite reclamation and fixed-identity fusion/shatter provider (STATIC target).
+Phase10 receives conservation, protection, hold and replay; Integration coordinates
+the structural commit. Growth and contact attrition remain separate gates.
 
 ## Scope and first task
 

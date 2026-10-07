@@ -1,13 +1,16 @@
-#include "DesktopApp.hpp"
-#if CRUCIBLE_ENABLE_DIAGNOSTICS
-#include <crucible/runtime/RuntimeDiagnostics.hpp>
-#include <iostream>
-#endif
-#include <crucible/presentation/FieldTool.hpp>
-#include <crucible/presentation/desktop/SceneUi.hpp>
 #include <cmath>
+#include <SDL3/SDL.h>
 #include <stdexcept>
 #include <string_view>
+
+#include "crucible/presentation/desktop/SceneUi.hpp"
+#include "crucible/presentation/FieldTool.hpp"
+#include "desktop/DesktopApp.hpp"
+#if CRUCIBLE_ENABLE_DIAGNOSTICS
+#include <iostream>
+#include "crucible/runtime/RuntimeDiagnostics.hpp"
+#endif
+
 namespace crucible::desktop {
 namespace {
 void Check(bool ok) { if (!ok) throw std::runtime_error(SDL_GetError()); }
@@ -25,23 +28,39 @@ std::string_view StructuralFeedback(StructuralCommandResult result) noexcept {
 }
 }
 DesktopApp::DesktopApp(ReclamationMissionSettings mission, bool structural,
-        runtime::InspectorSession::Diagnostics diagnostics)
+        runtime::InspectorSession::Diagnostics diagnostics, WindowMode window_mode)
     : session_(2048, {64, 4096}, mission, structural,
           runtime::InspectorSession::ExecutionPath::integrated, diagnostics), structural_(structural) {
     if (diagnostics == runtime::InspectorSession::Diagnostics::bounded && !session_.GetDiagnostics())
         SDL_Log("Bounded diagnostics unavailable; continuing without outcome logging");
     if (structural_) message_ = "Gather 64 at relay, F fuse, X shatter; quota plus 120 held ticks wins";
-    window_.reset(SDL_CreateWindow(structural_ ? "Crucible - secure the relay" : "Crucible - reclamation challenge", 1280, 720,
+    window_.reset(SDL_CreateWindow(structural_ ? "Crucible - secure the relay" : "Crucible - reclamation challenge",
+        presentation::desktop::CanvasWidth, presentation::desktop::CanvasHeight,
         SDL_WINDOW_RESIZABLE | SDL_WINDOW_HIGH_PIXEL_DENSITY));
     Check(static_cast<bool>(window_));
+    Check(SDL_SetWindowMinimumSize(window_.get(), 1024, 607));
     renderer_.reset(SDL_CreateRenderer(window_.get(), nullptr));
     Check(static_cast<bool>(renderer_));
     SDL_Log("Crucible native renderer=%s, window pixel density=%.2f, display scale=%.2f",
         SDL_GetRendererName(renderer_.get()), SDL_GetWindowPixelDensity(window_.get()),
         SDL_GetWindowDisplayScale(window_.get()));
-    Check(SDL_SetRenderLogicalPresentation(renderer_.get(), 1280, 720, SDL_LOGICAL_PRESENTATION_LETTERBOX));
+    Check(SDL_SetRenderLogicalPresentation(renderer_.get(), presentation::desktop::CanvasWidth,
+        presentation::desktop::CanvasHeight, SDL_LOGICAL_PRESENTATION_LETTERBOX));
     // Best effort pacing: software/dummy renderers may not support vertical sync.
     static_cast<void>(SDL_SetRenderVSync(renderer_.get(), 1));
+    if (window_mode == WindowMode::fullscreen) setFullscreen(true);
+    baseline_ = std::chrono::steady_clock::now();
+}
+void DesktopApp::setFullscreen(bool enabled) {
+    CancelGesture();
+    // SDL retains windowed geometry. The desktop mode is borderless, never exclusive.
+    if ((enabled && !SDL_SetWindowFullscreenMode(window_.get(), nullptr)) ||
+        !SDL_SetWindowFullscreen(window_.get(), enabled)) {
+        SDL_Log("Crucible fullscreen request failed: %s", SDL_GetError());
+        message_ = "Display change refused - use F11 to retry";
+    }
+    // Requests can be asynchronous; the displayed button observes actual SDL flags.
+    // Do not advance a catch-up burst for time spent in the window manager.
     baseline_ = std::chrono::steady_clock::now();
 }
 DesktopApp::~DesktopApp() {
@@ -119,9 +138,11 @@ void DesktopApp::Act(Action action) {
         break;
     case Action::fit: CancelGesture(); camera_.ResetFit(); break;
     case Action::fuse:
-        CancelGesture(); structural_admission_ = session_.TryFuseRelay(); break;
+        if (structural_) { CancelGesture(); structural_admission_ = session_.TryFuseRelay(); } break;
     case Action::shatter:
-        CancelGesture(); structural_admission_ = session_.TryShatterRelay(); break;
+        if (structural_) { CancelGesture(); structural_admission_ = session_.TryShatterRelay(); } break;
+    case Action::fullscreen:
+        setFullscreen((SDL_GetWindowFlags(window_.get()) & SDL_WINDOW_FULLSCREEN) == 0); break;
     }
 }
 SDL_AppResult DesktopApp::HandleEvent(const SDL_Event& event) {
@@ -141,6 +162,13 @@ SDL_AppResult DesktopApp::HandleEvent(const SDL_Event& event) {
         minimized_ = false; Suspend(background_ || minimized_); return SDL_APP_CONTINUE;
     }
     if (event.type == SDL_EVENT_WINDOW_FOCUS_LOST) { CancelGesture(); return SDL_APP_CONTINUE; }
+    if (event.type == SDL_EVENT_WINDOW_RESIZED || event.type == SDL_EVENT_WINDOW_PIXEL_SIZE_CHANGED ||
+        event.type == SDL_EVENT_WINDOW_DISPLAY_SCALE_CHANGED || event.type == SDL_EVENT_WINDOW_ENTER_FULLSCREEN ||
+        event.type == SDL_EVENT_WINDOW_LEAVE_FULLSCREEN) {
+        CancelGesture();
+        baseline_ = std::chrono::steady_clock::now();
+        return SDL_APP_CONTINUE;
+    }
     int width{}, height{};
     Check(SDL_GetRenderOutputSize(renderer_.get(), &width, &height));
     if (suspended_ || width <= 0 || height <= 0) return SDL_APP_CONTINUE;
@@ -155,7 +183,11 @@ SDL_AppResult DesktopApp::HandleEvent(const SDL_Event& event) {
         case SDLK_R: Act(Action::restart); break;
         case SDLK_F: Act(structural_ ? Action::fuse : Action::fit); break;
         case SDLK_X: if (structural_) Act(Action::shatter); break;
-        case SDLK_ESCAPE: CancelGesture(); break;
+        case SDLK_F11: Act(Action::fullscreen); break;
+        case SDLK_ESCAPE:
+            CancelGesture();
+            if (SDL_GetWindowFlags(window_.get()) & SDL_WINDOW_FULLSCREEN) setFullscreen(false);
+            break;
         case SDLK_DELETE: CancelGesture(); Admit({FieldEditKind::remove, slot_, {}, 0, 0}); break;
         default: break;
         }
@@ -164,12 +196,8 @@ SDL_AppResult DesktopApp::HandleEvent(const SDL_Event& event) {
         if (event.button.button == SDL_BUTTON_MIDDLE && camera_.TryToWorld(point)) {
             CancelGesture(); dragging_ = true; last_pointer_ = point;
         } else if (event.button.button == SDL_BUTTON_LEFT && !dragging_) {
-            // Fixed prototype buttons use the painter's logical toolbar layout.
-            if (point.y >= 632 && point.y < 664) {
-                for (std::size_t i = 0; i < presentation::desktop::ToolbarButtonCount; ++i) {
-                    const auto bounds = presentation::desktop::ToolbarButton(i);
-                    if (point.x >= bounds.x && point.x < bounds.x + bounds.width) Act(static_cast<Action>(i));
-                }
+            if (const auto action = presentation::desktop::tryToolbarAction(point, structural_)) {
+                Act(*action);
             } else if (const auto world = camera_.TryToWorld(point)) {
                 if (tool_ == presentation::FieldTool::flow) {
                     CancelGesture();
@@ -258,7 +286,8 @@ SDL_AppResult DesktopApp::Iterate() {
     }
     const presentation::desktop::SceneUi ui{
         session_.GetStatus() == runtime::ClockDriver::Status::paused,
-        session_.GetStatus() == runtime::ClockDriver::Status::blocked, tool_, slot_, GetPreview(), message, mission};
+        session_.GetStatus() == runtime::ClockDriver::Status::blocked, tool_, slot_, GetPreview(), message, mission,
+        (SDL_GetWindowFlags(window_.get()) & SDL_WINDOW_FULLSCREEN) != 0};
     Check(painter_.TryDraw(*renderer_, session_.GetSnapshot(), camera_, ui));
     Check(SDL_RenderPresent(renderer_.get()));
     return SDL_APP_CONTINUE;
