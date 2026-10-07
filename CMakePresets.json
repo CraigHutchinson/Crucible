@@ -45,6 +45,80 @@
         "CMAKE_BUILD_TYPE": "Release",
         "CRUCIBLE_BUILD_BENCHMARKS": "ON"
       }
+    },
+    {
+      "name": "desktop-debug",
+      "inherits": "debug",
+      "cacheVariables": {
+        "CRUCIBLE_BUILD_DESKTOP": "ON"
+      }
+    },
+    {
+      "name": "desktop-release",
+      "inherits": "release",
+      "cacheVariables": {
+        "CRUCIBLE_BUILD_DESKTOP": "ON"
+      }
+    },
+    {
+      "name": "desktop-sanitize",
+      "inherits": "sanitize",
+      "cacheVariables": {
+        "CRUCIBLE_BUILD_DESKTOP": "ON"
+      }
+    },
+    {
+      "name": "macos-debug",
+      "inherits": "desktop-debug",
+      "toolchainFile": "${sourceDir}/cmake/toolchains/macos-homebrew-llvm.cmake"
+    },
+    {
+      "name": "macos-release",
+      "inherits": "desktop-release",
+      "toolchainFile": "${sourceDir}/cmake/toolchains/macos-homebrew-llvm.cmake"
+    },
+    {
+      "name": "spike-debug",
+      "inherits": "desktop-debug",
+      "cacheVariables": {
+        "CRUCIBLE_BUILD_RENDER_SPIKE": "ON"
+      }
+    },
+    {
+      "name": "spike-release",
+      "inherits": "desktop-release",
+      "cacheVariables": {
+        "CRUCIBLE_BUILD_RENDER_SPIKE": "ON"
+      }
+    },
+    {
+      "name": "spike-sanitize",
+      "inherits": "desktop-sanitize",
+      "cacheVariables": {
+        "CRUCIBLE_BUILD_RENDER_SPIKE": "ON"
+      }
+    },
+    {
+      "name": "gpu-debug",
+      "inherits": "spike-debug",
+      "cacheVariables": {
+        "CRUCIBLE_BUILD_GPU_RECEIVER": "ON"
+      }
+    },
+    {
+      "name": "gpu-release",
+      "inherits": "spike-release",
+      "cacheVariables": {
+        "CRUCIBLE_BUILD_GPU_RECEIVER": "ON"
+      }
+    },
+    {
+      "name": "gpu-sanitize",
+      "inherits": "spike-sanitize",
+      "cacheVariables": {
+        "CRUCIBLE_BUILD_GPU_RECEIVER": "ON",
+        "SDL_X11_SHARED": "OFF"
+      }
     }
   ],
   "buildPresets": [
@@ -63,6 +137,50 @@
     {
       "name": "bench",
       "configurePreset": "bench"
+    },
+    {
+      "name": "desktop-debug",
+      "configurePreset": "desktop-debug"
+    },
+    {
+      "name": "desktop-release",
+      "configurePreset": "desktop-release"
+    },
+    {
+      "name": "desktop-sanitize",
+      "configurePreset": "desktop-sanitize"
+    },
+    {
+      "name": "macos-debug",
+      "configurePreset": "macos-debug"
+    },
+    {
+      "name": "macos-release",
+      "configurePreset": "macos-release"
+    },
+    {
+      "name": "spike-debug",
+      "configurePreset": "spike-debug"
+    },
+    {
+      "name": "spike-release",
+      "configurePreset": "spike-release"
+    },
+    {
+      "name": "spike-sanitize",
+      "configurePreset": "spike-sanitize"
+    },
+    {
+      "name": "gpu-debug",
+      "configurePreset": "gpu-debug"
+    },
+    {
+      "name": "gpu-release",
+      "configurePreset": "gpu-release"
+    },
+    {
+      "name": "gpu-sanitize",
+      "configurePreset": "gpu-sanitize"
     }
   ],
   "testPresets": [
@@ -90,6 +208,83 @@
     {
       "name": "bench",
       "configurePreset": "bench",
+      "output": {
+        "outputOnFailure": true
+      }
+    },
+    {
+      "name": "desktop-debug",
+      "configurePreset": "desktop-debug",
+      "output": {
+        "outputOnFailure": true
+      }
+    },
+    {
+      "name": "desktop-release",
+      "configurePreset": "desktop-release",
+      "output": {
+        "outputOnFailure": true
+      }
+    },
+    {
+      "name": "desktop-sanitize",
+      "configurePreset": "desktop-sanitize",
+      "output": {
+        "outputOnFailure": true
+      }
+    },
+    {
+      "name": "macos-debug",
+      "configurePreset": "macos-debug",
+      "output": {
+        "outputOnFailure": true
+      }
+    },
+    {
+      "name": "macos-release",
+      "configurePreset": "macos-release",
+      "output": {
+        "outputOnFailure": true
+      }
+    },
+    {
+      "name": "spike-debug",
+      "configurePreset": "spike-debug",
+      "output": {
+        "outputOnFailure": true
+      }
+    },
+    {
+      "name": "spike-release",
+      "configurePreset": "spike-release",
+      "output": {
+        "outputOnFailure": true
+      }
+    },
+    {
+      "name": "spike-sanitize",
+      "configurePreset": "spike-sanitize",
+      "output": {
+        "outputOnFailure": true
+      }
+    },
+    {
+      "name": "gpu-debug",
+      "configurePreset": "gpu-debug",
+      "output": {
+        "outputOnFailure": true
+      }
+    },
+    {
+      "name": "gpu-release",
+      "configurePreset": "gpu-release",
+      "output": {
+        "outputOnFailure": true
+      }
+    },
+    {
+      "name": "gpu-sanitize",
+      "configurePreset": "gpu-sanitize",
       "output": {
         "outputOnFailure": true
       }

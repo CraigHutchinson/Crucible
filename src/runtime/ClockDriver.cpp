@@ -1,10 +1,14 @@
 #include <crucible/runtime/ClockDriver.hpp>
 
 #include <limits>
+#include <utility>
 
 namespace crucible::runtime {
 
-ClockDriver::ClockDriver(HeadlessSession& session) noexcept : session_(session) {}
+ClockDriver::ClockDriver(HeadlessSession& session, std::function<bool()> stop_after_boundary,
+        std::function<HeadlessSession::StepResult()> step_boundary) noexcept
+    : session_(session), stop_after_boundary_(std::move(stop_after_boundary)),
+      step_boundary_(std::move(step_boundary)) {}
 
 void ClockDriver::DiscardTime(std::uint64_t scaled_nanoseconds) noexcept {
     constexpr auto maximum = std::numeric_limits<std::uint64_t>::max();
@@ -40,7 +44,7 @@ ClockDriver::PumpResult ClockDriver::TryPump(std::chrono::nanoseconds elapsed) {
     while (remainder_ >= tick_units && advanced < 4) {
         HeadlessSession::StepResult result;
         try {
-            result = session_.TryStep();
+            result = step_boundary_ ? step_boundary_() : session_.TryStep();
         } catch (...) {
             status_ = Status::blocked;
             throw;
@@ -53,6 +57,15 @@ ClockDriver::PumpResult ClockDriver::TryPump(std::chrono::nanoseconds elapsed) {
         }
         remainder_ -= tick_units;
         ++advanced;
+        try {
+            if (stop_after_boundary_ && stop_after_boundary_()) {
+                Close();
+                return {status_, advanced, boundary, GetSummary()};
+            }
+        } catch (...) {
+            status_ = Status::blocked;
+            throw;
+        }
     }
     const auto excess = remainder_ - remainder_ % tick_units;
     DiscardTime(excess);

@@ -1,0 +1,29 @@
+{
+  "base_commit": "0bc9731230d55442ca2eaae8670203121bc747a7",
+  "host": "Linux-6.18.44-x86_64-with-glibc2.39",
+  "compiler": "GCC 13.3.0",
+  "flags": "-O3 -DNDEBUG",
+  "purpose": "Outcome/replay receiving proof, not performance benchmark or human playtest",
+  "final_settings": {
+    "target_reclaimed": 1780,
+    "deadline_ticks": 900
+  },
+  "passive_command": "build/desktop-release/crucible --mission",
+  "route_command": "build/desktop-release/crucible --mission --route",
+  "pre_tuning_settings": {
+    "target_reclaimed": 6144,
+    "deadline_ticks": 900
+  },
+  "pre_tuning_strategy_index": [
+    "no fields",
+    "attract center32,16 radius8 strength4",
+    "repel center32,16 radius8 strength-4",
+    "attract center32,16 radius20 strength4 (larger than live tool)",
+    "center attract switched to repel at tick180",
+    "sweep slot0 attract radius8 strength4 every60 ticks x8/24/40/56, y8/24",
+    "four quadrant repel fields radius8 strength-4",
+    "attract24,16 and repel48,16 radius8 strengths+4/-4"
+  ],
+  "pre_tuning_columns": "strategy, outcome enum (2=lost), terminal tick, recovered quanta",
+  "limits": "Shared Linux host. Recorded long strategy runs are Linux Release only; cross-platform fixtures cover boundary/resource/replay/outcome and actual event/pixel consumers. Raw pre-tuning scratch driver retained; final route is a production CLI consumer."
+}

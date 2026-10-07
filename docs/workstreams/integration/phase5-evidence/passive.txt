@@ -1,0 +1,1 @@
+Crucible reference challenge (no field input): LOST tick=900 recovered=1774 target=1780 deadline=900 commands=0 conserved=1 replay=full-state

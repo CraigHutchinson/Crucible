@@ -1,0 +1,38 @@
+{
+  "2048": {
+    "capture_median_us": {
+      "min": 19.601,
+      "max": 20.25
+    },
+    "capture_p95_us": {
+      "min": 20.408,
+      "max": 32.326
+    },
+    "pack_median_us": {
+      "min": 13.645,
+      "max": 14.076
+    },
+    "pack_p95_us": {
+      "min": 13.846,
+      "max": 17.593
+    }
+  },
+  "150000": {
+    "capture_median_us": {
+      "min": 1924.17,
+      "max": 1962.09
+    },
+    "capture_p95_us": {
+      "min": 2443.79,
+      "max": 2757.97
+    },
+    "pack_median_us": {
+      "min": 778.712,
+      "max": 790.527
+    },
+    "pack_p95_us": {
+      "min": 1073.14,
+      "max": 1314.5
+    }
+  }
+}

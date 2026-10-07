@@ -1,5 +1,11 @@
 name: Build and test
-on: [push, pull_request]
+on:
+  push:
+    branches: [main]
+  pull_request:
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
 permissions:
   contents: read
 jobs:
@@ -7,20 +13,128 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-24.04, windows-latest]
+        os: [ubuntu-24.04, windows-latest, macos-15]
         preset: [debug, release]
     runs-on: ${{ matrix.os }}
+    env:
+      BUILD_PRESET: ${{ matrix.os == 'macos-15' && format('macos-{0}', matrix.preset) || format('desktop-{0}', matrix.preset) }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          lfs: true
       - uses: ilammy/msvc-dev-cmd@v1
         if: runner.os == 'Windows'
-      - run: cmake --preset ${{ matrix.preset }}
-      - run: cmake --build --preset ${{ matrix.preset }} --parallel 4
-      - run: ctest --preset ${{ matrix.preset }}
+      - name: Select complete macOS C++23 toolchain
+        if: runner.os == 'macOS'
+        run: |
+          brew install llvm@21
+          echo "CRUCIBLE_LLVM_ROOT=$(brew --prefix llvm@21)" >> "$GITHUB_ENV"
+      - name: Linux window development dependencies
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y libx11-dev libxext-dev libxrandr-dev libxcursor-dev libxi-dev libxfixes-dev libxss-dev libxtst-dev xvfb xauth
+      - name: Development prerequisites before configure/build
+        run: python scripts/check_prerequisites.py --stage development --timeout ${{ runner.os == 'Windows' && '30' || '10' }} --budget 60
+      - run: cmake --preset ${{ env.BUILD_PRESET }} -DCRUCIBLE_BUILD_RENDER_SPIKE=ON -DCRUCIBLE_BUILD_RULE_SPIKE=ON -DCRUCIBLE_ENABLE_DIAGNOSTICS=ON
+      - run: cmake --build --preset ${{ env.BUILD_PRESET }} --parallel 4
+      - run: python scripts/run_tests.py --preset ${{ env.BUILD_PRESET }}
+      - name: Native X11 window event smoke
+        if: runner.os == 'Linux'
+        env:
+          SDL_RENDER_DRIVER: software
+        run: xvfb-run -a build/desktop-${{ matrix.preset }}/tests/integration/crucible_desktop_event_test --native
+      - name: Capture actual structural software frames
+        if: matrix.os == 'ubuntu-24.04' && matrix.preset == 'release'
+        run: build/desktop-release/tests/presentation/desktop/crucible_structural_examples "$RUNNER_TEMP/structural-frames" > "$RUNNER_TEMP/structural-frames.jsonl"
+      - uses: actions/upload-artifact@v4
+        if: matrix.os == 'ubuntu-24.04' && matrix.preset == 'release'
+        with:
+          name: structural-software-frames
+          path: |
+            ${{ runner.temp }}/structural-frames
+            ${{ runner.temp }}/structural-frames.jsonl
+  headless:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          lfs: true
+      - run: python scripts/check_prerequisites.py --stage development
+      - run: cmake --preset release -DCRUCIBLE_BUILD_RULE_SPIKE=ON
+      - run: cmake --build --preset release --parallel 4
+      - run: python scripts/run_tests.py --preset release
+      - name: SDL stays out of the ordinary dependency graph
+        run: test ! -d build/release/_deps/sdl3-build
+      - name: Production build consumes only its used sub0 packages
+        run: |
+          cmake --preset release -B build/production -DBUILD_TESTING=OFF
+          cmake --build build/production --parallel 4
+          build/production/crucible --mission --route
+          test -d build/production/_deps/sub0pipeline-src
+          test -d build/production/_deps/sub0pub-src
+          test ! -d build/production/_deps/sub0log-src
   sanitize:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
-      - run: cmake --preset sanitize
-      - run: cmake --build --preset sanitize --parallel 4
-      - run: ctest --preset sanitize
+        with:
+          lfs: true
+      - run: sudo apt-get update && sudo apt-get install -y libx11-dev libxext-dev libxrandr-dev libxcursor-dev libxi-dev libxfixes-dev libxss-dev libxtst-dev
+      - run: python scripts/check_prerequisites.py --stage development --sanitize
+      - run: cmake --preset desktop-sanitize -DCRUCIBLE_BUILD_RENDER_SPIKE=ON -DCRUCIBLE_BUILD_RULE_SPIKE=ON -DCRUCIBLE_ENABLE_DIAGNOSTICS=ON
+      - run: cmake --build --preset desktop-sanitize --parallel 4
+      - run: python scripts/run_tests.py --preset desktop-sanitize
+
+  gpu:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          lfs: true
+      - name: Explicit shader and software Vulkan receiver tools
+        run: sudo apt-get update && sudo apt-get install -y glslang-tools mesa-vulkan-drivers vulkan-tools xvfb xauth libx11-dev libxext-dev libxrandr-dev libxcursor-dev libxi-dev libxfixes-dev libxss-dev libxtst-dev
+      - name: Select and inspect executing software Vulkan device
+        run: |
+          selected_icd=""
+          for icd in /usr/share/vulkan/icd.d/lvp_icd*.json; do
+            if [ -f "$icd" ]; then
+              selected_icd="$icd"
+              echo "VK_DRIVER_FILES=$icd" >> "$GITHUB_ENV"
+              VK_DRIVER_FILES="$icd" vulkaninfo --summary
+              break
+            fi
+          done
+          test -n "$selected_icd"
+          glslangValidator --version
+      - run: python scripts/check_prerequisites.py --stage development --gpu
+      - run: cmake --preset gpu-release
+      - run: cmake --build --preset gpu-release --parallel 4
+      - run: xvfb-run -a python scripts/run_tests.py --preset gpu-release --prerequisite-report ${{ runner.temp }}/gpu-prerequisites.json
+      - name: Actual receiver Debug readback
+        run: |
+          cmake --preset gpu-debug
+          cmake --build --preset gpu-debug --target crucible_gpu_readback_test crucible_gpu_fault_test --parallel 4
+          xvfb-run -a python scripts/run_tests.py --preset gpu-debug -R '^(gpu_instanced_readback|gpu_fault_receiving|gpu_fault_process)$' --no-tests=error
+      - name: Actual receiver ASan/UBSan readback
+        run: |
+          cmake --preset gpu-sanitize
+          python scripts/check_prerequisites.py --stage development --build-dir build/gpu-sanitize --sanitize --gpu
+          cmake --build --preset gpu-sanitize --target crucible_gpu_readback_test crucible_gpu_fault_test --parallel 4
+          xvfb-run -a python scripts/run_tests.py --preset gpu-sanitize -R '^(gpu_instanced_readback|gpu_fault_receiving|gpu_fault_process)$' --no-tests=error
+      - name: Actual completed production-frame GPU captures
+        run: xvfb-run -a python scripts/capture_gpu_examples.py --executable build/gpu-release/crucible_gpu_receiver --vertex build/gpu-release/gpu-shaders/world.vert.spv --fragment build/gpu-release/gpu-shaders/world.frag.spv --output ${{ runner.temp }}/gpu-captures
+      - name: Visual capture dependencies
+        run: python -m pip install Pillow matplotlib
+      - name: Actual controlled-retirement captures
+        run: xvfb-run -a python scripts/capture_phase7_examples.py gpu --executable build/gpu-release/tests/presentation/gpu/crucible_gpu_fault_test --vertex build/gpu-release/gpu-shaders/world.vert.spv --fragment build/gpu-release/gpu-shaders/world.frag.spv --output ${{ runner.temp }}/phase7-retirement
+      - name: Frozen mission study and actual painter captures
+        run: python scripts/capture_phase7_examples.py mission --executable build/gpu-release/tests/integration/crucible_mission_sensitivity --output ${{ runner.temp }}/phase7-mission
+      - uses: actions/upload-artifact@v4
+        with:
+          name: gpu-readback-evidence
+          retention-days: 90
+          path: |
+            ${{ runner.temp }}/gpu-captures/
+            ${{ runner.temp }}/phase7-retirement/
+            ${{ runner.temp }}/phase7-mission/
+            build/gpu-release/gpu-shader-toolchain.txt
+            ${{ runner.temp }}/gpu-prerequisites.json

@@ -1,0 +1,1 @@
+Crucible reference challenge (swept attractor): WON tick=267 recovered=1780 target=1780 deadline=900 commands=5 conserved=1 replay=full-state

@@ -1,0 +1,18 @@
+{
+  "schema": 1,
+  "recovered_on": "2026-10-03",
+  "original_local_checkpoint": "7240f97",
+  "preservation_tag": "phase7-original-evidence-recovery",
+  "verified_merged_baseline": "2e0f3ec3422180e0926a93617654735ea55d604c",
+  "local_main_verified": true,
+  "source_and_original_raw_hashes_verified": true,
+  "retained_original_png_count": 11,
+  "original_images_regenerated": false,
+  "hosted_zip_sha256": "e9888f67506d216059fe9bd51cfd06e3730c5efc4da8bb5ddeeb7bf884601dd3",
+  "hosted_zip_bytes": 665196,
+  "hosted_checkout": "19fa1fd61abbb39c486434092ae766ece044a29d",
+  "hosted_metadata_output_hashes_verified": true,
+  "hosted_state_images_pixel_identical_to_original_count": 9,
+  "scope": "Original source/capture recovery and hosted artifact inspection; no new hardware, performance or human acceptance.",
+  "public_metadata": "Reduced provenance receipts retain source/capture hashes; original full-cache metadata remains in the local recovery checkpoint."
+}

@@ -1,0 +1,45 @@
+{
+  "source_commit": "10cbd46e2ce892a652dd68dd73f212ac68684c3f",
+  "compiler": "GCC 13.3.0",
+  "platform": "Linux",
+  "profiles": "desktop software/console; ordinary headless Release",
+  "tests": {
+    "desktop_debug": {
+      "percent_passed": 100,
+      "test_count": 31,
+      "log_sha256": "fcb85b7087f337b62f3fec98645f640f46931db02db246a482b45a54402d5509",
+      "failed_test_names": []
+    },
+    "desktop_release_original": {
+      "percent_passed": 97,
+      "test_count": 31,
+      "log_sha256": "7f38e9d668c0e56b8d75507e8eff07ebd9814d0f4471332b1d4003b303787ae2",
+      "failed_test_names": [
+        "scene_painter_software"
+      ]
+    },
+    "desktop_release_corrected_scene": {
+      "percent_passed": 100,
+      "test_count": 1,
+      "log_sha256": "b65bbdaa0a454af306b1c02917acbd561251bb9ad83ad4f7f43d71bb8340fe98",
+      "failed_test_names": []
+    },
+    "headless_release": {
+      "percent_passed": 100,
+      "test_count": 29,
+      "log_sha256": "1c8a91ed32f5ff698c563279980bf288e7af7d66428c6d64b6d60bcaba391a78",
+      "failed_test_names": []
+    }
+  },
+  "sanitizer": {
+    "status": "blocked",
+    "reason": "Normal LeakSanitizer canary cannot inspect /proc; no leak disabling",
+    "receipt_sha256": "35311dac373002f8df038396ac323b73c818e0acd95c684cb329493933d56b7c"
+  },
+  "native_window": {
+    "status": "blocked",
+    "reason": "X11 development libraries and Xvfb absent"
+  },
+  "hosted_ci": "Not published; automatic approval review rejected publication",
+  "scope": "Local receiving only; not merge acceptance"
+}

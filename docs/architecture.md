@@ -1,226 +1,168 @@
 # Crucible architecture
 
-Product intent and gameplay scope live in [game-design.md](game-design.md). This
-document owns technical boundaries; [visual concepts](concepts/README.md) illustrate
-the proposed experience without selecting a renderer or changing current physics.
-The [reuse catalog](reuse/README.md) records upstream/extraction opportunities.
-Hex spatial topology is likely but unresolved; [Sub0HexGrid](reuse/Sub0HexGrid.md)
-has standalone scalar groundwork. The current rectangular implementation remains the verified baseline;
-swarm indexing and Blight adjacency require separate migration decisions.
+The [hierarchy responsibility map](workstreams/hierarchy-boundaries.md) supplements every module for the competing acceleration programme. It separates upstream geometry, application occupied indexes, domain reducers, view/navigation policy and executor lifetime. It changes no current representation, backend or pin.
 
-Status: second integrated headless increment, 2026-10-01. Bounded command admission,
-tick trace replay, stable spatial queries, bounded separation/radial steering, clock
-driving, owned state copies and cellular spread exist in a sequential optional scenario; full gameplay/concurrency remain planned. See
-[workstream map](workstreams/README.md) for paths/status and
-[work-breakdown.md](work-breakdown.md) for implementation gates.
-The [hierarchy responsibility map](workstreams/hierarchy-boundaries.md) supplements
-every module for the competing acceleration programme. It separates upstream geometry,
-application occupied indexes, domain reducers, view/nav policy and executor lifetime;
-no representation, new module, backend or dependency adoption is selected here.
+[Game design](game-design.md) owns product intent; this document owns implemented
+boundaries and the gates for changing them. [Concepts](concepts/README.md) guide
+material and shape readability. Art does not define resource rules or select a backend.
 
-The [phase 2 handoff](workstreams/integration/phase2-validation.md) is the authority
-for implemented scope and evidence. HeadlessSession borrows an exclusively owned
-Simulation; main owns both. The broader Runtime composition below is the target
-architecture. The legacy Simulation constructor retains the ECS-only workload;
-ScenarioOptions selects startup-owned grids, fields, scratch and stable sample IDs.
-Scenario ticks spread Blight, optionally compute immutable-input bounded steering
-(the prior radial-only path remains the absent-option behavior),
-then rebuild the spatial grid. Consumption, alignment/cohesion and structural mutation remain pending.
+Phase12 dispatch baseline is PR24 merge `835c781605c98c79f8d10e26e2b8aab63593101e`.
+[Phase10](phases/phase10.md) extends the sequential owned command loop with fixed
+mobile/anchored/lost participation, one relay lattice, protection and hold. No ECS
+allocation/destruction occurs after startup. FLOW remains a straight capsule current.
+Factions, threaded gameplay, population growth and terrain remain future work.
 
-## Goal and existing foundation
+## Ownership and consumers
 
-Crucible is a macro-RTS/swarm simulator: steer nanites with painted currents,
-attractors and repulsors, consume cellular Blight, and fuse density into structures
-that can shatter into a depleted swarm. The first slice is a bounded 2D world with
-these mechanics and a snapshot-driven display. Networking, persistence, scripting,
-an editor and planetary streaming are outside this slice.
-
-The target is 100,000–150,000 active entities at 60 FPS, subject to full workload
-measurement. Current Simulation owns Position/Velocity ECS data and integrates at
-1/60 second. main runs headlessly. The stack test independently proves synchronous
-Pub delivery -> deferred ECS tick -> sequential Pipeline telemetry -> decoded Log
-record. Its source is now tests/integration/stack.cpp. It does not prove threaded
-handoff or a production gameplay schedule.
-[validation.md](validation.md) records prior Linux evidence and platform limits.
-
-## Modules and production consumers
-
-Use concrete modules and value contracts, without a generic engine framework or
-single-implementation virtual interfaces. Reserved folders and INTERFACE targets
-support parallel sessions; add APIs/implementations only with a named real caller.
-
-| Module / planned paths under include/crucible and src | Owns | Consumer / dependency boundary |
+| Boundary | Implemented owner and consumer | Constraint |
 |---|---|---|
-| Existing Simulation facade | ECS world, tick state, simulation storage and coordinator commit | Runtime and headless scenarios; ECS and internal modules |
-| contracts/ | Tick/sequence/entity identities, scenario limits, command and snapshot values, failure results | Runtime, simulation, presentation; standard C++ only |
-| runtime/ | Clock, command ingress, Pipeline schedule, lifecycle | main; Simulation, Pub/Pipeline adapters, telemetry |
-| spatial/ | Stable cell indexing, bins and complete radius traversal | Steering and interactions; immutable position/ID inputs |
-| fields/ | Painted flows, attractors/repulsors and sampling | Steering; immutable per-tick field state |
-| blight/ | Current/next cellular buffers and evolution | Simulation and interactions |
-| swarm/ | Steering math and next-position/velocity outputs | Simulation; spatial and fields |
-| scheduling/ | Executor adaptation and phase access declarations | Runtime; verified Pipeline executor API |
-| interactions/ | Consumption arbitration, fusion/shatter proposals | Coordinator commit; immutable swarm/Blight input |
-| presentation/ | Owned snapshot exchange, later drawing and input mapping | Runtime and desktop main; platform APIs in implementation only |
-| telemetry/ | Bounded phase summaries and Log adapter | Runtime; no background ECS queries |
+| Simulation | ECS state, stable sample IDs, fields, Blight, spatial bins and scratch; consumed by Runtime and headless scenarios | One exclusive coordinator; no platform, Pub callback or Log-global dependency |
+| Contracts | Grid/settings, BoundaryCommand, identities/activity, ledger and state-copy values | Standard C++ value types; add fields only with a receiving caller |
+| Spatial / Fields / Swarm | Pinned H2 geometry and local bins; field sampling; bounded separation/steering | Immutable tick input, startup-sized output; complete-query and independent numerical oracles |
+| Blight / Interactions | Cardinal current/next infection buffers; deterministic stock-to-reserve arbitration | Stock is independent of infection; atomic resource publication, not whole-tick rollback |
+| HeadlessSession | Borrowed Simulation, bounded ingress, completed command trace | Simulation outlives session; only ingress supports producer threads |
+| InspectorSession | Owns Simulation/session, isolated intent route, boundary graph/clock and mission | Restart constructs a full replacement first; failed construction preserves the old run |
+| Presentation | Camera2D/FieldTool and owned copied frames; concrete ScenePainter | No ECS views in drawing; no generic renderer hierarchy |
+| Optional GPU receiver | Owned InstancePacket, camera uniforms, three fence-retired slots and readback receipts | Explicit lifetime/generation checks; no default desktop promotion |
+| IntentDelivery / BoundaryPipeline | Production Pub v2 queue admission and Pipeline commit/capture/mission graph | Coordinator-only scoped delivery and untimed inline jobs; no ECS callback mutation |
+| Telemetry | Optional RuntimeDiagnostics consumed by InspectorSession and desktop | Startup-owned64KiB image, numeric refusal/terminal records, counted drops, cold decode; scoped global logger restoration on coordinator only |
 
-Runtime is the composition root and owns Simulation, ingress, executor, snapshot
-pool and telemetry. Simulation owns its grids, fields and reusable scratch. Domain
-modules receive scoped immutable input and exclusive output views; they retain no
-world pointers. Rendering receives copied values, never ECS views. Simulation has
-no platform/render, Pub callback or Log-global dependencies. Core now exposes only
-ECS/Contracts plus project requirements; Swarm, Spatial, Fields and Blight are private. Runtime currently links
-Core for headless running. Its future adapters will link Pub/Pipeline/Log explicitly.
-Local workstream targets/source lists isolate parallel-session build edits. Reserved
-targets contain no dummy objects and do not claim implemented gameplay.
+Core publicly exposes Contracts/ECS and project requirements; domain targets remain
+private. Runtime links Core publicly and production Pub/Pipeline privately. Builds with testing disabled
+fetch ECS/H2/Pub/Pipeline and optional SDL; Log is acquired only when diagnostics
+are enabled. Desktop, mission
+routes and scenario exports consume the integrated path. Direct execution/replay
+remains a receiving comparator, sharing simulation/mission policy.
+Target-scoped CMake, explicit source lists and full pins keep builds and stream ownership
+reviewable. No stub API, copied geometry kernel or single-implementation interface is needed.
 
-```mermaid
-flowchart LR
-    Input[Platform input] --> Runtime
-    Runtime --> Queue[Bounded command ingress]
-    Queue --> Simulation
-    Runtime --> Pipeline[Pipeline executor]
-    Pipeline --> Simulation
-    Simulation --> Spatial
-    Simulation --> Fields
-    Simulation --> Blight
-    Simulation --> Swarm
-    Simulation --> Interactions
-    Simulation --> Snapshot[Owned snapshot]
-    Snapshot --> Presentation
-    Runtime --> Telemetry
-```
+## Boundary input and completed ticks
 
-## Pinned dependency constraints
+CommandIngress owns a mutex-protected value ring. Admission validates a complete
+nonempty batch and either copies all values or rejects without consuming a sequence.
+A full ring rejects newest. Closing is out-of-band; shutdown never needs queue space.
+Pause stops ticks while bounded admission remains open.
 
-The audit used the pinned sources, not assumptions about sibling HEADs:
+At a boundary, HeadlessSession captures a sequence cutoff and drains only that
+prefix. Trace capacity failure preserves the boundary. Field/fuse/shatter commands apply in sequence against committed state before
+movement; earlier actions are visible to later actions. Normal structural refusals
+are recorded without stopping. Completion records payload, sequence, tick and result. Unexpected
+application/tick failure stops the session; already applied edits are not rolled back.
+Replay prevalidates a fresh matching scenario's entire trace, then applies it at the
+same boundaries. Exact checks include IDs, positions/velocities, flow endpoints,
+activity, infection, every stock cell, structure settings/members/generation/hold
+and all ledger diagnostics. A shared owned-state comparison is consumed by CLI/spike
+and structural receiving; independent geometry/arithmetic oracles remain separate.
 
-- ECS 8391f81fd74a016564b4711b074eb286d3c5e14b requires trivially copyable
-  components of at most 64 bytes, at most 64 component types and 32 declared queries.
-  each<Cs...> must match a declared Query exactly. Large grids/buffers stay outside
-  components; small IDs reference simulation-owned data. The integrator owns queries.
-- Pipeline f6f54c623908649e8daac3613545062cf08b3822 builds graphs on one thread.
-  Completion callbacks must drain; timed jobs can outlive run and require
-  join_orphans before borrowed state is released. Initial ticks forbid timed/orphan
-  work. All stop/error paths still join outstanding work before destroying captures.
-- Its desktop executor creates a thread per job; the priority executor supplies a
-  bounded pool. Both are currently disabled in Crucible. Sequential execution is
-  the baseline; bounded parallel execution needs a separate integration gate.
-- The sequential executor factory is publicly declared in the pinned header.
-  The former manual declaration/comment has been removed from the integration test.
+| Current tick order | Reads | Writes |
+|---|---|---|
+| Apply boundary commands | Admitted owned prefix, committed mobile positions | Fields, participation, membership and mass/loss |
+| Gather / rebuild / steer | Tick-start mobile samples, fields and complete bins | Reusable sorted input and next-state scratch |
+| Publish movement | Computed next position/velocity | Existing ECS component values; world edges clamp |
+| Prepare cardinal spread | Committed infection | Leased next infection buffer |
+| Arbitrate reclamation | Post-move contacts in cell/ID order, next infection | Pending stock/ledger and clearing; clear protected centers after harvest, then joint commit |
+| Rebuild / complete / observe | Moved state and committed resources | Mobile bins, completed tick/hold/mission and owned snapshot |
 
-Pub callback/unsubscription and ECS capacity/identity guarantees require exact-source
-verification before threaded use. A DAG alone never proves safe concurrent mutation.
+The optional radial-only path precedes the bounded steering setting. Resource-disabled
+scenarios retain ordinary spread; the legacy ECS-only constructor retains its isolated
+integration workload. Future parallel phases must declare reads/writes, use disjoint
+scratch and join before structural mutation. A DAG alone does not make ECS or Pub safe.
 
-## Ownership, capacities and time
+## Production delivery and graph publication
 
-Start sequentially at 60 ticks/second. Runtime uses a steady-clock accumulator,
-allows at most four catch-up ticks per display iteration, discards excess wall time
-and counts that discard. Headless replay advances an exact tick count independently
-of wall time. Reproducibility means the same admitted commands, seed and ordering;
-bit-identical floating point across different platforms is not promised.
+Each run owns a private typed Pub domain, one sink and publisher. A batch span is
+borrowed only for synchronous delivery; the sink copies through CommandIngress,
+which remains the sole admission policy. Receipts own run/request IDs and admission
+status/sequence range. No duplicate broker, reply queue or intermediate payload
+allocation. The adapter and restart are coordinator-only.
 
-Scenario configuration supplies finite entity/grid/field/command/proposal capacities.
-Validate nonfinite values, dimensions, arithmetic overflow and storage budget before
-startup. Preallocate scratch and snapshot slots; no steady-state buffer growth.
-Measure ECS allocation behavior for structural transitions before claiming those
-paths allocate nothing. Capacity failure returns an explicit result and retains a
-valid prior state, without partial resource consumption or half-created structures.
+A startup-built Pipeline graph orders TryStep, capture and mission evaluation.
+Normal pause/close/trace exhaustion skips descendants without draining input.
+Two owned frame buffers preserve the last good publication on failure. Mission
+progress stages from that same completed frame and commits after graph success;
+terminal admission closes before another catch-up boundary. Inline untimed jobs
+have no orphan work; exceptions fail-stop without rolling back committed world
+state. Runtime bookkeeping may allocate; startup-sized simulation storage does
+not imply an allocation-free graph. See [Phase11](phases/phase11.md).
 
-Stable application EntityId includes generation/liveness semantics, never a row
-offset; Simulation maps it onto the verified ECS identity API. Borrowed phase views
-expire at barriers; all ECS borrows expire before structural commit. Cross-thread
-commands own their payload, with no publisher pointers. Failure results are nodiscard.
+## Resource and structural rules
 
-## Command ingress
+Conservation is `initial = remaining stock + mobile + reserve + structure + lost`.
+`harvested` and `work_actions` are diagnostics. Existing resource-disabled and legacy
+quota modes remain unchanged. The [structural rule](decisions/phase9-structural-proposal.md)
+selects the lowest64 eligible IDs, anchors them at the relay and refunds the lowest48
+on shatter, losing16. Empty/stale/insufficient requests do not mutate rule state.
+Only mobile identities steer, query and reclaim; all identities are retained in owned
+state. Protection clears pending infection after harvest; committed infection can
+emit one final wave on the fusion tick. Hold advances only on completed boundaries.
+Victory checks harvested quota plus120 hold before deadline/starvation defeat;
+terminal outcome closes admission and restart replaces the entire run. This fixed
+identity design does not imply allocator, dynamic-growth or ECS rollback guarantees.
 
-One input coordinator produces, one simulation coordinator consumes. Additional
-input sources serialize through the producer. Start with a bounded mutex-protected
-value ring. Pub is a typed delivery adapter into the ring, not the thread-safety
-boundary. Its callback only validates/copies; it never mutates ECS or runs a tick.
+Kind, allegiance, controller and presentation are distinct future concepts. The
+[faction board](concepts/factions-deathmatch-v2.png) establishes color-plus-shape
+readability, not hostility, owned stock or authority. The
+[Phase 9 comparison](phases/phase9.md) precedes those consumers; avoid adding unused
+faction types or a multiplayer framework. Terrain/traversal remains the
+[world extension gate](decisions/terrain-and-world-extension.md).
 
-Accepted commands get monotonic sequences. At tick start capture a cutoff, drain
-only through that sequence, and leave later arrivals for the next tick. Record
-accepted values, sequence and applied tick; replay injects that trace at boundaries.
-Reject newest on full capacity and expose feedback/counters. Paint batches are
-bounded and admitted atomically. Coalescing is deferred until replay semantics are
-specified. Close/stop is out-of-band so a full queue cannot prevent shutdown; closed
-ingress rejects admission. Pause stops ticks while ingress remains bounded.
+## Observation, graphics and lifecycle
 
-## Tick schedule and data access
+ScenarioSnapshot allocates once and captures owned values only under coordinator
+exclusivity. A borrow expires on the next successful capture/restart/destruction;
+rejected capture preserves the retained frame. There is no concurrent snapshot
+exchange. Add leases or a buffer pool only when a delayed concurrent consumer needs
+them and proves slow-reader/backpressure/teardown behavior.
 
-Read committed S(n), compute next state in scratch, commit S(n+1), then publish.
-Boundary edits apply before forming tick inputs. World edges clamp positions; there
-is no wraparound. Cell size and neighbor radius are scenario values; traverse every
-cell intersecting the radius, including border cells.
+The desktop painter batches cell/sample geometry and clips world overlays before
+narrowing to SDL raster coordinates. FieldTool distinguishes uncommitted previews,
+admitted edits and refusal. The optional SDL_GPU Vulkan receiver consumes normalized
+copied records, retains camera-independent packets and publishes only completed
+readback pixels. Controlled software-device faults and retirement have fixtures;
+physical loss/performance and a second backend remain separate gates. See
+[rendering](decisions/phase4-rendering.md), [GPU decision](decisions/phase6-gpu.md) and
+[Phase 7 review](sprint-reviews/phase-07.md).
 
-| Phase | Reads | Exclusive writes | Prerequisites |
-|---|---|---|---|
-| Boundary | Accepted commands, committed state | Field edits, validated boundary structural changes, tick inputs | Previous tick and all ECS readers joined |
-| Spatial rebuild | Tick-start positions/IDs | Counts, offsets, stable ID bins | Boundary |
-| Blight step | Current Blight, immutable rule/field inputs | Next Blight buffer | Boundary |
-| Steering | Tick-start state, bins, fields | Per-entity force scratch | Spatial rebuild |
-| Integrate | Tick-start state, forces | Next positions/velocities | Steering |
-| Interaction-bin rebuild | Next positions/IDs | Separate next-position bins | Integrate |
-| Interactions | Next state/bins, next Blight | Partition proposals/reductions | Interaction bins and Blight step |
-| Commit | Stable sorted proposals, next state | ECS values/structure, resource ledger, current Blight selection | All workers joined and borrows released |
-| Extract | Committed S(n+1) | Free snapshot slot, summary | Commit |
+Teardown closes admission, stops boundaries and joins producers/readers before
+releasing borrowed storage. Pub sinks explicitly disconnect while ingress and domain still exist; inline graph
+jobs cannot outlive a call. Concurrent producers/readers still require joining. GPU resources
+remain until fence/drain policy permits release. World replacement needs the same
+quiescence. No silent continuation after an unexpected tick failure.
 
-Steering bins cannot be reused after movement. Spatial rebuild and Blight step can
-run together only after access declarations are verified. Initially all phases run
-sequentially. Parallel workers read gathered immutable dense input and write disjoint
-scratch ranges or owned cell partitions. Only the coordinator accesses/mutates ECS.
-Reductions merge in stable cell/EntityId order. Every task declares reads, writes and
-partition ownership; overlapping writers require ordering or reductions. Build the
-graph while quiescent, never concurrently; prohibit nested waits on a saturated pool.
+## Pinned guarantees and acceptance gates
 
-Blight evolution writes next; interactions consume that next buffer, then commit
-swaps it into current. Resolve consumption and non-overlapping fusion candidates in
-stable cell/EntityId order. Validate complete resource/capacity transitions before
-mutation. Shatter has a defined remaining budget and respects entity capacity.
-Domain packages specify numerical rules and tiny reference fixtures before coding;
-this architecture does not invent tuning thresholds.
+- ECS `8391f81fd74a016564b4711b074eb286d3c5e14b`: trivially copyable components
+  up to 64 bytes, 64 component types and 32 exact declared queries. IDs use a 24-bit
+  index domain; do not assume transactional creation. Keep grids and large state outside components.
+- Pipeline `f6f54c623908649e8daac3613545062cf08b3822`: construct graphs on one
+  thread, drain callbacks and join orphaned timed work before releasing borrows.
+  Current gameplay is sequential; the thread-per-job and pool executors are disabled.
+- Sub0HexGrid H2 supplies checked assignment/conservative candidates. Crucible owns
+  IDs, bins and exact filtering, with private rectangular and exact-scan fallbacks
+  for unsupported geometry/radius domains. Blight still uses cardinal adjacency.
+- Pub scoped synchronous delivery is received in Phase11; concurrent adapter calls
+  remain unsupported. Most-derived registration/disconnection and owned queue copy
+  are explicit. Threaded delivery still needs separate exact-version receiving.
+  [Pinned audit](workstreams/integration/wave1-pinned-audit.md) and the
+  [reuse catalog](reuse/README.md) record what has actually been checked.
 
-## Snapshot exchange and teardown
+Run supported Debug, Release and ASan/UBSan through `scripts/run_tests.py` with
+capability preflight. Use independent numerical/ledger oracles, full-state replay,
+capacity/rejection and retained-state/lifetime fixtures. Threaded work adds race
+coverage or an explicit limitation. Physical GPU, iOS and human tests require
+[capability-matched receiving](workstreams/integration/hardware-receiving-backlog.md).
 
-Use three owned display buffers with free/writing/ready/reading states protected by
-an exchange lock. Renderer acquires an RAII lease on newest ready data and releases
-only after CPU reads and uploads requiring that memory complete. Never overwrite a
-reading slot. Supersede ready data under the lock; if no free slot exists, skip
-publication and count it instead of blocking simulation. Snapshots contain tick ID,
-copied visible swarm/structures and Blight display data, never ECS/scratch pointers.
-Headless mode can omit display payloads. Measure snapshot memory and extraction cost.
+The 100K–150K / 60 FPS target needs full tick and upload/presentation-inclusive frame
+measurements under the [benchmark protocol](benchmarking.md). Isolated ECS timing,
+a rendered image and a software Vulkan pass establish different facts.
 
-Shutdown closes admission, stops new ticks, finishes/joins all tasks, detaches Pub
-subscriptions and drains active callbacks while ingress still exists, finishes GPU
-uploads/releases leases, destroys presentation/executor/simulation, then flushes and
-destroys telemetry last. RAII startup failure follows equivalent dependency ordering.
-Task failure joins work, suppresses commit/publication and stops with an error;
-boundary edits already applied are not rolled back, and continuing is unsupported.
-World replacement requires the same quiescence. Resume applies queued values at the
-next boundary.
+## Longer-term owned-library integration
 
-## Validation and open decisions
-
-Sequential execution is the parallel oracle. Replay identical seed/accepted trace;
-compare exact identities, structural events and resource totals, with documented
-numeric tolerances. Never depend on undocumented ECS iteration order. Test dense and
-empty grids, borders, stale IDs, exhausted queues/proposals/entities, slow consumers,
-pause/resume, startup failure, dispatch failure and repeated shutdown.
-
-Require Debug/Release and supported ASan/UBSan; threaded packages also need supported
-race checks or an explicit coverage limitation. Follow benchmarking.md for isolated
-controlled timing. Whole-tick p95/p99, command age, allocations, peak memory, density,
-workers and drops matter; rendering additionally needs upload/presentation-inclusive
-frame timings. ECS microbenchmarks do not prove game FPS.
-
-| Decision still needing evidence | Closure |
-|---|---|
-| ECS identity/capacity and Pub callback lifetime | Exact pinned-source audit W0/W1 |
-| Bounded executor joining/failure semantics | W0/W7; sequential until proven |
-| Gameplay math/resource rules | W3–W6 reference fixtures and decision records |
-| Graphics/window backend and platforms | W9 ADR before adding dependencies |
-| 60 FPS target feasibility | W10 complete workload and W9 frame evidence |
-
-Record consequential changes in docs/decisions/ when made, including affected
-consumers, compatibility and acceptance evidence. Integrator approves shared-contract
-changes before dependent agents apply them. No unused public flags or APIs.
+The [sub0 roadmap](reuse/sub0-roadmap.md) assigns upstream requirements and receiving
+ownership. Pins are reproducibility checkpoints; missing neutral capabilities should
+be specified and evolved upstream before new game behavior depends on them. ECS
+owns capacity/identity/creation guarantees, HexGrid geometry, Pub delivery lifetime,
+Pipeline dispatch/join, and Log bounded observation. Runtime retains command cutoff
+and domain rejection; simulation retains biomass/faction rules. MemPage/TieredCache
+await measured backing/residency consumers. Introduce a consumed adapter once, with
+package fixtures, explicit failure/lifetime contracts and exact-pin game receiving.

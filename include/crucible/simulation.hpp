@@ -5,6 +5,7 @@
 #include <crucible/contracts/GridConfig.hpp>
 #include <crucible/contracts/StateCopy.hpp>
 #include <crucible/contracts/SteeringSettings.hpp>
+#include <crucible/contracts/ResourceSettings.hpp>
 #include <sub0ecs/sub0ecs.hpp>
 #include <cstddef>
 #include <memory>
@@ -21,12 +22,15 @@ public:
         GridConfig grid;
         std::size_t field_capacity{};
         std::optional<SteeringSettings> steering{};
+        std::optional<ResourceSettings> resources{}; ///< Enables finite reclamation; absent preserves legacy spread.
+        std::optional<StructuralSettings> structural{}; ///< Unit-mass fixed-identity relay mode; requires resources.
     };
 
     /// Legacy ECS-only workload; no fields, grid or Blight state is constructed.
     explicit Simulation(std::size_t count);
-    /// Allocate the bounded scenario at startup. Invalid geometry/count or allocation
-    /// failure throws before a usable Simulation exists. Population never grows.
+    /// Allocate the bounded scenario at startup. Invalid geometry/count/settings,
+    /// unrepresentable biomass or allocation failure throws before a usable Simulation
+    /// exists. Population never grows.
     Simulation(std::size_t count, ScenarioOptions options);
     ~Simulation();
     Simulation(const Simulation&) = delete;
@@ -40,15 +44,28 @@ public:
     /// legacy workload has zero slots and rejects every edit.
     [[nodiscard]] bool TryApplyFieldEdit(const FieldEdit& edit) noexcept;
     [[nodiscard]] std::size_t GetFieldCapacity() const noexcept;
+    /// Boundary-only atomic transitions; normal refusal leaves simulation state unchanged.
+    [[nodiscard]] StructuralCommandResult TryFuseRelay() noexcept;
+    [[nodiscard]] StructuralCommandResult TryShatterRelay(std::uint64_t generation) noexcept;
+    /// Owned observation with current mobile eligibility; no retained ECS/query borrow.
+    [[nodiscard]] std::optional<StructuralState> GetStructuralState() const noexcept;
     /// Completed scenario observations; return zero for the legacy workload.
     [[nodiscard]] std::size_t GetBlightInfectedCount() const noexcept;
     [[nodiscard]] std::size_t GetOccupiedCellCount() const noexcept;
+    /** Returns an owned completed-boundary ledger without copying world geometry.
+     * @return Finite-resource quantities, or nullopt for scenarios without resources.
+     * @note Requires exclusive coordinator access; no retained ECS/storage borrow.
+     */
+    [[nodiscard]] std::optional<BiomassLedger> GetBiomassLedger() const noexcept;
     /// Consume an immediate radius query without exposing the grid's borrowed buffer.
     /// Invalid input or the legacy workload returns nullopt.
     [[nodiscard]] std::optional<std::size_t> TryCountNeighbors(Position center, float radius) noexcept;
-    /// Copies sorted samples, all field slots and row-major Blight into owned caller storage.
-    /// Requires exclusive coordinator access. Capacity failure or legacy mode writes nothing.
-    /// Boundary edits already applied are visible; capture after a completed boundary for replay.
+    /** Copies sorted samples, all field slots, row-major infection and resource stock.
+     * @param[out] destination Mutually disjoint caller-owned spans; stocks required only when resources are enabled.
+     * @return Geometry, used lengths, completed tick and optional biomass ledger; nullopt on capacity failure or ECS-only mode.
+     * @note Requires exclusive coordinator access. Rejection writes nothing. Boundary edits
+     * already applied are visible; capture after a completed boundary for replay.
+     */
     [[nodiscard]] std::optional<ScenarioStateInfo> TryCopyState(StateCopyDestination destination) noexcept;
 private:
     struct ScenarioState;

@@ -9,7 +9,17 @@ consider. Read the latest review before planning or delegating another sprint.
 |---|---|---|---|
 | 1 | Headless foundations and game intent; complete | [Phase 1](phase-01.md) | `ab708a7`, PR 1 |
 | 2 | Steering, bounded clock, owned inspection and actual-state visual; complete | [Phase 2](phase-02.md) | `cdc6034`, PR 4 |
-| 3 | Resource consequence and optional reusable hex traversal; proposed only | [Plan](../phases/phase3.md); review due at phase close | Not started |
+| 3 | Finite reclamation and consumed H2 receiving proof; complete | [Phase 3 review](phase-03.md), [plan](../phases/phase3.md) | `21f3786`, PR 7 |
+| 4 | Interactive inspection/control; complete | [Phase 4 review](phase-04.md), [plan](../phases/phase4.md) | `09ae74f`, PR 9 |
+| 5 | Reclamation challenge, instancing design and resilient validation; complete | [Phase 5 review](phase-05.md), [plan](../phases/phase5.md) | `57c1da6`, PR 12 |
+| 6 | Optional executing Vulkan instancing and replay-backed examples; physical gates open | [Phase 6 review](phase-06.md), [plan](../phases/phase6.md) | `7317a03`, PR15 |
+| 7 | Controlled GPU failure/retirement and mission timing; merged and original evidence recovered | [Phase 7 review](phase-07.md), [plan](../phases/phase7.md) | PR17 `d2fda2a`; recovery PR19 `50f61d8` |
+| 8 | Straight flow, primitive cues and concepts; recovered/merged, original local evidence retained | [Phase 8 review](phase-08.md), [plan](../phases/phase8.md) | `a95c511`, PR21 |
+| 9 | Rules shootout and actual relay-density spike; investigative scope delivered | [Phase 9 review](phase-09.md), [plan](../phases/phase9.md) | Dispatch `a95c511`; [PR22 acceptance/merge receipt](https://github.com/CraigHutchinson/Crucible/pull/22) |
+| 10 | Fixed-identity relay loop, conserved loss/protection/hold and live owned receiving | [Phase10 review](phase-10.md), [plan](../phases/phase10.md) | `262c4eb`, [PR23](https://github.com/CraigHutchinson/Crucible/pull/23) |
+
+| 11 | Production Pub/Pipeline backbone; complete | [Review](phase-11.md), [plan](../phases/phase11.md) | `835c781`; [PR24](https://github.com/CraigHutchinson/Crucible/pull/24) |
+| 12 | Measured runtime budgets and bounded diagnostics; complete | [Review](phase-12.md), [plan](../phases/phase12.md) | `c4ae9c0`, [PR25](https://github.com/CraigHutchinson/Crucible/pull/25) |
 
 ## Review procedure
 

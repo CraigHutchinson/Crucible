@@ -5,7 +5,7 @@ set_tests_properties(simulation PROPERTIES LABELS integration)
 
 add_executable(crucible_stack_test stack.cpp)
 target_link_libraries(crucible_stack_test PRIVATE Crucible::Core Sub0Pipeline::Sub0Pipeline
-    Sub0Pipeline::Headless Sub0Pub::Sub0Pub Sub0Log::Sub0Log)
+    Sub0Pub::Sub0Pub Sub0Log::Sub0Log)
 add_test(NAME stack_round_trip COMMAND crucible_stack_test)
 set_tests_properties(stack_round_trip PROPERTIES LABELS integration)
 
@@ -18,3 +18,46 @@ add_executable(crucible_phase2_test phase2.cpp)
 target_link_libraries(crucible_phase2_test PRIVATE Crucible::Runtime Crucible::Presentation)
 add_test(NAME phase2_full_state COMMAND crucible_phase2_test)
 set_tests_properties(phase2_full_state PROPERTIES LABELS "integration;presentation")
+
+add_executable(crucible_phase3_test phase3.cpp)
+target_link_libraries(crucible_phase3_test PRIVATE Crucible::Runtime Crucible::Presentation)
+add_test(NAME phase3_full_state COMMAND crucible_phase3_test)
+set_tests_properties(phase3_full_state PROPERTIES LABELS "integration;presentation;resources")
+
+if(NOT CRUCIBLE_BUILD_DESKTOP)
+    add_test(NAME challenge_passive_cli COMMAND crucible --mission)
+    add_test(NAME challenge_route_cli COMMAND crucible --mission --route)
+    set_tests_properties(challenge_passive_cli PROPERTIES LABELS "integration;mission"
+        PASS_REGULAR_EXPRESSION "LOST tick=900 .*conserved=1 replay=full-state")
+    set_tests_properties(challenge_route_cli PROPERTIES LABELS "integration;mission"
+        PASS_REGULAR_EXPRESSION "WON tick=.*conserved=1 replay=full-state")
+endif()
+
+if(CRUCIBLE_BUILD_DESKTOP)
+    add_executable(crucible_desktop_event_test desktop.cpp)
+    target_link_libraries(crucible_desktop_event_test PRIVATE crucible_desktop_adapter)
+    add_test(NAME desktop_events COMMAND crucible_desktop_event_test)
+    set_tests_properties(desktop_events PROPERTIES LABELS "integration;desktop")
+endif()
+
+if(CRUCIBLE_BUILD_DESKTOP)
+    add_executable(crucible_mission_examples mission_examples.cpp)
+    target_link_libraries(crucible_mission_examples PRIVATE Crucible::Runtime Crucible::ScenePainter SDL3::SDL3)
+    add_test(NAME mission_strategy_examples COMMAND crucible_mission_examples)
+    set_tests_properties(mission_strategy_examples PROPERTIES LABELS "integration;mission;presentation" TIMEOUT 900)
+endif()
+
+if(CRUCIBLE_BUILD_DESKTOP)
+    add_executable(crucible_mission_sensitivity mission_sensitivity.cpp)
+    target_link_libraries(crucible_mission_sensitivity PRIVATE
+        Crucible::Runtime Crucible::ScenePainter SDL3::SDL3)
+    add_test(NAME mission_timing_schedule COMMAND crucible_mission_sensitivity --schedule-only)
+    set_tests_properties(mission_timing_schedule PROPERTIES
+        LABELS "integration;mission;presentation" TIMEOUT 60)
+endif()
+
+# The headless executable is built in desktop/sanitizer configurations too.
+# Receive the complete structural mission on every supported platform.
+add_test(NAME structural_route_cli COMMAND crucible --structural --route)
+set_tests_properties(structural_route_cli PROPERTIES LABELS "integration;mission;resources"
+    TIMEOUT 900 PASS_REGULAR_EXPRESSION "WON tick=.*hold=120 .*conserved=1 replay=full-state")

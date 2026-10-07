@@ -1,4 +1,4 @@
-add_library(crucible_presentation ScenarioSnapshot.cpp)
+add_library(crucible_presentation ScenarioSnapshot.cpp Camera2D.cpp FieldTool.cpp)
 add_library(Crucible::Presentation ALIAS crucible_presentation)
 target_include_directories(crucible_presentation PUBLIC ${PROJECT_SOURCE_DIR}/include)
 target_link_libraries(crucible_presentation PUBLIC crucible_options Crucible::Contracts PRIVATE Crucible::Core)

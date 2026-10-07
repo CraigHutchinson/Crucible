@@ -144,6 +144,38 @@ void CheckBlockedAndSchedules() {
     Require(first_clock.GetSummary().completed_tick == second_clock.GetSummary().completed_tick &&
         first.checksum() == second.checksum(), "clock schedule does not alter exact ticks");
 }
+
+void CheckCompletedBoundaryStop() {
+    Simulation simulation{0};
+    HeadlessSession session{simulation, {1, 0}};
+    std::uint64_t observed{};
+    ClockDriver clock{session, [&] {
+        observed = session.GetCompletedTick();
+        return observed == 2;
+    }};
+    clock.Pause();
+    Require(clock.TryPump(1s).advanced_ticks == 0 && observed == 0,
+        "paused pump never invokes completed-boundary callback");
+    clock.Resume();
+    const auto stopped = clock.TryPump(100ms + 1ns);
+    Require(stopped.status == Status::closed && stopped.advanced_ticks == 2 &&
+        observed == 2 && stopped.summary.completed_tick == 2 &&
+        stopped.summary.discarded_scaled_nanoseconds == 64'000'000'060,
+        "stop callback sees completed ticks and discards whole and fractional carry");
+    clock.Resume();
+    Require(clock.TryPump(100ms).advanced_ticks == 0 && observed == 2,
+        "terminal stop callback cannot be repeated or resumed");
+
+    Simulation failed_simulation{0};
+    HeadlessSession failed_session{failed_simulation, {1, 0}};
+    ClockDriver failed{failed_session, []() -> bool { throw std::logic_error("boundary observer failed"); }};
+    bool threw{};
+    try { static_cast<void>(failed.TryPump(100ms)); }
+    catch (const std::logic_error&) { threw = true; }
+    Require(threw && failed.GetStatus() == Status::blocked && failed.GetSummary().completed_tick == 1,
+        "throwing callback latches blocked after its completed tick");
+    Require(failed.TryPump(100ms).advanced_ticks == 0, "throwing callback never runs again");
+}
 }
 
 int main() {
@@ -152,6 +184,7 @@ int main() {
         CheckInvalidTime();
         CheckLifecycleAndCounters();
         CheckBlockedAndSchedules();
+        CheckCompletedBoundaryStop();
     } catch (const std::exception& error) {
         std::cerr << error.what() << '\n';
         return 1;

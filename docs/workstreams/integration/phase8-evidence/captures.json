@@ -1,0 +1,58 @@
+{
+  "source_commit": "10cbd46e2ce892a652dd68dd73f212ac68684c3f",
+  "dirty": true,
+  "executable_sha256": "1b7710f60050340c91f95c4511632990071c25726d2df18bf9163730c63acf5a",
+  "platform": "Linux",
+  "source_tree": "aae5ed66b1342a1d4515902f2c958f6e1acc7fbd",
+  "dependency_pins_sha256": "ff2d48cb05079974918c458a217cd43524b0b2742ca6a8ed6a1bf0b0db7e1419",
+  "fixture_sha256": "4d8fb4f04caf396001091f3e0f6dc15856bfff90a730058ddf767830f877e454",
+  "painter_sha256": "db70b0db8f23a22c562a69c4f3b1492563eb2027cefd44139a4779e31508539a",
+  "backend": "production SDL software painter, owned completed tick 60",
+  "scenario": {
+    "samples": 2048,
+    "grid": [
+      64,
+      32,
+      1
+    ],
+    "tick": 60,
+    "applied": [
+      "FLOW slot0 (12,12)->(44,12), radius8 strength4",
+      "ATTRACT slot1 (24,24), radius8 strength4",
+      "REPEL slot2 (52,24), radius8 strength-4"
+    ],
+    "preview": "FLOW slot3 (18,20)->(46,28), radius8 strength4",
+    "zoom_factor": 2
+  },
+  "scope": "Applied flow and radial fields; dashed uncommitted preview; fitted and zoomed camera. No human, hardware or performance acceptance.",
+  "captures": [
+    {
+      "view": "fit",
+      "png": "flow-fit.png",
+      "dimensions": [
+        1280,
+        720
+      ],
+      "bmp_sha256": "c2d736ba3d1310b7e55c52f1c46eaae6b5e1331ece9b2d4a1cf19b6ef2146814",
+      "png_sha256": "61fa7e350a886e9db6d25a154b3e949ab6e86a087fb753b086021e658b21e64e",
+      "stdout": "",
+      "stderr": "",
+      "published_path": "docs/concepts/exports/phase8-flow-fit.png"
+    },
+    {
+      "view": "zoom",
+      "png": "flow-zoom.png",
+      "dimensions": [
+        1280,
+        720
+      ],
+      "bmp_sha256": "6ae73c91a858f65527ae749aa69187882afa2110e44426719b6495a51f68f293",
+      "png_sha256": "0f07ca32d742bc5f4d897848a182ac802821c9dda4ef6c30020489cafb645eaa",
+      "stdout": "",
+      "stderr": "",
+      "published_path": "docs/concepts/exports/phase8-flow-zoom.png"
+    }
+  ],
+  "visual_inspection": "Inspected fit and zoom: solid selected flow corridor and rightward chevrons; shape-based inward/outward radial cues; white dashed uncommitted preview; clipped zoom remains within arena; HUD and FLOW button remain visible. Human readability is not established.",
+  "dirty_scope": "Only receiving/review documentation was uncommitted during capture; painter and fixture match 10cbd46."
+}

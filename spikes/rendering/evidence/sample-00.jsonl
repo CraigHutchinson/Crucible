@@ -1,0 +1,2 @@
+{"samples":2048,"records":4096,"instance_bytes":131072,"expanded_bytes":622592,"capture_median_us":20.25,"capture_p95_us":20.465,"pack_median_us":14.076,"pack_p95_us":14.209,"pixel_equal":true,"digest":11188884868288052309}
+{"samples":150000,"records":152048,"instance_bytes":4865536,"expanded_bytes":23111296,"capture_median_us":1947.56,"capture_p95_us":2742.85,"pack_median_us":787.698,"pack_p95_us":1171.63,"pixel_equal":true,"digest":4720514841958633061}

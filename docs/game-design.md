@@ -1,6 +1,6 @@
 # Crucible: game intent and first playable design
 
-Design baseline, 2026-10-01. This develops the existing swarm/Blight/fusion premise
+Product direction updated for Phase10, 2026-10-05. This develops the existing swarm/Blight/fusion premise
 into a concrete proposed game. New mission, resource and visual choices below are
 design proposals for iteration, not claims of implemented or playtested behavior.
 Read this before the technical [architecture](architecture.md) or work packages.
@@ -25,6 +25,16 @@ The project is both a playable game and a demanding real-time simulation built o
 the sub0 ecosystem. Technical scale serves that experience: the target of
 100,000–150,000 entities matters when it makes the swarm feel continuous and alive.
 A convincing, understandable small scenario comes before a measured large one.
+
+## Future factions and control
+
+The current single-player reference has nanites and Blight. Preserve the option
+for more than two factions, including differently colored variants of either kind
+as potentially controllable groups. Kind, allegiance, controller and palette are
+separate concepts; different factions may be allied, neutral or hostile. This is
+[extensibility groundwork](decisions/faction-extensibility.md), not implemented
+multiplayer or new gameplay rules. Freeze resource ownership and command authority
+at their first real consumers; Phase 6 only reviews rendering assumptions.
 
 ## Player, setting and viewpoint
 
@@ -137,14 +147,22 @@ back. Loss is recorded explicitly. A visual cloud is not an excuse to lose the l
 Blight is the first opposition. A local spread rule creates pressure on unattended
 territory; the swarm can consume it, but handling a contested cell carries a defined
 attrition cost. That cost must be tunable and visible, with a short fixture proving
-no resource is created by contention or a failed transition. The existing monotone
-spread prototype has no consumption or attrition and does not yet implement this loop.
+no resource is created by contention or a failed transition. Finite reclamation now
+uses a conserved stock/mobile/reserve/structure/lost ledger. Fixed-identity
+fusion/shatter is implemented; contact attrition and population growth remain later.
 
 The important tension is keeping enough mobile mass to reclaim while anchoring enough
 to secure the objective. Difficulty comes initially from map geometry, infection
 placement and spread/consumption balance. Combat AI and multiplayer are deferred.
 
 ## First playable scenario: Secure the relay
+
+The [phase 5 reference challenge](decisions/phase5-reclamation.md) precedes this full
+scenario: recover a visible biomass quota before a completed-tick deadline, with
+latched outcomes and restart. It uses the live field tools and ledger without adding
+structures or protection rules. Difficulty/comprehension require a human playtest.
+The optional [GPU receiver](decisions/phase6-gpu.md) implements instancing and
+readback receiving; the default desktop still uses the established software painter.
 
 A compact bounded arena begins with a finite swarm, an infected frontier and one
 relay marker beyond it. The player learns to gather the swarm, route it through the
@@ -183,6 +201,13 @@ Shapes and motion reinforce colors: points/ribbons for swarm, contiguous crust f
 Blight, rigid interlocked geometry for structures. Keep material detail subordinate
 to strategic readability. Overlays should be separable from the rendered world.
 
+The [resource board](concepts/resources-v2.png) distinguishes stock, mobile mass,
+reserve and a future lattice. The [faction/deathmatch board](concepts/factions-deathmatch-v2.png)
+uses four color-plus-shape identities and variants of both organism kinds. The
+[Phase9 comparison](phases/phase9.md) receives rule and actual concentration evidence
+before selecting further gameplay. These material studies guide later fidelity;
+primitive readable interaction comes first.
+
 See the [visual concept gallery](concepts/README.md) for world, unit/material and
 screen renders. These images are generated design explorations. Their HUD values,
 terrain and visual effects are illustrative; they are not captures of the executable
@@ -192,9 +217,10 @@ or final production assets, and do not select a renderer.
 
 | Stage | What it establishes |
 |---|---|
-| Implemented headless increment | Owned field edits, bounded ingress, exact tick replay, radial movement, spatial diagnostics and simple cellular spread |
-| Next simulation work | Numerical steering rules; clock/lifecycle completion; telemetry that can describe the emerging loop |
-| Gameplay gate | Consumption/attrition ledger, one lattice, fusion/shatter, objective and outcome in a sequential reference scenario |
+| Implemented increment | Straight drag FLOW and radial edits, bounded ingress/replay/clock, bounded steering, spatial diagnostics, finite ledger and live SDL display |
+| Current mission increment | Quota/deadline challenge and optional one-relay fusion/protection/hold/shatter with progress/outcome/restart |
+| Current investigation | Phase9 selected64→48+16 from actual density evidence; Phase10 receives the structural loop |
+| Gameplay gate | One-lattice conservation/protection/hold received; future contact attrition and human tuning have separate gates |
 | First playable gate | Snapshot display, input tools, pause/restart, objective feedback and a visual win/loss |
 | Scale gate | Full tick/frame workload measured at small, 100K and 150K populations with rendering/uploads included |
 

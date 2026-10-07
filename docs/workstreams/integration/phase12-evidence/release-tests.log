@@ -1,0 +1,114 @@
+Test project D:/Craig/GitHub/Crucible/build/phase12-release
+      Start  1: workflow_permissions
+ 1/42 Test  #1: workflow_permissions ...................   Passed    0.09 sec
+      Start  2: workflow_prerequisites
+ 2/42 Test  #2: workflow_prerequisites .................   Passed    0.36 sec
+      Start  3: gpu_packet_numeric
+ 3/42 Test  #3: gpu_packet_numeric .....................   Passed    0.04 sec
+      Start  4: gpu_slot_retirement
+ 4/42 Test  #4: gpu_slot_retirement ....................   Passed    0.03 sec
+      Start  5: gpu_instanced_readback
+ 5/42 Test  #5: gpu_instanced_readback .................   Passed    1.19 sec
+      Start  6: scene_painter_software
+ 6/42 Test  #6: scene_painter_software .................   Passed    0.28 sec
+      Start  7: structural_actual_frames
+ 7/42 Test  #7: structural_actual_frames ...............   Passed    0.44 sec
+      Start  8: structural_desktop_events
+ 8/42 Test  #8: structural_desktop_events ..............   Passed    1.19 sec
+      Start  9: simulation
+ 9/42 Test  #9: simulation .............................   Passed    0.04 sec
+      Start 10: stack_round_trip
+10/42 Test #10: stack_round_trip .......................   Passed    0.07 sec
+      Start 11: scenario_integration
+11/42 Test #11: scenario_integration ...................   Passed    0.03 sec
+      Start 12: phase2_full_state
+12/42 Test #12: phase2_full_state ......................   Passed    0.42 sec
+      Start 13: phase3_full_state
+13/42 Test #13: phase3_full_state ......................   Passed    0.42 sec
+      Start 14: desktop_events
+14/42 Test #14: desktop_events .........................   Passed    0.36 sec
+      Start 15: mission_strategy_examples
+15/42 Test #15: mission_strategy_examples ..............   Passed   16.63 sec
+      Start 16: mission_timing_schedule
+16/42 Test #16: mission_timing_schedule ................   Passed    0.04 sec
+      Start 17: structural_route_cli
+17/42 Test #17: structural_route_cli ...................   Passed    2.56 sec
+      Start 18: contracts_values
+18/42 Test #18: contracts_values .......................   Passed    0.04 sec
+      Start 19: runtime_headless
+19/42 Test #19: runtime_headless .......................   Passed    0.03 sec
+      Start 20: runtime_ingress
+20/42 Test #20: runtime_ingress ........................   Passed    0.03 sec
+      Start 21: runtime_session
+21/42 Test #21: runtime_session ........................   Passed    0.03 sec
+      Start 22: runtime_clock
+22/42 Test #22: runtime_clock ..........................   Passed    0.03 sec
+      Start 23: runtime_inspector
+23/42 Test #23: runtime_inspector ......................   Passed    0.03 sec
+      Start 24: runtime_mission
+24/42 Test #24: runtime_mission ........................   Passed    0.06 sec
+      Start 25: runtime_reference_route
+25/42 Test #25: runtime_reference_route ................   Passed    0.03 sec
+      Start 26: runtime_structural
+26/42 Test #26: runtime_structural .....................   Passed    0.31 sec
+      Start 27: runtime_intent_delivery
+27/42 Test #27: runtime_intent_delivery ................   Passed    0.03 sec
+      Start 28: runtime_boundary_pipeline
+28/42 Test #28: runtime_boundary_pipeline ..............   Passed    0.31 sec
+      Start 29: runtime_backbone_parity
+29/42 Test #29: runtime_backbone_parity ................   Passed    3.82 sec
+      Start 30: runtime_diagnostics
+30/42 Test #30: runtime_diagnostics ....................   Passed    0.05 sec
+      Start 31: runtime_diagnostics_parity
+31/42 Test #31: runtime_diagnostics_parity .............   Passed    3.71 sec
+      Start 32: spatial_grid
+32/42 Test #32: spatial_grid ...........................   Passed    0.03 sec
+      Start 33: spatial_hex_queries
+33/42 Test #33: spatial_hex_queries ....................   Passed    0.31 sec
+      Start 34: spatial_allocation_reuse
+34/42 Test #34: spatial_allocation_reuse ...............   Passed    0.03 sec
+      Start 35: fields_sampling
+35/42 Test #35: fields_sampling ........................   Passed    0.03 sec
+      Start 36: blight_grid
+36/42 Test #36: blight_grid ............................   Passed    0.04 sec
+      Start 37: swarm_steering
+37/42 Test #37: swarm_steering .........................   Passed    0.31 sec
+      Start 38: interactions_reclamation
+38/42 Test #38: interactions_reclamation ...............   Passed    0.04 sec
+      Start 39: interactions_reclamation_allocations
+39/42 Test #39: interactions_reclamation_allocations ...   Passed    0.04 sec
+      Start 40: interactions_structural
+40/42 Test #40: interactions_structural ................   Passed    0.29 sec
+      Start 41: camera_affine
+41/42 Test #41: camera_affine ..........................   Passed    0.04 sec
+      Start 42: field_tools
+42/42 Test #42: field_tools ............................   Passed    0.03 sec
+
+100% tests passed, 0 tests failed out of 42
+
+Label Time Summary:
+blight          =   0.11 sec*proc (3 tests)
+contracts       =   0.04 sec*proc (1 test)
+desktop         =   1.83 sec*proc (3 tests)
+fields          =   0.03 sec*proc (1 test)
+gpu             =   1.26 sec*proc (3 tests)
+input           =   0.06 sec*proc (2 tests)
+integration     =  20.57 sec*proc (9 tests)
+interactions    =   0.36 sec*proc (3 tests)
+lifetime        =   1.27 sec*proc (3 tests)
+log             =   3.76 sec*proc (2 tests)
+mission         =  19.32 sec*proc (5 tests)
+numeric         =   0.04 sec*proc (1 test)
+pipeline        =   7.84 sec*proc (3 tests)
+presentation    =  19.98 sec*proc (15 tests)
+pub             =   3.84 sec*proc (2 tests)
+readback        =   1.19 sec*proc (1 test)
+resources       =   3.29 sec*proc (3 tests)
+runtime         =   8.45 sec*proc (13 tests)
+simulation      =   0.29 sec*proc (1 test)
+spatial         =   0.38 sec*proc (3 tests)
+structural      =   1.91 sec*proc (3 tests)
+swarm           =   0.31 sec*proc (1 test)
+workflow        =   0.45 sec*proc (2 tests)
+
+Total Test time (real) =  33.89 sec

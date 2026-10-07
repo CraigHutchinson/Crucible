@@ -4,14 +4,13 @@
 
 Own occupied indexes, bins, bounds caches, base occupancy/count summaries and bounded build/update/query frontiers. Consume reviewed upstream geometry/coverage; domain owners define reducer meaning, Presentation view policy, and navigation connectivity/costs.
 
-See the [application responsibility map](../hierarchy-boundaries.md) for defining owners,
-read/write sets, lifetimes, bounded progress and cross-project handoffs.
+See the [application responsibility map](../hierarchy-boundaries.md) for defining owners, read/write sets, lifetimes, bounded progress and cross-project handoffs.
 
-Bounded grid and brute-force fixtures are integrated and validated. Simulation
-rebuilds after movement and main consumes radius diagnostics. Broader steering remains
-pending. See [initial combined evidence](../integration/wave1-validation.md).
-Phase 2 added bounded immutable-input steering as a real query consumer; broader
-swarm/navigation behavior remains gated. See [phase 2 evidence](../integration/phase2-validation.md).
+Phase 2 supplies tick-start queries consumed by stable-ID steering and committed
+post-move inspection. P3-02 receives pinned Sub0HexGrid H2 geometry while preserving
+complete query/ownership behavior. See [design](design.md), [coverage/compatibility
+decision](decisions.md) and [current handoff](validation.md); integrated promotion
+and replay evidence remain architect gates.
 
 ## Scope and first task
 

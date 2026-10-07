@@ -4,6 +4,10 @@ Status: in progress / complete. Date: YYYY-MM-DD. Accountable reviewer: role/nam
 
 ## Intent, baseline and scope
 
+Record the top-down consumer task/concept, bottom-up capability/limit receiving and
+the smallest vertical slice where they meet. Reconcile demonstrated consumer
+requirements with backend contracts; identify graphics/UI/sound applicability.
+
 Name the intended useful increment and actual included scope. Record dispatch main
 SHA, reviewed implementation head, PR and (after merge) merge SHA. Link phase plan,
 frozen decisions and detailed validation/handoffs. Distinguish original acceptance,
@@ -31,7 +35,17 @@ smoke and artifact reproduction/visual checks. Separate correctness from perform
 static inspection from measurements and synthetic fixtures from real inputs. Link the
 detailed evidence rather than copying logs. State missing coverage or failing gates.
 
+Include visually inspected examples of actual changed behavior wherever viable.
+For each link, record provenance, reproduction, relevant scenario/tick/commands and
+backend/platform, what the example demonstrates and its limits. Use before/after
+where useful. Record an explicit reason for a nonvisual change or the capture
+blocker, accountable owner and receiving gate; do not silently omit this criterion.
+
 ## Retrospective and reuse
+
+State what the consumer concept taught the foundations, what verified foundations
+changed in the experience, and the balanced next slice. Name concrete upstream
+requirements, receiving caller and evidence rather than a speculative API list.
 
 What helped, what created avoidable work, and what to change next time. Record receiving
 library/consumer and retain/reuse/improve/extract disposition with catalog links.

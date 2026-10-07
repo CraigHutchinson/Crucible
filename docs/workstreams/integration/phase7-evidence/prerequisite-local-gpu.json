@@ -1,0 +1,76 @@
+{
+  "schema": 1,
+  "stage": "test",
+  "ok": false,
+  "checks": [
+    {
+      "name": "python",
+      "status": "pass",
+      "required": true,
+      "detail": "Python >=3.10 required",
+      "version": "3.12.14",
+      "executable": "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python"
+    },
+    {
+      "name": "display",
+      "status": "fail",
+      "required": true,
+      "detail": "XOpenDisplay failed in the current execution namespace",
+      "returncode": 1,
+      "command": [
+        "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python",
+        "-c",
+        "import ctypes, ctypes.util, sys\nlib = ctypes.CDLL(ctypes.util.find_library('X11') or 'libX11.so.6')\nlib.XOpenDisplay.argtypes = [ctypes.c_char_p]\nlib.XOpenDisplay.restype = ctypes.c_void_p\nlib.XCloseDisplay.argtypes = [ctypes.c_void_p]\ndisplay = lib.XOpenDisplay(None)\nif not display:\n    sys.exit('XOpenDisplay failed in the current execution namespace')\nlib.XCloseDisplay(display)\nprint('XOpenDisplay connected')\n"
+      ],
+      "elapsed_seconds": 0.064,
+      "process_scope": "POSIX process group",
+      "output_truncated": false,
+      "backend": "x11",
+      "display": "127.0.0.1:101",
+      "scope": "XOpenDisplay in the same execution namespace; SDL initialization remains a test gate"
+    },
+    {
+      "name": "vulkan",
+      "status": "fail",
+      "required": true,
+      "detail": "error: XDG_RUNTIME_DIR is invalid or not set in the environment.\nXCB failed to connect to the X server due to error:1.\nERROR at ./vulkaninfo/./vulkaninfo.h:737: AppCreateXcbSurface failed to establish connection",
+      "returncode": 1,
+      "command": [
+        "vulkaninfo",
+        "--summary"
+      ],
+      "elapsed_seconds": 0.032,
+      "process_scope": "POSIX process group",
+      "output_truncated": false,
+      "devices": [],
+      "backend": "Vulkan"
+    },
+    {
+      "name": "spirv",
+      "status": "pass",
+      "required": true,
+      "detail": "/workspace/scratch/24e6565bae82/Crucible/build/gpu-release/gpu-shaders/world.vert.spv",
+      "test": "gpu_instanced_readback"
+    },
+    {
+      "name": "spirv",
+      "status": "pass",
+      "required": true,
+      "detail": "/workspace/scratch/24e6565bae82/Crucible/build/gpu-release/gpu-shaders/world.frag.spv",
+      "test": "gpu_instanced_readback"
+    }
+  ],
+  "selected_tests": [
+    "gpu_instanced_readback"
+  ],
+  "scope": "Capability preflight only; no performance, physical-console or suite acceptance claim",
+  "capacity": {
+    "cpu_count": 9,
+    "memory_bytes": null,
+    "requirement": "No invented CPU/RAM minimum"
+  },
+  "compiler": "/usr/bin/c++",
+  "sanitizers": false,
+  "gpu_required": true,
+  "elapsed_seconds": 0.098
+}

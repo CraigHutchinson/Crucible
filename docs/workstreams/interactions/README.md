@@ -4,10 +4,9 @@
 
 Own exact resource/identity validation, arbitration and bounded proposals. Spatial summaries can locate candidates but cannot replace authoritative checks; structural/resource commits remain coordinated by Integration.
 
-See the [application responsibility map](../hierarchy-boundaries.md) for defining owners,
-read/write sets, lifetimes, bounded progress and cross-project handoffs.
+See the [application responsibility map](../hierarchy-boundaries.md) for defining owners, read/write sets, lifetimes, bounded progress and cross-project handoffs.
 
-Reserved build boundary (INTERFACE target); algorithms and public APIs are pending.
+Finite reclamation provider (STATIC target); fusion/shatter remain pending.
 
 ## Scope and first task
 
@@ -42,3 +41,10 @@ Run the preset build, stream CTest label and combined suite when integrated. Rep
 commands/results, platforms, changed paths/SHAs, production wiring, shared patch
 requests and unmet prerequisites. Follow [the task brief](../../work-breakdown.md).
 Completion requires both a real consumer and acceptance evidence.
+
+## First consumed provider
+
+`Reclamation` now supplies bounded stock-to-reserve arbitration and staged cardinal
+Blight publication. See [design](design.md) and [handoff](validation.md). Fusion/shatter
+and complete W6 remain deferred; architect-owned Simulation wiring and executable gates
+must accompany this provider before merge.

@@ -52,5 +52,10 @@ int main() {
     bool too_many = false;
     try { Simulation bad{std::numeric_limits<std::size_t>::max()}; }
     catch (const std::length_error&) { too_many = true; }
-    return too_many ? 0 : 14;
+    if (!too_many) return 14;
+    // One past the ECS handle count is refused before any entity is created.
+    bool past_handles = false;
+    try { Simulation bad{std::size_t{sub0ecs::Entity::kMaxEntities} + 1}; }
+    catch (const std::length_error&) { past_handles = true; }
+    return past_handles ? 0 : 17;
 }

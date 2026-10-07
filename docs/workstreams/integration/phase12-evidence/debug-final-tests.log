@@ -1,0 +1,90 @@
+{
+  "schema": 1,
+  "stage": "test",
+  "ok": true,
+  "checks": [
+    {
+      "name": "python",
+      "status": "pass",
+      "required": true,
+      "detail": "Python >=3.10 required",
+      "version": "3.14.5",
+      "executable": "C:\\Users\\craig\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe"
+    }
+  ],
+  "selected_tests": [
+    "workflow_permissions",
+    "structural_actual_frames",
+    "structural_desktop_events",
+    "mission_strategy_examples",
+    "mission_timing_schedule",
+    "structural_route_cli",
+    "runtime_inspector",
+    "runtime_mission",
+    "runtime_reference_route",
+    "runtime_structural",
+    "runtime_backbone_parity",
+    "runtime_diagnostics",
+    "runtime_diagnostics_parity",
+    "interactions_structural"
+  ],
+  "scope": "Capability preflight only; no performance, physical-console or suite acceptance claim",
+  "capacity": {
+    "cpu_count": 24,
+    "memory_bytes": null,
+    "requirement": "No invented CPU/RAM minimum"
+  },
+  "compiler": "C:/Program Files/Microsoft Visual Studio/18/Community/VC/Tools/MSVC/14.51.36231/bin/Hostx64/x64/cl.exe",
+  "sanitizers": false,
+  "gpu_required": false,
+  "elapsed_seconds": 0.032
+}
+Test project D:/Craig/GitHub/Crucible/build/phase12-debug
+      Start  1: workflow_permissions
+ 1/14 Test  #1: workflow_permissions .............   Passed    0.11 sec
+      Start  6: structural_actual_frames
+ 2/14 Test  #6: structural_actual_frames .........   Passed    3.46 sec
+      Start  7: structural_desktop_events
+ 3/14 Test  #7: structural_desktop_events ........   Passed    2.00 sec
+      Start 14: mission_strategy_examples
+ 4/14 Test #14: mission_strategy_examples ........   Passed  130.61 sec
+      Start 15: mission_timing_schedule
+ 5/14 Test #15: mission_timing_schedule ..........   Passed    0.11 sec
+      Start 16: structural_route_cli
+ 6/14 Test #16: structural_route_cli .............   Passed   19.24 sec
+      Start 22: runtime_inspector
+ 7/14 Test #22: runtime_inspector ................   Passed    0.05 sec
+      Start 23: runtime_mission
+ 8/14 Test #23: runtime_mission ..................   Passed    0.29 sec
+      Start 24: runtime_reference_route
+ 9/14 Test #24: runtime_reference_route ..........   Passed    0.06 sec
+      Start 25: runtime_structural
+10/14 Test #25: runtime_structural ...............   Passed    2.64 sec
+      Start 28: runtime_backbone_parity
+11/14 Test #28: runtime_backbone_parity ..........   Passed   28.73 sec
+      Start 29: runtime_diagnostics
+12/14 Test #29: runtime_diagnostics ..............   Passed    0.08 sec
+      Start 30: runtime_diagnostics_parity
+13/14 Test #30: runtime_diagnostics_parity .......   Passed   28.21 sec
+      Start 39: interactions_structural
+14/14 Test #39: interactions_structural ..........   Passed    2.08 sec
+
+100% tests passed, 0 tests failed out of 14
+
+Label Time Summary:
+desktop         =   2.00 sec*proc (1 test)
+integration     = 149.95 sec*proc (3 tests)
+interactions    =   2.08 sec*proc (1 test)
+lifetime        =   0.08 sec*proc (1 test)
+log             =  28.29 sec*proc (2 tests)
+mission         = 150.30 sec*proc (5 tests)
+pipeline        =  56.94 sec*proc (2 tests)
+presentation    = 139.21 sec*proc (8 tests)
+pub             =  28.73 sec*proc (1 test)
+resources       =  21.88 sec*proc (2 tests)
+runtime         =  60.06 sec*proc (7 tests)
+simulation      =   2.08 sec*proc (1 test)
+structural      =   7.53 sec*proc (3 tests)
+workflow        =   0.11 sec*proc (1 test)
+
+Total Test time (real) = 217.67 sec
