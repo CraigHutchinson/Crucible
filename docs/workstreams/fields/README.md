@@ -8,7 +8,9 @@ See the [application responsibility map](../hierarchy-boundaries.md) for definin
 read/write sets, lifetimes, bounded progress and cross-project handoffs.
 
 Radial attractor/repulsor slots are integrated into scenario movement and validated.
-Painted flows remain open. See [combined evidence](../integration/wave1-validation.md).
+Straight painted FLOW is delivered in Phase8 with owned endpoints and replay.
+Computed navigation flows remain separate research. See
+[FLOW receiving](phase8-flow.md) and [initial evidence](../integration/wave1-validation.md).
 
 ## Scope and first task
 

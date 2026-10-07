@@ -45,6 +45,19 @@ jobs:
       - name: Capture actual structural software frames
         if: matrix.os == 'ubuntu-24.04' && matrix.preset == 'release'
         run: build/desktop-release/tests/presentation/desktop/crucible_structural_examples "$RUNNER_TEMP/structural-frames" > "$RUNNER_TEMP/structural-frames.jsonl"
+      - name: Capture readable desktop output at receiving sizes
+        if: matrix.os == 'ubuntu-24.04' && matrix.preset == 'release'
+        run: |
+          mkdir -p "$RUNNER_TEMP/readable-controls"
+          build/desktop-release/tests/presentation/desktop/crucible_readable_controls_test "$RUNNER_TEMP/readable-controls" > "$RUNNER_TEMP/readable-controls/receiving.txt"
+          git rev-parse HEAD > "$RUNNER_TEMP/readable-controls/source.txt"
+          git status --porcelain > "$RUNNER_TEMP/readable-controls/worktree.txt"
+      - uses: actions/upload-artifact@v4
+        if: matrix.os == 'ubuntu-24.04' && matrix.preset == 'release'
+        with:
+          name: readable-desktop-controls
+          retention-days: 90
+          path: ${{ runner.temp }}/readable-controls
       - uses: actions/upload-artifact@v4
         if: matrix.os == 'ubuntu-24.04' && matrix.preset == 'release'
         with:
@@ -79,7 +92,7 @@ jobs:
         with:
           lfs: true
       - run: sudo apt-get update && sudo apt-get install -y libx11-dev libxext-dev libxrandr-dev libxcursor-dev libxi-dev libxfixes-dev libxss-dev libxtst-dev
-      - run: python scripts/check_prerequisites.py --stage development --sanitize
+      - run: python scripts/check_prerequisites.py --stage development --sanitize --timeout 30 --budget 60
       - run: cmake --preset desktop-sanitize -DCRUCIBLE_BUILD_RENDER_SPIKE=ON -DCRUCIBLE_BUILD_RULE_SPIKE=ON -DCRUCIBLE_ENABLE_DIAGNOSTICS=ON
       - run: cmake --build --preset desktop-sanitize --parallel 4
       - run: python scripts/run_tests.py --preset desktop-sanitize

@@ -106,9 +106,10 @@ def main() -> None:
                               for row in results["cases"])
     if len(images) != expected_images:
         raise ValueError(f"Expected {expected_images} completed-state captures, found {len(images)}")
+    canvas = (1280, 864) if args.mode == "mission" else (1280, 720)
     for source in images:
         with Image.open(source) as frame:
-            if frame.size != (1280, 720):
+            if frame.size != canvas:
                 raise ValueError("Unexpected receiving canvas dimensions")
             frame.save(source.with_suffix(".png"))
     if args.mode == "mission":
@@ -117,7 +118,7 @@ def main() -> None:
         plot_events(output / "events.csv", output / "retirement-events.png")
     metadata = {
         "source_commit": revision, "committed_source_tree": tree, "source_dirty": dirty,
-        "os": platform.platform(), "command": command, "logical_canvas": [1280, 720],
+        "os": platform.platform(), "command": command, "logical_canvas": list(canvas),
         "capture_tools": {"python": platform.python_version(), "pillow": pillow_version,
                           "matplotlib": matplotlib.__version__},
         "backend": "production software ScenePainter" if args.mode == "mission" else "executing SDL_GPU Vulkan receiver; controlled delayed queries",

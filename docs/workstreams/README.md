@@ -5,7 +5,7 @@ authority. A reserved folder/target does not mean its gameplay package is implem
 Read [game design](../game-design.md) for player intent and the first playable slice;
 use [concepts](../concepts/README.md) as visual exploration rather than game rules.
 Active assignments are phase-specific: see the [phase workflow](../phases/README.md)
-and [current structural dispatch](../phases/phase10.md). Retain these module folders while
+and [current Phase13 package](../phases/phase13.md). Retain these module folders while
 consolidating small coupled packages under a single phase owner when useful.
 Read the [hierarchy/acceleration responsibility map](hierarchy-boundaries.md) with
 every brief. Spatial owns occupied traversal; upstream H geometric grouping/coverage;
@@ -24,10 +24,10 @@ Experiment ownership does not transfer production module ownership.
 | Fields | W3 | [Fields](fields/README.md) | Fields; bounded radial attractor/repulsor slots |
 | Blight | W4 | [Blight](blight/README.md) | Blight; double-buffered cardinal spread and exclusive prepared-step lease |
 | Swarm | W5 | [Swarm](swarm/README.md) | Swarm; fixed integration and bounded immutable-input separation/radial steering |
-| Interactions | W6 | [Interactions](interactions/README.md) | Interactions; finite stock-to-reserve reclamation; structural work deferred |
+| Interactions | W6 | [Interactions](interactions/README.md) | Interactions; finite reclamation and fixed-identity fusion/shatter; Integration coordinates commits |
 | Scheduling | W7 | [Scheduling](scheduling/README.md) | Scheduling; reserved |
 | Telemetry | W8a | [Telemetry](telemetry/README.md) | Telemetry; adapter target reserved; current owned summary lives with ClockDriver |
-| Presentation | W8b/W9 | [Presentation](presentation/README.md) | Presentation; sequential owned snapshots, CLI SVG consumer; graphics/exchange deferred |
+| Presentation | W8b/W9 | [Presentation](presentation/README.md) | Presentation; owned snapshots, camera/tools, SDL ScenePainter and optional offscreen Vulkan; concurrent exchange deferred |
 | Validation | W10 | [Validation](validation/README.md) | Opt-in crucible_bench; ECS microbenchmark |
 
 CMake aliases use the Crucible:: prefix. Spatial/Fields split W3 into distinct path

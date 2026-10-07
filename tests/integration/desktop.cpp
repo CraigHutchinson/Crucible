@@ -1,13 +1,15 @@
-#include "DesktopApp.hpp"
-#include <crucible/presentation/ScenarioSnapshot.hpp>
-#include <crucible/runtime/HeadlessSession.hpp>
-#include <crucible/simulation.hpp>
 #include <algorithm>
-#include <crucible/presentation/desktop/SceneUi.hpp>
-#include <SDL3/SDL.h>
 #include <iostream>
+#include <SDL3/SDL.h>
 #include <stdexcept>
 #include <string_view>
+
+#include "crucible/presentation/desktop/SceneUi.hpp"
+#include "crucible/presentation/ScenarioSnapshot.hpp"
+#include "crucible/runtime/HeadlessSession.hpp"
+#include "crucible/simulation.hpp"
+#include "desktop/DesktopApp.hpp"
+
 namespace {
 void Require(bool ok, const char* message) { if (!ok) throw std::runtime_error(message); }
 void Send(crucible::desktop::DesktopApp& app, const SDL_Event& event) {
@@ -54,7 +56,7 @@ void FlowEvents() {
     crucible::desktop::DesktopApp app;
     Key(app, SDLK_SPACE);
     // The new button is appended; existing PAUSE/RESTART/FIT semantic indices stay fixed.
-    const auto flow_button = crucible::presentation::desktop::ToolbarButton(7);
+    const auto flow_button = crucible::presentation::desktop::toolbarButton(7);
     Click(app, static_cast<float>(flow_button.x + 10), static_cast<float>(flow_button.y + 10));
     Click(app, 500, 350); Move(app, 700, 350);
     Require(app.GetSession().GetSummary().ingress_pending == 0 && app.GetPreview() &&
@@ -120,13 +122,13 @@ void FlowEvents() {
     Send(app, wheel); Release(app, 700, 350);
     Require(app.GetSession().GetSummary().ingress_pending == 0, "zoom gesture cancels flow");
     Key(app, SDLK_F);
-    Require(SDL_SetWindowSize(&app.GetWindow(), 800, 800) && SDL_SyncWindow(&app.GetWindow()), "flow letterbox resize");
+    Require(SDL_SetWindowSize(&app.GetWindow(), 1024, 900) && SDL_SyncWindow(&app.GetWindow()), "flow letterbox resize");
     SDL_PumpEvents();
-    Click(app, 300, 393.75F); Move(app, 500, 393.75F); Release(app, 500, 393.75F);
+    Click(app, 400, 389.2F); Move(app, 624, 389.2F); Release(app, 624, 389.2F);
     Require(app.GetSession().GetSummary().ingress_pending == 1 && app.GetPreview()->kind == FieldEditKind::set_flow &&
         app.GetPreview()->center.x < 32 && app.GetPreview()->end.x > 32, "flow endpoints use native letterbox conversion");
     Key(app, SDLK_R); Key(app, SDLK_SPACE);
-    Require(SDL_SetWindowSize(&app.GetWindow(), 1280, 720) && SDL_SyncWindow(&app.GetWindow()), "restore fixture window");
+    Require(SDL_SetWindowSize(&app.GetWindow(), 1280, 864) && SDL_SyncWindow(&app.GetWindow()), "restore fixture window");
     SDL_PumpEvents(); Key(app, SDLK_4);
     for (int i = 0; i < 65; ++i) { Click(app, 500, 350); Move(app, 700, 350); Release(app, 700, 350); }
     Require(app.GetSession().GetSummary().ingress_pending == 64 && app.GetPreview() &&
@@ -151,7 +153,8 @@ void Check() {
     Require(app.GetSession().GetMission().has_value() &&
         app.GetSession().GetMission()->settings.target_reclaimed == 1780 &&
         app.GetSession().GetMission()->settings.deadline_ticks == 900, "production reference challenge selected");
-    Click(app, 630, 646); // toolbar pause
+    const auto pause = crucible::presentation::desktop::toolbarButton(4);
+    Click(app, static_cast<float>(pause.x + 10), static_cast<float>(pause.y + 10));
     Require(app.GetSession().GetStatus() == Status::paused, "pointer pause");
     const auto initial = app.GetSession().GetSummary().completed_tick;
     Click(app, 30, 40); // header never admits an edit
@@ -193,7 +196,8 @@ void Check() {
     Require(app.GetSession().GetStatus() == Status::paused, "foreground cannot bypass minimized gate");
     suspend.type = SDL_EVENT_WINDOW_RESTORED; Send(app, suspend);
     Require(app.GetSession().GetStatus() == Status::paused, "foreground preserves user pause");
-    Click(app, 780, 646); // toolbar restart
+    const auto restart = crucible::presentation::desktop::toolbarButton(5);
+    Click(app, static_cast<float>(restart.x + 10), static_cast<float>(restart.y + 10));
     Require(app.GetSession().GetSnapshot().GetInfo()->completed_tick == 0 && app.GetSession().GetTrace().empty() &&
         !app.GetPreview() && app.GetSession().GetStatus() == Status::running, "pointer restart fresh run");
     suspend.type = SDL_EVENT_WILL_ENTER_BACKGROUND; Send(app, suspend);
@@ -203,13 +207,13 @@ void Check() {
     suspend.type = SDL_EVENT_WINDOW_RESTORED; Send(app, suspend);
     Require(app.GetSession().GetStatus() == Status::running, "aggregate restore resumes prior running state");
     Key(app, SDLK_SPACE);
-    Require(SDL_SetWindowSize(&app.GetWindow(), 800, 800), "resize native window");
+    Require(SDL_SetWindowSize(&app.GetWindow(), 1024, 900), "resize native window");
     Require(SDL_SyncWindow(&app.GetWindow()), "resize completes before coordinate assertions");
     SDL_PumpEvents();
     Require(app.Iterate() == SDL_APP_CONTINUE, "resized logical draw");
-    Click(app, 400, 100);
+    Click(app, 512, 10);
     Require(app.GetSession().GetSummary().ingress_pending == 0, "resized presentation letterbox rejects commands");
-    Click(app, 400, 393.75F);
+    Click(app, 512, 389.2F);
     Require(app.GetSession().GetSummary().ingress_pending == 1 && app.GetPreview()->center.x == 32,
         "resized native window maps through logical presentation");
     SDL_Event quit{}; quit.type = SDL_EVENT_QUIT;
@@ -257,7 +261,7 @@ void ExportMission(const char* path) {
     for (int i = 0; i < 20; ++i)
         Require(run.TryPump(std::chrono::milliseconds{50}).advanced_ticks == 3, "mission export completed ticks");
     std::unique_ptr<SDL_Surface, decltype(&SDL_DestroySurface)> surface{
-        SDL_CreateSurface(1280, 720, SDL_PIXELFORMAT_RGBA32), SDL_DestroySurface};
+        SDL_CreateSurface(crucible::presentation::desktop::CanvasWidth, crucible::presentation::desktop::CanvasHeight, SDL_PIXELFORMAT_RGBA32), SDL_DestroySurface};
     Require(surface != nullptr, "mission export surface");
     std::unique_ptr<SDL_Renderer, decltype(&SDL_DestroyRenderer)> renderer{
         SDL_CreateSoftwareRenderer(surface.get()), SDL_DestroyRenderer};

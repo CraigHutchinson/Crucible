@@ -1,5 +1,5 @@
 add_library(crucible_desktop_adapter DesktopApp.cpp)
-target_include_directories(crucible_desktop_adapter PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+target_include_directories(crucible_desktop_adapter PUBLIC ${PROJECT_SOURCE_DIR}/src)
 target_link_libraries(crucible_desktop_adapter PUBLIC Crucible::Runtime Crucible::Presentation crucible_scene_painter SDL3::SDL3)
 add_executable(crucible_desktop main.cpp)
 target_link_libraries(crucible_desktop PRIVATE crucible_desktop_adapter)

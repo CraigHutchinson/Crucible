@@ -21,7 +21,7 @@ package is not a permanent agent assignment.
 | 11 | Forge ECS/Pub v2 and Pipeline into the production backbone; upstream API evolution | [Plan](phase11.md), [review](../sprint-reviews/phase-11.md); local receiving complete, [PR24 receipt](https://github.com/CraigHutchinson/Crucible/pull/24) |
 
 | 12 | Runtime budgets and opt-in bounded diagnostics | [Plan](phase12.md), [review](../sprint-reviews/phase-12.md); complete, PR25 merged at `c4ae9c0` |
-| 13 | Consumer presentation/input/sound reconciled with measured foundations | [Proposal](phase13.md); not dispatched |
+| 13 | Consumer presentation/input/sound reconciled with measured foundations | [Plan](phase13.md), [review](../sprint-reviews/phase-13.md); P13-01 dispatched, P13-02 sound deferred |
 
 The [sprint-review archive](../sprint-reviews/README.md) tracks findings, follow-ups
 and delegation lessons for every completed increment.

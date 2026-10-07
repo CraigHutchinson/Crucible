@@ -1,17 +1,17 @@
-#include <crucible/presentation/desktop/ScenePainter.hpp>
-#include <crucible/presentation/desktop/SceneUi.hpp>
-#include <crucible/presentation/ScenarioSnapshot.hpp>
-#include <crucible/presentation/Camera2D.hpp>
-#include <crucible/simulation.hpp>
-#include <SDL3/SDL.h>
-
 #include <array>
 #include <cstdint>
+#include <cstdio>
 #include <limits>
 #include <memory>
+#include <SDL3/SDL.h>
 #include <stdexcept>
-#include <cstdio>
 #include <string_view>
+
+#include "crucible/presentation/Camera2D.hpp"
+#include "crucible/presentation/desktop/ScenePainter.hpp"
+#include "crucible/presentation/desktop/SceneUi.hpp"
+#include "crucible/presentation/ScenarioSnapshot.hpp"
+#include "crucible/simulation.hpp"
 
 namespace {
 using namespace crucible;
@@ -21,13 +21,13 @@ void Require(bool value, const char* reason) { if (!value) throw std::runtime_er
 struct RendererDelete { void operator()(SDL_Renderer* p) const noexcept { SDL_DestroyRenderer(p); } };
 struct SurfaceDelete { void operator()(SDL_Surface* p) const noexcept { SDL_DestroySurface(p); } };
 struct SoftwareCanvas {
-    std::unique_ptr<SDL_Surface, SurfaceDelete> surface{SDL_CreateSurface(1280, 720, SDL_PIXELFORMAT_RGBA32)};
+    std::unique_ptr<SDL_Surface, SurfaceDelete> surface{SDL_CreateSurface(crucible::presentation::desktop::CanvasWidth, crucible::presentation::desktop::CanvasHeight, SDL_PIXELFORMAT_RGBA32)};
     std::unique_ptr<SDL_Renderer, RendererDelete> renderer;
     SoftwareCanvas() {
         Require(surface != nullptr, "software surface");
         renderer.reset(SDL_CreateSoftwareRenderer(surface.get()));
         Require(renderer != nullptr, "software renderer");
-        Require(SDL_SetRenderLogicalPresentation(renderer.get(), 1280, 720, SDL_LOGICAL_PRESENTATION_LETTERBOX), "logical canvas");
+        Require(SDL_SetRenderLogicalPresentation(renderer.get(), CanvasWidth, CanvasHeight, SDL_LOGICAL_PRESENTATION_LETTERBOX), "logical canvas");
     }
     std::array<std::uint8_t, 4> Pixel(int x, int y) {
         Require(SDL_FlushRenderer(renderer.get()), "flush for independent pixel read");
@@ -106,7 +106,7 @@ void RejectionBeforeDraw(SoftwareCanvas& canvas) {
     Require(!too_small.TryDraw(*canvas.renderer, frame, camera, {}), "sample cap rejected");
     Require(!too_few_cells.TryDraw(*canvas.renderer, frame, camera, {}), "cell cap rejected");
     Camera2D wrong_geometry{{1, 1, 1}, View};
-    Camera2D wrong_view{grid, {0, 0, 1280, 720}};
+    Camera2D wrong_view{grid, {0, 0, CanvasWidth, CanvasHeight}};
     Require(!painter.TryDraw(*canvas.renderer, frame, wrong_geometry, {}), "wrong geometry rejected");
     Require(!painter.TryDraw(*canvas.renderer, frame, wrong_view, {}), "wrong viewport rejected");
     SceneUi invalid{};
@@ -241,7 +241,7 @@ void MissionHud(SoftwareCanvas& canvas) {
     Require(frame.GetInfo()->biomass->reserve == 3, "independent three-contact fixture");
     Require(painter.TryDraw(*canvas.renderer, frame, camera, {}), "legacy no mission draw");
     const auto world = RegionDigest(canvas, {24, 96, 1232, 520});
-    const auto ledger = RegionDigest(canvas, {24, 70, 1232, 8});
+    const auto ledger = RegionDigest(canvas, {24, 74, 1232, 20});
     Require(canvas.Pixel(900, 20) == Background, "no mission has no progress overlay");
     SoftwareCanvas oracle;
     SceneUi ui{};
@@ -251,12 +251,12 @@ void MissionHud(SoftwareCanvas& canvas) {
         std::array<std::uint8_t, 4>{22, 38, 55, 255}, "active progress half-filled");
     TextMatches(canvas, oracle, "ACTIVE", {536, 16, 128, 16}, Cyan, 2);
     constexpr std::array<std::uint8_t, 4> White{219, 232, 249, 255};
-    TextMatches(canvas, oracle, "Recovered 3 / 6 | Ticks left 1 (simulation ticks)", {24, 44, 1200, 8}, White, 1);
+    TextMatches(canvas, oracle, "Recovered 3 / 6 | Ticks left 1", {24, 34, 1200, 20}, White, BodyTextScale);
     TextMatches(canvas, oracle,
-        "ACTIVE: Recover the quota before ticks run out. Drag FLOW or place ATTRACT/REPEL. R or RESTART: fresh challenge.",
-        {24, 84, 1232, 8}, White, 1);
+        "Recover quota before the deadline. FLOW drag / radial click.",
+        {24, 792, 1232, 20}, White, BodyTextScale);
     Require(RegionDigest(canvas, {24, 96, 1232, 520}) == world &&
-        RegionDigest(canvas, {24, 70, 1232, 8}) == ledger, "mission preserves world pass and conservation ledger");
+        RegionDigest(canvas, {24, 74, 1232, 20}) == ledger, "mission preserves world pass and conservation ledger");
     const auto active_top = RegionDigest(canvas, {24, 0, 1232, 96});
     // Quota overshoot must fill, not extend, the bar.
     ui.mission = ReclamationMissionProgress{{2, 2}, 3, 1, ReclamationMissionOutcome::won};
@@ -265,8 +265,8 @@ void MissionHud(SoftwareCanvas& canvas) {
     Require(canvas.Pixel(1254, 20) == Won && canvas.Pixel(1257, 20) == Background,
         "won overshoot bounded to progress track");
     TextMatches(canvas, oracle, "WON", {536, 16, 128, 16}, Won, 2);
-    TextMatches(canvas, oracle, "WON: Biomass quota recovered. Run stopped; inspect with pan/zoom. R or RESTART: play again.",
-        {24, 84, 1232, 8}, White, 1);
+    TextMatches(canvas, oracle, "WON: Quota recovered. Run stopped; R or RESTART to play again.",
+        {24, 792, 1232, 20}, White, BodyTextScale);
     Require(RegionDigest(canvas, {24, 96, 1232, 520}) == world, "win does not alter world geometry");
     const auto won_top = RegionDigest(canvas, {24, 0, 1232, 96});
     ui.mission = ReclamationMissionProgress{{4, 1}, 3, 1, ReclamationMissionOutcome::lost};
@@ -274,12 +274,12 @@ void MissionHud(SoftwareCanvas& canvas) {
     constexpr std::array<std::uint8_t, 4> Lost{255, 199, 107, 255};
     Require(canvas.Pixel(900, 20) == Lost, "loss has distinct graphical progress");
     TextMatches(canvas, oracle, "LOST", {536, 16, 128, 16}, Lost, 2);
-    TextMatches(canvas, oracle, "Recovered 3 / 4 | Ticks left 0 (simulation ticks)", {24, 44, 1200, 8}, White, 1);
-    TextMatches(canvas, oracle, "LOST: Deadline reached before quota. Run stopped; inspect with pan/zoom. R or RESTART: try again.",
-        {24, 84, 1232, 8}, White, 1);
+    TextMatches(canvas, oracle, "Recovered 3 / 4 | Ticks left 0", {24, 34, 1200, 20}, White, BodyTextScale);
+    TextMatches(canvas, oracle, "LOST: Deadline reached. Run stopped; R or RESTART to try again.",
+        {24, 792, 1232, 20}, White, BodyTextScale);
     Require(RegionDigest(canvas, {24, 96, 1232, 520}) == world && active_top != won_top &&
         won_top != RegionDigest(canvas, {24, 0, 1232, 96}), "all outcomes visible without world changes");
-    const auto valid = RegionDigest(canvas, {0, 0, 1280, 720});
+    const auto valid = RegionDigest(canvas, {0, 0, CanvasWidth, CanvasHeight});
     for (const auto bad : std::array{
         ReclamationMissionProgress{{4, 1}, 3, 2, ReclamationMissionOutcome::lost},
         ReclamationMissionProgress{{0, 2}, 3, 1, ReclamationMissionOutcome::won},
@@ -290,7 +290,7 @@ void MissionHud(SoftwareCanvas& canvas) {
         ReclamationMissionProgress{{4, 2}, 3, 1, static_cast<ReclamationMissionOutcome>(99)}}) {
         ui.mission = bad;
         Require(!painter.TryDraw(*canvas.renderer, frame, camera, ui) &&
-            RegionDigest(canvas, {0, 0, 1280, 720}) == valid, "inconsistent mission rejected before canvas mutation");
+            RegionDigest(canvas, {0, 0, CanvasWidth, CanvasHeight}) == valid, "inconsistent mission rejected before canvas mutation");
     }
     // A zero-progress initial boundary is still drawable, with an empty bounded bar.
     Simulation initial{0, {grid, 4, {}, ResourceSettings{}}};

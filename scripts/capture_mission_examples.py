@@ -53,7 +53,7 @@ def main():
     metadata = {
         "source_commit": revision, "dirty": dirty,
         "command": [str(executable), "--export", str(output)],
-        "backend": "production SDL software painter, 1280x720 RGBA32 logical pixels",
+        "backend": "production SDL software painter, 1280x864 RGBA32 logical pixels",
         "capture_ticks": {"sweep-active": 60, "sweep-won": 267, "passive-lost": 900},
         "raw_sha256": hashlib.sha256(raw).hexdigest(),
         "scope": "Fixed live-tool strategies, conservation and independent full-state terminal replay; no human tuning/device/performance claim",

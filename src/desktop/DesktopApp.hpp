@@ -1,28 +1,35 @@
 #pragma once
-#include <crucible/runtime/InspectorSession.hpp>
-#include <crucible/presentation/Camera2D.hpp>
-#include <crucible/presentation/FieldTool.hpp>
-#include <crucible/presentation/desktop/ScenePainter.hpp>
-#include <SDL3/SDL.h>
 #include <chrono>
 #include <cstdint>
 #include <memory>
+#include <SDL3/SDL.h>
 #include <string_view>
+
+#include "crucible/presentation/Camera2D.hpp"
+#include "crucible/presentation/desktop/ScenePainter.hpp"
+#include "crucible/presentation/desktop/SceneUi.hpp"
+#include "crucible/presentation/FieldTool.hpp"
+#include "crucible/runtime/InspectorSession.hpp"
+
 namespace crucible::desktop {
 /** Concrete main-thread SDL lifetime and event adapter. No producer threads.
  * SDL callbacks guard thread identity before borrowing this instance.
  */
 class DesktopApp {
 public:
+    enum class WindowMode { windowed, fullscreen };
     /** Allocates the reference challenge and SDL window/renderer.
      * @param[in] mission Positive quota/deadline tuning within startup substrate stock.
      * @param[in] structural Enables the fixed relay challenge.
      * @param[in] diagnostics Optional bounded outcome log, decoded to stdout at shutdown.
      * Requires CRUCIBLE_ENABLE_DIAGNOSTICS; allocation failure is reported and disables logging.
+     * @param[in] window_mode Requests borderless fullscreen or the default resizable window.
+     * Fullscreen failure is reported and falls back to a playable window.
      * @throws std::invalid_argument Invalid mission; startup/allocation errors propagate.
      */
     explicit DesktopApp(ReclamationMissionSettings mission = {}, bool structural = false,
-        runtime::InspectorSession::Diagnostics diagnostics = runtime::InspectorSession::Diagnostics::disabled);
+        runtime::InspectorSession::Diagnostics diagnostics = runtime::InspectorSession::Diagnostics::disabled,
+        WindowMode window_mode = WindowMode::windowed);
     ~DesktopApp();
     DesktopApp(const DesktopApp&) = delete;
     DesktopApp& operator=(const DesktopApp&) = delete;
@@ -45,8 +52,9 @@ public:
 private:
     struct WindowDelete { void operator()(SDL_Window* p) const noexcept { SDL_DestroyWindow(p); } };
     struct RendererDelete { void operator()(SDL_Renderer* p) const noexcept { SDL_DestroyRenderer(p); } };
-    enum class Action { attract, repel, erase, slot, pause, restart, fit, flow, fuse, shatter };
+    using Action = presentation::desktop::ToolbarAction;
     void Act(Action action);
+    void setFullscreen(bool enabled);
     void Admit(FieldEdit edit);
     void Preview(presentation::ScreenPoint point);
     void CancelGesture() noexcept;

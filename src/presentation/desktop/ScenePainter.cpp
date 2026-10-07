@@ -1,16 +1,16 @@
-#include <crucible/presentation/desktop/ScenePainter.hpp>
-#include <crucible/presentation/desktop/SceneUi.hpp>
-#include <crucible/presentation/ScenarioSnapshot.hpp>
-#include <crucible/presentation/Camera2D.hpp>
-#include <SDL3/SDL.h>
-
 #include <algorithm>
 #include <array>
-#include <cmath>
 #include <cinttypes>
+#include <cmath>
 #include <limits>
 #include <numbers>
+#include <SDL3/SDL.h>
 #include <stdexcept>
+
+#include "crucible/presentation/Camera2D.hpp"
+#include "crucible/presentation/desktop/ScenePainter.hpp"
+#include "crucible/presentation/desktop/SceneUi.hpp"
+#include "crucible/presentation/ScenarioSnapshot.hpp"
 
 namespace crucible::presentation::desktop {
 namespace {
@@ -218,6 +218,28 @@ bool Label(SDL_Renderer& renderer, float x, float y, const char* text, float sca
     const bool restored = SDL_SetRenderScale(&renderer, 1, 1);
     return drawn && restored;
 }
+bool drawFeedback(SDL_Renderer& renderer, std::string_view message) noexcept {
+    constexpr std::size_t columns = 61;
+    for (int row = 0; row < 2 && !message.empty(); ++row) {
+        auto count = std::min(message.size(), columns);
+        if (message.size() > columns && row == 0) {
+            const auto space = message.substr(0, columns).find_last_of(' ');
+            if (space != std::string_view::npos && space != 0) count = space;
+        }
+        char line[columns + 1]{};
+        for (std::size_t i = 0; i < count; ++i) {
+            const auto c = static_cast<unsigned char>(message[i]);
+            line[i] = c >= 32 && c <= 126 ? static_cast<char>(c) : '?';
+        }
+        if (row == 1 && message.size() > count) {
+            line[count - 3] = '.'; line[count - 2] = '.'; line[count - 1] = '.';
+        }
+        if (!Label(renderer, 24, 744.F + 24.F * static_cast<float>(row), line, BodyTextScale)) return false;
+        message.remove_prefix(count);
+        while (!message.empty() && message.front() == ' ') message.remove_prefix(1);
+    }
+    return true;
+}
 }
 
 ScenePainter::ScenePainter(std::size_t sample_capacity, std::size_t cell_capacity)
@@ -352,79 +374,73 @@ bool ScenePainter::TryDraw(SDL_Renderer& renderer, const ScenarioSnapshot& frame
             (progress.w > 0 && !SDL_RenderFillRect(&renderer, &progress)) || !SDL_RenderRect(&renderer, &track)) return false;
         const auto ticks_left = mission.completed_tick < mission.settings.deadline_ticks
             ? mission.settings.deadline_ticks - mission.completed_tick : 0;
-        SDL_snprintf(line, sizeof line, "Recovered %" PRIu64 " / %" PRIu64 " | Ticks left %" PRIu64 " (simulation ticks)",
+        SDL_snprintf(line, sizeof line, "Recovered %" PRIu64 " / %" PRIu64 " | Ticks left %" PRIu64,
                      mission.reclaimed, mission.settings.target_reclaimed, ticks_left);
-        if (!Color(renderer, Text) || !Label(renderer, 24, 44, line)) return false;
+        if (!Color(renderer, Text) || !Label(renderer, 24, 34, line, BodyTextScale)) return false;
     }
     const char* run_state = ui.mission && ui.mission->outcome != ReclamationMissionOutcome::active
         ? "STOPPED" : (ui.paused ? "PAUSED" : "RUNNING");
     SDL_snprintf(line, sizeof line, "Tick %" PRIu64 " | Nanites %zu | %s%s | Slot %zu", info->completed_tick,
                  mobile_count, run_state, ui.blocked ? " / BLOCKED" : "", ui.selected_slot + 1);
-    if (!Label(renderer, 24, ui.mission ? 56.F : 44.F, line, ui.mission ? 1.F : 1.5F)) return false;
+    if (!Label(renderer, 24, 54, line, BodyTextScale)) return false;
     if (info->biomass) {
         const auto& mass = *info->biomass;
-        SDL_snprintf(line, sizeof line, "Mass: initial %" PRIu64 " = stock %" PRIu64 " + mobile %" PRIu64 " + reserve %" PRIu64 " + lattice %" PRIu64 " + lost %" PRIu64,
-                     mass.initial_total, mass.remaining_stock, mass.mobile_mass, mass.reserve, mass.structure_mass, mass.lost_mass);
+        SDL_snprintf(line, sizeof line, "Stock %" PRIu64 "|Mobile %" PRIu64 "|Reserve %" PRIu64 "|Lattice %" PRIu64 "|Lost %" PRIu64,
+                     mass.remaining_stock, mass.mobile_mass, mass.reserve, mass.structure_mass, mass.lost_mass);
     } else SDL_snprintf(line, sizeof line, "Mass ledger unavailable in this scenario");
-    if (!Label(renderer, 24, 70, line)) return false;
-    const char* instruction = "Cells: red infected+stock | ochre infected+empty | green reclaimed | cyan nanites | white dashed preview";
+    if (!Label(renderer, 24, 74, line, BodyTextScale)) return false;
+    const char* instruction = "Red: infected | Green: reclaimed | Cyan: swarm";
     if (ui.mission) {
         switch (ui.mission->outcome) {
         case ReclamationMissionOutcome::active:
-            instruction = "ACTIVE: Recover the quota before ticks run out. Drag FLOW or place ATTRACT/REPEL. R or RESTART: fresh challenge.";
+            instruction = "Recover quota before the deadline. FLOW drag / radial click.";
             break;
         case ReclamationMissionOutcome::won:
-            instruction = "WON: Biomass quota recovered. Run stopped; inspect with pan/zoom. R or RESTART: play again.";
+            instruction = "WON: Quota recovered. Run stopped; R or RESTART to play again.";
             break;
         case ReclamationMissionOutcome::lost:
-            instruction = "LOST: Deadline reached before quota. Run stopped; inspect with pan/zoom. R or RESTART: try again.";
+            instruction = "LOST: Deadline reached. Run stopped; R or RESTART to try again.";
             break;
         }
     }
     if (info->structural && ui.mission) {
         switch (ui.mission->outcome) {
         case ReclamationMissionOutcome::active:
-            instruction = "ACTIVE: Recover quota AND hold lattice for 120 ticks. Dashed ring: gather64. Solid amber ring: protection. X redeploys48, loses16.";
+            instruction = "Quota + hold relay120 ticks. Shatter returns48, loses16.";
             break;
         case ReclamationMissionOutcome::won:
-            instruction = "WON: Quota and relay hold secured. Inspect with pan/zoom; R restarts.";
+            instruction = "WON: Quota and relay secured. R or RESTART to play again.";
             break;
         case ReclamationMissionOutcome::lost:
-            instruction = "LOST: Deadline or insufficient recoverable mass. Inspect with pan/zoom; R restarts.";
+            instruction = "LOST: Deadline or too little mass. R or RESTART to try again.";
             break;
         }
     }
-    if (!Label(renderer, 24, 84, instruction)) return false;
+    if (!Label(renderer, 24, 792, instruction, BodyTextScale)) return false;
     if (info->structural) {
         const auto& state = *info->structural;
-        SDL_snprintf(line, sizeof line, "Relay: eligible %zu/64 | %s | Held %" PRIu64 "/%" PRIu64 " ticks | F fuse64 | X refund48/loss16 | FIT VIEW: camera",
+        SDL_snprintf(line, sizeof line, "Relay: eligible %zu/64 | %s | Held %" PRIu64 "/%" PRIu64 " ticks",
             state.eligible_mobile, state.occupied ? "ANCHORED" : "EMPTY", state.hold_ticks, state.settings.hold_ticks);
-        if (!Label(renderer, 24, 622, line)) return false;
+        if (!Label(renderer, 24, 622, line, BodyTextScale)) return false;
     }
-    const std::array labels{"1 ATTRACT", "2 REPEL", "3 ERASE", "TAB SLOT", ui.paused ? "RESUME" : "PAUSE", "RESTART", "FIT VIEW", "4 FLOW"};
+    const std::array labels{"1 ATTRACT", "2 REPEL", "3 ERASE", "TAB SLOT", ui.paused ? "RESUME" : "PAUSE", "RESTART", "FIT VIEW", "4 FLOW",
+        "F FUSE", "X SHATTER", ui.fullscreen_ ? "F11 WIN" : "F11 FULL"};
     static_assert(labels.size() == ToolbarButtonCount);
     for (std::size_t i = 0; i < labels.size(); ++i) {
-        const auto bounds = ToolbarButton(i);
+        const auto bounds = toolbarButton(i);
         const SDL_FRect button{static_cast<float>(bounds.x), static_cast<float>(bounds.y),
                                static_cast<float>(bounds.width), static_cast<float>(bounds.height)};
         const auto active = (i == 0 && ui.tool == FieldTool::attract) || (i == 1 && ui.tool == FieldTool::repel) ||
                             (i == 2 && ui.tool == FieldTool::remove) || (i == 4 && ui.paused) ||
                             (i == 7 && ui.tool == FieldTool::flow);
+        const bool enabled = isToolbarActionEnabled(static_cast<ToolbarAction>(i), info->structural.has_value());
         if (!Color(renderer, active ? Stocked : Background) || !SDL_RenderFillRect(&renderer, &button) ||
-            !Color(renderer, active ? Attract : Text) || !SDL_RenderRect(&renderer, &button) ||
-            !Label(renderer, button.x + 8, button.y + 12, labels[i])) return false;
+            !Color(renderer, !enabled ? ExhaustedInfected : (active ? Attract : Text)) || !SDL_RenderRect(&renderer, &button) ||
+            !Label(renderer, button.x + 8, button.y + 11, labels[i], BodyTextScale)) return false;
     }
-    // A view owns no message storage; copy the current borrow into bounded ASCII text.
-    const auto length = std::min(ui.message.size(), std::size_t{153});
-    for (std::size_t i = 0; i < length; ++i) {
-        const auto c = static_cast<unsigned char>(ui.message[i]);
-        line[i] = c >= 32 && c <= 126 ? static_cast<char>(c) : '?';
-    }
-    line[length] = '\0';
-    if (!Color(renderer, Text) || !Label(renderer, 24, 678, line) ||
-        !Label(renderer, 24, 702, info->structural
-            ? "1/2 radial | 4 FLOW | Middle pan | Wheel zoom | Space pause | R restart | F fuse relay | X shatter | FIT VIEW camera | Del erase | Esc cancel"
-            : "1/2 click: radial | 4 drag: FLOW | Middle drag: pan | Wheel: zoom | Space: pause | R: restart | F: fit | Del: erase | Esc: cancel")) return false;
+    if (!Color(renderer, Text) || !drawFeedback(renderer, ui.message) ||
+        !Label(renderer, 24, 816, "Middle pan | Wheel zoom | Tab slot | Del erase", BodyTextScale) ||
+        !Label(renderer, 24, 840, "Space pause | R restart | F11 full | Esc cancel / window", BodyTextScale)) return false;
     return true;
 }
 }

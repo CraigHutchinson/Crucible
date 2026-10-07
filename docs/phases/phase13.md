@@ -1,8 +1,10 @@
 # Phase 13 proposal: readable secure-relay play with bounded sound
 
-Status: proposed, not dispatched. Phase12 merged at `c4ae9c0`. Start from this verified merge
-baseline and its completed [review](../sprint-reviews/phase-12.md); record the
-actual merge SHA, active claims and an in-progress review at dispatch. This plan
+Status: P13-01 dispatched 2026-10-07 from main `5b84ccd` (PR28); P13-02 sound
+remains undispatched. Phase12 merged at `c4ae9c0`; PR26/27 refreshed Pipeline/ECS
+and PR28 reconciled ownership since then. Read its completed
+[review](../sprint-reviews/phase-12.md) and the current
+[coherence review and package contract](../decisions/phase13-coherence.md). This plan
 selects no new backend, dependency pin or public library API.
 
 ## Player task and two-way design loop
@@ -66,6 +68,11 @@ Neither audio nor HUD policy should depend on diagnostic delivery succeeding.
 | Architect | Consumer concept, shared desktop/runtime contracts, integration, native receiving, participant protocol and publication | Retain shared wiring; serial builds and uncontended measurements |
 | Presentation/input worker | Readable objective/toolbar/status and common drawing/hit-test layout, resize/DPI and queued/applied visual states | Split around owned presentation geometry; notify architect before DesktopApp edits |
 | Sound worker | Concrete SDL audio candidate with startup-owned clips, bounded cue/background playback and silence/failure lifecycle | Replace completed diagnostics implementation stream with one real consumer; no mixer framework |
+
+P13-01 consolidates architect and presentation/input under root; no workers are
+dispatched. P13-02 is deferred: current DesktopDependencies explicitly builds
+SDL_AUDIO OFF. Readability/input has a production caller and can be received
+independently before introducing an asynchronous audio lifetime.
 
 Use at most the architect plus two workers. If the audio prerequisite or consumer
 contract is not ready, consolidate the readable/input core and record the sound

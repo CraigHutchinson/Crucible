@@ -32,7 +32,7 @@ def main():
         )
         png = bitmap.with_suffix(".png")
         with Image.open(bitmap) as frame:
-            if frame.size != (1280, 720):
+            if frame.size != (1280, 864):
                 raise ValueError("Unexpected flow fixture canvas size")
             frame.save(png)
             size = list(frame.size)
