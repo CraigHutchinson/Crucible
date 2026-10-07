@@ -71,6 +71,21 @@ policy. Snapshot epoch, row, application ID and ECS handle are distinct domains.
 
 ## Handoff and acceptance
 
+Every handoff names both directions under the standing methodology: the intended
+visible/interactive experience and its fidelity/feedback needs, plus verified
+geometry/runtime/storage capabilities and measured limits. Reconcile them through
+a received vertical slice; revise either side where costs or participant feedback
+justify it. Concepts, synthetic fixtures, native graphics/input/audio and participant
+evidence are distinct. Audio/background research gets an explicitly appointed W0
+application role if needed; no new audio module or geometry responsibility is implied.
+
+Current production placement remains authoritative: BoundaryPipeline and optional
+RuntimeDiagnostics live in Runtime despite the W7/W8a role boundaries. Their files
+remain Runtime-owned; extracting them requires an explicit phase handoff. Current
+Presentation includes Camera2D/FieldTool/ScenePainter and an optional GPU receiver.
+Hierarchy-specific mini-map/zoom cache and native spatial compute remain proposed;
+this map does not replace the current application evidence with the earlier headless baseline.
+
 Sub0HexGrid I owns standalone comparison fixtures/registration in its repository;
 W10 owns Crucible consumer extensions and scenario/replay/render/navigation evidence.
 Integrators agree shared input/counter semantics; one coordinator reserves each

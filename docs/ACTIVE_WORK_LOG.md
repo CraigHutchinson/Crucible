@@ -63,6 +63,12 @@ coverage checks and boundary self-review passed; PR records exact-head CI/delive
 New claims include agent, branch/worktree, package, exact paths, host/CPU reservation,
 base SHA and dependencies. Completed rows link evidence or say documentation-only.
 
+Responsibility audit resumed 2026-10-07: recovered pushed commit 6ae564b, reconciled
+with main f30ab1a and current ECS/H2 receiving without changing pins or implementation.
+Current-state supplements retain Runtime ownership of BoundaryPipeline/RuntimeDiagnostics.
+Standing top-down/bottom-up handoffs added; final PR/CI delivery pending. Docs only,
+no local build/measurement CPU held. Earlier phase reservations are not inferred expired.
+
 ## Phase 3 architecture preparation, 2026-10-03
 
 Base: `7692049a2c3b596f35ab27d159efdc215b52f84e`; branch
