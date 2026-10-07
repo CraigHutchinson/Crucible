@@ -1,5 +1,11 @@
 # Interactions workstream — W6
 
+## Hierarchy and acceleration boundary
+
+Own exact resource/identity validation, arbitration and bounded proposals. Spatial summaries can locate candidates but cannot replace authoritative checks; structural/resource commits remain coordinated by Integration.
+
+See the [application responsibility map](../hierarchy-boundaries.md) for defining owners, read/write sets, lifetimes, bounded progress and cross-project handoffs.
+
 Finite reclamation provider (STATIC target); fusion/shatter remain pending.
 
 ## Scope and first task

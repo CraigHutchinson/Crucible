@@ -1,5 +1,7 @@
 # Crucible architecture
 
+The [hierarchy responsibility map](workstreams/hierarchy-boundaries.md) supplements every module for the competing acceleration programme. It separates upstream geometry, application occupied indexes, domain reducers, view/navigation policy and executor lifetime. It changes no current representation, backend or pin.
+
 [Game design](game-design.md) owns product intent; this document owns implemented
 boundaries and the gates for changing them. [Concepts](concepts/README.md) guide
 material and shape readability. Art does not define resource rules or select a backend.

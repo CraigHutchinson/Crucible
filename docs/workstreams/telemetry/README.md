@@ -1,5 +1,12 @@
 # Telemetry workstream — W8a
 
+## Hierarchy and acceleration boundary
+
+Own bounded versioned observations and drop policy. Receive counters from domain owners; no logging-thread traversal of ECS/index storage, mutation or independent performance conclusions.
+
+See the [application responsibility map](../hierarchy-boundaries.md) for defining owners,
+read/write sets, lifetimes, bounded progress and cross-project handoffs.
+
 Reserved build boundary (INTERFACE target); algorithms and public APIs are pending.
 
 ## Scope and first task

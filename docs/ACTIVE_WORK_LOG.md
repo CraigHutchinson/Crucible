@@ -54,8 +54,20 @@ an uncontended host even when files do not overlap.
 | Phase 2 runtime / Sol 6.1 low | Complete increment | .worktrees/phase2-runtime: runtime and telemetry headers/source/tests/docs | 2026-10-01 / 65bb8c4 / phase2-runtime | ad269ce integrated as 88b8a1e; clock/summary verified |
 | Sprint reviews and authorized cleanup / architect | Complete docs | docs/sprint-reviews, phase/workflow links, branch refs only; no builds | 2026-10-01 / cdc6034 / sprint-review-records | [Reviews and archive](sprint-reviews/README.md); completed refs removed, detached worktrees/artifacts preserved |
 
+Responsibility audit, 2026-10-02: integrator completed hierarchy-boundaries.md, stream
+brief supplements, catalog/architecture/reuse links and this log on
+docs/hierarchy-responsibilities at 7692049. Documentation only, no CPU held;
+Sub0HexGrid coordination is a separate PR; Sub0ECS remains read-only. Stream/link
+coverage checks and boundary self-review passed; PR records exact-head CI/delivery.
+
 New claims include agent, branch/worktree, package, exact paths, host/CPU reservation,
 base SHA and dependencies. Completed rows link evidence or say documentation-only.
+
+Responsibility audit resumed 2026-10-07: recovered pushed commit 6ae564b, reconciled
+with main f30ab1a and current ECS/H2 receiving without changing pins or implementation.
+Current-state supplements retain Runtime ownership of BoundaryPipeline/RuntimeDiagnostics.
+Standing top-down/bottom-up handoffs added; final PR/CI delivery pending. Docs only,
+no local build/measurement CPU held. Earlier phase reservations are not inferred expired.
 
 ## Phase 3 architecture preparation, 2026-10-03
 

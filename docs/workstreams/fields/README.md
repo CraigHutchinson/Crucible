@@ -1,5 +1,12 @@
 # Fields workstream — W3
 
+## Hierarchy and acceleration boundary
+
+Own player-painted/radial field units, sampling, edits and domain reduction/invalidation. Consume Spatial addressing as needed; computed route integration/flow fields require an explicitly assigned navigation owner and are not automatically this module.
+
+See the [application responsibility map](../hierarchy-boundaries.md) for defining owners,
+read/write sets, lifetimes, bounded progress and cross-project handoffs.
+
 Radial attractor/repulsor slots are integrated into scenario movement and validated.
 Painted flows remain open. See [combined evidence](../integration/wave1-validation.md).
 

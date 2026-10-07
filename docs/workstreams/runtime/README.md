@@ -1,5 +1,12 @@
 # Runtime workstream — W2
 
+## Hierarchy and acceleration boundary
+
+Own admission, replay/pause, deadline/catch-up and when resumable domain work runs. Scheduling owns executor joins; Spatial owns its cursor. Partial hierarchy work cannot silently complete a tick or change snapshot freshness policy.
+
+See the [application responsibility map](../hierarchy-boundaries.md) for defining owners,
+read/write sets, lifetimes, bounded progress and cross-project handoffs.
+
 The compatibility `run_ticks` path remains. Bounded ingress and sequential
 pause/boundary/trace/replay are integrated and validated; see [combined evidence](../integration/wave1-validation.md),
 [design](design.md) and [validation](validation.md). The bounded clock and owned

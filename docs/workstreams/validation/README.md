@@ -1,5 +1,12 @@
 # Validation workstream — W10
 
+## Hierarchy and acceleration boundary
+
+Own independent consumer oracles, shared comparison protocol and raw full-cycle evidence across motion, views and navigation. Distinguish headless export from actual GPU rendering, capture build/update/output/order costs, and serialize controlled runs; gameplay tolerances remain consumer-owned.
+
+See the [application responsibility map](../hierarchy-boundaries.md) for defining owners,
+read/write sets, lifetimes, bounded progress and cross-project handoffs.
+
 Own benchmarks/, scripts/capture_benchmarks.py and new capture tools, plus evidence
 in docs/benchmarks/ and this folder. Central validation.md and CI edits go through
 integrator. benchmarks/CMakeLists.txt owns benchmark source registration.

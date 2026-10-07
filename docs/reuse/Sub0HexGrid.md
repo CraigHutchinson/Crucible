@@ -123,6 +123,13 @@ nothing about the cost of a point-radius query.
 Items 1–3 record the original extraction sequence and are superseded by delivered
 H2. Items 4–5 now apply through P3-02's concrete query/lifetime/replay and pin gates.
 
+H2 finite indexing/candidates and resumable example are now delivered upstream;
+[PR 4](https://github.com/CraigHutchinson/Sub0HexGrid/pull/4) records evidence.
+Hierarchy remains a [multi-option experimental programme](https://github.com/CraigHutchinson/Sub0HexGrid/blob/main/docs/phases/hierarchy-research.md),
+not adopted production code. The [application responsibility map](../workstreams/hierarchy-boundaries.md)
+defines Spatial/Presentation/navigation and other owner handoffs. Actual pin/migration,
+query/replay and game-use evidence remain Crucible integration gates.
+
 1. Record a topology ADR and one consumed geometry contract within phase 2's budget.
    Retain the rectangular baseline if unresolved; do not stall useful inspection/clock work.
 2. Verify the first receiving caller and any genuine second consumer; compare existing

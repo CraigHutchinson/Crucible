@@ -1,5 +1,11 @@
 # Spatial workstream — W3
 
+## Hierarchy and acceleration boundary
+
+Own occupied indexes, bins, bounds caches, base occupancy/count summaries and bounded build/update/query frontiers. Consume reviewed upstream geometry/coverage; domain owners define reducer meaning, Presentation view policy, and navigation connectivity/costs.
+
+See the [application responsibility map](../hierarchy-boundaries.md) for defining owners, read/write sets, lifetimes, bounded progress and cross-project handoffs.
+
 Phase 2 supplies tick-start queries consumed by stable-ID steering and committed
 post-move inspection. P3-02 receives pinned Sub0HexGrid H2 geometry while preserving
 complete query/ownership behavior. See [design](design.md), [coverage/compatibility
