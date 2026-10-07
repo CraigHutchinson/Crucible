@@ -30,6 +30,9 @@ File-by-file findings:
   resize cancellation, restart and repeated fullscreen lifetime are consumed.
 - Remaining exporter/caller edits are shared-canvas/include-path updates. CMake
   includes the desktop source root and registers the real receiver explicitly.
+  Extended audit includes FLOW/mission/timing Python size contracts and the
+  rendering spike surface; GPU mode remains720 high and world raster comparison
+  remains identical. Capture round trips cover these tool consumers separately.
 
 No unresolved MUST findings in the new work. Pre-existing deviations remain:
 PascalCase APIs/files, snake_case aggregate/member fields and compact brace layout.

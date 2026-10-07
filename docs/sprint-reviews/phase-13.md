@@ -32,6 +32,8 @@ No new workers, dependency pins, runtime APIs, framework or simulation concurren
 | Admission can be mistaken for application | Queued preview and feedback retained until completed trace; full replay fixtures | Sound cadence stays separate |
 | Audio build is explicitly disabled | P13-02 remains undispatched with lifecycle/device prerequisite | Actual sound/listening |
 | Historical tests hardcode old display geometry | Resize/replay fixtures and all production-painter exporters updated | Hosted platform receiving |
+| Capture tools still validate old painter size | FLOW/mission scripts and spike surface follow1280x864; GPU stays1280x720 | Executed capture round trips |
+| Hosted sanitizer compiler preflight timed out at10s | Run37616267098 blocked before configure; instrumented compile allowed bounded30s/60s total | Normal sanitizer acceptance still required |
 | Existing C++ names differ from sub0 | New declarations use camelCase; existing API/file migrations remain bounded follow-up | No repository-wide style compliance claim |
 
 ## Verification and useful artifacts
@@ -57,6 +59,12 @@ timing/allocation/performance result is claimed.
 [Sub0 code-quality review](../workstreams/presentation/phase13-review.md) records
 resolved findings and existing style deviations. After automated receiving, use
 the [personal native/participant checklist](../playtests/phase13-readable-controls.md).
+
+Extended consumer receiving passed: rendering-instance spike1/1, FLOW script two
+captures, mission script three captures and timing script six captures. All actual
+painter outputs are1280x864, and the WON mission output was visually inspected.
+The GPU capture mode retains its independent1280x720 contract. Historical captured
+images and performance figures are unchanged; no new spike timing was run.
 
 ## Two-way reconciliation and reuse
 

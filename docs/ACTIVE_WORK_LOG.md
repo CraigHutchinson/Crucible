@@ -15,6 +15,14 @@ Status: alignment and P13-01 implementation/code review complete; Release42/42,
 Debug42/42 plus final affected4/4 passed. Shared CPU released; publication/hosted
 CI receiving next. Native DPI/participant and sound gates remain explicit.
 
+Follow-through: PR29 published head33bdb71/tree30d9455 matches local98f10fe.
+Hosted canary compile exceeded10s before sanitizer setup; bounded30s allowance
+does not suppress execution/failure. Root reclaims serial CPU and capture/script/
+rendering-spike paths for old-canvas consumers found by the extended audit.
+Consumer fixes received: spike1/1; FLOW2, mission3 and timing6 actual1280x864
+capture round trips passed; WON output inspected. CPU released again. Final-head
+hosted platform/sanitizer and PR29 merge receipt remain required.
+
 ## Sub0 pin refresh, 2026-10-06
 
 Baseline `c195f8d` clean main; branch `chore/sub0-pin-refresh`. Integrator-only:

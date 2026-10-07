@@ -92,7 +92,7 @@ jobs:
         with:
           lfs: true
       - run: sudo apt-get update && sudo apt-get install -y libx11-dev libxext-dev libxrandr-dev libxcursor-dev libxi-dev libxfixes-dev libxss-dev libxtst-dev
-      - run: python scripts/check_prerequisites.py --stage development --sanitize
+      - run: python scripts/check_prerequisites.py --stage development --sanitize --timeout 30 --budget 60
       - run: cmake --preset desktop-sanitize -DCRUCIBLE_BUILD_RENDER_SPIKE=ON -DCRUCIBLE_BUILD_RULE_SPIKE=ON -DCRUCIBLE_ENABLE_DIAGNOSTICS=ON
       - run: cmake --build --preset desktop-sanitize --parallel 4
       - run: python scripts/run_tests.py --preset desktop-sanitize

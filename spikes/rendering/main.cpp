@@ -27,7 +27,7 @@ void Require(bool ok, const char* reason) { if (!ok) throw std::runtime_error(re
 struct SurfaceDelete { void operator()(SDL_Surface* p) const noexcept { SDL_DestroySurface(p); } };
 struct RendererDelete { void operator()(SDL_Renderer* p) const noexcept { SDL_DestroyRenderer(p); } };
 struct Canvas {
-    std::unique_ptr<SDL_Surface, SurfaceDelete> surface{SDL_CreateSurface(1280, 720, SDL_PIXELFORMAT_RGBA32)};
+    std::unique_ptr<SDL_Surface, SurfaceDelete> surface{SDL_CreateSurface(desktop::CanvasWidth, desktop::CanvasHeight, SDL_PIXELFORMAT_RGBA32)};
     std::unique_ptr<SDL_Renderer, RendererDelete> renderer;
     Canvas() {
         Require(surface != nullptr, "surface");
