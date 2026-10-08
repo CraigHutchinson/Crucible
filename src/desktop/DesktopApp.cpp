@@ -45,7 +45,7 @@ DesktopApp::DesktopApp(ReclamationMissionSettings mission, bool structural,
           .mission = mission, .diagnostics = diagnostics, .windowMode = window_mode}) {}
 DesktopApp::DesktopApp(StartupSettings settings)
     : session_(settings.scenario, {64, 4096}, settings.mission,
-          runtime::InspectorSession::ExecutionPath::integrated, settings.diagnostics, settings.observations),
+          runtime::InspectorSession::ExecutionPath::integrated, settings.diagnostics, settings.observations, settings.rowExecution),
       camera_(settings.scenario.grid, {24, 96, 1232, 520}),
       painter_(settings.scenario.population, requireCells(settings), settings.viewPolicy),
       toolRadius_(settings.toolRadius), toolMagnitude_(settings.toolMagnitude),

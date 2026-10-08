@@ -3,6 +3,8 @@
 #include <crucible/contracts/ReclamationMission.hpp>
 #include "crucible/contracts/scenario_settings.hpp"
 #include "crucible/contracts/tick_statistics.hpp"
+#include "crucible/contracts/execution_settings.hpp"
+#include "crucible/contracts/row_execution_storage.hpp"
 #include <memory>
 namespace crucible::runtime { class RuntimeDiagnostics; }
 namespace crucible::presentation { class ScenarioSnapshot; }
@@ -55,6 +57,8 @@ public:
      * @param diagnostics Optional bounded outcome sink, with the existing failure policy.
      * @param observations Startup receiving capacity; positive requires integrated execution.
      * Failed boundaries are not observations. Stage attribution requires positive capacity.
+     * @param rowExecution Startup workers (1..32) and partitions (1..128, no larger
+     * than max(population,1)). Partitions0 resolves to1 or twice the worker count.
      * @throws std::invalid_argument Invalid geometry, capacities or mission settings.
      * @note Coordinator-only; restart constructs the same scenario before replacement.
      */
@@ -63,7 +67,7 @@ public:
         std::optional<ReclamationMissionSettings> mission = std::nullopt,
         ExecutionPath execution = ExecutionPath::integrated,
         Diagnostics diagnostics = Diagnostics::disabled,
-        ObservationSettings observations = {0, false});
+        ObservationSettings observations = {0, false}, ExecutionSettings rowExecution = {});
     ~InspectorSession();
     InspectorSession(const InspectorSession&) = delete;
     InspectorSession& operator=(const InspectorSession&) = delete;
@@ -109,6 +113,16 @@ public:
      * @note Coordinator-only observation; no storage borrow is returned.
      */
     [[nodiscard]] constexpr std::uint64_t getRunId() const noexcept { return run_id_; }
+    /** Copies the resolved startup row execution policy retained by restart.
+     * @return Positive worker/partition bounds, independent of per-tick FP fallback.
+     * @note Coordinator-only; no scheduler or mutable simulation borrow escapes.
+     */
+    [[nodiscard]] constexpr ExecutionSettings getRowExecution() const noexcept { return rowExecution_; }
+    /** Copies actual startup row storage bounds from the owned Simulation.
+     * @return Retained scratch, graph and pool queue capacities, including paused runs.
+     * @note Coordinator-only; no scheduler or mutable storage borrow escapes.
+     */
+    [[nodiscard]] RowExecutionStorage getRowExecutionStorage() const noexcept;
 private:
     struct Run;
     [[nodiscard]] CommandIngress::Admission AdmitCommand(const BoundaryCommand& command);
@@ -117,6 +131,7 @@ private:
     const std::optional<ReclamationMissionSettings> mission_;
     const ExecutionPath execution_;
     const ObservationSettings observationSettings_{};
+    const ExecutionSettings rowExecution_{};
     std::uint64_t run_id_{1};
     std::unique_ptr<Run> run_;
 #if CRUCIBLE_ENABLE_DIAGNOSTICS

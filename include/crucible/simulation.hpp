@@ -7,6 +7,8 @@
 #include <crucible/contracts/SteeringSettings.hpp>
 #include <crucible/contracts/ResourceSettings.hpp>
 #include "crucible/contracts/tick_statistics.hpp"
+#include "crucible/contracts/execution_settings.hpp"
+#include "crucible/contracts/row_execution_storage.hpp"
 #include <sub0ecs/sub0ecs.hpp>
 #include <cstddef>
 #include <memory>
@@ -26,6 +28,7 @@ public:
         std::optional<ResourceSettings> resources{}; ///< Enables finite reclamation; absent preserves legacy spread.
         std::optional<StructuralSettings> structural{}; ///< Unit-mass fixed-identity relay mode; requires resources.
         bool observeTimings{}; ///< Explicit CPU attribution arm; disabled ordinary/timing comparison path.
+        ExecutionSettings rowExecution{}; ///< Positive resolved startup counts; requires steering when changed from 1/1.
     };
 
     /// Legacy ECS-only workload; no fields, grid or Blight state is constructed.
@@ -46,6 +49,11 @@ public:
      * @note Exclusive coordinator access; no storage borrow escapes.
      */
     [[nodiscard]] std::optional<TickStatistics> getTickStatistics() const noexcept;
+    /** Copies actual startup row scratch, graph and pending-queue bounds.
+     * @return Zero bounds for scenarios without the row adapter.
+     * @note Coordinator-only; includes retained capacity during FP fallback.
+     */
+    [[nodiscard]] RowExecutionStorage getRowExecutionStorage() const noexcept;
     [[nodiscard]] double checksum();
     /// Boundary-only field application; false leaves field slots unchanged. The
     /// legacy workload has zero slots and rejects every edit.

@@ -2,6 +2,14 @@
 
 ## Phase14 execution and Pub main receiving, 2026-10-08
 
+Current resumed dispatch: Scheduling A owns `.worktrees/phase14-scheduling`
+include/src/tests/docs/local manifests and exclusive CPU for its Debug/Release
+receiving. B completed independent Scheduling source review, with no MUST/SHOULD;
+worker original FP state between jobs remains source-reviewed rather than directly
+observed. Root owns shared Simulation/Runtime/DesktopApp/main wiring source-only
+while A builds. Exact merged Pipeline f730c4e receiving passed full Release51/51
+and Debug51/51 (221.78s). No performance or native capture runs overlap these builds.
+
 User authorizes dependency update and plan execution. Root owns branch
 `phase14-large-swarm`, planning checkpoint `c801123`, current worktree. Verified
 Sub0Pub main `d566c71c47cc5aeba3ed0b615052dbe6fcd91f23` (PR35), after PR32's

@@ -78,7 +78,11 @@ upstream merge/pin): Contracts carries startup `ExecutionSettings` with workers
 and partitions. Runtime resolves partitions0 to1 for workers1 and twice workers
 otherwise; ordinary default remains workers1 until actual G5 evidence supports
 an AUTO promotion. Scheduling consumes only resolved positive counts and startup
-sample capacity. One coordinator worker uses the same startup graph inline;
+sample capacity. Runtime bounds this product's startup requests to workers1..32
+and partitions1..128, with partitions no larger than max(population,1); invalid
+requests reject before constructing a replacement run. Explicit desktop
+`--workers` and `--partitions` use this same policy, retained by restart.
+One coordinator worker uses the same startup graph inline;
 selected multiple workers use an exclusively owned PriorityExecutor directly,
 never a per-tick ScopedExecutor. Its queue capacity equals the partition count.
 

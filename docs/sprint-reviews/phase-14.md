@@ -34,12 +34,14 @@ commands, pause, resource conservation and restart. `75e2868` consumes checked
 native presentation in Windows scale mode; the explicit native fixtures passed
 at the later `fd8075e` checkpoint as recorded below.
 
-A now owns the independently isolated upstream Pipeline submission/failure
-prerequisite; B owns the production capture harness and presentation receiving.
+The upstream Pipeline prerequisite is merged and received at exact pin `f730c4e`.
+A now owns the bounded Scheduling provider; B owns the production capture harness
+and independently reviews the provider and shared coordinator wiring.
 Root retains Contracts/Simulation/Runtime/desktop, shared inventories/pins/CI,
 central records, independent integration review, serial CPU/GPU receiving and
-publication. Query rows remain sequential until the executor prerequisite is
-received. No physical frame-budget or useful-parallelism result is claimed.
+publication. Parallel consumption is being received in Simulation; the default
+remains one worker until matched performance gates support promotion. No physical
+frame-budget or useful-parallelism result is claimed.
 
 ## Findings and resolutions
 
@@ -114,14 +116,36 @@ with the PR29 simulation/query/steering sources unchanged; its startup scaffold
 permits the target scale, so it is not described as a stock PR29 executable.
 
 Upstream [Sub0Pipeline PR36](https://github.com/CraigHutchinson/Sub0Pipeline/pull/36)
-isolates bounded submission and rejection/join repairs. Its initial source
-checkpoint passed nine local Debug and nine Release cases, preserving the original
-Core/DSL assertion counts. Five alternating process pairs and allocation audit
-are retained; a validation-cost regression needs investigation, and stalled VTune
-collection has produced no attribution evidence. Independent review additionally
-found Priority/Scoped completion published before callable captures are destroyed.
-That ownership repair and exact-head platform/race/adapters acceptance precede
-consumer pin promotion. No upstream merge or parallel safety claim is made here.
+merged as `f730c4ec2973a449c45fbf9a74595414b9bf30e1`. It isolates bounded submission,
+rejection/join and completion-target destruction repairs. Corrected head `b20428b`
+passed all nine full jobs in [run37848858562](https://github.com/CraigHutchinson/Sub0Pipeline/actions/runs/37848858562),
+including actual Qt/Zephyr adapters and sanitizer/race receiving. The preceding
+head's macOS fixture failed because moved-from std::function targets need not
+be empty; explicit exchange corrected the fixture without weakening lifetime checks.
+Local Debug9/9 and Release9/9 preserve Core165 cases/10298 assertions and DSL35/292.
+The consumed Crucible pin then passed full Release51/51 (34.24s) and Debug51/51
+(221.78s), before new Scheduling consumption.
+
+Five alternating upstream pairs and allocation/disassembly audits are retained.
+The full ordered harness's validate1000 median was +32.15%; five isolated pairs
+were -2.43% with overlapping ranges, and existing validate assembly was identical.
+Neither result supports a performance promotion. First graph storage increased
+by one allocation/40 bytes; Scoped ownership packets allocate per dispatch, so
+the inner consumer uses the bounded Priority adapter directly. Stalled VTune
+collection produced no profile; only owned collector processes were stopped.
+
+Schema3 native diagnostic probes at `73b4f2e` receive six camera-cycle frames for
+each scale and none/FLOW/gather route, with zero observation drops and closed tick
+identities. The none-route mean boundary was94.147ms at100K and145.959ms at150K;
+the unchanged proposal kernel accounted for81.965ms and126.486ms respectively.
+These short attribution runs are not thermally qualified acceptance samples and
+establish no percentile,60Hz, input-budget or mature-front claim.
+
+Scheduling source review initially missed plain Pipeline body exception handling.
+Release throwing-callback receiving reproduced process fail-fast; containment
+inside the row job now restores FP through unwinding before returning failure.
+Keep this failure and the qualified MSVC Debug orchestration allocation evidence
+with the provider handoff. Integrated numerical, storage and final-head gates remain open.
 
 ## Retrospective and reuse
 

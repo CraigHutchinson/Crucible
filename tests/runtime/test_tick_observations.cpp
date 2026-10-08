@@ -32,7 +32,7 @@ int main() {
     require(first.boundary.count() >= 0 && first.simulation && first.simulation->completedTick == 1);
     const auto phases = *first.simulation;
     require(phases.inputRows == 257 && phases.queryRows == 257 && phases.queryScratchCapacity == 257);
-    require(phases.occupiedCells > 0 && phases.workers == 1 && phases.partitions == 1 && phases.taskCapacity == 0);
+    require(phases.occupiedCells > 0 && phases.workers == 1 && phases.partitions == 1 && phases.taskCapacity == 1);
     require(phases.gather + phases.index + phases.propose + phases.commit + phases.resources + phases.rebuild <= first.boundary);
     observed.Pause();
     require(observed.TryPump(std::chrono::seconds{1}).advanced_ticks == 0);

@@ -5,6 +5,7 @@
 #include <crucible/runtime/RuntimeDiagnostics.hpp>
 #endif
 #include <limits>
+#include <algorithm>
 #include <crucible/presentation/ScenarioSnapshot.hpp>
 #include <crucible/simulation.hpp>
 #include <stdexcept>
@@ -15,6 +16,14 @@ GridExtent requireExtent(GridConfig grid) {
     const auto extent = grid.TryValidate();
     if (!extent) throw std::invalid_argument("Invalid inspector scenario geometry");
     return *extent;
+}
+ExecutionSettings resolveExecution(ExecutionSettings settings, std::size_t population) {
+    if (settings.workers == 0 || settings.workers > 32)
+        throw std::invalid_argument("Inspector worker count must be in 1..32");
+    if (settings.partitions == 0) settings.partitions = settings.workers == 1 ? 1 : 2 * settings.workers;
+    if (settings.partitions > 128 || settings.partitions > std::max(population, std::size_t{1}))
+        throw std::invalid_argument("Inspector partitions exceed startup bounds");
+    return settings;
 }
 }
 struct InspectorSession::Run {
@@ -33,10 +42,10 @@ struct InspectorSession::Run {
     ClockDriver clock;
     Run(const ScenarioSettings& scenario, HeadlessSession::Limits limits,
             std::optional<ReclamationMissionSettings> settings,
-            ExecutionPath execution, std::uint64_t run_id, ObservationSettings observations)
+            ExecutionPath execution, std::uint64_t run_id, ObservationSettings observations, ExecutionSettings rowExecution)
         : extent(requireExtent(scenario.grid)),
           simulation(scenario.population, {scenario.grid, scenario.fieldCapacity,
-              scenario.steering, scenario.resources, scenario.structural, observations.simulationStages}),
+              scenario.steering, scenario.resources, scenario.structural, observations.simulationStages, rowExecution}),
           session(simulation, limits),
           delivery(execution == ExecutionPath::integrated
               ? std::make_unique<IntentDelivery>(session.GetIngress(), run_id) : nullptr),
@@ -127,13 +136,13 @@ InspectorSession::InspectorSession(std::size_t samples, HeadlessSession::Limits 
           execution, diagnostics) {}
 InspectorSession::InspectorSession(ScenarioSettings scenario, HeadlessSession::Limits limits,
         std::optional<ReclamationMissionSettings> mission, ExecutionPath execution,
-        Diagnostics diagnostics, ObservationSettings observations)
+        Diagnostics diagnostics, ObservationSettings observations, ExecutionSettings rowExecution)
     : scenarioSettings_(scenario), limits_(limits), mission_(mission),
-      execution_(execution), observationSettings_(observations) {
+      execution_(execution), observationSettings_(observations), rowExecution_(resolveExecution(rowExecution, scenario.population)) {
     if ((observations.capacity && execution != ExecutionPath::integrated) ||
         (observations.simulationStages && !observations.capacity))
         throw std::invalid_argument("tick observations require integrated execution and positive attribution capacity");
-    run_ = std::make_unique<Run>(scenarioSettings_, limits, mission_, execution, run_id_, observations);
+    run_ = std::make_unique<Run>(scenarioSettings_, limits, mission_, execution, run_id_, observations, rowExecution_);
 #if CRUCIBLE_ENABLE_DIAGNOSTICS
     if (diagnostics == Diagnostics::bounded) {
         try { diagnostics_ = std::make_unique<RuntimeDiagnostics>(); }
@@ -145,6 +154,9 @@ InspectorSession::InspectorSession(ScenarioSettings scenario, HeadlessSession::L
 #endif
 }
 InspectorSession::~InspectorSession() = default;
+RowExecutionStorage InspectorSession::getRowExecutionStorage() const noexcept {
+    return run_->simulation.getRowExecutionStorage();
+}
 ClockDriver::PumpResult InspectorSession::TryPump(std::chrono::nanoseconds elapsed) {
     const auto result = run_->clock.TryPump(elapsed);
     if (result.advanced_ticks && run_->direct_frame && !run_->direct_frame->TryCapture(run_->simulation)) {
@@ -201,7 +213,7 @@ void InspectorSession::Close() { run_->clock.Close(); }
 void InspectorSession::Restart() {
     if (run_id_ == std::numeric_limits<std::uint64_t>::max())
         throw std::overflow_error("inspector run identifier exhausted");
-    auto replacement = std::make_unique<Run>(scenarioSettings_, limits_, mission_, execution_, run_id_ + 1, observationSettings_);
+    auto replacement = std::make_unique<Run>(scenarioSettings_, limits_, mission_, execution_, run_id_ + 1, observationSettings_, rowExecution_);
     run_->clock.Close();
     run_.swap(replacement);
     ++run_id_;
