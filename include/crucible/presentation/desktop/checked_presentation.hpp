@@ -27,6 +27,10 @@ public:
      * @throws std::bad_alloc Startup receiver storage cannot be allocated.
      */
     explicit CheckedPresentation(SDL_Renderer& renderer);
+    /** Releases original device/swapchain references on the desktop coordinator.
+     * @note Owns no submitted GPU buffers and performs no completion wait. The
+     * host drains its completion observer before destroying this receiver/renderer.
+     */
     ~CheckedPresentation();
     CheckedPresentation(const CheckedPresentation&) = delete;
     CheckedPresentation& operator=(const CheckedPresentation&) = delete;
