@@ -1,5 +1,12 @@
 # Presentation workstream — W8b/W9
 
+Phase14 proposed assignment: workerB owns ScenarioSnapshot capacities, scalable
+world/overlay/HUD drawing, view-only density quality and phase14 frame capture.
+Root owns DesktopApp/window wiring. Measure current native SDL first; a live GPU
+adapter is conditional required core only after G0b, not offscreen promotion.
+See [scale contracts](../../decisions/phase14-scale-contracts.md) and the
+[all-stream audit](../hierarchy-boundaries.md#phase14-proposed-scale-assignment).
+
 ## Hierarchy and acceleration boundary
 
 Own copied/leased view snapshots, mini-map/zoom caches, visual reducers/quality/freshness, camera transforms, exact picking fallback and graphics upload lifetime. Read authoritative state and emit commands through Runtime; do not update simulation indexes or navigation state.

@@ -1,5 +1,21 @@
 # Active work log
 
+## Phase 14 major milestone planning, 2026-10-07
+
+Architect/root reviews clean main `9e7fed990c404e95ab25e699090996aeec048040`
+(PR29). User selected full-frame performance and bounded parallel simulation as
+the major target. Two read-only reviewers cover consumer and foundation evidence;
+no implementation workers or hardware measurements are dispatched. Planning claim:
+Phase14 plan/decision/review, affected stream briefs/responsibility/reuse/index docs
+and Phase13 publication reconciliation. No C++/pins/build/cache edits; no sustained
+CPU/GPU claim. Existing worktrees and all prior artifacts are preserved.
+Status: planning complete 2026-10-08; final review corrections applied, local
+documentation links/anchors and whitespace verified. Reviewers' findings and
+limitations are recorded in the decision/review. Documentation remains local and
+uncommitted; no implementation or source-delivery claim. Planning paths released.
+Implementation claims require a fresh baseline, contract checkpoint and the
+package-specific ownership/resource reservation.
+
 ## Phase 13 P13-01 readable controls, 2026-10-07
 
 Root owns `phase13-readable-controls`, based on clean main `5b84ccd` (PR28).
@@ -21,7 +37,10 @@ does not suppress execution/failure. Root reclaims serial CPU and capture/script
 rendering-spike paths for old-canvas consumers found by the extended audit.
 Consumer fixes received: spike1/1; FLOW2, mission3 and timing6 actual1280x864
 capture round trips passed; WON output inspected. CPU released again. Final-head
-hosted platform/sanitizer and PR29 merge receipt remain required.
+hosted platform/sanitizer and PR29 merge receipt were still required at that entry.
+Publication reconciliation during Phase14 planning: PR29 merged at `9e7fed9`;
+all nine final-head jobs passed at `49f702a` in run37619200451. P13-01 claim
+complete, CPU remains released. Sound/native/participant gates remain open.
 
 ## Sub0 pin refresh, 2026-10-06
 

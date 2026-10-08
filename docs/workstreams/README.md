@@ -7,6 +7,10 @@ use [concepts](../concepts/README.md) as visual exploration rather than game rul
 Active assignments are phase-specific: see the [phase workflow](../phases/README.md)
 and [current Phase13 package](../phases/phase13.md). Retain these module folders while
 consolidating small coupled packages under a single phase owner when useful.
+The next major [Phase14 proposal](../phases/phase14.md) consolidates Spatial/Swarm/
+Scheduling under workerA and snapshots/presentation/frame receiving under workerB;
+root owns shared contracts/wiring. Implementation is undispatched. Read the
+[scale contracts](../decisions/phase14-scale-contracts.md) before parallel use.
 Read the [hierarchy/acceleration responsibility map](hierarchy-boundaries.md) with
 every brief. Spatial owns occupied traversal; upstream H geometric grouping/coverage;
 Presentation view caches/policy; phase-assigned navigation owns route research.

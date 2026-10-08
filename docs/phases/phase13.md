@@ -1,7 +1,9 @@
 # Phase 13 proposal: readable secure-relay play with bounded sound
 
-Status: P13-01 dispatched 2026-10-07 from main `5b84ccd` (PR28); P13-02 sound
-remains undispatched. Phase12 merged at `c4ae9c0`; PR26/27 refreshed Pipeline/ECS
+Status: P13-01 published/merged as PR29 at `9e7fed9` on 2026-10-07, all nine
+exact-head jobs successful at `49f702a`. Native/participant gates remain open;
+P13-02 sound remains undispatched. Dispatch main was `5b84ccd` (PR28).
+Phase12 merged at `c4ae9c0`; PR26/27 refreshed Pipeline/ECS
 and PR28 reconciled ownership since then. Read its completed
 [review](../sprint-reviews/phase-12.md) and the current
 [coherence review and package contract](../decisions/phase13-coherence.md). This plan

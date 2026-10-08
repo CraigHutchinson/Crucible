@@ -9,6 +9,11 @@ the selected fixed-identity lattice with live commands, loss/protection/hold and
 Factions/combat/growth remain separate gates. [Architecture](architecture.md) owns
 current boundaries; the [sub0 roadmap](reuse/sub0-roadmap.md) owns upstream evolution
 and receiving responsibility. This is a capability backlog, not a permanent team.
+Current main includes Phase13 readable controls (PR29); audio/native/participant
+gates remain separate. The next major [Phase14 plan](phases/phase14.md) selects
+joined simulation partitions and complete physical-frame evidence at100K/150K.
+Its [responsibility audit](workstreams/hierarchy-boundaries.md#phase14-proposed-scale-assignment)
+and dispatch checkpoints supersede the historical four-agent wave below for this sprint.
 
 Optional Vulkan instancing and controlled software-device failure/retirement
 receiving are delivered. Physical-device/full-frame and second-backend acceptance

@@ -28,3 +28,11 @@ automata, collision resolution, input handoff, telemetry and structural fusion.
 Report whole-tick p95/p99, dropped commands/telemetry, peak memory, allocations,
 worker count, grid sizes and occupancy. Rendering needs its own end-to-end frame
 measurement. The goal is a 16.67 ms frame budget; current results do not prove it.
+
+The [Phase14 major package](phases/phase14.md#measurement-and-handoff) now selects
+that full workload as proposed core at100K/150K. Its G0a/G0b checkpoints freeze
+evolving scenarios, density classes, field-driven behavior, exact native completion
+observation, sample minima and numerical/visual criteria before optimized acceptance.
+Use the same production DesktopApp/Simulation consumer, retain raw timelines and
+controlled pairs, and report CPU work/pacing/GPU completion separately. No new
+full-frame or scale result exists from this planning update.

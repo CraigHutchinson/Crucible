@@ -63,6 +63,12 @@ bins does not automatically change Blight's cardinal spread; cellular adjacency,
 finite world boundaries and visual mapping need an explicit decision and fixtures.
 The current rectangular grid is the verified implementation, not a final product constraint.
 
+The user-selected [Phase14 technical milestone](phases/phase14.md) tests a readable
+continuously evolving100K/150K swarm under live spatial control, with complete-frame
+and joined-execution evidence. Expanded-world density and same-arena crowd stress
+are distinct scenarios. This scale proposal preserves existing game rules; growth,
+attrition, terrain and sound remain subsequent received consumer work.
+
 The visible arena is a local patch of a larger world. The user's future direction
 adds terrain height for appearance and movement cost, mining that forms depressions,
 and permanent fused terrain such as bridges. See [world/terrain direction](decisions/terrain-and-world-extension.md)

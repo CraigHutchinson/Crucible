@@ -51,6 +51,20 @@ from those real callers before advancing the remaining library roadmap.
 
 ## Requirement and promotion record
 
+### Phase14 selected scale consumer
+
+[Phase14](../phases/phase14.md) proposes complete100K/150K native frames and
+synchronously joined steering partitions. Reuse R03 Pipeline for a bounded inner
+Scheduling consumer; exact pinned priority-pool queue allocation/failure needs
+independent receiving before adoption. A supplies a minimal neutral reproduction
+and upstream requirement if deficient; root owns full-pin promotion after upstream
+merge/package tests and game replay/join/race receiving. No cached dependency edits
+or copied pool. R05/R06 preserve H2 geometry and application-owned immutable complete
+queries; R07/R08 preserve command/snapshot/game policy locally. View density stays
+Presentation-owned and cannot change simulation neighbors. R09 still lacks a
+residency consumer and remains deferred. See the
+[responsibility audit](../workstreams/hierarchy-boundaries.md#phase14-proposed-scale-assignment).
+
 Every upstream handoff contains: originating source SHA/phase; concrete consumer;
 neutral requirement and smallest failing/receiving fixture; storage/lifetime/thread
 ownership; capacity/overflow/failure behavior; alternatives; destination project;

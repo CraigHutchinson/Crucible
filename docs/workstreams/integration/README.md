@@ -1,5 +1,12 @@
 # Integration workstream — W0 and composition ownership
 
+Phase14 proposed assignment: root owns Contracts/Simulation/Runtime/DesktopApp,
+shared manifests/pins/presets/CI, source checkpoints and all serial build/device
+receiving. A owns pure query/kernel/scheduling, B snapshots/drawing/frame capture;
+neither writes shared wiring. G0a precedes sequential provider work; G0b precedes
+parallel/backend adoption. See [plan](../../phases/phase14.md) and the
+[all-stream audit](../hierarchy-boundaries.md#phase14-proposed-scale-assignment).
+
 ## Hierarchy and acceleration boundary
 
 Own frozen ECS gathering, exact-pin capability audit, publication/structural commit and cross-module wiring. Appoint the navigation research owner before HN spikes; coordinate semantics with their defining modules rather than absorbing them.

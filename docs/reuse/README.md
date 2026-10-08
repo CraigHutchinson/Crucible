@@ -35,6 +35,13 @@ standalone project and Crucible consumer both pass their gates.
 
 ## How an increment feeds reusable libraries
 
+Phase14's selected [scale proposal](../phases/phase14.md) receives R03 bounded
+executor dispatch/joins with an actual Simulation caller and R06 immutable complete
+queries with a Swarm caller. Improve Pipeline only from exact-source fixtures and
+independent package plus game receiving; do not duplicate its executor locally.
+Domain/view policy stays local, H2 geometry stays upstream, R09 caches remain
+unconsumed. This is a planned disposition, not new pins or measured improvement.
+
 For a candidate or upstream finding record: originating phase/commit, domain behavior,
 product-neutral capability, named receiving consumer, existing project alternatives,
 ownership/lifetime/capacity/failure contract and current evidence. Include the smallest

@@ -34,6 +34,12 @@ forms of the same biomass. The lattice/shatter rule now has a primitive prototyp
   [headless scenarios](#headless-scenarios-and-investigations), and
   [phase12 evidence](docs/sprint-reviews/phase-12.md).
 
+Next major milestone proposal: [Phase14, interactive100K/150K performance](docs/phases/phase14.md)
+defines bounded parallel simulation, whole native frame budgets and two coordinated
+agent workstreams. It is reviewed planning, not implemented scale/FPS capability;
+the current executable remains the2K prototype. Read its
+[contracts and review](docs/decisions/phase14-scale-contracts.md) before dispatch.
+
 The desktop prototype is a bounded reclamation challenge: recover **1,780 biomass
 quanta before tick 900**. Pause stops the deadline. Flow and radial tools change
 movement; the HUD reports progress, admission feedback and a latched win or loss.

@@ -131,12 +131,15 @@ quiescence. No silent continuation after an unexpected tick failure.
 
 ## Pinned guarantees and acceptance gates
 
-- ECS `8391f81fd74a016564b4711b074eb286d3c5e14b`: trivially copyable components
+- ECS `1b1114ad2a15569ce106da429e94435912144f4f`: trivially copyable components
   up to 64 bytes, 64 component types and 32 exact declared queries. IDs use a 24-bit
   index domain; do not assume transactional creation. Keep grids and large state outside components.
-- Pipeline `f6f54c623908649e8daac3613545062cf08b3822`: construct graphs on one
+- Pipeline `bf2ecce80545d2fcef94e73f2da6ed425153ba46`: construct graphs on one
   thread, drain callbacks and join orphaned timed work before releasing borrows.
   Current gameplay is sequential; the thread-per-job and pool executors are disabled.
+  [Phase14](phases/phase14.md) proposes an immutable query/row seam and a bounded
+  inner partition consumer; the outer Runtime graph remains coordinator-inline.
+  This proposal changes no current executor, query guarantee or dependency pin.
 - Sub0HexGrid H2 supplies checked assignment/conservative candidates. Crucible owns
   IDs, bins and exact filtering, with private rectangular and exact-scan fallbacks
   for unsupported geometry/radius domains. Blight still uses cardinal adjacency.

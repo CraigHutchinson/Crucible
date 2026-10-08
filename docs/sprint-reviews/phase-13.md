@@ -1,7 +1,10 @@
 # Phase 13 sprint review: readable player controls and bounded sound
 
-Status: in progress, 2026-10-07. Root accountable. P13-01 is implemented and under
-receiving; P13-02 sound remains undispatched. This is not Phase13 closure.
+Status: P13-01 publication complete, 2026-10-07. Root accountable. PR29 merged at
+`9e7fed990c404e95ab25e699090996aeec048040`; all nine hosted jobs succeeded at
+head `49f702a7dd5313805c927113dc358922cbd60952` in
+[run37619200451](https://github.com/CraigHutchinson/Crucible/actions/runs/37619200451).
+Native/participant gates and P13-02 sound remain open. This is not full Phase13 closure.
 
 ## Intent, baseline and scope
 
@@ -43,7 +46,8 @@ Fresh build trees use checksum-verified CPM0.42.1 and read-only cached sources w
 Git heads match all six full pins. No shared dependency cache edits. Release full
 42/42 passes (36.13s) with diagnostics enabled. Full Debug42/42 passed
 (203.62s); final changed desktop/painter receiving4/4 passed after the resize
-review fixes. Hosted platform/sanitizer acceptance pending.
+review fixes. Hosted platform/sanitizer acceptance subsequently passed in the
+final-head run linked above; no new local receiving was run during Phase14 planning.
 The receiving runner is `scripts/run_tests.py` with the repository preset plus
 `--test-dir` / `--prerequisite-build-dir` for the isolated tree.
 
@@ -81,5 +85,8 @@ participant gates remain open. P12-F02 maps to P13-02: enable the consumed SDL a
 profile, freeze owned clips/background/cue coalescing/mute/pause/restart/failure,
 receive asynchronous shutdown and actual output, then gather separate listening
 feedback. Carry all Phase12 deferred growth/scale/world/faction/concurrency/iOS and
-physical GPU/human gates with their existing owners. P13-01 publication/CI is pending;
-Phase13 remains in progress until its separately received scope is reconciled.
+physical GPU/human gates with their existing owners. P13-01 publication/CI is
+received; Phase13's broader audio/native/participant scope remains open.
+User selected [Phase14](../phases/phase14.md) as the next major target: complete
+physical-frame scale evidence and bounded parallel simulation. Audio is carried
+explicitly rather than implied by the scale milestone.

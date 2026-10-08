@@ -1,5 +1,12 @@
 # Scheduling workstream — W7
 
+Phase14 proposed first consumer: Simulation synchronously executes an untimed
+partition graph over immutable input; workerA owns this adapter and its independent
+join/dispatch/failure tests. Root retains outer Runtime graph and shared wiring.
+Priority pool storage/failure guarantees require G0b receiving; fixed workers
+alone do not bound the queue. See [scale contracts](../../decisions/phase14-scale-contracts.md)
+and [all-stream audit](../hierarchy-boundaries.md#phase14-proposed-scale-assignment).
+
 ## Hierarchy and acceleration boundary
 
 Own executor adaptation, phase access sets, work partitioning and CPU/device completion/failure joins. Execute Runtime policy; do not choose index semantics, view approximation, navigation rules or publication freshness. Native resources belong to the named adapter.
