@@ -6,6 +6,7 @@
 #include <string_view>
 
 #include "crucible/presentation/Camera2D.hpp"
+#include "crucible/presentation/desktop/checked_presentation.hpp"
 #include "crucible/presentation/desktop/ScenePainter.hpp"
 #include "crucible/presentation/desktop/SceneUi.hpp"
 #include "crucible/presentation/FieldTool.hpp"
@@ -18,6 +19,8 @@ namespace crucible::desktop {
 class DesktopApp {
 public:
     enum class WindowMode { windowed, fullscreen };
+    /// Legacy SDL calls or the received concrete Windows native handoff path.
+    enum class PresentationMode { sdl, checkedD3D11 };
     /** Owns consumed desktop startup policy around the platform-free scenario.
      * Omit mission for a continuously evolving inspector. Restart retains this policy.
      */
@@ -29,6 +32,7 @@ public:
         float toolRadius{8.0F}; ///< Radial radius and FLOW corridor half-width in world units.
         float toolMagnitude{4.0F}; ///< Shared live/script force magnitude.
         presentation::desktop::ScenePainter::ViewPolicy viewPolicy{presentation::desktop::ScenePainter::ViewPolicy::exact}; ///< Consumed view-only representation.
+        PresentationMode presentationMode{PresentationMode::sdl}; ///< Checked mode requires the concrete native capability.
     };
     /** Copies timing from one production iteration without retaining frame storage.
      * Durations describe CPU call intervals only; GPU completion is separate.
@@ -38,6 +42,7 @@ public:
         std::chrono::nanoseconds service{}, pump{}, draw{}, present{};
         std::size_t advancedTicks{};
         bool presented{}; ///< Native presentation call returned; not successful scanout proof.
+        std::optional<presentation::desktop::CheckedPresentation::Receipt> nativeReceipt{}; ///< Explicit native outcome in checked mode only.
     };
     /** Allocates the reference challenge and SDL window/renderer.
      * @param[in] mission Positive quota/deadline tuning within startup substrate stock.
@@ -106,6 +111,7 @@ private:
     [[nodiscard]] presentation::ScreenPoint ToLogical(float x, float y) const;
     std::unique_ptr<SDL_Window, WindowDelete> window_;
     std::unique_ptr<SDL_Renderer, RendererDelete> renderer_;
+    std::unique_ptr<presentation::desktop::CheckedPresentation> checkedPresentation_;
     runtime::InspectorSession session_;
     presentation::Camera2D camera_;
     presentation::desktop::ScenePainter painter_;

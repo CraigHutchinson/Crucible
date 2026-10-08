@@ -42,6 +42,9 @@ SDL_AppResult SDL_AppInit(void** state, int argc, char** argv) {
             settings.mission.reset();
             settings.toolRadius = 16.0F;
             settings.viewPolicy = crucible::presentation::desktop::ScenePainter::ViewPolicy::densityOverview;
+#if defined(_WIN32)
+            settings.presentationMode = crucible::desktop::DesktopApp::PresentationMode::checkedD3D11;
+#endif
             settings.diagnostics = diagnostics;
             settings.windowMode = window_mode;
             *state = std::make_unique<crucible::desktop::DesktopApp>(settings).release();

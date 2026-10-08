@@ -59,7 +59,11 @@ DesktopApp::DesktopApp(StartupSettings settings)
         SDL_WINDOW_RESIZABLE | SDL_WINDOW_HIGH_PIXEL_DENSITY));
     Check(static_cast<bool>(window_));
     Check(SDL_SetWindowMinimumSize(window_.get(), 1024, 607));
-    renderer_.reset(SDL_CreateRenderer(window_.get(), nullptr));
+    if (settings.presentationMode != PresentationMode::sdl &&
+        settings.presentationMode != PresentationMode::checkedD3D11)
+        throw std::invalid_argument("Invalid desktop presentation mode");
+    renderer_.reset(SDL_CreateRenderer(window_.get(), settings.presentationMode == PresentationMode::checkedD3D11
+        ? "direct3d11" : nullptr));
     Check(static_cast<bool>(renderer_));
     SDL_Log("Crucible native renderer=%s, window pixel density=%.2f, display scale=%.2f",
         SDL_GetRendererName(renderer_.get()), SDL_GetWindowPixelDensity(window_.get()),
@@ -68,6 +72,11 @@ DesktopApp::DesktopApp(StartupSettings settings)
         presentation::desktop::CanvasHeight, SDL_LOGICAL_PRESENTATION_LETTERBOX));
     // Best effort pacing: software/dummy renderers may not support vertical sync.
     static_cast<void>(SDL_SetRenderVSync(renderer_.get(), 1));
+    if (settings.presentationMode == PresentationMode::checkedD3D11) {
+        checkedPresentation_ = std::make_unique<presentation::desktop::CheckedPresentation>(*renderer_);
+        if (!checkedPresentation_->isSupported())
+            throw std::runtime_error("Checked presentation requires the native Direct3D11 renderer");
+    }
     if (settings.windowMode == WindowMode::fullscreen) setFullscreen(true);
     baseline_ = std::chrono::steady_clock::now();
 }
@@ -320,12 +329,21 @@ SDL_AppResult DesktopApp::Iterate() {
     const auto drawBegin = std::chrono::steady_clock::now();
     Check(painter_.TryDraw(*renderer_, session_.GetSnapshot(), camera_, ui));
     const auto drawEnd = std::chrono::steady_clock::now();
-    Check(SDL_RenderPresent(renderer_.get()));
+    if (checkedPresentation_) {
+        const auto receipt = checkedPresentation_->present();
+        frameStatistics_.nativeReceipt = receipt;
+        using Status = presentation::desktop::CheckedPresentation::Status;
+        if (receipt.status != Status::handedOff && receipt.status != Status::busy && receipt.status != Status::occluded)
+            throw std::runtime_error("Checked native presentation failed or changed device");
+        frameStatistics_.presented = receipt.status == Status::handedOff;
+    } else {
+        Check(SDL_RenderPresent(renderer_.get()));
+        frameStatistics_.presented = true;
+    }
     const auto end = std::chrono::steady_clock::now();
     frameStatistics_.draw = drawEnd - drawBegin;
     frameStatistics_.present = end - drawEnd;
     frameStatistics_.service = end - now;
-    frameStatistics_.presented = true;
     frameStatistics_.completedTick = session_.GetSnapshot().GetInfo()->completed_tick;
     return SDL_APP_CONTINUE;
 }
