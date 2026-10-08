@@ -13,6 +13,6 @@ struct TickStatistics {
     std::uint64_t completedTick{};
     std::chrono::nanoseconds gather{}, index{}, propose{}, commit{}, resources{}, rebuild{};
     std::size_t inputRows{}, queryRows{}, occupiedCells{}, queryScratchCapacity{}; ///< Scratch is the total across all startup partitions.
-    std::size_t workers{1}, partitions{1}, taskCapacity{}; ///< Executed workers/active ranges; taskCapacity is the fixed graph-node bound.
+    std::size_t workers{1}, partitions{1}, taskCapacity{}; ///< Effective path's selected worker bound, active ranges and fixed graph-node bound; not observed thread utilization.
 };
 }
