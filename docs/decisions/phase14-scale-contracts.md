@@ -73,6 +73,40 @@ tests and snapshot/GPU caller before changing surfaces.
 
 ## C2 scheduling and failure joins
 
+Next-wave design freeze, 2026-10-08 (implementation waits for the corrected
+upstream merge/pin): Contracts carries startup `ExecutionSettings` with workers
+and partitions. Runtime resolves partitions0 to1 for workers1 and twice workers
+otherwise; ordinary default remains workers1 until actual G5 evidence supports
+an AUTO promotion. Scheduling consumes only resolved positive counts and startup
+sample capacity. One coordinator worker uses the same startup graph inline;
+selected multiple workers use an exclusively owned PriorityExecutor directly,
+never a per-tick ScopedExecutor. Its queue capacity equals the partition count.
+
+`RowPartitions` owns one untimed startup graph, fixed range/result metadata and
+one startup-owned row callable. Actual mobile rows are balanced into contiguous
+disjoint ranges by quotient/remainder, exactly covering the complete input.
+Zero rows succeed without dispatch; an empty-capacity scenario retains its valid
+single empty partition. Counts/representability and empty callable reject before
+launch. The constructor primes graph caches through an explicitly inactive
+no-op epoch, not a tryRun0 path that skips the graph. No real row callback executes
+at startup. Simulation owns complete query scratch per partition: memory is
+P*N*sizeof(SampleId), plus fixed task/range metadata. Whole-input validation per
+partition remains part of measured cost; no unchecked query API is implied.
+
+Run outcomes distinguish complete, invalid rows, unsupported floating-point mode
+and failed work. Capture the coordinator environment per run; pool jobs install
+and restore worker fenv and received x86 rounding/FTZ/DAZ controls before returning
+to Pipeline completion. Inline execution preserves the coordinator's ordinary
+exception-flag effects. A mode that cannot be received produces no row callback
+for that partition; only a successfully joined graph whose sole limitation is
+unsupported FP may request sequential recomputation before ECS commit. Submission,
+callback or graph failures dominate that status and retain existing fail-stop
+behavior. Never disguise rejection as a floating-point fallback. All accepted
+bodies, completion callbacks and callable targets finish before any return.
+G1 receives standard rounding modes and supported denormal controls/restoration;
+G2 receives startup/first/warm storage, partial failure joins, reuse and destruction.
+No public borrowed-executor overload or test-only production knob is introduced.
+
 Contracts owns the consumed startup execution value representation; Runtime
 resolves policy (sequential, selected bounded workers, chunk count and measured
 auto policy) and injects it into Simulation. Core must not include/link Runtime:

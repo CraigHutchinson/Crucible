@@ -50,6 +50,21 @@ source-only. Root now reserves CPU/GPU for the native capture build/classifier,
 observed sequential-control build and short production probes. No upstream build
 or competing measurement until root releases. Hosted Crucible `b3f73ba` passed
 all ten jobs including ThreadSanitizer; later source needs its own receiving.
+Root completed native harness/control receiving at `395b4b1`/`e0fb323`: full
+Release50/50 and control46/46, plus all12 short native process arms across both
+scales and none/FLOW/gather. Every process returned0 with correlated observations;
+probe rows remain ineligible for percentiles. Initial influence12.776%/10.64%,
+actual Intel Graphics D3D11/240Hz/driver receipt, pre-present overview/detail
+captures visually inspected. Cold100K pump costs about110ms per tick establish
+an attribution need, not a whole-tick percentile or budget claim. Raw owned
+artifact `build/phase14-native-probe-01` is retained. Root then received complete
+bounded boundary/stage observations at `0979218`, Release6/6; independent review
+prompted `5cf5d91`, whose new blocked-boundary fixture still awaits execution.
+Root released CPU/GPU. A exclusively receives/measures upstream `8e3eaf9`;
+B reviews and extends the native harness source-only with the root observation
+checkpoint. Root remains source/network-only until A releases. Upstream PR36
+is published; full validation must be freshly requested by a ci:full label event
+after each head change, since synchronize alone selects the routine job.
 
 ## Phase 14 major milestone planning, 2026-10-07
 
