@@ -34,5 +34,12 @@ that full workload as proposed core at100K/150K. Its G0a/G0b checkpoints freeze
 evolving scenarios, density classes, field-driven behavior, exact native completion
 observation, sample minima and numerical/visual criteria before optimized acceptance.
 Use the same production DesktopApp/Simulation consumer, retain raw timelines and
-controlled pairs, and report CPU work/pacing/GPU completion separately. No new
-full-frame or scale result exists from this planning update.
+controlled pairs, and report CPU work/pacing/GPU completion separately. Scenario
+and native lifecycle receiving is recorded in the Phase14 review; full-frame and
+useful-parallelism targets remain unreceived.
+
+The separate hosted `race` job builds headless Debug with actual ThreadSanitizer
+flags, executes the configured compiler/runtime canary and receives Spatial,
+Swarm, Scheduling and Pipeline-labelled ownership fixtures. It does not measure
+timings or infer race freedom from a passed ordinary/sanitizer suite. Availability
+and findings are receiving results; no local Windows ThreadSanitizer pass is claimed.

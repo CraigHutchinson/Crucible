@@ -97,6 +97,21 @@ jobs:
       - run: cmake --build --preset desktop-sanitize --parallel 4
       - run: python scripts/run_tests.py --preset desktop-sanitize
 
+  race:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          lfs: true
+      - name: Configure the actual headless ThreadSanitizer receiver
+        run: cmake --preset debug -B build/race -DCMAKE_CXX_FLAGS="-O1 -g -fsanitize=thread -fno-omit-frame-pointer" -DCMAKE_EXE_LINKER_FLAGS="-fsanitize=thread"
+      - name: Compile and execute the configured runtime canary
+        run: python scripts/check_prerequisites.py --stage development --build-dir build/race --timeout 30 --budget 60
+      - run: cmake --build build/race --parallel 4
+      - name: Receive immutable queries, partitions and joined runtime ownership
+        run: python scripts/run_tests.py --preset debug --test-dir build/race --prerequisite-build-dir build/race -L "spatial|swarm|scheduling|pipeline" --no-tests=error
+
   gpu:
     runs-on: ubuntu-24.04
     steps:
