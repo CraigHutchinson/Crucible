@@ -65,6 +65,25 @@ B reviews and extends the native harness source-only with the root observation
 checkpoint. Root remains source/network-only until A releases. Upstream PR36
 is published; full validation must be freshly requested by a ci:full label event
 after each head change, since synchronize alone selects the routine job.
+Resume follow-through: corrected upstream PR36 head `b20428b` passed every full
+job in run37848858562, including macOS, then merged as `f730c4e`. Its portable
+fixture clears caller-owned moved-from functions without weakening any lifetime
+assertion. Clean sibling main fast-forwarded; every owned worktree/build remained.
+Root adopted exact merged Pipeline pin at `b967731`, full Release51/51 passed
+34.24s. The earlier observation correction also passed its Debug6/6; camera
+schema3 classifier23 cases passed, both source arms build. Six explicit native
+stage/camera probes at `73b4f2e` passed with complete identities/tick coverage and
+zero drops, retaining raw data/images in `build/phase14-stage-native-probe-02`.
+Cold none-route mean complete boundary94.147ms/145.959ms at100K/150K; proposal
+phase81.965ms/126.486ms dominates. These short attribution arms remain excluded
+from acceptance percentiles. The ordinary comparison control retains PR29 kernel
+bytes and matching outer clocks/camera script at `b7fc7ac`.
+Next wave: A owns new `.worktrees/phase14-scheduling` from the received pin with
+Scheduling-only source/tests/manifests/docs. Root owns every execution policy,
+Simulation/Runtime/desktop/harness shared hook, priority dependency setting and
+integration. Source implementation is authorized against reviewed C2; root holds
+CPU/GPU for exact-pin Debug receiving before granting worker tests. B performs
+independent plan/source review only until a named refinement package is dispatched.
 
 ## Phase 14 major milestone planning, 2026-10-07
 
