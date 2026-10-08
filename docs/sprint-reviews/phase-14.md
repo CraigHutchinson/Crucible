@@ -31,7 +31,8 @@ and desktop at `4e80534`. Restart preserves geometry/policy and changes run iden
 `93c1d9a` wires the immutable whole-input row seam into actual Simulation staging;
 eight affected Release checks pass, including full-state direct/integrated scale
 commands, pause, resource conservation and restart. `75e2868` consumes checked
-native presentation in Windows scale mode; its native receiving is pending.
+native presentation in Windows scale mode; the explicit native fixtures passed
+at the later `fd8075e` checkpoint as recorded below.
 
 A now owns the independently isolated upstream Pipeline submission/failure
 prerequisite; B owns the production capture harness and presentation receiving.
@@ -95,6 +96,32 @@ Fresh combined Debug passed48/48 at `93c1d9a`; all six affected checked desktop
 fixtures then passed in Debug and Release after the lifecycle correction. Actual
 captures/raw timelines, physical G3-G6 quality/budgets, audio and participant
 results are pending; diagrams here explain proposals only.
+
+Hosted [run37806301603](https://github.com/CraigHutchinson/Crucible/actions/runs/37806301603)
+passed all ten jobs at `b3f73ba19bbc98d726f268edc8a4795c7b0a7508`: Windows,
+Linux and macOS Debug/Release, headless dependency omission, ASan/UBSan, software
+Vulkan receiving and the new actual ThreadSanitizer query/partition/runtime
+receiver. This precedes native capture-harness integration and parallel wiring;
+neither later source nor concurrent worker execution inherits that receipt.
+
+The production native frame harness was received as source at `ad48618`, with
+shared benchmark registration at `c309aba`. It retains per-frame/command identity,
+checked handoff and joined GPU observation, actual adapter/driver metadata,
+explicit60Hz pacing, cold exact-tick route attribution and pre-present overview/
+detail images. Classifier, executable and physical probe receiving remain pending.
+The observed sequential control `72dbb51` uses the same frontend instrumentation
+with the PR29 simulation/query/steering sources unchanged; its startup scaffold
+permits the target scale, so it is not described as a stock PR29 executable.
+
+Upstream [Sub0Pipeline PR36](https://github.com/CraigHutchinson/Sub0Pipeline/pull/36)
+isolates bounded submission and rejection/join repairs. Its initial source
+checkpoint passed nine local Debug and nine Release cases, preserving the original
+Core/DSL assertion counts. Five alternating process pairs and allocation audit
+are retained; a validation-cost regression needs investigation, and stalled VTune
+collection has produced no attribution evidence. Independent review additionally
+found Priority/Scoped completion published before callable captures are destroyed.
+That ownership repair and exact-head platform/race/adapters acceptance precede
+consumer pin promotion. No upstream merge or parallel safety claim is made here.
 
 ## Retrospective and reuse
 
