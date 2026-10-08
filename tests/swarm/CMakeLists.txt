@@ -2,3 +2,13 @@ add_executable(crucible_swarm_tests Steering.cpp)
 target_link_libraries(crucible_swarm_tests PRIVATE Crucible::Swarm Crucible::Spatial Crucible::Fields)
 add_test(NAME swarm_steering COMMAND crucible_swarm_tests)
 set_tests_properties(swarm_steering PROPERTIES LABELS swarm)
+
+add_executable(crucible_swarm_partition_tests test_partition_rows.cpp)
+target_link_libraries(crucible_swarm_partition_tests PRIVATE Crucible::Swarm Crucible::Spatial Crucible::Fields Threads::Threads)
+add_test(NAME swarm_partition_rows COMMAND crucible_swarm_partition_tests)
+set_tests_properties(swarm_partition_rows PROPERTIES LABELS swarm)
+
+add_executable(crucible_swarm_partition_allocation_tests test_partition_allocations.cpp)
+target_link_libraries(crucible_swarm_partition_allocation_tests PRIVATE Crucible::Swarm Crucible::Spatial Crucible::Fields)
+add_test(NAME swarm_partition_allocations COMMAND crucible_swarm_partition_allocation_tests)
+set_tests_properties(swarm_partition_allocations PROPERTIES LABELS swarm)

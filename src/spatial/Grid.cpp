@@ -147,15 +147,22 @@ bool Grid::TryRebuild(std::span<const SpatialSample> samples) noexcept {
 }
 
 std::optional<std::span<const SampleId>> Grid::TryQuery(Position center, float radius) noexcept {
+    return tryQuery(center, radius, m_Results);
+}
+
+std::optional<std::span<const SampleId>> Grid::tryQuery(
+    Position center, float radius, std::span<SampleId> callerScratch) const noexcept
+{
     if (!std::isfinite(center.x) || !std::isfinite(center.y) || !std::isfinite(radius) || radius < 0.0F)
         return std::nullopt;
+    if (callerScratch.size() < m_SampleCount) return std::nullopt;
     center = ClampPosition(center);
     const double distance = radius;
     std::size_t result_count = 0;
     const auto consider = [&](const SpatialSample& sample) {
         const double dx = static_cast<double>(sample.position.x) - center.x;
         const double dy = static_cast<double>(sample.position.y) - center.y;
-        if (dx * dx + dy * dy <= distance * distance) m_Results[result_count++] = sample.id;
+        if (dx * dx + dy * dy <= distance * distance) callerScratch[result_count++] = sample.id;
     };
     const auto visit = [&](std::size_t cell) {
         for (auto bin = m_Offsets[cell]; bin < m_Offsets[cell + 1]; ++bin)
@@ -177,7 +184,7 @@ std::optional<std::span<const SampleId>> Grid::TryQuery(Position center, float r
         for (std::size_t y = min_y; y <= max_y; ++y)
             for (std::size_t x = min_x; x <= max_x; ++x) visit(y * m_Config.columns + x);
     }
-    auto results = std::span{m_Results}.first(result_count);
+    auto results = callerScratch.first(result_count);
     std::ranges::sort(results);
     return std::span<const SampleId>{results};
 }

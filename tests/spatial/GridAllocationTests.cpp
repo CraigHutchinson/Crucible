@@ -5,6 +5,7 @@
 #include <iostream>
 #include <limits>
 #include <new>
+#include <utility>
 
 namespace {
 // Standalone single-threaded instrumentation observes ordinary C++ vector/sort allocations.
@@ -38,6 +39,7 @@ int main() {
                                                static_cast<float>(row % 13) * 0.5F}};
     crucible::spatial::Grid grid{{8, 8, 1}, samples.size()};
     crucible::spatial::Grid fallback{{1, 4096, 1}, samples.size()};
+    std::array<crucible::SampleId, 2048> caller_scratch{};
     bool valid = true;
     {
         AllocationScope scoped;
@@ -46,7 +48,8 @@ int main() {
             for (float radius : {0.0F, 0.1F, 1.0F, 4.0F, std::numeric_limits<float>::max()}) {
                 const auto hits = grid.TryQuery({4, 4}, radius);
                 const auto fallback_hits = fallback.TryQuery({0.5F, 4}, radius);
-                valid = hits.has_value() && fallback_hits.has_value() && valid;
+                const auto caller_hits = std::as_const(grid).tryQuery({4, 4}, radius, caller_scratch);
+                valid = hits.has_value() && fallback_hits.has_value() && caller_hits.has_value() && valid;
             }
             const auto saved_id = samples.back().id;
             samples.back().id = samples.front().id;
