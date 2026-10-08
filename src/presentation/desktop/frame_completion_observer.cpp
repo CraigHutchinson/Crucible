@@ -1,5 +1,6 @@
 #include <SDL3/SDL.h>
 #include <stdexcept>
+#include <string_view>
 #include <thread>
 #include <vector>
 
@@ -52,6 +53,8 @@ struct FrameCompletionObserver::State {
     State(SDL_Renderer& value, std::size_t capacity) : renderer(value) {
         if (capacity == 0) throw std::invalid_argument("Completion observer needs positive capacity");
 #if defined(_WIN32)
+        const auto* name = SDL_GetRendererName(&renderer);
+        if (!name || std::string_view{name} != "direct3d11") return;
         auto* native = currentDevice();
         if (!native) return;
         if (!SDL_IsMainThread()) throw std::invalid_argument("Native observer requires desktop main thread");

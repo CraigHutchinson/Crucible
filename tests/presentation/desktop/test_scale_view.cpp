@@ -7,6 +7,7 @@
 #include <thread>
 
 #include "crucible/presentation/Camera2D.hpp"
+#include "crucible/presentation/desktop/checked_presentation.hpp"
 #include "crucible/presentation/desktop/ScenePainter.hpp"
 #include "crucible/presentation/desktop/SceneUi.hpp"
 #include "crucible/presentation/desktop/frame_completion_observer.hpp"
@@ -90,6 +91,10 @@ void unsupportedObserver(Canvas& canvas) {
     try { Observer invalid{*canvas.renderer, 0}; }
     catch (const std::invalid_argument&) { rejected = true; }
     require(rejected, "zero observation capacity refused at startup");
+    crucible::presentation::desktop::CheckedPresentation presentation{*canvas.renderer};
+    require(!presentation.isSupported() && presentation.present().status ==
+        crucible::presentation::desktop::CheckedPresentation::Status::unsupported,
+        "software renderer cannot claim native checked handoff");
 }
 void nativeCompletion() {
     using Observer = crucible::presentation::desktop::FrameCompletionObserver;
@@ -101,10 +106,15 @@ void nativeCompletion() {
     std::unique_ptr<SDL_Renderer, RendererDelete> renderer{SDL_CreateRenderer(window.get(), "direct3d11")};
     require(static_cast<bool>(renderer), "declared D3D11 renderer required, no software substitution");
     Observer observer{*renderer, 2};
+    crucible::presentation::desktop::CheckedPresentation checked{*renderer};
+    require(checked.isSupported(), "actual checked native presentation mechanism required");
     require(observer.getCapability() == Observer::Capability::direct3d11, "actual native completion mechanism required");
     const auto present = [&] {
         require(SDL_SetRenderDrawColor(renderer.get(), 11, 19, 32, 255) &&
-            SDL_RenderClear(renderer.get()) && SDL_RenderPresent(renderer.get()), "native presentation call");
+            SDL_RenderClear(renderer.get()), "native frame drawing");
+        const auto receipt = checked.present();
+        require(receipt.status == crucible::presentation::desktop::CheckedPresentation::Status::handedOff &&
+            receipt.nativeResult && *receipt.nativeResult == 0, "checked S_OK native handoff, never double present");
     };
     present();
     require(observer.recordFrame({1, 1, 7}) == Observer::RecordStatus::recorded, "first native marker");
@@ -137,11 +147,13 @@ void nativeCompletion() {
     require(device && SDL_SetPointerProperty(properties, SDL_PROP_RENDERER_D3D11_DEVICE_POINTER, nullptr),
         "synthetic public device-property replacement");
     const auto changed = observer.pollOldest();
+    const auto changedPresentation = checked.present();
     require(SDL_SetPointerProperty(properties, SDL_PROP_RENDERER_D3D11_DEVICE_POINTER, device), "restore native device property");
     require(changed.status == Observer::PollStatus::deviceChanged && observer.getPendingCount() == 1 &&
+        changedPresentation.status == crucible::presentation::desktop::CheckedPresentation::Status::deviceChanged &&
         observer.recordFrame({2, 3, 2}) == Observer::RecordStatus::deviceChanged && observer.tryDrain() &&
         observer.getPendingCount() == 0, "identity change latches refusal and original context drains retained work");
-    SDL_Log("Native completed-command receiving passed; presentation success/scanout were not received");
+    SDL_Log("Native handoff and completed-command receiving passed; physical scanout was not received");
 }
 }
 int main(int argc, char** argv) {

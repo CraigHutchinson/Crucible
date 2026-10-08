@@ -68,6 +68,33 @@ completion. Flush sends work asynchronously; it is not itself completion:
 [GetData](https://learn.microsoft.com/en-us/windows/win32/api/d3d11/nf-d3d11-id3d11devicecontext-getdata),
 [Flush](https://learn.microsoft.com/en-us/windows/win32/api/d3d11/nf-d3d11-id3d11devicecontext-flush).
 
+## Checked native handoff candidate
+
+`CheckedPresentation` receives only an actual direct3d11 renderer name plus its
+public device/swapchain properties. Original COM references are owned at startup;
+other backends/platforms are unsupported. It replaces the ordinary presentation
+call for an explicitly selected receiver and never double-presents.
+
+The coordinator checks identity/device state, checks `SDL_FlushRenderer`, calls
+native Present1 with fixed sync interval one/flags zero, then flushes SDL again to
+invalidate cached native state. The pinned D3D11 invalidation clears the cached
+render target, shader, blend/rasterizer and dirty viewport/clip state, so the next
+SDL drawing call rebinds after a native flip. No private renderer fields are read
+or changed. Existing small desktop runs retain ordinary SDL presentation.
+
+Only native S_OK is `handedOff`; busy and occluded are non-presenting cohorts.
+Other native results, flush failure and changed device/swapchain identity latch an
+explicit error. A copied optional signed HRESULT is absent when no native operation
+supplied a result. Root propagates these outcomes separately from GPU completion.
+The receiver owns handoff/pacing on this one backend, not scanout or a backend
+recovery framework. Retaining original swapchain references can prevent automatic
+replacement; identity/loss is fail-stop pending explicit receiving/reconstruction.
+
+The explicit native fixture now exercises the checked handoff instead of the SDL
+wrapper, then correlates its commands with the completion observer. Its property
+replacement fixture checks both receivers; no physical loss/hang is induced.
+None of these native behaviors has been executed at this source handoff.
+
 ## Root receiving and shared wiring
 
 The local manifest includes the observer in `Crucible::ScenePainter`. The normal
