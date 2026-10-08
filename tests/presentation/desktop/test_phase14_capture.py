@@ -11,12 +11,14 @@ SPEC.loader.exec_module(CAPTURE)
 
 
 def fixture():
-    header = dict(type="capture", schema=1, source="a" * 40, source_tree="b" * 40, population=100000,
+    header = dict(type="capture", schema=2, source="a" * 40, source_tree="b" * 40, population=100000,
                   columns=400, route=1, completion_mode="joined-yield-zero",
                   pacing_mode="fixed-60hz-skip-whole-overdue-periods", duration_ns=30_000_000_000,
                   warmup_ticks=120, drained=True, failure="", bounded_out=False,
                   device_identity_received=True, driver_version=123, initial_tick=120,
-                  dropped_frame_rows=0, dropped_input_rows=0, initial_discarded_scaled_ns=0)
+                  dropped_frame_rows=0, dropped_input_rows=0, initial_discarded_scaled_ns=0,
+                  tick_observation_capacity=40124, tick_observation_count=1920,
+                  initial_observation_cursor=120, dropped_tick_observations=0, profile_stages=False)
     quality = dict(type="quality", compared=True, cpu_ns=1234, capture_cpu_ns=0,
                    initial_nonzero_field_samples=11000, signed_mean_dx=24)
     records = [header, quality]
@@ -28,7 +30,11 @@ def fixture():
                             completion_observed_ns=begin + 9_000_000, marker_begin_ns=begin + 7_500_000,
                             marker_end_ns=begin + 8_000_000, poll_call_ns=1000, poll_calls=1,
                             handoff_observed_ns=begin + 7_000_000, native_status=0, marker_status=0,
-                            visible=True, status=0, pacing_skipped=0, discarded_scaled_ns=0, width=1280, height=864))
+                            visible=True, status=0, pacing_skipped=0, discarded_scaled_ns=0, width=1280, height=864,
+                            pump_ns=6_000_000))
+    for index in range(1800):
+        records.append(dict(type="tick", run=1, frame=index + 1, tick=index + 121,
+                            boundary_ns=5_000_000, applied_commands=int(index % 6 == 0), simulation=None))
     for index in range(300):
         frame = records[2 + index * 6]
         records.append(dict(type="trace", sequence=index + 1, tick=frame["tick"]))
@@ -50,6 +56,7 @@ class ClassificationTests(unittest.TestCase):
         result = CAPTURE.summarize(self.records)
         self.assertTrue(result["acceptance_sample_eligible"])
         self.assertEqual(result["fullframe_p99_ns"], 10_000_000)
+        self.assertEqual(result["tick_boundary_p95_ns"], 5_000_000)
         self.assertEqual(result["input_p99_ns"], 9_000_000)
         self.assertTrue(result["g3_target_met"])
         self.assertTrue(result["g4_target_met"])
@@ -65,8 +72,9 @@ class ClassificationTests(unittest.TestCase):
         self.assertFalse(result["g3_target_met"])
 
     def test_idle_redraws_cannot_receive_evolving_frame_gate(self):
-        rows = [row for row in self.records if row["type"] not in ("input", "trace")]
+        rows = [row for row in self.records if row["type"] not in ("input", "trace", "tick")]
         rows[0]["route"] = 0
+        rows[0]["tick_observation_count"] = 120
         for row in rows:
             if row["type"] == "frame":
                 row.update(advanced=0, tick=120, draw_tick=120)
@@ -142,6 +150,82 @@ class ClassificationTests(unittest.TestCase):
         self.assertEqual(result["fullframe_max_ns"], 1_010_000_000)
         self.assertEqual(result["fullframe_over_20ms_frames"], 1)
         self.assertEqual(result["fullframe_p99_ns"], 10_000_000)
+
+    def test_four_ticks_in_one_pump_keep_actual_boundary_distribution(self):
+        frames = [row for row in self.records if row["type"] == "frame"]
+        self.records = [row for row in self.records if row["type"] != "tick"]
+        for index, frame in enumerate(frames):
+            frame.update(advanced=4, tick=120 + (index + 1) * 4, draw_tick=120 + (index + 1) * 4)
+            for offset, duration in enumerate((1_000_000, 1_000_000, 1_000_000, 2_000_000)):
+                self.records.append(dict(type="tick", run=1, frame=frame["frame"], tick=121 + index * 4 + offset,
+                                         boundary_ns=duration, applied_commands=int(index % 6 == 0 and offset == 3), simulation=None))
+        for row in self.records:
+            if row["type"] == "input":
+                row["tick"] = frames[row["application_frame"] - 1]["tick"]
+            elif row["type"] == "trace":
+                row["tick"] = frames[(row["sequence"] - 1) * 6]["tick"]
+        self.records[0]["tick_observation_count"] = 7320
+        result = CAPTURE.summarize(self.records)
+        self.assertEqual(result["tick_observation_count"], 7200)
+        self.assertEqual(result["tick_boundary_p95_ns"], 2_000_000)
+        self.assertNotEqual(result["tick_boundary_p95_ns"], 6_000_000 // 4)
+
+    def test_missing_tick_or_drop_blocks_all_acceptance_percentiles(self):
+        rows = [row for row in self.records if not (row["type"] == "tick" and row["tick"] == 122)]
+        result = CAPTURE.summarize(rows)
+        self.assertFalse(result["complete_tick_coverage"])
+        self.assertFalse(result["acceptance_sample_eligible"])
+        self.assertIsNone(result["tick_boundary_p95_ns"])
+        self.assertIsNone(result["fullframe_p95_ns"])
+        self.records[0]["dropped_tick_observations"] = 1
+        self.assertFalse(CAPTURE.summarize(self.records)["acceptance_sample_eligible"])
+
+    def test_duplicate_mixed_run_or_wrong_frame_tick_is_rejected(self):
+        tick = next(row for row in self.records if row["type"] == "tick")
+        self.records.append(copy.deepcopy(tick))
+        with self.assertRaisesRegex(ValueError, "Duplicate tick"):
+            CAPTURE.summarize(self.records)
+        self.records.pop()
+        tick["run"] = 2
+        with self.assertRaisesRegex(ValueError, "exact run/frame"):
+            CAPTURE.summarize(self.records)
+        tick["run"] = 1
+        tick["frame"] = 2
+        with self.assertRaisesRegex(ValueError, "exact run/frame"):
+            CAPTURE.summarize(self.records)
+
+    def test_tick_command_and_pump_accounting_cannot_be_forged(self):
+        tick = next(row for row in self.records if row["type"] == "tick")
+        tick["applied_commands"] = 0
+        with self.assertRaisesRegex(ValueError, "command count"):
+            CAPTURE.summarize(self.records)
+        tick["applied_commands"] = 1
+        tick["boundary_ns"] = 7_000_000
+        with self.assertRaisesRegex(ValueError, "whole pump"):
+            CAPTURE.summarize(self.records)
+
+    def test_bounded_prefix_cursor_cannot_exceed_received_storage(self):
+        self.records[0]["initial_observation_cursor"] = 1921
+        with self.assertRaisesRegex(ValueError, "bounded tick observation"):
+            CAPTURE.summarize(self.records)
+
+    def test_stage_attribution_is_never_budget_acceptance(self):
+        self.records[0]["profile_stages"] = True
+        for row in self.records:
+            if row["type"] == "tick":
+                row["simulation"] = dict(tick=row["tick"], gather_ns=1, index_ns=2, propose_ns=3,
+                                         commit_ns=4, resources_ns=5, rebuild_ns=6, input_rows=100000,
+                                         query_rows=100000, occupied_cells=50000, query_scratch_capacity=100000,
+                                         workers=1, partitions=1, task_capacity=0)
+        result = CAPTURE.summarize(self.records)
+        self.assertTrue(result["complete_tick_coverage"])
+        self.assertFalse(result["acceptance_sample_eligible"])
+        self.assertIsNone(result["tick_boundary_p95_ns"])
+        self.assertFalse(result["g3_target_met"])
+        self.assertFalse(result["g4_target_met"])
+        next(row for row in self.records if row["type"] == "tick")["simulation"]["tick"] += 1
+        with self.assertRaisesRegex(ValueError, "phase attribution"):
+            CAPTURE.summarize(self.records)
 
 
 if __name__ == "__main__":

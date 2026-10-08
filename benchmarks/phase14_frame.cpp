@@ -45,7 +45,12 @@ struct Settings {
     std::size_t population{100000}, frames{1800}, maxFrames{10000}, mutations{300};
     std::uint64_t warmupTicks{120}, seconds{30}, timeoutSeconds{300};
     Route route{Route::flow};
+    bool profileStages{};
 };
+/// Same bounded outer-boundary observations in both comparison arms; stage clocks are separate.
+[[nodiscard]] std::size_t observationCapacity(const Settings& settings) noexcept {
+    return 4 * settings.maxFrames + static_cast<std::size_t>(settings.warmupTicks) + 4;
+}
 /// Owned production observations; completion timestamps are poll observation bounds.
 struct Frame {
     App::FrameStatistics app{};
@@ -138,6 +143,10 @@ struct Video {
         else if (option == "--warmup-ticks") settings.warmupTicks = parseInteger(value);
         else if (option == "--seconds") settings.seconds = parseInteger(value);
         else if (option == "--timeout-seconds") settings.timeoutSeconds = parseInteger(value);
+        else if (option == "--profile-stages") {
+            if (value != "true" && value != "false") throw std::invalid_argument("Profile stages requires true or false");
+            settings.profileStages = value == "true";
+        }
         else if (option == "--route") {
             if (value == "none") settings.route = Route::none;
             else if (value == "flow") settings.route = Route::flow;
@@ -268,7 +277,9 @@ void writeCapture(const Settings& settings, std::span<const Frame> frames, std::
     std::span<const crucible::runtime::AppliedCommand> trace, const Quality& quality,
     std::string_view renderer, std::string_view failure, bool drained, bool boundedOut,
     std::int64_t duration, std::int64_t warmupDuration, std::uint64_t warmupTicks,
-    float refreshRate, float displayScale, float pixelDensity, std::uint64_t initialDiscarded, const Device& device) {
+    float refreshRate, float displayScale, float pixelDensity, std::uint64_t initialDiscarded, const Device& device,
+    std::span<const Session::TickObservation> observations, std::size_t initialObservationCursor,
+    std::uint64_t droppedObservations) {
     const auto accepted = std::ranges::count_if(inputs, [](const Input& input) {
         return input.accepted && input.visible && input.status == Status::running && input.completed > 0;
     });
@@ -278,11 +289,11 @@ void writeCapture(const Settings& settings, std::span<const Frame> frames, std::
     });
     const auto advancing = std::ranges::count_if(frames, [](const Frame& frame) { return frame.app.advancedTicks > 0; });
     const bool sampleMinimum = advancing >= 1800 && duration >= 30'000'000'000LL && warmupTicks >= 120;
-    const bool qualifying = failure.empty() && !boundedOut && drained && device.received && device.driverVersion && sampleMinimum &&
+    const bool qualifying = !settings.profileStages && !droppedObservations && failure.empty() && !boundedOut && drained && device.received && device.driverVersion && sampleMinimum &&
         complete == static_cast<std::ptrdiff_t>(frames.size()) &&
         (settings.route == Route::none || accepted >= 300);
     std::cout << std::setprecision(17);
-    std::cout << "{\"type\":\"capture\",\"schema\":1,\"source\":" << jsonString(settings.source)
+    std::cout << "{\"type\":\"capture\",\"schema\":2,\"source\":" << jsonString(settings.source)
         << ",\"source_tree\":" << jsonString(CRUCIBLE_PHASE14_BUILD_TREE)
         << ",\"population\":" << settings.population << ",\"route\":" << static_cast<int>(settings.route)
         << ",\"renderer\":" << jsonString(renderer)
@@ -296,6 +307,11 @@ void writeCapture(const Settings& settings, std::span<const Frame> frames, std::
         << ",\"adapter_luid_high\":" << device.luidHigh
         << ",\"adapter_name\":" << jsonString(device.name)
         << ",\"initial_tick\":" << warmupTicks
+        << ",\"tick_observation_capacity\":" << observationCapacity(settings)
+        << ",\"tick_observation_count\":" << observations.size()
+        << ",\"initial_observation_cursor\":" << initialObservationCursor
+        << ",\"dropped_tick_observations\":" << droppedObservations
+        << ",\"profile_stages\":" << settings.profileStages
         << ",\"columns\":" << (settings.population == 100000 ? 400 : 500)
         << ",\"rows\":" << (settings.population == 100000 ? 250 : 300)
         << ",\"cell_size\":1,\"tool_radius\":16,\"tool_magnitude\":4,\"sync_interval\":1,\"present_flags\":0"
@@ -338,6 +354,26 @@ void writeCapture(const Settings& settings, std::span<const Frame> frames, std::
             << ",\"pending\":" << frame.clock.ingress_pending
             << ",\"discarded_scaled_ns\":" << frame.clock.discarded_scaled_nanoseconds << "}\n";
     }
+    std::size_t observationFrame{};
+    for (const auto& observation : observations.subspan(std::min(initialObservationCursor, observations.size()))) {
+        while (observationFrame < frames.size() && frames[observationFrame].clock.completed_tick < observation.completedTick)
+            ++observationFrame;
+        const auto frameId = observationFrame < frames.size() ? frames[observationFrame].app.frameId : 0;
+        std::cout << "{\"type\":\"tick\",\"run\":" << observation.runId << ",\"frame\":" << frameId
+            << ",\"tick\":" << observation.completedTick << ",\"boundary_ns\":" << observation.boundary.count()
+            << ",\"applied_commands\":" << observation.appliedCommands << ",\"simulation\":";
+        if (observation.simulation) {
+            const auto& stage = *observation.simulation;
+            std::cout << "{\"tick\":" << stage.completedTick << ",\"gather_ns\":" << stage.gather.count()
+                << ",\"index_ns\":" << stage.index.count() << ",\"propose_ns\":" << stage.propose.count()
+                << ",\"commit_ns\":" << stage.commit.count() << ",\"resources_ns\":" << stage.resources.count()
+                << ",\"rebuild_ns\":" << stage.rebuild.count() << ",\"input_rows\":" << stage.inputRows
+                << ",\"query_rows\":" << stage.queryRows << ",\"occupied_cells\":" << stage.occupiedCells
+                << ",\"query_scratch_capacity\":" << stage.queryScratchCapacity << ",\"workers\":" << stage.workers
+                << ",\"partitions\":" << stage.partitions << ",\"task_capacity\":" << stage.taskCapacity << '}';
+        } else std::cout << "null";
+        std::cout << "}\n";
+    }
     for (const auto& input : inputs)
         std::cout << "{\"type\":\"input\",\"run\":" << input.run << ",\"sequence\":" << input.sequence
             << ",\"tick\":" << input.tick << ",\"frame\":" << input.frame
@@ -367,7 +403,10 @@ int capture(const Settings& settings) {
     std::vector<crucible::SampleState> finalSamples(settings.population);
     std::vector<crucible::runtime::AppliedCommand> finalTrace(4096);
     std::vector<std::size_t> sequenceToInput(4097, settings.mutations);
+    std::vector<Session::TickObservation> observations(observationCapacity(settings));
     std::size_t frameCount{}, inputCount{}, traceCount{}, currentSlot{}, advancingFrames{};
+    std::size_t observationCount{}, initialObservationCursor{};
+    std::uint64_t droppedObservations{};
     std::uint64_t firstFrame{}, captureRun{}, completedTick{}, actualWarmupTicks{};
     std::uint64_t initialDiscarded{};
     std::int64_t duration{}, warmupDuration{};
@@ -384,6 +423,7 @@ int capture(const Settings& settings) {
     startup.toolMagnitude = 4;
     startup.viewPolicy = crucible::presentation::desktop::ScenePainter::ViewPolicy::densityOverview;
     startup.presentationMode = App::PresentationMode::checkedD3D11;
+    startup.observations = {observationCapacity(settings), settings.profileStages};
     const Video video;
     {
         App app{startup};
@@ -414,6 +454,7 @@ int capture(const Settings& settings) {
                 if (app.Iterate() != SDL_APP_CONTINUE) throw std::runtime_error("Warmup stopped");
             } while (app.GetSession().GetSummary().completed_tick < settings.warmupTicks);
             actualWarmupTicks = app.GetSession().GetSummary().completed_tick;
+            initialObservationCursor = app.GetSession().getTickObservations().size();
             const auto warmupFrame = app.getFrameStatistics();
             if (!warmupFrame.presented || observer.recordFrame({warmupFrame.runId, warmupFrame.frameId,
                 warmupFrame.completedTick}) != Observer::RecordStatus::recorded || !observer.tryDrain())
@@ -568,6 +609,11 @@ int capture(const Settings& settings) {
         const auto trace = app.GetSession().GetTrace();
         traceCount = trace.size();
         std::ranges::copy(trace, finalTrace.begin());
+        // Copy the immutable prefix cold. No per-frame observation scan/allocation changes service timing.
+        const auto receivedObservations = app.GetSession().getTickObservations();
+        observationCount = receivedObservations.size();
+        std::ranges::copy(receivedObservations, observations.begin());
+        droppedObservations = app.GetSession().getDroppedTickObservations();
         if (failure.empty() && !settings.captureDirectory.empty()) {
             const auto imageBegin = Clock::now();
             try {
@@ -606,7 +652,8 @@ int capture(const Settings& settings) {
     }
     writeCapture(settings, {frames.data(), frameCount}, {inputs.data(), inputCount},
         {finalTrace.data(), traceCount}, quality, renderer, failure, drained, boundedOut, duration, warmupDuration,
-        actualWarmupTicks, refreshRate, displayScale, pixelDensity, initialDiscarded, device);
+        actualWarmupTicks, refreshRate, displayScale, pixelDensity, initialDiscarded, device,
+        {observations.data(), observationCount}, initialObservationCursor, droppedObservations);
     return failure.empty() && !boundedOut ? 0 : 1;
 }
 }

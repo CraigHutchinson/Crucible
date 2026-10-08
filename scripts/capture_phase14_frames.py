@@ -30,12 +30,14 @@ def summarize(records):
     if len(captures) != 1 or len(qualities) != 1:
         raise ValueError("Expected exactly one capture and quality receipt")
     capture, quality = captures[0], qualities[0]
-    if capture["schema"] != 1 or capture["completion_mode"] != "joined-yield-zero" or capture["pacing_mode"] != "fixed-60hz-skip-whole-overdue-periods":
+    if capture["schema"] != 2 or capture["completion_mode"] != "joined-yield-zero" or capture["pacing_mode"] != "fixed-60hz-skip-whole-overdue-periods":
         raise ValueError("Unsupported schema or observation arm")
     frames = [row for row in records if row.get("type") == "frame"]
     inputs = [row for row in records if row.get("type") == "input"]
     traces = [row for row in records if row.get("type") == "trace"]
+    ticks = [row for row in records if row.get("type") == "tick"]
     identities = {}
+    expected_ticks = {}
     previous_tick = capture["initial_tick"]
     previous_end = 0
     for frame in frames:
@@ -49,11 +51,13 @@ def summarize(records):
         identities[identity] = frame
         counters = [frame[name] for name in ("advanced", "authoritative_mobile", "individual", "aggregated", "hidden", "marks",
                                              "begin_ns", "end_ns", "handoff_observed_ns", "marker_begin_ns", "marker_end_ns",
-                                             "completion_observed_ns", "poll_call_ns", "poll_calls", "pacing_skipped")]
+                                             "completion_observed_ns", "poll_call_ns", "poll_calls", "pacing_skipped", "pump_ns")]
         if any(value < 0 for value in counters):
             raise ValueError("Negative count or clock observation")
         if frame["tick"] - previous_tick != frame["advanced"]:
             raise ValueError("Tick delta differs from advanced tick count")
+        for tick in range(previous_tick + 1, frame["tick"] + 1):
+            expected_ticks[identity[0], tick] = frame
         if frame["begin_ns"] < previous_end:
             raise ValueError("Frame timeline moves backwards or overlaps in joined arm")
         previous_tick, previous_end = frame["tick"], frame["end_ns"]
@@ -72,6 +76,47 @@ def summarize(records):
     if any(row["sequence"] != index + 1 or not capture["initial_tick"] < row["tick"] <= previous_tick
            for index, row in enumerate(traces)):
         raise ValueError("Trace sequence or tick is outside the frozen measured run")
+    observation_counts = [capture[name] for name in ("tick_observation_capacity", "tick_observation_count",
+                                                    "initial_observation_cursor", "dropped_tick_observations")]
+    if (any(value < 0 for value in observation_counts) or not capture["tick_observation_capacity"] or
+            not capture["initial_observation_cursor"] <= capture["tick_observation_count"] <= capture["tick_observation_capacity"]):
+        raise ValueError("Invalid bounded tick observation accounting")
+    received_ticks = {}
+    frame_boundaries = {}
+    commands_per_tick = {}
+    for command in traces:
+        commands_per_tick[command["tick"]] = commands_per_tick.get(command["tick"], 0) + 1
+    last_observed_tick = capture["initial_tick"]
+    for row in ticks:
+        identity = row["run"], row["tick"]
+        if identity in received_ticks:
+            raise ValueError("Duplicate tick observation identity")
+        if row["tick"] <= last_observed_tick or row["boundary_ns"] < 0 or row["applied_commands"] < 0:
+            raise ValueError("Nonmonotonic or negative tick observation")
+        last_observed_tick = row["tick"]
+        frame = expected_ticks.get(identity)
+        if frame is None or frame["frame"] != row["frame"]:
+            raise ValueError("Tick observation has no exact run/frame boundary correlation")
+        if row["applied_commands"] != commands_per_tick.get(row["tick"], 0):
+            raise ValueError("Tick command count differs from applied trace")
+        stages = row["simulation"]
+        if bool(stages is not None) != bool(capture["profile_stages"]):
+            raise ValueError("Tick phase presence differs from declared attribution arm")
+        if stages is not None:
+            durations = [stages[name] for name in ("gather_ns", "index_ns", "propose_ns", "commit_ns", "resources_ns", "rebuild_ns")]
+            counts = [stages[name] for name in ("input_rows", "query_rows", "occupied_cells", "query_scratch_capacity", "workers", "partitions", "task_capacity")]
+            if stages["tick"] != row["tick"] or any(value < 0 for value in durations + counts) or sum(durations) > row["boundary_ns"]:
+                raise ValueError("Invalid copied simulation phase attribution")
+        received_ticks[identity] = row
+        frame_identity = row["run"], row["frame"]
+        frame_boundaries[frame_identity] = frame_boundaries.get(frame_identity, 0) + row["boundary_ns"]
+    for identity, boundary in frame_boundaries.items():
+        if boundary > identities[identity]["pump_ns"]:
+            raise ValueError("Tick boundary intervals exceed correlated whole pump interval")
+    tick_coverage = (set(received_ticks) == set(expected_ticks) and
+                     capture["initial_observation_cursor"] == capture["initial_tick"] and
+                     capture["tick_observation_count"] - capture["initial_observation_cursor"] == len(ticks) and
+                     not capture["dropped_tick_observations"])
     accepted_inputs = []
     accepted_sequences = set()
     for row in inputs:
@@ -107,18 +152,22 @@ def summarize(records):
     minimum = len(cohort) >= 1800 and duration >= 30_000_000_000 and capture["warmup_ticks"] >= 120
     stable_output = bool(frames and all((row["width"], row["height"]) == (frames[0]["width"], frames[0]["height"])
                                        and row["width"] > 0 and row["height"] > 0 for row in frames))
-    eligible = (minimum and stable_output and len(handoffs) == len(frames) and capture["drained"] and capture["device_identity_received"] and capture["driver_version"] is not None and
+    eligible = (tick_coverage and not capture["profile_stages"] and minimum and stable_output and len(handoffs) == len(frames) and capture["drained"] and capture["device_identity_received"] and capture["driver_version"] is not None and
                 not capture["failure"] and not capture["bounded_out"] and
                 not capture["dropped_frame_rows"] and not capture["dropped_input_rows"] and
                 (capture["route"] == 0 or len(accepted_inputs) >= 300))
     result = {
-        "schema": 1, "source": capture["source"], "source_tree": capture["source_tree"],
+        "schema": 2, "source": capture["source"], "source_tree": capture["source_tree"],
         "population": capture["population"], "route": capture["route"],
         "acceptance_sample_eligible": bool(eligible), "frame_count": len(frames),
         "running_visible_completed_handoff_frames": len(handoffs), "evolving_completed_handoff_frames": len(cohort),
         "accepted_running_visible_completed_inputs": len(accepted_inputs),
         "active_ticks": advanced, "zero_tick_frames": sum(row["advanced"] == 0 for row in frames),
         "multiple_tick_frames": sum(row["advanced"] > 1 for row in frames),
+        "tick_observation_count": len(ticks), "expected_measured_ticks": len(expected_ticks),
+        "complete_tick_coverage": tick_coverage, "dropped_tick_observations": capture["dropped_tick_observations"],
+        "profile_stages": bool(capture["profile_stages"]),
+        "tick_boundary_p95_ns": None, "tick_boundary_p99_ns": None, "tick_boundary_max_ns": None,
         "pacing_skipped_periods": sum(row["pacing_skipped"] for row in frames),
         "stable_output_dimensions": stable_output,
         "no_handoff_frames": sum(row["native_status"] != 0 for row in frames),
@@ -141,6 +190,9 @@ def summarize(records):
         "scope": "Joined completion observation upper bounds; no scanout, participant or five-pair closure claim.",
     }
     if eligible:
+        boundaries = [row["boundary_ns"] for row in ticks]
+        result.update(tick_boundary_p95_ns=nearest_rank(boundaries, .95),
+                      tick_boundary_p99_ns=nearest_rank(boundaries, .99), tick_boundary_max_ns=max(boundaries))
         services = [max(row["end_ns"], row["completion_observed_ns"]) - row["begin_ns"] for row in cohort]
         cadence = [b["handoff_observed_ns"] - a["handoff_observed_ns"] for a, b in zip(handoffs, handoffs[1:])]
         result.update(fullframe_p95_ns=nearest_rank(services, .95), fullframe_p99_ns=nearest_rank(services, .99),
@@ -206,6 +258,7 @@ def main():
     parser.add_argument("--populations", nargs="+", type=int, default=[100000, 150000])
     parser.add_argument("--routes", nargs="+", choices=["none", "flow", "gather"], default=["none", "flow", "gather"])
     parser.add_argument("--probe", action="store_true", help="short receiving only; never percentile acceptance")
+    parser.add_argument("--profile-stages", action="store_true", help="current-only stage attribution; never acceptance or baseline comparison")
     parser.add_argument("--uncontended", action="store_true")
     parser.add_argument("--background-power-thermal", help="record observed background load, power mode and thermal condition")
     parser.add_argument("--cooldown-seconds", type=float, default=10)
@@ -215,20 +268,24 @@ def main():
     if args.summarize:
         print(json.dumps(summarize(read_capture(args.summarize)), indent=2))
         return 0
-    if any(getattr(args, name) is None for name in ("baseline", "baseline_build", "baseline_source",
-                                                  "current", "current_build", "current_source", "output")):
-        parser.error("capture requires both arm binaries/builds/sources and --output")
+    arms = ("current",) if args.profile_stages else ("baseline", "current")
+    required = ["output"] + [arm + suffix for arm in arms for suffix in ("", "_build", "_source")]
+    if any(getattr(args, name) is None for name in required):
+        parser.error("capture requires each selected arm's binary/build/source and --output")
+    if args.profile_stages and any(getattr(args, name) is not None for name in ("baseline", "baseline_build", "baseline_source")):
+        parser.error("stage attribution is current-only; omit baseline arguments")
     if not args.uncontended or not args.background_power_thermal:
         parser.error("stop competing work and record --uncontended plus --background-power-thermal")
-    if args.pairs < (1 if args.probe else 5) or args.pairs > 20 or not 0 <= args.cooldown_seconds <= 60:
+    if args.pairs < (1 if args.probe or args.profile_stages else 5) or args.pairs > 20 or not 0 <= args.cooldown_seconds <= 60:
         parser.error("invalid pair count or cooldown")
     if any(value not in (100000, 150000) for value in args.populations) or not 30 <= args.process_timeout <= 3600 or len(set(args.populations)) != len(args.populations) or len(set(args.routes)) != len(args.routes):
         parser.error("invalid scale or external timeout")
     args.output.mkdir(parents=True, exist_ok=False)
-    metadata = {"schema": 1, "started_utc": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+    metadata = {"schema": 2, "started_utc": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
                 "platform": platform.platform(), "processor": platform.processor(), "logical_cpus": os.cpu_count(),
                 "background_power_thermal": args.background_power_thermal, "uncontended_attested": args.uncontended,
                 "probe": args.probe, "pairs": args.pairs, "cooldown_seconds": args.cooldown_seconds,
+                "profile_stages": args.profile_stages, "study": "current-only-attribution" if args.profile_stages else "paired-boundary-only",
                 "process_timeout_seconds": args.process_timeout, "populations": args.populations, "routes": args.routes,
                 "completion_mode": "joined-yield-zero", "results": [], "arms": {}}
     metadata["wrapper_sha256"] = hashlib.sha256(Path(__file__).read_bytes()).hexdigest()
@@ -237,13 +294,13 @@ def main():
         metadata_path.write_text(json.dumps(metadata, indent=2), encoding="utf-8")
     save_metadata()
     try:
-        for arm in ("baseline", "current"):
+        for arm in arms:
             metadata["arms"][arm] = provenance(getattr(args, arm), getattr(args, arm + "_build"), getattr(args, arm + "_source"))
         save_metadata()
         for population in args.populations:
             for route in args.routes:
                 for pair in range(args.pairs):
-                    order = ("baseline", "current") if pair % 2 == 0 else ("current", "baseline")
+                    order = arms if args.profile_stages or pair % 2 == 0 else tuple(reversed(arms))
                     for arm in order:
                         directory = args.output / f"{population}-{route}-pair{pair + 1}-{arm}"
                         directory.mkdir()
@@ -251,7 +308,8 @@ def main():
                         command = [information["binary"], "--source", information["source"], "--population", str(population),
                                    "--route", route, "--frames", "3" if args.probe else "1800",
                                    "--seconds", "0" if args.probe else "30", "--warmup-ticks", "0" if args.probe else "120",
-                                   "--mutations", "1" if args.probe else "300", "--timeout-seconds", "30" if args.probe else "300"]
+                                   "--mutations", "1" if args.probe else "300", "--timeout-seconds", "30" if args.probe else "300",
+                                   "--profile-stages", "true" if args.profile_stages else "false"]
                         if args.quality_images:
                             command += ["--capture-dir", str(directory)]
                         receipt = {"arm": arm, "population": population, "route": route, "pair": pair + 1,
@@ -270,7 +328,7 @@ def main():
                             if summary["source"] != information["source"] or summary["source_tree"] != information["source_tree"]:
                                 raise ValueError("Binary source identity differs from captured checkout")
                             (directory / "summary.json").write_text(json.dumps(summary, indent=2), encoding="utf-8")
-                            receipt["sample_eligible"] = summary["acceptance_sample_eligible"] and not args.probe
+                            receipt["sample_eligible"] = summary["acceptance_sample_eligible"] and not args.probe and not args.profile_stages
                             receipt["g3_target_met"] = summary["g3_target_met"]
                             receipt["g4_target_met"] = summary["g4_target_met"]
                             receipt["quality_pass"] = summary["quality_pass"]
@@ -281,9 +339,9 @@ def main():
                             return 1  # Preserve the exact failed process; no retry or outlier deletion.
                         time.sleep(args.cooldown_seconds)
         # Individual receipts remain separate; neither a median nor a probe hides a slower/outlier arm.
-        metadata["all_samples_eligible"] = bool(not args.probe and all(row.get("sample_eligible") for row in metadata["results"]))
+        metadata["all_samples_eligible"] = bool(not args.probe and not args.profile_stages and all(row.get("sample_eligible") for row in metadata["results"]))
         save_metadata()
-        return 0 if args.probe or metadata["all_samples_eligible"] else 1
+        return 0 if args.probe or args.profile_stages or metadata["all_samples_eligible"] else 1
     except (ValueError, KeyError, OSError, subprocess.CalledProcessError) as error:
         metadata["failure"] = str(error)
         save_metadata()

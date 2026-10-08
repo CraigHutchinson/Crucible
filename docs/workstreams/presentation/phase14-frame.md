@@ -219,13 +219,15 @@ participant comprehension or physical scanout.
 
 ## Schema and classification receiving
 
-JSONL schema1 contains one `capture`, ordered `frame` rows, `input` rows, the exact
-`trace`, and one `quality`. Monotonic nanoseconds share the measured steady origin.
+JSONL schema2 contains one `capture`, ordered `frame` and completed-boundary `tick`
+rows, `input` rows, the exact `trace`, and one `quality`. Monotonic frame nanoseconds
+share the measured steady origin; tick intervals are copied duration values.
 
 | Row | Consequential fields |
 |---|---|
-| capture | source/tree, actual renderer/adapter/display, scenario/tool settings, capacities, duration/warmup, initial discarded time, drain/bounds/drops/failure, joined observation and60Hz pacing modes |
+| capture | source/tree, actual renderer/adapter/display, scenario/tool settings, capacities, duration/warmup, initial tick/observation cursor, retained observation count and drops, attribution flag, initial discarded time, drain/bounds/drops/failure, joined observation and60Hz pacing modes |
 | frame | run/frame/tick, advanced ticks, begin/end, production service/pump/draw/present intervals, native status/signed HRESULT, marker status/interval, handoff/completion observations, poll calls/time, pace lateness/skips, visibility/focus/events, closed view counts, ingress/applied/discard counters |
+| tick | run/completed tick and containing frame, complete boundary duration, applied-command count and optional copied simulation stage durations/counts |
 | input | run/sequence/applied tick, event/admission/application observations, application frame versus completed-handoff frame, acceptance/running/visible state |
 | trace | exact sequence/tick/action/result and field slot/kind/geometry/strength |
 | quality | cold oracle/image CPU time, retained capture tick, influenced count/cohort, signed mean/max displacement and threshold-crossing count |
@@ -244,7 +246,14 @@ active routes. Collection continues through idle redraws until the advancing-fra
 minimum; G3 uses advancing frames, while all raw handoffs remain in G4 cadence and
 stale-frame reporting. Tick deltas must equal advanced ticks from the captured
 initial tick. Globally ordered frame intervals, handoff/marker/completion timing,
-input application-frame correlation and nonnegative counters are validated. A
+input application-frame correlation and nonnegative counters are validated. Every
+advancing tick must have exactly one immutable observation in the same run and
+containing frame. Each tick's command count must match the actual applied trace;
+the sum of boundary durations cannot exceed its containing pump duration. Missing
+or dropped tick observations block all acceptance percentiles; duplicate, mixed-run
+or wrongly correlated observations are rejected. Whole-tick p95/p99/max use actual
+complete boundary rows, including command application and snapshot publication,
+rather than dividing a multi-tick pump interval by its advanced count. A
 changed native output size is a separate nonqualifying workload cohort.
 Full-frame p95<=16.67ms/p99<=20ms and actual handoff cadence/input
 targets are independent from eligibility and quality. Repeats and discarded time
@@ -257,11 +266,28 @@ fresh output directories and an external process deadline. No retry removes a
 failure or slower outlier. Probe mode uses three frames/no warmup and explicitly
 cannot receive acceptance. All per-process summaries and raw data are retained;
 pair receipt eligibility does not itself close G1/G2/G5/platform/participant gates.
-Eleven independent synthetic classifier fixtures are registered as
+Seventeen independent synthetic classifier fixtures are registered as
 `phase14_capture_classification`. They exercise minima, correlation/accounting,
 occlusion/full slots, clock discard, mean-cohort quality, idle-frame dilution,
-corrupt tick/backward timing and missing driver. They have not been executed by
-the worker and supply schema coverage rather than native performance receipts.
+corrupt tick/backward timing, missing driver, a four-tick pump, incomplete/duplicate/
+mixed-run boundaries, applied-command and bounded-prefix accounting, and explicit
+stage attribution exclusion. All17 passed with
+`python tests/presentation/desktop/test_phase14_capture.py -v` on2026-10-08;
+the exact output is retained locally in
+`build/phase14-boundary-receipts/classifier.txt`. This supplies schema coverage;
+the updated C++ harness and native receipts still require architect receiving.
+
+The harness preallocates both Runtime observations and its cold-copy destination
+to `4 * maxFrames + warmupTicks + 4` at startup. Warmup freezes the initial tick and
+observation cursor; the immutable prefix is copied once after measurement/drain.
+Default `--profile-stages false` enables matching outer boundary clocks in both
+comparison arms and leaves simulation stage clocks disabled. The wrapper's
+`--profile-stages` flag instead runs a current-only attribution arm, refuses baseline
+arguments and passes `true` explicitly. Its raw optional stage intervals and counts
+are diagnostic evidence and never qualify G3/G4/G5. The sequential control receives
+the same Runtime outer clocks while retaining its prior Simulation/Spatial/Swarm
+bytes; it rejects stage attribution explicitly. The architect owns that separate
+receiving change and its actual source-parity receipt.
 
 Root handoff: include the owned manifest, commit the compiled source checkpoint,
 reconfigure so the embedded SHA/tree matches, receive classifier plus targeted C++
