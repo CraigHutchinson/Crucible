@@ -29,10 +29,18 @@ upstream independently received fix. Status: Wave1 provider implementation next.
 Shared scenario checkpoint `4e80534` receives configurable evolving100K/150K
 desktop settings and restart identity; six affected Release tests passed. Draft
 [PR30](https://github.com/CraigHutchinson/Crucible/pull/30) owns the source checkpoint.
-Root now reserves serial CPU for combined provider Release/Debug receiving.
-B authors the production capture harness source-only. A audits the independently
+Root completed combined Debug48/48 at the production row checkpoint, then the six
+affected checked-presentation desktop cases in Debug. Release receives those six
+after the lifecycle fixture's event-order correction. Physical D3D11 query/handoff
+receiving and both100K/150K production world/HUD resize/fullscreen/pause/restart/close
+checks passed; these short fixtures establish no frame-budget or visual-quality claim.
+Root CPU/GPU released. A now reserves exclusive CPU for standalone upstream
+Debug/Release fixtures and baseline builds; timing starts only after all builds end
+and the architect is notified. B authors the production capture harness source-only.
+A implements the independently
 claimed upstream executor prerequisite in Sub0Pipeline's `.worktrees/bounded-submission`
-at `fac58c0`; no upstream edit/build before the design checkpoint. Root alone
+at `fac58c0`; the bounded queue/strong rejection, constructor/scoped rollback,
+allocation-safe root/successor/trigger failure and join design is approved. Root alone
 owns upstream publication/pin receiving. No competing hardware timing run.
 Full combined/platform/race and physical frame gates remain open.
 
