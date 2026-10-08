@@ -1,6 +1,7 @@
 # Phase 14: interactive large-swarm performance milestone
 
-Status: reviewed planning proposal, finalized 2026-10-08; implementation undispatched.
+Status: implementation authorized 2026-10-08; Pub main received and G0a frozen.
+Reviewed planning finalized2026-10-08; runtime parallel adoption still awaits G0b.
 Architect/root is accountable from design through integration, evidence and merge.
 User selected **full-frame performance and bounded parallel simulation** as the
 major sprint target. Planning baseline is clean main

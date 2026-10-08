@@ -24,6 +24,35 @@ cmake/DependencyPins.cmake. Current sibling HEAD is not automatically the pin.
 
 ## C1 immutable epoch and query storage
 
+G0a freeze, 2026-10-08, from Pub checkpoint `3f85c82`: add const
+`Grid::tryQuery(center, radius, callerScratch)` returning an optional borrowed
+complete sorted span; retain exclusive `TryQuery` through owned scratch. Scratch
+must fit all committed samples and be disjoint from index and other active tasks.
+Add const `Steering::tryComputeRows(fullInput, fields, constGrid, firstRow,
+pendingRows, queryScratch)` returning checked success. Range length is the pending
+span size; fullInput remains complete, pending spans are disjoint. Invalid ranges,
+nonfinite input and insufficient scratch reject before writes; an unexpected
+membership failure may leave staging partial and must never publish. Existing
+TryCompute invokes shared row math into its startup staging and retains its whole
+destination/overlap contract. A owns Spatial/Swarm source/tests/local manifests.
+
+Root freezes one platform-free `ScenarioSettings` value carrying population,
+grid, field capacity and steering/resource/optional structural settings; Inspector
+owns optional mission policy and derives all frame capacities from validated grid.
+Existing session/desktop constructors forward through settings to preserve2K
+behavior. Scale launches100K/400x250 or150K/500x300 use no mission cutoff. Desktop
+tool radius/magnitude are startup settings shared by native input and scripted
+routes; restart reuses exactly the same scenario. Initial distribution retains
+deterministic cell-centered placement for the first density probe; no extra seed
+surface is added without a consumer. Root owns every shared settings/runtime/app edit.
+
+WorkerB initially owns scalable painter validation/culling/counts and a concrete
+D3D11 completion observer for a production native probe. GPU-completed rendering
+and presentation-call evidence remain distinct: inspection found pinned SDL's
+wrapper can hide backend present failure. G0b must receive a checked handoff path
+or retain that gate blocked; completion cannot certify successful present/scanout.
+No backend adoption is implied. B sends DesktopApp and root-manifest patches.
+
 Integration owns gathered ascending-ID values, Fields observation and committed
 Spatial index. No ECS pointers escape gather. A defines the Spatial query contract:
 immutable index reads during one coordinator-frozen epoch, each task borrowing its

@@ -11,7 +11,14 @@ CPU reserved for fresh dependency receiving builds/tests; no timing run concurre
 Two agents perform read-only Wave0 query/executor and presentation/observer audits
 until exact G0a contracts/worktrees are dispatched. Existing historical worktrees,
 Pub local branch and its untracked editor settings are preserved. Fresh phase14
-build/source trees only; caches remain read-only. Status: Pub consumer receiving.
+build/source trees only; caches remain read-only. Pub main received in fresh
+MSVC19.51 Release:43/43 tests passed (35.97s), including scoped delivery/teardown,
+stack roundtrip, mission/replay and desktop receiving; checkpoint `3f85c82`.
+Compiler debug information uses Embedded (/Z7) to avoid a stale PDB-server mismatch;
+canary passes, bootstrap SHA256 verified, sources match exact pins. CPU released.
+G0a query/row/scenario/provider ownership is frozen in the decision; current
+Pipeline allocation/submission failure risks block parallel adoption until an
+upstream independently received fix. Status: Wave1 provider implementation next.
 
 ## Phase 14 major milestone planning, 2026-10-07
 
