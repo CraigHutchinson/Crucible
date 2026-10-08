@@ -37,6 +37,7 @@ struct Simulation::ScenarioState {
         : options(options), extent(RequireExtent(options.grid)), grid(options.grid, count),
           fields(options.field_capacity), blight(options.grid), samples(count),
           tick_input(options.steering || options.resources ? count : 0), next_state(options.steering ? count : 0),
+          queryScratch(options.steering ? count : 0),
           activities(options.structural ? count : 0, SampleActivity::mobile) {
         if (options.structural) {
             const auto& settings = *options.structural;
@@ -63,6 +64,7 @@ struct Simulation::ScenarioState {
     blight::Grid blight;
     std::vector<spatial::SpatialSample> samples;
     std::vector<SampleState> tick_input, next_state;
+    std::vector<SampleId> queryScratch; ///< Coordinator-owned complete-result scratch for the immutable row seam.
     std::vector<SampleActivity> activities;
     std::optional<StructuralState> structural;
 
@@ -125,7 +127,7 @@ void Simulation::tick() {
             for (std::size_t i = 0; i < index; ++i)
                 state.samples[i] = {state.tick_input[i].id, state.tick_input[i].position};
             if (!state.grid.TryRebuild(std::span{state.samples}.first(index)) ||
-                !state.steering->TryCompute(input, state.fields, state.grid, output))
+                !state.steering->tryComputeRows(input, state.fields, state.grid, 0, output, state.queryScratch))
                 throw std::logic_error("Scenario steering rejected tick-start state");
             state.world.each<Position, Velocity, SampleId>([&](Position& position, Velocity& velocity, const SampleId& id) {
                 if (state.Activity(id) != SampleActivity::mobile) return;
