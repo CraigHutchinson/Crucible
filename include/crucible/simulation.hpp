@@ -6,6 +6,7 @@
 #include <crucible/contracts/StateCopy.hpp>
 #include <crucible/contracts/SteeringSettings.hpp>
 #include <crucible/contracts/ResourceSettings.hpp>
+#include "crucible/contracts/tick_statistics.hpp"
 #include <sub0ecs/sub0ecs.hpp>
 #include <cstddef>
 #include <memory>
@@ -24,6 +25,7 @@ public:
         std::optional<SteeringSettings> steering{};
         std::optional<ResourceSettings> resources{}; ///< Enables finite reclamation; absent preserves legacy spread.
         std::optional<StructuralSettings> structural{}; ///< Unit-mass fixed-identity relay mode; requires resources.
+        bool observeTimings{}; ///< Explicit CPU attribution arm; disabled ordinary/timing comparison path.
     };
 
     /// Legacy ECS-only workload; no fields, grid or Blight state is constructed.
@@ -39,6 +41,11 @@ public:
     Simulation& operator=(Simulation&&) = delete;
 
     void tick();
+    /** Copies phase timing for the last successfully committed observed tick.
+     * @return Absent when attribution is disabled, before the first tick or after a failed tick.
+     * @note Exclusive coordinator access; no storage borrow escapes.
+     */
+    [[nodiscard]] std::optional<TickStatistics> getTickStatistics() const noexcept;
     [[nodiscard]] double checksum();
     /// Boundary-only field application; false leaves field slots unchanged. The
     /// legacy workload has zero slots and rejects every edit.

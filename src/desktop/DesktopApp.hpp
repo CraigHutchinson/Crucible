@@ -34,6 +34,7 @@ public:
         float toolMagnitude{4.0F}; ///< Shared live/script force magnitude.
         presentation::desktop::ScenePainter::ViewPolicy viewPolicy{presentation::desktop::ScenePainter::ViewPolicy::exact}; ///< Consumed view-only representation.
         PresentationMode presentationMode{PresentationMode::sdl}; ///< Checked mode requires the concrete native capability.
+        runtime::InspectorSession::ObservationSettings observations{}; ///< Bounded receiving rows; ordinary launch remains disabled.
     };
     /** Copies timing from one production iteration without retaining frame storage.
      * Durations describe CPU call intervals only; GPU completion is separate.

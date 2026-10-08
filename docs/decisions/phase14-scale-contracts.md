@@ -123,6 +123,25 @@ No simulation LOD, approximate geometry or neighbor cap enters this decision.
 
 ## C4 observation and workload policy
 
+G0a receiving refinement, 2026-10-08: the short native probes expose simulation
+as the dominant cost. InspectorSession owns startup-bounded integrated
+`TickObservation` storage, disabled at capacity0. One successful StepGraph call
+records run/tick, applied-command count and its complete boundary interval, from
+before command service through snapshot/mission publication. Never derive tick
+percentiles by dividing a multi-tick pump duration. Records append an immutable
+prefix; counted drops block acceptance, successful restart resets storage/identity,
+and failed or paused boundaries add no successful row. Positive capacity on the
+direct comparator is rejected because it captures once per pump, not per boundary.
+
+Optional Simulation phase clocks are a separate explicit attribution arm:
+gather/sort, index rebuild, proposals, ECS commit, resources and final spatial
+rebuild, plus actual row/query/storage counts. Disabled phase clocks return absent
+statistics. Baseline and candidate acceptance arms use identical outer observation
+capacity and leave phase clocks disabled; stage instrumentation overhead must be
+qualified independently. The observed PR29 control preserves its Simulation,
+Spatial and Swarm source bytes and rejects unsupported stage attribution. These
+copied values add no worker/storage borrow or Core-to-Runtime dependency.
+
 Root defines numeric copied observations; B owns the capture schema/harness. No
 logging thread traverses Simulation/Spatial or stores borrowed spans. Hot observations
 use startup-bounded storage with counted drops; output/JSON serialization is cold.

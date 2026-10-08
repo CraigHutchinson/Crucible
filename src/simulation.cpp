@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <chrono>
 #include <exception>
 #include <limits>
 #include <stdexcept>
@@ -65,6 +66,7 @@ struct Simulation::ScenarioState {
     std::vector<spatial::SpatialSample> samples;
     std::vector<SampleState> tick_input, next_state;
     std::vector<SampleId> queryScratch; ///< Coordinator-owned complete-result scratch for the immutable row seam.
+    std::optional<TickStatistics> tickStatistics; ///< Only successfully committed explicit attribution observations.
     std::vector<SampleActivity> activities;
     std::optional<StructuralState> structural;
 
@@ -116,6 +118,17 @@ void Simulation::tick() {
         throw std::overflow_error("Simulation tick identity exhausted");
     if (scenario_) {
         auto& state = *scenario_;
+        state.tickStatistics.reset();
+        const bool observed = state.options.observeTimings;
+        using Clock = std::chrono::steady_clock;
+        auto phaseBegin = observed ? Clock::now() : Clock::time_point{};
+        TickStatistics statistics;
+        const auto finishPhase = [&](std::chrono::nanoseconds& destination) {
+            if (!observed) return;
+            const auto end = Clock::now();
+            destination = std::chrono::duration_cast<std::chrono::nanoseconds>(end - phaseBegin);
+            phaseBegin = end;
+        };
         if (state.steering) {
             std::size_t index = 0;
             state.world.each<Position, Velocity, SampleId>([&](const Position& position, const Velocity& velocity, const SampleId& id) {
@@ -126,15 +139,23 @@ void Simulation::tick() {
             std::ranges::sort(input, {}, &SampleState::id);
             for (std::size_t i = 0; i < index; ++i)
                 state.samples[i] = {state.tick_input[i].id, state.tick_input[i].position};
-            if (!state.grid.TryRebuild(std::span{state.samples}.first(index)) ||
-                !state.steering->tryComputeRows(input, state.fields, state.grid, 0, output, state.queryScratch))
+            statistics.inputRows = index;
+            finishPhase(statistics.gather);
+            if (!state.grid.TryRebuild(std::span{state.samples}.first(index)))
+                throw std::logic_error("Scenario spatial index rejected tick-start state");
+            finishPhase(statistics.index);
+            if (!state.steering->tryComputeRows(input, state.fields, state.grid, 0, output, state.queryScratch))
                 throw std::logic_error("Scenario steering rejected tick-start state");
+            statistics.queryRows = index;
+            statistics.queryScratchCapacity = state.queryScratch.size();
+            finishPhase(statistics.propose);
             state.world.each<Position, Velocity, SampleId>([&](Position& position, Velocity& velocity, const SampleId& id) {
                 if (state.Activity(id) != SampleActivity::mobile) return;
                 const auto sample = std::ranges::lower_bound(output, id, {}, &SampleState::id);
                 position = sample->position;
                 velocity = sample->velocity;
             });
+            finishPhase(statistics.commit);
         } else {
             state.world.each<Position, Velocity, SampleId>([&](Position& position, Velocity& velocity, const SampleId& id) {
                 if (state.Activity(id) != SampleActivity::mobile) return;
@@ -150,6 +171,7 @@ void Simulation::tick() {
                 position.y = static_cast<float>(std::clamp(static_cast<double>(position.y) +
                     static_cast<double>(velocity.y) * tick_seconds, 0.0, static_cast<double>(state.extent.height)));
             });
+            finishPhase(statistics.commit);
         }
         if (state.reclamation) {
             std::size_t index = 0;
@@ -164,17 +186,27 @@ void Simulation::tick() {
         } else {
             state.blight.Step();
         }
+        finishPhase(statistics.resources);
         RebuildSpatial();
         ++completed_ticks_;
         if (state.structural && state.structural->occupied &&
             state.structural->hold_ticks != std::numeric_limits<std::uint64_t>::max())
             ++state.structural->hold_ticks;
+        finishPhase(statistics.rebuild);
+        if (observed) {
+            statistics.completedTick = completed_ticks_;
+            statistics.occupiedCells = state.grid.GetOccupiedCellCount();
+            state.tickStatistics = statistics;
+        }
         return;
     }
     world_.each<Position, Velocity>([](Position& position, const Velocity& velocity) {
         swarm::integrate_position(position, velocity);
     });
     ++completed_ticks_;
+}
+std::optional<TickStatistics> Simulation::getTickStatistics() const noexcept {
+    return scenario_ ? scenario_->tickStatistics : std::nullopt;
 }
 double Simulation::checksum() {
     double sum = 0.0;
