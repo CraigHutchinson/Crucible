@@ -1,6 +1,6 @@
 # Scheduling workstream — W7
 
-Phase14 proposed first consumer: Simulation synchronously executes an untimed
+Phase14 provider: Simulation synchronously executes an untimed
 partition graph over immutable input; workerA owns this adapter and its independent
 join/dispatch/failure tests. Root retains outer Runtime graph and shared wiring.
 Priority pool storage/failure guarantees require G0b receiving; fixed workers
@@ -14,7 +14,7 @@ Own executor adaptation, phase access sets, work partitioning and CPU/device com
 See the [application responsibility map](../hierarchy-boundaries.md) for defining owners,
 read/write sets, lifetimes, bounded progress and cross-project handoffs.
 
-Reserved build boundary (INTERFACE target); algorithms and public APIs are pending.
+Concrete STATIC target: RowPartitions owns the startup-bounded synchronous row graph. Provider Debug/Release receiving passed; root production, platform and physical-budget receiving remains separate.
 
 ## Scope and first task
 

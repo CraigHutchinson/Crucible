@@ -1,2 +1,2 @@
-crucible_add_workstream(crucible_scheduling Scheduling)
-target_link_libraries(crucible_scheduling INTERFACE Crucible::Contracts)
+crucible_add_workstream(crucible_scheduling Scheduling row_partitions.cpp)
+target_link_libraries(crucible_scheduling PUBLIC Crucible::Contracts PRIVATE Sub0Pipeline::Priority)

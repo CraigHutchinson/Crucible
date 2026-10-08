@@ -1,2 +1,14 @@
-# Own scheduling test sources, executables and add_test registrations here.
-# Apply LABELS scheduling; this file is included only with BUILD_TESTING enabled.
+add_executable(crucible_row_partitions_tests test_row_partitions.cpp)
+target_link_libraries(crucible_row_partitions_tests PRIVATE Crucible::Scheduling)
+add_test(NAME scheduling_row_partitions COMMAND crucible_row_partitions_tests)
+set_tests_properties(scheduling_row_partitions PROPERTIES LABELS "scheduling;pipeline" TIMEOUT 30)
+
+add_executable(crucible_row_floating_point_tests test_row_floating_point.cpp)
+target_link_libraries(crucible_row_floating_point_tests PRIVATE Crucible::Scheduling Crucible::Swarm Crucible::Fields Crucible::Spatial)
+add_test(NAME scheduling_row_floating_point COMMAND crucible_row_floating_point_tests)
+set_tests_properties(scheduling_row_floating_point PROPERTIES LABELS "scheduling;swarm;spatial;pipeline" TIMEOUT 30)
+
+add_executable(crucible_row_allocation_tests test_row_allocations.cpp)
+target_link_libraries(crucible_row_allocation_tests PRIVATE Crucible::Scheduling)
+add_test(NAME scheduling_row_allocations COMMAND crucible_row_allocation_tests)
+set_tests_properties(scheduling_row_allocations PROPERTIES LABELS "scheduling;pipeline" TIMEOUT 30)
