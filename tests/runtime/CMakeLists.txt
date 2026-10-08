@@ -1,4 +1,8 @@
 add_executable(crucible_runtime_tests headless.cpp)
+add_executable(crucible_scenario_settings_tests test_scenario_settings.cpp)
+target_link_libraries(crucible_scenario_settings_tests PRIVATE Crucible::Runtime Crucible::Presentation)
+add_test(NAME runtime_scenario_settings COMMAND crucible_scenario_settings_tests)
+set_tests_properties(runtime_scenario_settings PROPERTIES LABELS "runtime;presentation;scale" TIMEOUT 180)
 target_link_libraries(crucible_runtime_tests PRIVATE Crucible::Runtime)
 add_test(NAME runtime_headless COMMAND crucible_runtime_tests)
 set_tests_properties(runtime_headless PROPERTIES LABELS runtime)

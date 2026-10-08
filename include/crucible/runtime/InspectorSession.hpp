@@ -1,6 +1,7 @@
 #pragma once
 #include <crucible/runtime/ClockDriver.hpp>
 #include <crucible/contracts/ReclamationMission.hpp>
+#include "crucible/contracts/scenario_settings.hpp"
 #include <memory>
 namespace crucible::runtime { class RuntimeDiagnostics; }
 namespace crucible::presentation { class ScenarioSnapshot; }
@@ -29,6 +30,20 @@ public:
     explicit InspectorSession(std::size_t samples = 2048,
         HeadlessSession::Limits limits = {64, 4096},
         std::optional<ReclamationMissionSettings> mission = std::nullopt, bool structural = false,
+        ExecutionPath execution = ExecutionPath::integrated,
+        Diagnostics diagnostics = Diagnostics::disabled);
+    /** Allocates a complete owned scenario from one authoritative startup value.
+     * @param scenario Fixed geometry, population, fields and resource/steering rules.
+     * @param limits Pending command and completed trace capacities.
+     * @param mission Optional quota policy; omission leaves scale scenarios evolving.
+     * @param execution Integrated production path or direct receiving comparator.
+     * @param diagnostics Optional bounded outcome sink, with the existing failure policy.
+     * @throws std::invalid_argument Invalid geometry, capacities or mission settings.
+     * @note Coordinator-only; restart constructs the same scenario before replacement.
+     */
+    explicit InspectorSession(ScenarioSettings scenario,
+        HeadlessSession::Limits limits = {64, 4096},
+        std::optional<ReclamationMissionSettings> mission = std::nullopt,
         ExecutionPath execution = ExecutionPath::integrated,
         Diagnostics diagnostics = Diagnostics::disabled);
     ~InspectorSession();
@@ -63,13 +78,17 @@ public:
     [[nodiscard]] std::span<const AppliedCommand> GetTrace() const noexcept;
     /// Optional sink borrow expires on destruction; decode only while the coordinator is idle.
     [[nodiscard]] const RuntimeDiagnostics* GetDiagnostics() const noexcept;
+    /** Identifies the current run independently of completed tick and trace indices.
+     * @return Nonzero session-local identity; increments only after a successful restart.
+     * @note Coordinator-only observation; no storage borrow is returned.
+     */
+    [[nodiscard]] constexpr std::uint64_t getRunId() const noexcept { return run_id_; }
 private:
     struct Run;
     [[nodiscard]] CommandIngress::Admission AdmitCommand(const BoundaryCommand& command);
-    const std::size_t samples_;
+    const ScenarioSettings scenarioSettings_;
     const HeadlessSession::Limits limits_;
     const std::optional<ReclamationMissionSettings> mission_;
-    const bool structural_;
     const ExecutionPath execution_;
     std::uint64_t run_id_{1};
     std::unique_ptr<Run> run_;

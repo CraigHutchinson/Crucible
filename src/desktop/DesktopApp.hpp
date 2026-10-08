@@ -18,6 +18,26 @@ namespace crucible::desktop {
 class DesktopApp {
 public:
     enum class WindowMode { windowed, fullscreen };
+    /** Owns consumed desktop startup policy around the platform-free scenario.
+     * Omit mission for a continuously evolving inspector. Restart retains this policy.
+     */
+    struct StartupSettings {
+        ScenarioSettings scenario{}; ///< Authoritative population/geometry/capacity.
+        std::optional<ReclamationMissionSettings> mission{ReclamationMissionSettings{}}; ///< Session quota policy.
+        runtime::InspectorSession::Diagnostics diagnostics{runtime::InspectorSession::Diagnostics::disabled}; ///< Optional outcome sink.
+        WindowMode windowMode{WindowMode::windowed}; ///< Reversible initial display policy.
+        float toolRadius{8.0F}; ///< Radial radius and FLOW corridor half-width in world units.
+        float toolMagnitude{4.0F}; ///< Shared live/script force magnitude.
+    };
+    /** Copies timing from one production iteration without retaining frame storage.
+     * Durations describe CPU call intervals only; GPU completion is separate.
+     */
+    struct FrameStatistics {
+        std::uint64_t frameId{}, runId{}, completedTick{};
+        std::chrono::nanoseconds service{}, pump{}, draw{}, present{};
+        std::size_t advancedTicks{};
+        bool presented{}; ///< Native presentation call returned; not successful scanout proof.
+    };
     /** Allocates the reference challenge and SDL window/renderer.
      * @param[in] mission Positive quota/deadline tuning within startup substrate stock.
      * @param[in] structural Enables the fixed relay challenge.
@@ -30,6 +50,12 @@ public:
     explicit DesktopApp(ReclamationMissionSettings mission = {}, bool structural = false,
         runtime::InspectorSession::Diagnostics diagnostics = runtime::InspectorSession::Diagnostics::disabled,
         WindowMode window_mode = WindowMode::windowed);
+    /** Allocates receivers from the same validated scenario used by the session.
+     * @param settings Scenario, optional mission and consumed tool/window policy.
+     * @throws std::invalid_argument Invalid scenario or tool settings; startup errors propagate.
+     * @note Coordinator-owned SDL lifetime; the toolbar currently requires four field slots.
+     */
+    explicit DesktopApp(StartupSettings settings);
     ~DesktopApp();
     DesktopApp(const DesktopApp&) = delete;
     DesktopApp& operator=(const DesktopApp&) = delete;
@@ -49,6 +75,16 @@ public:
     [[nodiscard]] const presentation::Camera2D& GetCamera() const noexcept { return camera_; }
     [[nodiscard]] std::optional<FieldEdit> GetPreview() const noexcept { return preview_ ? preview_ : admitted_preview_; }
     [[nodiscard]] SDL_Window& GetWindow() const noexcept { return *window_; }
+    /** Returns the native renderer for the coordinator's completion-observation receiver.
+     * @return Renderer owned by this app, valid until app destruction.
+     * @note No worker may retain or access this borrow.
+     */
+    [[nodiscard]] SDL_Renderer& getRenderer() const noexcept { return *renderer_; }
+    /** Copies the latest iteration's CPU timings and frame identity.
+     * @return Completed call intervals, with presented false for skipped iterations.
+     * @note Coordinator-only; GPU completion and physical scanout are not inferred.
+     */
+    [[nodiscard]] FrameStatistics getFrameStatistics() const noexcept { return frameStatistics_; }
 private:
     struct WindowDelete { void operator()(SDL_Window* p) const noexcept { SDL_DestroyWindow(p); } };
     struct RendererDelete { void operator()(SDL_Renderer* p) const noexcept { SDL_DestroyRenderer(p); } };
@@ -63,8 +99,11 @@ private:
     std::unique_ptr<SDL_Window, WindowDelete> window_;
     std::unique_ptr<SDL_Renderer, RendererDelete> renderer_;
     runtime::InspectorSession session_;
-    presentation::Camera2D camera_{{64, 32, 1.0F}, {24, 96, 1232, 520}};
-    presentation::desktop::ScenePainter painter_{2048, 2048};
+    presentation::Camera2D camera_;
+    presentation::desktop::ScenePainter painter_;
+    const float toolRadius_, toolMagnitude_;
+    FrameStatistics frameStatistics_{};
+    std::uint64_t frameId_{};
     presentation::FieldTool tool_{presentation::FieldTool::attract};
     std::size_t slot_{};
     std::optional<FieldEdit> preview_;

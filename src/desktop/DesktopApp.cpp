@@ -5,6 +5,7 @@
 
 #include "crucible/presentation/desktop/SceneUi.hpp"
 #include "crucible/presentation/FieldTool.hpp"
+#include "crucible/presentation/ScenarioSnapshot.hpp"
 #include "desktop/DesktopApp.hpp"
 #if CRUCIBLE_ENABLE_DIAGNOSTICS
 #include <iostream>
@@ -14,6 +15,14 @@
 namespace crucible::desktop {
 namespace {
 void Check(bool ok) { if (!ok) throw std::runtime_error(SDL_GetError()); }
+std::size_t requireCells(const DesktopApp::StartupSettings& settings) {
+    const auto extent = settings.scenario.grid.TryValidate();
+    if (!extent || settings.scenario.fieldCapacity != 4 ||
+        !std::isfinite(settings.toolRadius) || settings.toolRadius <= 0 ||
+        !std::isfinite(settings.toolMagnitude) || settings.toolMagnitude < 0)
+        throw std::invalid_argument("Invalid desktop scenario or tool settings");
+    return extent->cells;
+}
 std::string_view StructuralFeedback(StructuralCommandResult result) noexcept {
     switch (result) {
     case StructuralCommandResult::applied: return "Structure action applied at completed boundary";
@@ -29,12 +38,22 @@ std::string_view StructuralFeedback(StructuralCommandResult result) noexcept {
 }
 DesktopApp::DesktopApp(ReclamationMissionSettings mission, bool structural,
         runtime::InspectorSession::Diagnostics diagnostics, WindowMode window_mode)
-    : session_(2048, {64, 4096}, mission, structural,
-          runtime::InspectorSession::ExecutionPath::integrated, diagnostics), structural_(structural) {
-    if (diagnostics == runtime::InspectorSession::Diagnostics::bounded && !session_.GetDiagnostics())
+    : DesktopApp(StartupSettings{.scenario = ScenarioSettings{
+          .structural = structural ? std::optional{StructuralSettings{}} : std::nullopt},
+          .mission = mission, .diagnostics = diagnostics, .windowMode = window_mode}) {}
+DesktopApp::DesktopApp(StartupSettings settings)
+    : session_(settings.scenario, {64, 4096}, settings.mission,
+          runtime::InspectorSession::ExecutionPath::integrated, settings.diagnostics),
+      camera_(settings.scenario.grid, {24, 96, 1232, 520}),
+      painter_(settings.scenario.population, requireCells(settings)),
+      toolRadius_(settings.toolRadius), toolMagnitude_(settings.toolMagnitude),
+      structural_(settings.scenario.structural.has_value()) {
+    if (settings.diagnostics == runtime::InspectorSession::Diagnostics::bounded && !session_.GetDiagnostics())
         SDL_Log("Bounded diagnostics unavailable; continuing without outcome logging");
     if (structural_) message_ = "Gather 64 at relay, F fuse, X shatter; quota plus 120 held ticks wins";
-    window_.reset(SDL_CreateWindow(structural_ ? "Crucible - secure the relay" : "Crucible - reclamation challenge",
+    if (!settings.mission) message_ = "Living swarm: FLOW / attract / repel, pause and restart";
+    window_.reset(SDL_CreateWindow(structural_ ? "Crucible - secure the relay" :
+        (settings.mission ? "Crucible - reclamation challenge" : "Crucible - living swarm"),
         presentation::desktop::CanvasWidth, presentation::desktop::CanvasHeight,
         SDL_WINDOW_RESIZABLE | SDL_WINDOW_HIGH_PIXEL_DENSITY));
     Check(static_cast<bool>(window_));
@@ -48,7 +67,7 @@ DesktopApp::DesktopApp(ReclamationMissionSettings mission, bool structural,
         presentation::desktop::CanvasHeight, SDL_LOGICAL_PRESENTATION_LETTERBOX));
     // Best effort pacing: software/dummy renderers may not support vertical sync.
     static_cast<void>(SDL_SetRenderVSync(renderer_.get(), 1));
-    if (window_mode == WindowMode::fullscreen) setFullscreen(true);
+    if (settings.windowMode == WindowMode::fullscreen) setFullscreen(true);
     baseline_ = std::chrono::steady_clock::now();
 }
 void DesktopApp::setFullscreen(bool enabled) {
@@ -88,13 +107,13 @@ void DesktopApp::Preview(presentation::ScreenPoint point) {
     if (tool_ == presentation::FieldTool::flow) {
         if (flow_start_) {
             const auto world = camera_.TryToWorld(point);
-            preview_ = world ? presentation::TryBuildFieldEdit({tool_, slot_, 8, 4}, *flow_start_, 4, *world)
+            preview_ = world ? presentation::TryBuildFieldEdit({tool_, slot_, toolRadius_, toolMagnitude_}, *flow_start_, 4, *world)
                              : std::nullopt;
         }
         return;
     }
     if (const auto world = camera_.TryToWorld(point))
-        preview_ = presentation::TryBuildFieldEdit({tool_, slot_, 8, 4}, *world, 4);
+        preview_ = presentation::TryBuildFieldEdit({tool_, slot_, toolRadius_, toolMagnitude_}, *world, 4);
     else if (!admission_ || admission_->status == runtime::CommandIngress::AdmissionStatus::accepted)
         preview_.reset();
 }
@@ -202,7 +221,7 @@ SDL_AppResult DesktopApp::HandleEvent(const SDL_Event& event) {
                 if (tool_ == presentation::FieldTool::flow) {
                     CancelGesture();
                     if (session_.GetStatus() != runtime::ClockDriver::Status::closed) flow_start_ = *world;
-                } else if (const auto edit = presentation::TryBuildFieldEdit({tool_, slot_, 8, 4}, *world, 4)) Admit(*edit);
+                } else if (const auto edit = presentation::TryBuildFieldEdit({tool_, slot_, toolRadius_, toolMagnitude_}, *world, 4)) Admit(*edit);
             }
         }
     } else if (event.type == SDL_EVENT_MOUSE_BUTTON_UP && event.button.button == SDL_BUTTON_MIDDLE) {
@@ -212,7 +231,7 @@ SDL_AppResult DesktopApp::HandleEvent(const SDL_Event& event) {
         const auto world = camera_.TryToWorld(ToLogical(event.button.x, event.button.y));
         CancelGesture();
         if (world) {
-            if (const auto edit = presentation::TryBuildFieldEdit({tool_, slot_, 8, 4}, start, 4, *world)) Admit(*edit);
+            if (const auto edit = presentation::TryBuildFieldEdit({tool_, slot_, toolRadius_, toolMagnitude_}, start, 4, *world)) Admit(*edit);
         }
     } else if (event.type == SDL_EVENT_MOUSE_MOTION) {
         const auto point = ToLogical(event.motion.x, event.motion.y);
@@ -231,12 +250,17 @@ SDL_AppResult DesktopApp::HandleEvent(const SDL_Event& event) {
 }
 SDL_AppResult DesktopApp::Iterate() {
     const auto now = std::chrono::steady_clock::now();
+    frameStatistics_ = {.frameId = ++frameId_, .runId = session_.getRunId()};
     const auto elapsed = std::chrono::duration_cast<std::chrono::nanoseconds>(now - baseline_);
     baseline_ = now;
     int width{}, height{};
     Check(SDL_GetRenderOutputSize(renderer_.get(), &width, &height));
     if (suspended_ || width <= 0 || height <= 0) return SDL_APP_CONTINUE;
-    static_cast<void>(session_.TryPump(elapsed));
+    const auto pumpBegin = std::chrono::steady_clock::now();
+    const auto pumpResult = session_.TryPump(elapsed);
+    const auto pumpEnd = std::chrono::steady_clock::now();
+    frameStatistics_.pump = pumpEnd - pumpBegin;
+    frameStatistics_.advancedTicks = pumpResult.advanced_ticks;
     // Rejected admission feedback cannot obscure retirement of an earlier accepted preview.
     if (admitted_preview_ && session_.GetTrace().size() >= admitted_sequence_) {
         admitted_preview_.reset(); admitted_sequence_ = 0;
@@ -288,8 +312,16 @@ SDL_AppResult DesktopApp::Iterate() {
         session_.GetStatus() == runtime::ClockDriver::Status::paused,
         session_.GetStatus() == runtime::ClockDriver::Status::blocked, tool_, slot_, GetPreview(), message, mission,
         (SDL_GetWindowFlags(window_.get()) & SDL_WINDOW_FULLSCREEN) != 0};
+    const auto drawBegin = std::chrono::steady_clock::now();
     Check(painter_.TryDraw(*renderer_, session_.GetSnapshot(), camera_, ui));
+    const auto drawEnd = std::chrono::steady_clock::now();
     Check(SDL_RenderPresent(renderer_.get()));
+    const auto end = std::chrono::steady_clock::now();
+    frameStatistics_.draw = drawEnd - drawBegin;
+    frameStatistics_.present = end - drawEnd;
+    frameStatistics_.service = end - now;
+    frameStatistics_.presented = true;
+    frameStatistics_.completedTick = session_.GetSnapshot().GetInfo()->completed_tick;
     return SDL_APP_CONTINUE;
 }
 }

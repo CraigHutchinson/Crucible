@@ -9,7 +9,15 @@
 #include <crucible/simulation.hpp>
 #include <stdexcept>
 namespace crucible::runtime {
+namespace {
+GridExtent requireExtent(GridConfig grid) {
+    const auto extent = grid.TryValidate();
+    if (!extent) throw std::invalid_argument("Invalid inspector scenario geometry");
+    return *extent;
+}
+}
 struct InspectorSession::Run {
+    const GridExtent extent;
     Simulation simulation;
     HeadlessSession session;
     std::optional<ReclamationMissionProgress> mission, pending_mission;
@@ -18,18 +26,19 @@ struct InspectorSession::Run {
     std::unique_ptr<presentation::ScenarioSnapshot> direct_frame;
     std::unique_ptr<BoundaryPipeline> graph;
     ClockDriver clock;
-    Run(std::size_t samples, HeadlessSession::Limits limits,
-            std::optional<ReclamationMissionSettings> settings, bool structural,
+    Run(const ScenarioSettings& scenario, HeadlessSession::Limits limits,
+            std::optional<ReclamationMissionSettings> settings,
             ExecutionPath execution, std::uint64_t run_id)
-        : simulation(samples, {{64, 32, 1.0F}, 4, SteeringSettings{}, ResourceSettings{},
-              structural ? std::optional{StructuralSettings{}} : std::nullopt}),
+        : extent(requireExtent(scenario.grid)),
+          simulation(scenario.population, {scenario.grid, scenario.fieldCapacity,
+              scenario.steering, scenario.resources, scenario.structural}),
           session(simulation, limits),
           delivery(execution == ExecutionPath::integrated
               ? std::make_unique<IntentDelivery>(session.GetIngress(), run_id) : nullptr),
           direct_frame(execution == ExecutionPath::direct
-              ? std::make_unique<presentation::ScenarioSnapshot>(samples, 4, 2048) : nullptr),
+              ? std::make_unique<presentation::ScenarioSnapshot>(scenario.population, scenario.fieldCapacity, extent.cells) : nullptr),
           graph(execution == ExecutionPath::integrated
-              ? std::make_unique<BoundaryPipeline>(session, simulation, samples, 4, 2048,
+              ? std::make_unique<BoundaryPipeline>(session, simulation, scenario.population, scenario.fieldCapacity, extent.cells,
                     [this](const auto& frame) { return mission ? StageMission(frame) : false; }) : nullptr),
           clock(session, graph ? std::function<bool()>{[this] { return graph->IsTerminal(); }}
               : (settings ? std::function<bool()>{[this] {
@@ -94,9 +103,16 @@ struct InspectorSession::Run {
 InspectorSession::InspectorSession(std::size_t samples, HeadlessSession::Limits limits,
         std::optional<ReclamationMissionSettings> mission, bool structural, ExecutionPath execution,
         Diagnostics diagnostics)
-    : samples_(samples), limits_(limits), mission_(structural && !mission ? std::optional{ReclamationMissionSettings{}} : mission),
-      structural_(structural), execution_(execution),
-      run_(std::make_unique<Run>(samples, limits, mission_, structural, execution, run_id_)) {
+    : InspectorSession(ScenarioSettings{.population = samples,
+          .structural = structural ? std::optional{StructuralSettings{}} : std::nullopt},
+          limits, structural && !mission ? std::optional{ReclamationMissionSettings{}} : mission,
+          execution, diagnostics) {}
+InspectorSession::InspectorSession(ScenarioSettings scenario, HeadlessSession::Limits limits,
+        std::optional<ReclamationMissionSettings> mission, ExecutionPath execution,
+        Diagnostics diagnostics)
+    : scenarioSettings_(scenario), limits_(limits), mission_(mission),
+      execution_(execution),
+      run_(std::make_unique<Run>(scenarioSettings_, limits, mission_, execution, run_id_)) {
 #if CRUCIBLE_ENABLE_DIAGNOSTICS
     if (diagnostics == Diagnostics::bounded) {
         try { diagnostics_ = std::make_unique<RuntimeDiagnostics>(); }
@@ -164,7 +180,7 @@ void InspectorSession::Close() { run_->clock.Close(); }
 void InspectorSession::Restart() {
     if (run_id_ == std::numeric_limits<std::uint64_t>::max())
         throw std::overflow_error("inspector run identifier exhausted");
-    auto replacement = std::make_unique<Run>(samples_, limits_, mission_, structural_, execution_, run_id_ + 1);
+    auto replacement = std::make_unique<Run>(scenarioSettings_, limits_, mission_, execution_, run_id_ + 1);
     run_->clock.Close();
     run_.swap(replacement);
     ++run_id_;

@@ -224,7 +224,7 @@ void MissionEvents() {
     using Status = crucible::runtime::ClockDriver::Status;
     using Outcome = crucible::ReclamationMissionOutcome;
     for (const auto target : {5ULL, 6ULL}) {
-        crucible::desktop::DesktopApp app{{target, 1}};
+        crucible::desktop::DesktopApp app{crucible::ReclamationMissionSettings{target, 1}};
         SDL_Delay(20);
         Require(app.Iterate() == SDL_APP_CONTINUE, "terminal mission draws through native adapter");
         const auto mission = app.GetSession().GetMission();

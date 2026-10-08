@@ -20,6 +20,12 @@ G0a query/row/scenario/provider ownership is frozen in the decision; current
 Pipeline allocation/submission failure risks block parallel adoption until an
 upstream independently received fix. Status: Wave1 provider implementation next.
 
+| Wave1 owner | Base/branch/worktree | Exclusive edit claim | Resource and gate |
+|---|---|---|---|
+| foundation_review / A | `0bfb0d2`, phase14-kernel, `.worktrees/phase14-kernel` | Spatial/Swarm include/src/tests/local manifests and owned docs | No heavy build/CPU until root reservation; sequential seam parity before upstream executor adoption |
+| consumer_review / B | `0bfb0d2`, phase14-frame, `.worktrees/phase14-frame` | Presentation include/src/tests/local manifests/docs; phase14-named harness/scripts | No heavy build/device until root reservation; preserve2K pixels, scalable native query/capture prerequisites |
+| architect/root | phase14-large-swarm, primary checkout | Contracts/Simulation/Runtime/DesktopApp/main and every shared manifest/pin/CI/doc | Owns serial compile/test/native/measurement; all provider changes through exact handoffs |
+
 ## Phase 14 major milestone planning, 2026-10-07
 
 Architect/root reviews clean main `9e7fed990c404e95ab25e699090996aeec048040`
