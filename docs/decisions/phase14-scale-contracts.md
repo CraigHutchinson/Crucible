@@ -93,6 +93,12 @@ at startup. Simulation owns complete query scratch per partition: memory is
 P*N*sizeof(SampleId), plus fixed task/range metadata. Whole-input validation per
 partition remains part of measured cost; no unchecked query API is implied.
 
+Pool jobs may invoke the same startup-owned callable target concurrently. Its
+captured context must outlive the adapter, and epoch input/output/scratch remain
+valid through joined return. Only each job's assigned destination range and
+partition scratch may be mutated. Coordinator calls are exclusive and non-reentrant;
+no callable may recursively tryRun, restart or replace the run.
+
 Run outcomes distinguish complete, invalid rows, unsupported floating-point mode
 and failed work. Capture the coordinator environment per run; pool jobs install
 and restore worker fenv and received x86 rounding/FTZ/DAZ controls before returning
@@ -103,6 +109,9 @@ unsupported FP may request sequential recomputation before ECS commit. Submissio
 callback or graph failures dominate that status and retain existing fail-stop
 behavior. Never disguise rejection as a floating-point fallback. All accepted
 bodies, completion callbacks and callable targets finish before any return.
+Failure to restore a saved worker environment is failed work and poisons the
+adapter against subsequent dispatch, including when another partition reports an
+unsupported install. Sequential recomputation cannot repair a persistent worker.
 G1 receives standard rounding modes and supported denormal controls/restoration;
 G2 receives startup/first/warm storage, partial failure joins, reuse and destruction.
 No public borrowed-executor overload or test-only production knob is introduced.
