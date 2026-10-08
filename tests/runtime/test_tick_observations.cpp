@@ -54,6 +54,18 @@ int main() {
     boundaryOnly.Close();
     require(boundaryOnly.TryPump(interval).advanced_ticks == 0 && boundaryOnly.getTickObservations().size() == 4);
 
+    Session limited{settings, {4, 1}, std::nullopt, Session::ExecutionPath::integrated,
+        Session::Diagnostics::disabled, {4, true}};
+    require(limited.TryAdmitFieldEdit(edit).status == runtime::CommandIngress::AdmissionStatus::accepted);
+    require(limited.TryPump(interval).advanced_ticks == 1);
+    const auto goodBoundary = limited.getTickObservations().front();
+    require(limited.TryAdmitFieldEdit(edit).status == runtime::CommandIngress::AdmissionStatus::accepted);
+    const auto blocked = limited.TryPump(interval);
+    require(blocked.advanced_ticks == 0 && blocked.status == runtime::ClockDriver::Status::blocked);
+    require(limited.GetSnapshot().GetInfo()->completed_tick == 1);
+    require(limited.getTickObservations().size() == 1 && limited.getDroppedTickObservations() == 0);
+    require(limited.getTickObservations().front().boundary == goodBoundary.boundary);
+
     for (const bool stages : {false, true}) {
         bool rejected{};
         try {

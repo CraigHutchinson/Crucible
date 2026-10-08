@@ -114,11 +114,11 @@ void Simulation::RebuildSpatial() {
 }
 
 void Simulation::tick() {
+    if (scenario_) scenario_->tickStatistics.reset();
     if (completed_ticks_ == std::numeric_limits<std::uint64_t>::max())
         throw std::overflow_error("Simulation tick identity exhausted");
     if (scenario_) {
         auto& state = *scenario_;
-        state.tickStatistics.reset();
         const bool observed = state.options.observeTimings;
         using Clock = std::chrono::steady_clock;
         auto phaseBegin = observed ? Clock::now() : Clock::time_point{};
