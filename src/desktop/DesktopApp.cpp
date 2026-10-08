@@ -3,6 +3,7 @@
 #include <SDL3/SDL.h>
 #include <stdexcept>
 #include <string_view>
+#include <utility>
 
 #include "crucible/presentation/desktop/SceneUi.hpp"
 #include "crucible/presentation/FieldTool.hpp"
@@ -100,6 +101,11 @@ DesktopApp::~DesktopApp() {
         } catch (const std::exception& error) { SDL_Log("Diagnostic export: %s", error.what()); }
     }
 #endif
+}
+bool DesktopApp::requestFrameCapture(std::string path) {
+    if (path.empty() || path.find('\0') != std::string::npos || capturePath_) return false;
+    capturePath_ = std::move(path);
+    return true;
 }
 presentation::ScreenPoint DesktopApp::ToLogical(float x, float y) const {
     float lx{}, ly{};
@@ -328,6 +334,13 @@ SDL_AppResult DesktopApp::Iterate() {
         (SDL_GetWindowFlags(window_.get()) & SDL_WINDOW_FULLSCREEN) != 0};
     const auto drawBegin = std::chrono::steady_clock::now();
     Check(painter_.TryDraw(*renderer_, session_.GetSnapshot(), camera_, ui));
+    if (capturePath_) {
+        std::unique_ptr<SDL_Surface, decltype(&SDL_DestroySurface)> capture{
+            SDL_RenderReadPixels(renderer_.get(), nullptr), SDL_DestroySurface};
+        Check(static_cast<bool>(capture));
+        Check(SDL_SaveBMP(capture.get(), capturePath_->c_str()));
+        capturePath_.reset();
+    }
     const auto drawEnd = std::chrono::steady_clock::now();
     if (checkedPresentation_) {
         const auto receipt = checkedPresentation_->present();

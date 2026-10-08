@@ -3,6 +3,7 @@
 #include <cstdint>
 #include <memory>
 #include <SDL3/SDL.h>
+#include <string>
 #include <string_view>
 
 #include "crucible/presentation/Camera2D.hpp"
@@ -98,6 +99,13 @@ public:
     [[nodiscard]] presentation::desktop::ScenePainter::DrawStatistics getDrawStatistics() const noexcept {
         return painter_.getDrawStatistics();
     }
+    /** Requests one complete world/HUD BMP before the next native presentation.
+     * @param path Owned destination; allocated by the coordinator outside measurement.
+     * @return False for an empty/embedded-null path or an existing pending request.
+     * @note Readback/file output occur in the next drawing iteration and may throw;
+     * use only a separately classified quality pass, never a performance sample.
+     */
+    [[nodiscard]] bool requestFrameCapture(std::string path);
 private:
     struct WindowDelete { void operator()(SDL_Window* p) const noexcept { SDL_DestroyWindow(p); } };
     struct RendererDelete { void operator()(SDL_Renderer* p) const noexcept { SDL_DestroyRenderer(p); } };
@@ -118,6 +126,7 @@ private:
     const float toolRadius_, toolMagnitude_;
     FrameStatistics frameStatistics_{};
     std::uint64_t frameId_{};
+    std::optional<std::string> capturePath_;
     presentation::FieldTool tool_{presentation::FieldTool::attract};
     std::size_t slot_{};
     std::optional<FieldEdit> preview_;
