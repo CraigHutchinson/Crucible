@@ -41,6 +41,7 @@ SDL_AppResult SDL_AppInit(void** state, int argc, char** argv) {
                 ? crucible::GridConfig{400, 250, 1.0F} : crucible::GridConfig{500, 300, 1.0F};
             settings.mission.reset();
             settings.toolRadius = 16.0F;
+            settings.viewPolicy = crucible::presentation::desktop::ScenePainter::ViewPolicy::densityOverview;
             settings.diagnostics = diagnostics;
             settings.windowMode = window_mode;
             *state = std::make_unique<crucible::desktop::DesktopApp>(settings).release();

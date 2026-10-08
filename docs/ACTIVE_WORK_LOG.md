@@ -22,9 +22,19 @@ upstream independently received fix. Status: Wave1 provider implementation next.
 
 | Wave1 owner | Base/branch/worktree | Exclusive edit claim | Resource and gate |
 |---|---|---|---|
-| foundation_review / A | `0bfb0d2`, phase14-kernel, `.worktrees/phase14-kernel` | Spatial/Swarm include/src/tests/local manifests and owned docs | No heavy build/CPU until root reservation; sequential seam parity before upstream executor adoption |
+| foundation_review / A | `0bfb0d2`, phase14-kernel, `.worktrees/phase14-kernel` | Spatial/Swarm include/src/tests/local manifests and owned docs | Delivered `e6b242d`; Debug7/7 and Release7/7; CPU released |
 | consumer_review / B | `0bfb0d2`, phase14-frame, `.worktrees/phase14-frame` | Presentation include/src/tests/local manifests/docs; phase14-named harness/scripts | No heavy build/device until root reservation; preserve2K pixels, scalable native query/capture prerequisites |
 | architect/root | phase14-large-swarm, primary checkout | Contracts/Simulation/Runtime/DesktopApp/main and every shared manifest/pin/CI/doc | Owns serial compile/test/native/measurement; all provider changes through exact handoffs |
+
+Shared scenario checkpoint `4e80534` receives configurable evolving100K/150K
+desktop settings and restart identity; six affected Release tests passed. Draft
+[PR30](https://github.com/CraigHutchinson/Crucible/pull/30) owns the source checkpoint.
+Root now reserves serial CPU for combined provider Release/Debug receiving.
+B authors the production capture harness source-only. A audits the independently
+claimed upstream executor prerequisite in Sub0Pipeline's `.worktrees/bounded-submission`
+at `fac58c0`; no upstream edit/build before the design checkpoint. Root alone
+owns upstream publication/pin receiving. No competing hardware timing run.
+Full combined/platform/race and physical frame gates remain open.
 
 ## Phase 14 major milestone planning, 2026-10-07
 

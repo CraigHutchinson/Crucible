@@ -28,6 +28,7 @@ public:
         WindowMode windowMode{WindowMode::windowed}; ///< Reversible initial display policy.
         float toolRadius{8.0F}; ///< Radial radius and FLOW corridor half-width in world units.
         float toolMagnitude{4.0F}; ///< Shared live/script force magnitude.
+        presentation::desktop::ScenePainter::ViewPolicy viewPolicy{presentation::desktop::ScenePainter::ViewPolicy::exact}; ///< Consumed view-only representation.
     };
     /** Copies timing from one production iteration without retaining frame storage.
      * Durations describe CPU call intervals only; GPU completion is separate.
@@ -85,6 +86,13 @@ public:
      * @note Coordinator-only; GPU completion and physical scanout are not inferred.
      */
     [[nodiscard]] FrameStatistics getFrameStatistics() const noexcept { return frameStatistics_; }
+    /** Copies representation counts from the latest successful production draw.
+     * @return Authoritative, individual, aggregated and hidden population counts.
+     * @note Coordinator-only; counts never alter simulation participation.
+     */
+    [[nodiscard]] presentation::desktop::ScenePainter::DrawStatistics getDrawStatistics() const noexcept {
+        return painter_.getDrawStatistics();
+    }
 private:
     struct WindowDelete { void operator()(SDL_Window* p) const noexcept { SDL_DestroyWindow(p); } };
     struct RendererDelete { void operator()(SDL_Renderer* p) const noexcept { SDL_DestroyRenderer(p); } };

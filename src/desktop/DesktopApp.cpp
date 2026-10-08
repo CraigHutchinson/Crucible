@@ -1,4 +1,5 @@
 #include <cmath>
+#include <limits>
 #include <SDL3/SDL.h>
 #include <stdexcept>
 #include <string_view>
@@ -45,7 +46,7 @@ DesktopApp::DesktopApp(StartupSettings settings)
     : session_(settings.scenario, {64, 4096}, settings.mission,
           runtime::InspectorSession::ExecutionPath::integrated, settings.diagnostics),
       camera_(settings.scenario.grid, {24, 96, 1232, 520}),
-      painter_(settings.scenario.population, requireCells(settings)),
+      painter_(settings.scenario.population, requireCells(settings), settings.viewPolicy),
       toolRadius_(settings.toolRadius), toolMagnitude_(settings.toolMagnitude),
       structural_(settings.scenario.structural.has_value()) {
     if (settings.diagnostics == runtime::InspectorSession::Diagnostics::bounded && !session_.GetDiagnostics())
@@ -151,7 +152,9 @@ void DesktopApp::Act(Action action) {
         break;
     case Action::restart:
         session_.Restart(); camera_.ResetFit(); CancelGesture(); admitted_preview_.reset(); admitted_sequence_ = 0; admission_.reset(); structural_admission_.reset();
-        message_ = structural_ ? "Fresh relay: gather 64, F fuse, hold 120 ticks and recover quota" : "Fresh challenge - recover biomass before the deadline";
+        message_ = structural_ ? "Fresh relay: gather 64, F fuse, hold 120 ticks and recover quota" :
+            (session_.GetMission() ? "Fresh challenge - recover biomass before the deadline" :
+                "Fresh living swarm: FLOW / attract / repel, pause and restart");
         if (suspended_) { restore_running_ = true; session_.Pause(); }
         baseline_ = std::chrono::steady_clock::now();
         break;
@@ -250,6 +253,8 @@ SDL_AppResult DesktopApp::HandleEvent(const SDL_Event& event) {
 }
 SDL_AppResult DesktopApp::Iterate() {
     const auto now = std::chrono::steady_clock::now();
+    if (frameId_ == std::numeric_limits<std::uint64_t>::max())
+        throw std::overflow_error("desktop frame identifier exhausted");
     frameStatistics_ = {.frameId = ++frameId_, .runId = session_.getRunId()};
     const auto elapsed = std::chrono::duration_cast<std::chrono::nanoseconds>(now - baseline_);
     baseline_ = now;
