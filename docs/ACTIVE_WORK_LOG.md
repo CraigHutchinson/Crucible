@@ -1,5 +1,18 @@
 # Active work log
 
+## Phase14 execution and Pub main receiving, 2026-10-08
+
+User authorizes dependency update and plan execution. Root owns branch
+`phase14-large-swarm`, planning checkpoint `c801123`, current worktree. Verified
+Sub0Pub main `d566c71c47cc5aeba3ed0b615052dbe6fcd91f23` (PR35), after PR32's
+v2 promotion. Root claims pins/IntentDelivery migration, Contracts/Simulation/
+Runtime/DesktopApp shared wiring, root inventories/CI and central docs. Serial
+CPU reserved for fresh dependency receiving builds/tests; no timing run concurrent.
+Two agents perform read-only Wave0 query/executor and presentation/observer audits
+until exact G0a contracts/worktrees are dispatched. Existing historical worktrees,
+Pub local branch and its untracked editor settings are preserved. Fresh phase14
+build/source trees only; caches remain read-only. Status: Pub consumer receiving.
+
 ## Phase 14 major milestone planning, 2026-10-07
 
 Architect/root reviews clean main `9e7fed990c404e95ab25e699090996aeec048040`

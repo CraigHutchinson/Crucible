@@ -153,7 +153,7 @@ software Vulkan receiving. [Benchmarking](docs/benchmarking.md) defines advisory
 measurement and reproducible evidence.
 
 Dependencies use a checksum-verified CPM bootstrap, namespaced targets and
-[full commit pins](cmake/DependencyPins.cmake): Sub0ECS master, Sub0Pub v2, Sub0Pipeline main,
+[full commit pins](cmake/DependencyPins.cmake): Sub0ECS master, Sub0Pub main (v2 merged), Sub0Pipeline main,
 Sub0Log and Sub0HexGrid H2. Gameplay directly consumes ECS/H2; live input uses Pub v2 and completed boundaries
 use a sequential Pipeline graph. Log supplies optional bounded runtime diagnostics
 when `CRUCIBLE_ENABLE_DIAGNOSTICS=ON`; production builds omit it by default.
