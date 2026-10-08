@@ -6,6 +6,7 @@ add_executable(crucible_scale_view_test test_scale_view.cpp)
 target_link_libraries(crucible_scale_view_test PRIVATE Crucible::ScenePainter Crucible::Core SDL3::SDL3)
 add_test(NAME scale_view_counts COMMAND crucible_scale_view_test)
 set_tests_properties(scale_view_counts PROPERTIES LABELS "presentation;desktop;scale" TIMEOUT 60)
+find_package(Python3 3.10 REQUIRED COMPONENTS Interpreter)
 add_test(NAME phase14_capture_classification COMMAND ${Python3_EXECUTABLE}
     ${CMAKE_CURRENT_SOURCE_DIR}/test_phase14_capture.py)
 set_tests_properties(phase14_capture_classification PROPERTIES LABELS "presentation;desktop;scale" TIMEOUT 30)
