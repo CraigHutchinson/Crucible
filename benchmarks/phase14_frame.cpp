@@ -51,6 +51,8 @@ struct Settings {
 [[nodiscard]] std::size_t observationCapacity(const Settings& settings) noexcept {
     return 4 * settings.maxFrames + static_cast<std::size_t>(settings.warmupTicks) + 4;
 }
+/// Copied production camera values; center is observed through its logical viewport midpoint.
+struct Camera { double scale{}, x{}, y{}; };
 /// Owned production observations; completion timestamps are poll observation bounds.
 struct Frame {
     App::FrameStatistics app{};
@@ -65,10 +67,13 @@ struct Frame {
     bool visible{};
     bool focused{};
     std::size_t events{};
+    Camera cameraBefore{}, cameraAfter{};
+    int cameraPhase{-1};
+    std::size_t cameraEvents{}, cameraTransitions{}, operatorCameraEvents{};
 };
 /// One scripted mutation's event, admission, application and completed-frame identity.
 struct Input {
-    std::uint64_t run{}, sequence{}, tick{}, frame{}, applicationFrame{};
+    std::uint64_t run{}, sequence{}, tick{}, frame{}, applicationFrame{}, eventFrame{};
     std::int64_t eventBegin{}, admitted{}, applied{}, completed{};
     Status status{};
     bool accepted{}, visible{};
@@ -193,6 +198,76 @@ void pressKey(App& app, SDL_Keycode key) {
     event.key.key = key;
     checkEvent(app, event);
 }
+[[nodiscard]] Camera readCamera(App& app) {
+    const auto viewport = app.GetCamera().GetViewport();
+    const auto center = app.GetCamera().TryToWorld({viewport.x + viewport.width / 2,
+        viewport.y + viewport.height / 2});
+    if (!center) throw std::runtime_error("Camera viewport midpoint is outside the world");
+    return {app.GetCamera().GetScale(), center->x, center->y};
+}
+[[nodiscard]] bool sameCamera(Camera first, Camera second) noexcept {
+    return std::abs(first.scale - second.scale) <= 1e-8 &&
+        std::abs(first.x - second.x) <= 1e-4 && std::abs(first.y - second.y) <= 1e-4;
+}
+[[nodiscard]] SDL_FPoint cameraWindowPoint(App& app,
+    crucible::presentation::ScreenPoint logical) {
+    float x{}, y{};
+    if (!SDL_RenderCoordinatesToWindow(&app.getRenderer(), static_cast<float>(logical.x),
+        static_cast<float>(logical.y), &x, &y)) throw std::runtime_error(SDL_GetError());
+    return {x, y};
+}
+/// The frozen six-frame camera workload uses the same production event adapter as field gestures.
+void dispatchCamera(App& app, Route route, std::size_t index, Frame& frame) {
+    frame.cameraBefore = readCamera(app);
+    if (route == Route::none) { frame.cameraAfter = frame.cameraBefore; return; }
+    frame.cameraPhase = static_cast<int>(index % 6);
+    const auto viewport = app.GetCamera().GetViewport();
+    const crucible::presentation::ScreenPoint midpoint{viewport.x + viewport.width / 2,
+        viewport.y + viewport.height / 2};
+    if (frame.cameraPhase == 0 || frame.cameraPhase == 5) {
+        pressKey(app, SDLK_F);
+        frame.cameraEvents = 1;
+    } else if (frame.cameraPhase == 1 || frame.cameraPhase == 4) {
+        const auto anchor = cameraWindowPoint(app, midpoint);
+        SDL_Event event{};
+        event.type = SDL_EVENT_MOUSE_WHEEL;
+        event.wheel.y = frame.cameraPhase == 1 ? 5.0F : -5.0F;
+        event.wheel.mouse_x = static_cast<float>(anchor.x);
+        event.wheel.mouse_y = static_cast<float>(anchor.y);
+        checkEvent(app, event);
+        frame.cameraEvents = 1;
+    } else {
+        const double direction = frame.cameraPhase == 2 ? 1 : -1;
+        const auto first = cameraWindowPoint(app, midpoint);
+        const auto last = cameraWindowPoint(app, {midpoint.x + direction * 24, midpoint.y + direction * 12});
+        SDL_Event event{};
+        event.type = SDL_EVENT_MOUSE_BUTTON_DOWN;
+        event.button.button = SDL_BUTTON_MIDDLE;
+        event.button.x = static_cast<float>(first.x);
+        event.button.y = static_cast<float>(first.y);
+        checkEvent(app, event);
+        event = {};
+        event.type = SDL_EVENT_MOUSE_MOTION;
+        event.motion.x = static_cast<float>(last.x);
+        event.motion.y = static_cast<float>(last.y);
+        checkEvent(app, event);
+        event = {};
+        event.type = SDL_EVENT_MOUSE_BUTTON_UP;
+        event.button.button = SDL_BUTTON_MIDDLE;
+        event.button.x = static_cast<float>(last.x);
+        event.button.y = static_cast<float>(last.y);
+        checkEvent(app, event);
+        frame.cameraEvents = 3;
+    }
+    frame.cameraAfter = readCamera(app);
+    frame.cameraTransitions = sameCamera(frame.cameraBefore, frame.cameraAfter) ? 0 : 1;
+}
+[[nodiscard]] bool isOperatorCameraEvent(const SDL_Event& event) noexcept {
+    return event.type == SDL_EVENT_MOUSE_WHEEL ||
+        ((event.type == SDL_EVENT_MOUSE_BUTTON_DOWN || event.type == SDL_EVENT_MOUSE_BUTTON_UP) &&
+            event.button.button == SDL_BUTTON_MIDDLE) ||
+        (event.type == SDL_EVENT_KEY_DOWN && event.key.key == SDLK_F);
+}
 void clickWorld(App& app, crucible::Position world, Uint32 type) {
     const auto logical = app.GetCamera().TryToScreen(world);
     if (!logical) throw std::runtime_error("Script world projection failed");
@@ -279,7 +354,7 @@ void writeCapture(const Settings& settings, std::span<const Frame> frames, std::
     std::int64_t duration, std::int64_t warmupDuration, std::uint64_t warmupTicks,
     float refreshRate, float displayScale, float pixelDensity, std::uint64_t initialDiscarded, const Device& device,
     std::span<const Session::TickObservation> observations, std::size_t initialObservationCursor,
-    std::uint64_t droppedObservations) {
+    std::uint64_t droppedObservations, crucible::presentation::ScreenRect cameraViewport) {
     const auto accepted = std::ranges::count_if(inputs, [](const Input& input) {
         return input.accepted && input.visible && input.status == Status::running && input.completed > 0;
     });
@@ -293,7 +368,7 @@ void writeCapture(const Settings& settings, std::span<const Frame> frames, std::
         complete == static_cast<std::ptrdiff_t>(frames.size()) &&
         (settings.route == Route::none || accepted >= 300);
     std::cout << std::setprecision(17);
-    std::cout << "{\"type\":\"capture\",\"schema\":2,\"source\":" << jsonString(settings.source)
+    std::cout << "{\"type\":\"capture\",\"schema\":3,\"source\":" << jsonString(settings.source)
         << ",\"source_tree\":" << jsonString(CRUCIBLE_PHASE14_BUILD_TREE)
         << ",\"population\":" << settings.population << ",\"route\":" << static_cast<int>(settings.route)
         << ",\"renderer\":" << jsonString(renderer)
@@ -316,6 +391,10 @@ void writeCapture(const Settings& settings, std::span<const Frame> frames, std::
         << ",\"rows\":" << (settings.population == 100000 ? 250 : 300)
         << ",\"cell_size\":1,\"tool_radius\":16,\"tool_magnitude\":4,\"sync_interval\":1,\"present_flags\":0"
         << ",\"view_policy\":\"density-overview\",\"mission\":false"
+        << ",\"camera_script\":\"overview-detail-pan-v1\",\"camera_mode\":"
+        << jsonString(settings.route == Route::none ? "fixed-overview" : "six-frame-cycle")
+        << ",\"camera_viewport_width\":" << cameraViewport.width
+        << ",\"camera_viewport_height\":" << cameraViewport.height
         << ",\"duration_ns\":" << duration << ",\"warmup_duration_ns\":" << warmupDuration
         << ",\"initial_discarded_scaled_ns\":" << initialDiscarded
         << ",\"warmup_ticks\":" << warmupTicks << ",\"drained\":" << drained
@@ -346,6 +425,14 @@ void writeCapture(const Settings& settings, std::span<const Frame> frames, std::
         std::cout << ",\"presented\":" << frame.app.presented << ",\"status\":" << static_cast<int>(frame.status)
             << ",\"visible\":" << frame.visible << ",\"width\":" << frame.width << ",\"height\":" << frame.height
             << ",\"focused\":" << frame.focused << ",\"native_events\":" << frame.events
+            << ",\"camera_phase\":" << frame.cameraPhase << ",\"camera_events\":" << frame.cameraEvents
+            << ",\"camera_transitions\":" << frame.cameraTransitions
+            << ",\"operator_camera_events\":" << frame.operatorCameraEvents
+            << ",\"camera_scale_before\":" << frame.cameraBefore.scale
+            << ",\"camera_center_x_before\":" << frame.cameraBefore.x
+            << ",\"camera_center_y_before\":" << frame.cameraBefore.y
+            << ",\"camera_scale\":" << frame.cameraAfter.scale
+            << ",\"camera_center_x\":" << frame.cameraAfter.x << ",\"camera_center_y\":" << frame.cameraAfter.y
             << ",\"authoritative_mobile\":" << frame.draw.authoritativeMobile
             << ",\"individual\":" << frame.draw.individualSamples << ",\"aggregated\":" << frame.draw.aggregatedSamples
             << ",\"hidden\":" << frame.draw.hiddenSamples << ",\"marks\":" << frame.draw.aggregateMarks
@@ -378,6 +465,7 @@ void writeCapture(const Settings& settings, std::span<const Frame> frames, std::
         std::cout << "{\"type\":\"input\",\"run\":" << input.run << ",\"sequence\":" << input.sequence
             << ",\"tick\":" << input.tick << ",\"frame\":" << input.frame
             << ",\"application_frame\":" << input.applicationFrame
+            << ",\"event_frame\":" << input.eventFrame
             << ",\"event_begin_ns\":" << input.eventBegin << ",\"admitted_ns\":" << input.admitted
             << ",\"applied_observed_ns\":" << input.applied << ",\"completed_observed_ns\":" << input.completed
             << ",\"accepted\":" << input.accepted << ",\"visible\":" << input.visible
@@ -406,6 +494,7 @@ int capture(const Settings& settings) {
     std::vector<Session::TickObservation> observations(observationCapacity(settings));
     std::size_t frameCount{}, inputCount{}, traceCount{}, currentSlot{}, advancingFrames{};
     std::size_t observationCount{}, initialObservationCursor{};
+    crucible::presentation::ScreenRect cameraViewport{};
     std::uint64_t droppedObservations{};
     std::uint64_t firstFrame{}, captureRun{}, completedTick{}, actualWarmupTicks{};
     std::uint64_t initialDiscarded{};
@@ -427,6 +516,7 @@ int capture(const Settings& settings) {
     const Video video;
     {
         App app{startup};
+        cameraViewport = app.GetCamera().GetViewport();
         Observer observer{app.getRenderer(), 8};
         const auto* name = SDL_GetRendererName(&app.getRenderer());
         renderer = name ? name : "unknown";
@@ -441,7 +531,14 @@ int capture(const Settings& settings) {
         auto processEvents = [&] {
             std::size_t count{};
             SDL_Event event{};
-            while (SDL_PollEvent(&event)) { ++count; checkEvent(app, event); }
+            while (SDL_PollEvent(&event)) {
+                ++count;
+                if (isOperatorCameraEvent(event)) {
+                    if (measuredOrigin && frameCount < frames.size()) ++frames[frameCount].operatorCameraEvents;
+                    else throw std::runtime_error("Unexpected operator camera event during warmup");
+                }
+                checkEvent(app, event);
+            }
             return count;
         };
         try {
@@ -465,6 +562,7 @@ int capture(const Settings& settings) {
             std::size_t consumedTrace{};
             const auto origin = Clock::now();
             measuredOrigin = origin;
+            auto expectedCamera = readCamera(app);
             auto deadline = origin;
             constexpr Nanoseconds period{16'666'667};
             std::uint64_t scriptAccepted{};
@@ -505,14 +603,19 @@ int capture(const Settings& settings) {
                 if (app.GetSession().GetSummary().ingress_accepted != scriptAccepted)
                     throw std::runtime_error("Unexpected operator field mutation before event service");
                 row.events = processEvents();
+                if (row.operatorCameraEvents || !sameCamera(readCamera(app), expectedCamera))
+                    throw std::runtime_error("Unexpected operator camera event or state change in measured workload");
                 if (app.GetSession().GetSummary().ingress_accepted != scriptAccepted)
                     throw std::runtime_error("Unexpected operator field mutation during event service");
                 poll();
                 if (app.GetSession().getRunId() != captureRun) throw std::runtime_error("Restart is a separate capture cohort");
+                dispatchCamera(app, settings.route, frameCount, row);
+                expectedCamera = row.cameraAfter;
                 if (settings.route != Route::none && inputCount < settings.mutations && frameCount % 6 == 0) {
                     auto& input = inputs[inputCount];
                     const auto before = app.GetSession().GetSummary();
                     input.run = captureRun;
+                    input.eventFrame = app.getFrameStatistics().frameId + 1;
                     input.status = app.GetSession().GetStatus();
                     input.visible = isVisible(app);
                     input.eventBegin = elapsedNs(origin);
@@ -653,7 +756,7 @@ int capture(const Settings& settings) {
     writeCapture(settings, {frames.data(), frameCount}, {inputs.data(), inputCount},
         {finalTrace.data(), traceCount}, quality, renderer, failure, drained, boundedOut, duration, warmupDuration,
         actualWarmupTicks, refreshRate, displayScale, pixelDensity, initialDiscarded, device,
-        {observations.data(), observationCount}, initialObservationCursor, droppedObservations);
+        {observations.data(), observationCount}, initialObservationCursor, droppedObservations, cameraViewport);
     return failure.empty() && !boundedOut ? 0 : 1;
 }
 }

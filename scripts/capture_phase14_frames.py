@@ -30,7 +30,7 @@ def summarize(records):
     if len(captures) != 1 or len(qualities) != 1:
         raise ValueError("Expected exactly one capture and quality receipt")
     capture, quality = captures[0], qualities[0]
-    if capture["schema"] != 2 or capture["completion_mode"] != "joined-yield-zero" or capture["pacing_mode"] != "fixed-60hz-skip-whole-overdue-periods":
+    if capture["schema"] != 3 or capture["completion_mode"] != "joined-yield-zero" or capture["pacing_mode"] != "fixed-60hz-skip-whole-overdue-periods":
         raise ValueError("Unsupported schema or observation arm")
     frames = [row for row in records if row.get("type") == "frame"]
     inputs = [row for row in records if row.get("type") == "input"]
@@ -40,7 +40,21 @@ def summarize(records):
     expected_ticks = {}
     previous_tick = capture["initial_tick"]
     previous_end = 0
-    for frame in frames:
+    if (capture["camera_script"] != "overview-detail-pan-v1" or
+            capture["camera_mode"] != ("fixed-overview" if capture["route"] == 0 else "six-frame-cycle")):
+        raise ValueError("Unsupported camera script or route cohort")
+    width, height = capture["columns"] * capture["cell_size"], capture["rows"] * capture["cell_size"]
+    fit_scale = min(capture["camera_viewport_width"] / width, capture["camera_viewport_height"] / height)
+    detail_scale = fit_scale * 1.2 ** 5
+    if not math.isfinite(fit_scale) or fit_scale <= 0 or detail_scale < 4:
+        raise ValueError("Camera geometry cannot receive the frozen detail workload")
+    def same_camera(first, second):
+        return (math.isclose(first[0], second[0], rel_tol=1e-9, abs_tol=1e-8) and
+                all(abs(a - b) <= 1e-4 for a, b in zip(first[1:], second[1:])))
+    fitted_camera = fit_scale, width / 2, height / 2
+    expected_camera = fitted_camera
+    camera_pan_frames = camera_detail_frames = camera_restore_frames = operator_camera_events = 0
+    for index, frame in enumerate(frames):
         identity = frame["run"], frame["frame"]
         if identity in identities or min(identity) <= 0:
             raise ValueError("Duplicate or nonpositive frame identity")
@@ -70,6 +84,36 @@ def summarize(records):
             raise ValueError("Completion is outside the ordered joined frame timeline")
         if completion and (frame["poll_calls"] <= 0 or frame["draw_tick"] != frame["tick"]):
             raise ValueError("Completed frame has no poll or mismatched drawn tick")
+        camera_before = tuple(frame[name] for name in ("camera_scale_before", "camera_center_x_before", "camera_center_y_before"))
+        camera_after = tuple(frame[name] for name in ("camera_scale", "camera_center_x", "camera_center_y"))
+        if (not all(math.isfinite(value) for value in camera_before + camera_after) or
+                min(camera_before[0], camera_after[0]) <= 0 or
+                any(frame[name] < 0 for name in ("camera_events", "camera_transitions", "operator_camera_events"))):
+            raise ValueError("Invalid camera observation")
+        operator_camera_events += frame["operator_camera_events"]
+        if not same_camera(camera_before, expected_camera):
+            raise ValueError("Camera before-state differs from frozen measured trajectory")
+        phase = -1 if capture["route"] == 0 else index % 6
+        if frame["camera_phase"] != phase:
+            raise ValueError("Camera phase differs from measured frame ordinal")
+        if phase in (-1, 0, 4, 5):
+            expected_camera = fitted_camera
+        elif phase in (1, 3):
+            expected_camera = detail_scale, width / 2, height / 2
+        else:
+            expected_camera = detail_scale, width / 2 - 24 / detail_scale, height / 2 - 12 / detail_scale
+        expected_events = 0 if phase == -1 else 3 if phase in (2, 3) else 1
+        if (not same_camera(camera_after, expected_camera) or frame["camera_events"] != expected_events or
+                frame["camera_transitions"] != int(not same_camera(camera_before, camera_after))):
+            raise ValueError("Camera actual transition does not receive the frozen production script")
+        if phase in (1, 2, 3):
+            if camera_after[0] < 4 or frame["individual"] <= 0 or frame["aggregated"]:
+                raise ValueError("Camera detail frame did not submit actual individual geometry")
+            camera_detail_frames += 1
+        if phase in (2, 3):
+            camera_pan_frames += 1
+        if phase == 5:
+            camera_restore_frames += 1
     applied = {row["sequence"]: row for row in traces}
     if len(applied) != len(traces):
         raise ValueError("Duplicate command sequence")
@@ -125,6 +169,10 @@ def summarize(records):
         if row["sequence"] in accepted_sequences:
             raise ValueError("Duplicate accepted input sequence")
         accepted_sequences.add(row["sequence"])
+        event_frame = identities.get((row["run"], row["event_frame"]))
+        if (event_frame is None or event_frame["camera_phase"] != 0 or
+                not event_frame["begin_ns"] <= row["event_begin_ns"] <= row["admitted_ns"] <= event_frame["end_ns"]):
+            raise ValueError("Field admission did not occur in its fitted overview event frame")
         if row["sequence"] not in applied:
             continue  # Accepted but uncompleted remains a visible failing cohort.
         command = applied[row["sequence"]]
@@ -152,12 +200,12 @@ def summarize(records):
     minimum = len(cohort) >= 1800 and duration >= 30_000_000_000 and capture["warmup_ticks"] >= 120
     stable_output = bool(frames and all((row["width"], row["height"]) == (frames[0]["width"], frames[0]["height"])
                                        and row["width"] > 0 and row["height"] > 0 for row in frames))
-    eligible = (tick_coverage and not capture["profile_stages"] and minimum and stable_output and len(handoffs) == len(frames) and capture["drained"] and capture["device_identity_received"] and capture["driver_version"] is not None and
+    eligible = (not operator_camera_events and tick_coverage and not capture["profile_stages"] and minimum and stable_output and len(handoffs) == len(frames) and capture["drained"] and capture["device_identity_received"] and capture["driver_version"] is not None and
                 not capture["failure"] and not capture["bounded_out"] and
                 not capture["dropped_frame_rows"] and not capture["dropped_input_rows"] and
                 (capture["route"] == 0 or len(accepted_inputs) >= 300))
     result = {
-        "schema": 2, "source": capture["source"], "source_tree": capture["source_tree"],
+        "schema": 3, "source": capture["source"], "source_tree": capture["source_tree"],
         "population": capture["population"], "route": capture["route"],
         "acceptance_sample_eligible": bool(eligible), "frame_count": len(frames),
         "running_visible_completed_handoff_frames": len(handoffs), "evolving_completed_handoff_frames": len(cohort),
@@ -167,6 +215,9 @@ def summarize(records):
         "tick_observation_count": len(ticks), "expected_measured_ticks": len(expected_ticks),
         "complete_tick_coverage": tick_coverage, "dropped_tick_observations": capture["dropped_tick_observations"],
         "profile_stages": bool(capture["profile_stages"]),
+        "camera_script": capture["camera_script"], "camera_mode": capture["camera_mode"],
+        "camera_detail_frames": camera_detail_frames, "camera_pan_frames": camera_pan_frames,
+        "camera_restore_frames": camera_restore_frames, "operator_camera_events": operator_camera_events,
         "tick_boundary_p95_ns": None, "tick_boundary_p99_ns": None, "tick_boundary_max_ns": None,
         "pacing_skipped_periods": sum(row["pacing_skipped"] for row in frames),
         "stable_output_dimensions": stable_output,
@@ -281,13 +332,13 @@ def main():
     if any(value not in (100000, 150000) for value in args.populations) or not 30 <= args.process_timeout <= 3600 or len(set(args.populations)) != len(args.populations) or len(set(args.routes)) != len(args.routes):
         parser.error("invalid scale or external timeout")
     args.output.mkdir(parents=True, exist_ok=False)
-    metadata = {"schema": 2, "started_utc": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+    metadata = {"schema": 3, "started_utc": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
                 "platform": platform.platform(), "processor": platform.processor(), "logical_cpus": os.cpu_count(),
                 "background_power_thermal": args.background_power_thermal, "uncontended_attested": args.uncontended,
                 "probe": args.probe, "pairs": args.pairs, "cooldown_seconds": args.cooldown_seconds,
                 "profile_stages": args.profile_stages, "study": "current-only-attribution" if args.profile_stages else "paired-boundary-only",
                 "process_timeout_seconds": args.process_timeout, "populations": args.populations, "routes": args.routes,
-                "completion_mode": "joined-yield-zero", "results": [], "arms": {}}
+                "completion_mode": "joined-yield-zero", "camera_script": "overview-detail-pan-v1", "results": [], "arms": {}}
     metadata["wrapper_sha256"] = hashlib.sha256(Path(__file__).read_bytes()).hexdigest()
     metadata_path = args.output / "metadata.json"
     def save_metadata():
@@ -306,7 +357,7 @@ def main():
                         directory.mkdir()
                         information = metadata["arms"][arm]
                         command = [information["binary"], "--source", information["source"], "--population", str(population),
-                                   "--route", route, "--frames", "3" if args.probe else "1800",
+                                   "--route", route, "--frames", "6" if args.probe else "1800",
                                    "--seconds", "0" if args.probe else "30", "--warmup-ticks", "0" if args.probe else "120",
                                    "--mutations", "1" if args.probe else "300", "--timeout-seconds", "30" if args.probe else "300",
                                    "--profile-stages", "true" if args.profile_stages else "false"]

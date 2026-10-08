@@ -10,9 +10,35 @@ CAPTURE = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(CAPTURE)
 
 
+def camera_fixture(records):
+    """Supply a known complete trajectory; rejected receipts below deliberately corrupt its actual values."""
+    header = records[0]
+    header.update(camera_script="overview-detail-pan-v1", camera_mode="fixed-overview" if header["route"] == 0 else "six-frame-cycle",
+                  camera_viewport_width=1232, camera_viewport_height=520)
+    scale, detail = (2.08, 5.1757056) if header["population"] == 100000 else (520 / 300, 4.313088)
+    center = header["columns"] / 2, header["rows"] / 2
+    fit = scale, *center
+    close = detail, *center
+    pan = detail, center[0] - 24 / detail, center[1] - 12 / detail
+    trajectory = (fit, close, pan, close, fit, fit)
+    previous = fit
+    for index, frame in enumerate(row for row in records if row["type"] == "frame"):
+        phase = -1 if header["route"] == 0 else index % 6
+        after = fit if phase == -1 else trajectory[phase]
+        frame.update(camera_phase=phase, camera_events=0 if phase == -1 else 3 if phase in (2, 3) else 1,
+                     camera_transitions=int(previous != after), operator_camera_events=0,
+                     camera_scale_before=previous[0], camera_center_x_before=previous[1], camera_center_y_before=previous[2],
+                     camera_scale=after[0], camera_center_x=after[1], camera_center_y=after[2])
+        if phase in (1, 2, 3):
+            frame.update(individual=50000, aggregated=0, hidden=header["population"] - 50000, marks=0)
+        else:
+            frame.update(individual=0, aggregated=header["population"], hidden=0, marks=10000)
+        previous = after
+
+
 def fixture():
-    header = dict(type="capture", schema=2, source="a" * 40, source_tree="b" * 40, population=100000,
-                  columns=400, route=1, completion_mode="joined-yield-zero",
+    header = dict(type="capture", schema=3, source="a" * 40, source_tree="b" * 40, population=100000,
+                  columns=400, rows=250, cell_size=1, route=1, completion_mode="joined-yield-zero",
                   pacing_mode="fixed-60hz-skip-whole-overdue-periods", duration_ns=30_000_000_000,
                   warmup_ticks=120, drained=True, failure="", bounded_out=False,
                   device_identity_received=True, driver_version=123, initial_tick=120,
@@ -41,10 +67,12 @@ def fixture():
         records.append(dict(type="input", run=1, sequence=index + 1, tick=frame["tick"],
                             frame=frame["frame"], event_begin_ns=frame["begin_ns"],
                             application_frame=frame["frame"],
+                            event_frame=frame["frame"],
                             admitted_ns=frame["begin_ns"] + 1_000_000,
                             applied_observed_ns=frame["begin_ns"] + 2_000_000,
                             completed_observed_ns=frame["completion_observed_ns"],
                             accepted=True, visible=True, status=0))
+    camera_fixture(records)
     return records
 
 
@@ -74,6 +102,7 @@ class ClassificationTests(unittest.TestCase):
     def test_idle_redraws_cannot_receive_evolving_frame_gate(self):
         rows = [row for row in self.records if row["type"] not in ("input", "trace", "tick")]
         rows[0]["route"] = 0
+        camera_fixture(rows)
         rows[0]["tick_observation_count"] = 120
         for row in rows:
             if row["type"] == "frame":
@@ -225,6 +254,67 @@ class ClassificationTests(unittest.TestCase):
         self.assertFalse(result["g4_target_met"])
         next(row for row in self.records if row["type"] == "tick")["simulation"]["tick"] += 1
         with self.assertRaisesRegex(ValueError, "phase attribution"):
+            CAPTURE.summarize(self.records)
+
+    def test_both_scales_receive_detail_pan_and_fitted_restoration(self):
+        for population, columns, rows in ((100000, 400, 250), (150000, 500, 300)):
+            self.records[0].update(population=population, columns=columns, rows=rows)
+            for frame in self.records:
+                if frame["type"] == "frame":
+                    frame["authoritative_mobile"] = population
+            camera_fixture(self.records)
+            result = CAPTURE.summarize(self.records)
+            self.assertTrue(result["acceptance_sample_eligible"])
+            self.assertEqual(result["camera_detail_frames"], 900)
+            self.assertEqual(result["camera_pan_frames"], 600)
+            self.assertEqual(result["camera_restore_frames"], 300)
+
+    def test_camera_events_cannot_substitute_for_actual_zoom_or_pan(self):
+        frames = [row for row in self.records if row["type"] == "frame"]
+        frames[1]["camera_scale"] = frames[1]["camera_scale_before"]
+        with self.assertRaisesRegex(ValueError, "actual transition"):
+            CAPTURE.summarize(self.records)
+        camera_fixture(self.records)
+        frames[2]["camera_center_x"] = frames[2]["camera_center_x_before"]
+        frames[2]["camera_center_y"] = frames[2]["camera_center_y_before"]
+        with self.assertRaisesRegex(ValueError, "actual transition"):
+            CAPTURE.summarize(self.records)
+
+    def test_detail_geometry_and_operator_cohorts_are_received_separately(self):
+        frames = [row for row in self.records if row["type"] == "frame"]
+        frames[1].update(individual=0, aggregated=50000, marks=100)
+        with self.assertRaisesRegex(ValueError, "actual individual geometry"):
+            CAPTURE.summarize(self.records)
+        camera_fixture(self.records)
+        frames[1]["operator_camera_events"] = 1
+        result = CAPTURE.summarize(self.records)
+        self.assertFalse(result["acceptance_sample_eligible"])
+        self.assertEqual(result["operator_camera_events"], 1)
+
+    def test_mutation_must_be_admitted_from_its_fitted_event_frame(self):
+        event = next(row for row in self.records if row["type"] == "input")
+        event["event_frame"] = 2
+        with self.assertRaisesRegex(ValueError, "fitted overview event frame"):
+            CAPTURE.summarize(self.records)
+
+    def test_fitted_restoration_cannot_be_assumed_from_phase_or_events(self):
+        restored = [row for row in self.records if row["type"] == "frame"][5]
+        restored["camera_center_x"] += 2
+        with self.assertRaisesRegex(ValueError, "actual transition"):
+            CAPTURE.summarize(self.records)
+
+    def test_none_camera_cohort_is_explicitly_fixed_overview(self):
+        self.records = [row for row in self.records if row["type"] not in ("input", "trace")]
+        self.records[0]["route"] = 0
+        for tick in self.records:
+            if tick["type"] == "tick":
+                tick["applied_commands"] = 0
+        camera_fixture(self.records)
+        result = CAPTURE.summarize(self.records)
+        self.assertTrue(result["acceptance_sample_eligible"])
+        self.assertEqual(result["camera_detail_frames"], 0)
+        self.records[0]["camera_mode"] = "six-frame-cycle"
+        with self.assertRaisesRegex(ValueError, "route cohort"):
             CAPTURE.summarize(self.records)
 
 

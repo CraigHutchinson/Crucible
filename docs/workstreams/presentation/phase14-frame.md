@@ -196,6 +196,26 @@ checked, GPU-completed frame carrying that applied edit; the earlier application
 frame is recorded independently. Ignored/refused, paused/hidden and uncompleted
 inputs stay visible and cannot help reach the 300-event qualifying count.
 
+FLOW/gather receive the frozen `overview-detail-pan-v1` camera workload through
+the production `HandleEvent` adapter inside each measured frame interval. Its six
+phases are fitted overview plus field mutation, five positive wheel units around
+the viewport midpoint, middle-button drag by24x12 logical units, inverse drag,
+five negative wheel units, and fitted overview restoration. Each full FLOW gesture
+therefore begins at fit, with both endpoints inside the viewport. The no-command
+comparator declares the separate `fixed-overview` camera cohort. Both baseline and
+current arms run the same source-defined script for a given route.
+
+Every frame retains the actual production scale and midpoint world coordinates
+before/after its phase, scripted event and actual transition counts, and separate
+operator-camera event counts. Classification checks continuous camera state,
+detail scale>=4 with actual individual geometry, both world-space pan directions,
+and fitted restoration; injecting the right number of events cannot establish
+those results. Unexpected operator wheel/middle/F events or camera state changes
+fail the measured workload and remain in the raw failure receipt. Input rows also
+name their admission event frame separately from eventual application/completion,
+so accepted mutations must originate from a fitted overview phase. Camera values
+live in the already startup-bounded frame storage and add no hot allocation.
+
 After the native loop/drain, an untimed `InspectorSession` with identical settings
 advances to the first applied field's tick minus one. The complete production
 `FieldSet::Sample` evaluates every authoritative copied sample there; nonzero
@@ -219,16 +239,16 @@ participant comprehension or physical scanout.
 
 ## Schema and classification receiving
 
-JSONL schema2 contains one `capture`, ordered `frame` and completed-boundary `tick`
+JSONL schema3 contains one `capture`, ordered `frame` and completed-boundary `tick`
 rows, `input` rows, the exact `trace`, and one `quality`. Monotonic frame nanoseconds
 share the measured steady origin; tick intervals are copied duration values.
 
 | Row | Consequential fields |
 |---|---|
 | capture | source/tree, actual renderer/adapter/display, scenario/tool settings, capacities, duration/warmup, initial tick/observation cursor, retained observation count and drops, attribution flag, initial discarded time, drain/bounds/drops/failure, joined observation and60Hz pacing modes |
-| frame | run/frame/tick, advanced ticks, begin/end, production service/pump/draw/present intervals, native status/signed HRESULT, marker status/interval, handoff/completion observations, poll calls/time, pace lateness/skips, visibility/focus/events, closed view counts, ingress/applied/discard counters |
+| frame | run/frame/tick, advanced ticks, begin/end, production service/pump/draw/present intervals, native status/signed HRESULT, marker status/interval, handoff/completion observations, poll calls/time, pace lateness/skips, visibility/focus/events, before/after camera scale/center, phase and actual transition counts, closed view counts, ingress/applied/discard counters |
 | tick | run/completed tick and containing frame, complete boundary duration, applied-command count and optional copied simulation stage durations/counts |
-| input | run/sequence/applied tick, event/admission/application observations, application frame versus completed-handoff frame, acceptance/running/visible state |
+| input | run/sequence/applied tick, event/admission/application observations, fitted admission event frame versus application/completed-handoff frames, acceptance/running/visible state |
 | trace | exact sequence/tick/action/result and field slot/kind/geometry/strength |
 | quality | cold oracle/image CPU time, retained capture tick, influenced count/cohort, signed mean/max displacement and threshold-crossing count |
 
@@ -263,18 +283,21 @@ and over-budget counts remain alongside percentiles.
 The wrapper requires five independently alternating baseline/current process pairs
 per selected workload, uncontended/background-power-thermal attestation, separate
 fresh output directories and an external process deadline. No retry removes a
-failure or slower outlier. Probe mode uses three frames/no warmup and explicitly
+failure or slower outlier. Probe mode uses six advancing frames/no warmup to cover
+one complete camera cycle and explicitly
 cannot receive acceptance. All per-process summaries and raw data are retained;
 pair receipt eligibility does not itself close G1/G2/G5/platform/participant gates.
-Seventeen independent synthetic classifier fixtures are registered as
+Twenty-three independent synthetic classifier fixtures are registered as
 `phase14_capture_classification`. They exercise minima, correlation/accounting,
 occlusion/full slots, clock discard, mean-cohort quality, idle-frame dilution,
 corrupt tick/backward timing, missing driver, a four-tick pump, incomplete/duplicate/
 mixed-run boundaries, applied-command and bounded-prefix accounting, and explicit
-stage attribution exclusion. All17 passed with
+stage attribution exclusion, both-scale detail/pan/restoration, camera no-op
+injection, actual detail geometry, operator camera cohorts, fitted input admission
+explicit fitted restoration and the declared fixed-overview comparator. All23 passed with
 `python tests/presentation/desktop/test_phase14_capture.py -v` on2026-10-08;
 the exact output is retained locally in
-`build/phase14-boundary-receipts/classifier.txt`. This supplies schema coverage;
+`build/phase14-boundary-receipts/camera-classifier.txt`. This supplies schema coverage;
 the updated C++ harness and native receipts still require architect receiving.
 
 The harness preallocates both Runtime observations and its cold-copy destination
