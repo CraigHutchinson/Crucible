@@ -43,6 +43,13 @@ at `fac58c0`; the bounded queue/strong rejection, constructor/scoped rollback,
 allocation-safe root/successor/trigger failure and join design is approved. Root alone
 owns upstream publication/pin receiving. No competing hardware timing run.
 Full combined/platform/race and physical frame gates remain open.
+2026-10-08 follow-through: A released CPU after five upstream alternating pairs
+and allocation captures; VTune stalled before sampling, owned processes stopped
+and no profile claimed. A/B continue the upstream capture-destruction review/fix
+source-only. Root now reserves CPU/GPU for the native capture build/classifier,
+observed sequential-control build and short production probes. No upstream build
+or competing measurement until root releases. Hosted Crucible `b3f73ba` passed
+all ten jobs including ThreadSanitizer; later source needs its own receiving.
 
 ## Phase 14 major milestone planning, 2026-10-07
 
