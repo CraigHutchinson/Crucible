@@ -161,7 +161,75 @@ graph job to exactly1call/16B only on checked MSVC x64. Release/unchecked remain
 strictly zero. Targeted Debug1/1 and Release1/1 passed; original failures are retained.
 [Exact-head run37853759147](https://github.com/CraigHutchinson/Crucible/actions/runs/37853759147)
 passed nine jobs, including actual ASan/UBSan and TSan; Windows Debug failed the
-same fixture. Corrected source still needs its own complete hosted receipt.
+same fixture. Corrected source subsequently passed all ten jobs in
+[run37912151353](https://github.com/CraigHutchinson/Crucible/actions/runs/37912151353)
+at `5ed8a7b369a658c0b9a9601e31b1c1e2c74d581b`, including Windows Debug,
+ASan/UBSan and actual ThreadSanitizer receiving. Later changes require their own
+exact-head checks.
+
+Native execution metadata and cold process-memory sampling are integrated at
+`ced304a`; completed Simulation FP fallback counters and their capture/classifier
+are integrated at `8c45b68`/`f70ce7d`. The counter increments only after a successful
+completed tick that recomputed rows sequentially because worker FP installation
+was unsupported. It is not a count of incomplete attempts or worker utilization.
+Nonzero parallel fallback deltas suppress acceptance. Four affected Release checks
+passed at `f70ce7d`, including33 classifier cases; unsupported FP failures remain
+source-reviewed where the native machine cannot induce them.
+
+At `f70ce7d`, all24 short native process arms across retained PR29 control,
+same-source1/2/4 workers and current-only1/8-worker attribution returned0 with
+closed tick identities, no drops, zero FP fallbacks and received cold memory data.
+Raw outputs remain under `build/phase14-workers-native-probe-03`. The full-SHA
+control test rejected a multi-worker request before work; the preceding malformed
+short-SHA attempt is retained separately. No thermal or acceptance sample is inferred.
+
+The current-only none-route means were111.81/152.80ms at100K/150K for one worker,
+and33.98/47.49ms for eight workers. Eight-worker proposal means were18.31/26.18ms;
+the remaining boundary work was approximately15.67/21.31ms. These diagnostic
+means establish where to refine next; they are not paired speedup, percentile or
+60Hz acceptance. At150K, proposal improvements alone cannot meet the complete
+frame target while that serial cost remains.
+
+The private dense-ID refinement `87605d0` is integrated as `d23335b`. Contiguous
+identity proof permits bounded direct lookup into the same immutable input;
+sparse identities retain the original search. Neighbor ordering and all numerical
+arithmetic remain unchanged. Four advancing rounds under four FP modes compare
+dense versus order-preserving sparse relabeling, legacy/in-place and1/2/4 workers.
+Provider Debug6/6 and Release6/6 pass with strict zero kernel/query allocations.
+Combined source checkpoint `466dc80` passes full Release56/56 in39.94s; logs are
+`build/phase14-pub-release/dense-integration-{build,tests}.log`. Native refinement
+attribution and final integrated Debug/platform receiving remain independent gates.
+
+Four short post-refinement attribution arms at `466dc80` also returned0, with
+no classifier errors or completed FP fallbacks; retained output is
+`build/phase14-dense-native-probe-04`. One-worker boundary means were83.79/127.04ms
+at100K/150K; eight-worker means were28.90/42.01ms. Eight-worker proposal means
+were12.89/18.40ms, leaving approximately16.00/23.61ms outside proposals. These
+unpaired short diagnostic samples support continued refinement, not a qualified
+speedup or changed acceptance target. Full native G3-G5 remain open.
+
+## Parallel experience design
+
+The user requested a holistic experience pass and a high-fidelity cinematic nanite
+logo. Worker B delivered `e75cf59`, integrated as `466dc80`, under only
+`docs/concepts/phase15-experience/`. Three original generated assets were inspected
+by worker and architect: silver/cyan nanite CRUCIBLE hero, six-shot storyboard and
+menu/mission compositions. Exact prompts and hashes are retained in
+[provenance](../concepts/phase15-experience/provenance.md). These are concepts,
+not new executable screens, animation/audio or measured fidelity.
+
+The [director's brief](../concepts/phase15-experience/director-brief.md) describes
+a twelve-second cinematic, coherent camera/material/lighting/sound, skip and
+reduced-motion behavior. The [experience design](../concepts/phase15-experience/experience-design.md)
+covers progression/options/results and mission-boundary persistence. Its next
+balanced slice receives menu→existing mission→explained result→committed progress→
+verified Continue after relaunch through an architect and two disjoint workers.
+Mid-mission restore and a later bounded Quantum Lens remain proposed consumers;
+the current64/48/16 biomass ledger and Phase14 G1-G7 remain authoritative.
+The user's gamer-research follow-up is integrated as `263429a`. The
+[menu note](../concepts/phase15-experience/menu-research.md) links the requested
+primary discussion, records its anecdotal limits and disagreements, and defines
+M01-M11 plus proposed native/participant receiving. Approved assets are unchanged.
 
 ## Retrospective and reuse
 

@@ -5,6 +5,15 @@ They explore the proposed swarm/Blight/fusion identity and a readable RTS screen
 They are not executable screenshots, final assets, a renderer selection or measured
 visual quality/performance. See [exact prompts and provenance](prompts.md).
 
+## Cinematic title and complete player journey
+
+The [experience package](phase15-experience/README.md) adds three inspected
+generated concepts: a nanite-formed CRUCIBLE hero, a six-shot cinematic storyboard,
+and main-menu/mission-selection compositions. The twelve-second director's brief
+and proposed next sprint connect visual ambition to immediate controls, explained
+results and mission-boundary persistence. Animation, audio, menu implementation,
+save restoration and participant receiving remain separate gates.
+
 ## World and frontier
 
 ![Flowing swarm meets cellular Blight on an industrial substrate](world-v1.png)

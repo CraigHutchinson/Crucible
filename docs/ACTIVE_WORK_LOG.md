@@ -4,6 +4,28 @@
 
 Current resumed dispatch, 2026-10-09: user resumed and explicitly permits pushing
 all Crucible work to GitHub. Root reserves CPU for integration/native receiving.
+Native pre-refinement receiving at `f70ce7d` is complete:24 short process arms
+across preserved-control,1/2/4/8 worker and attribution cohorts returned0 with
+closed observations, zero FP fallbacks and received cold process-memory counters.
+Actual control N-worker refusal used the full source SHA and failed before work;
+the earlier malformed short-SHA attempt is retained separately. These probes
+establish no thermal qualification or percentile/budget acceptance. A delivered
+dense-ID refinement `87605d0`, received as `d23335b`: Debug6/6 and Release6/6
+affected checks pass, with strict zero kernel/query allocations. Root now reserves
+CPU/GPU for combined receiving and subsequent isolated native attribution.
+Combined Release56/56 passed39.94s at `466dc80`; four short1/8-worker attribution
+arms at both scales returned0 with no classifier errors or completed FP fallbacks.
+Raw diagnostics are retained in `build/phase14-dense-native-probe-04`; no qualified
+speedup or native budget is claimed. Root now releases CPU/GPU, retaining source
+review, central records and authorized publication.
+B now owns only `docs/concepts/phase15-experience/**` in isolated
+`.worktrees/phase15-experience-design`, base `f70ce7d`: user-requested cinematic
+intro, full player journey, progression/save/Quantum design and generated concepts.
+Design package `e75cf59` is received as `466dc80`; B extends only its owned docs
+with the user-provided gamer research and menu requirements (`6423de1`, received
+as `263429a`, complete). A performs a read-only
+coordinator refinement audit; neither worker runs builds or measurements.
+Root owns central design/navigation/phase records and all later code/hardware.
 Full Debug at `84d7362` passed54/55; the whole structural coordinator allocation
 fixture alone rejected the received checked-MSVC proxy. The corrected fixture
 keeps component/edit/copy work strictly zero, receives exactly1call/16B on the
@@ -12,11 +34,11 @@ STL. Targeted Debug1/1 and Release1/1 pass; original failure logs are preserved.
 Release55/55 passed40.15s at `d4b2033`. Provider `328388c` is received
 as `68dc63e`, with Debug3/3 and Release3/3, source-reviewed failure containment and
 qualified checked-MSVC orchestration costs. Worker original FP state between jobs
-remains source-reviewed rather than directly observed. B owns worker-axis/native
-capture and bounded process-memory source in `.worktrees/phase14-frame`; no builds
-overlap root. A owns Swarm source/tests/local manifests/docs in isolated
-`.worktrees/phase14-steering-refinement`, base `84d7362`, for exact dense-ID lookup
-refinement source only. No upstream H2 or public prepared-epoch API is dispatched.
+remains source-reviewed rather than directly observed. B's worker-axis/native
+capture and bounded process-memory handoffs are integrated at `ced304a`/`f70ce7d`;
+original `.worktrees/phase14-frame` is clean and preserved. A's isolated
+`.worktrees/phase14-steering-refinement` is clean after dense-ID delivery.
+No upstream H2 or public prepared-epoch API is dispatched.
 Scheduling provider tree/evidence remains clean and preserved. Root owns all shared
 Simulation/Runtime/DesktopApp/main/pin/CI/doc/hardware/publication work.
 Exact merged Pipeline f730c4e receiving previously passed full Release51/51 and

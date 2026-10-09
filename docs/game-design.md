@@ -5,6 +5,12 @@ into a concrete proposed game. New mission, resource and visual choices below ar
 design proposals for iteration, not claims of implemented or playtested behavior.
 Read this before the technical [architecture](architecture.md) or work packages.
 
+The user-requested [experience expansion](concepts/phase15-experience/README.md)
+develops a cinematic nanite title, main menu/options, mission progression, safe
+continuation and bounded candidate Quantum mechanics. Its director's brief and
+parallel receiving plan are proposed next work; approved visual direction does
+not change the current physics, biomass ledger or delivered screen inventory.
+
 Current reference: fixed2048 identities, straight FLOW/radial fields and the
 optional secure-relay loop are implemented. That mode requires 1780 reclaimed by
 tick900 plus a lattice held120 consecutive completed ticks; fuse invests64,

@@ -22,7 +22,8 @@ package is not a permanent agent assignment.
 
 | 12 | Runtime budgets and opt-in bounded diagnostics | [Plan](phase12.md), [review](../sprint-reviews/phase-12.md); complete, PR25 merged at `c4ae9c0` |
 | 13 | Consumer presentation/input/sound reconciled with measured foundations | [Plan](phase13.md), [review](../sprint-reviews/phase-13.md); P13-01 merged PR29 at `9e7fed9`; native/participant and P13-02 sound remain open |
-| 14 | Interactive100K/150K full-frame performance and bounded parallel simulation | [Plan](phase14.md), [contracts](../decisions/phase14-scale-contracts.md), [review](../sprint-reviews/phase-14.md); reviewed proposal, implementation undispatched |
+| 14 | Interactive100K/150K full-frame performance and bounded parallel simulation | [Plan](phase14.md), [contracts](../decisions/phase14-scale-contracts.md), [review](../sprint-reviews/phase-14.md); execution in progress, draft PR30, major native budgets open |
+| Next proposal | Cinematic identity and complete return-to-play journey | [Concepts/design](../concepts/phase15-experience/README.md), [parallel receiving plan](../concepts/phase15-experience/receiving-plan.md); design only, implementation undispatched |
 
 The [sprint-review archive](../sprint-reviews/README.md) tracks findings, follow-ups
 and delegation lessons for every completed increment.
@@ -159,7 +160,10 @@ what review found, which uncertainty remains and how that changes the next divis
 The next phase begins by reassessing these facts rather than repeating the old team map.
 
 Latest published increment is [Phase13 P13-01](phase13.md), PR29 at `9e7fed9`.
-Its sound/native/participant gates remain open. The next major proposal is
+Its sound/native/participant gates remain open. The current major sprint is
 [Phase14](phase14.md), selected by the user for complete frame performance and
 joined parallel simulation. Shader portability and second-backend work keep their
 separate capability gates; Phase14 selects at most one qualified native backend.
+The parallel [experience design](../concepts/phase15-experience/README.md) proposes
+the next balanced menu→mission→result→persisted progress→Continue slice. It does
+not close Phase14 or dispatch a campaign/renderer/save framework.

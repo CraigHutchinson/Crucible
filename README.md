@@ -46,6 +46,11 @@ parallel adoption and physical60Hz/60FPS acceptance remain open. Read its
 [contracts](docs/decisions/phase14-scale-contracts.md) and
 [execution review](docs/sprint-reviews/phase-14.md) for the exact evidence and limits.
 
+The [next experience design](docs/concepts/phase15-experience/README.md) explores
+a cinematic nanite title, main menu, mission progression and safe continuation.
+Its inspected concept renders and director's brief are proposals; the current
+executable does not yet contain those screens, saves or Quantum abilities.
+
 The desktop prototype is a bounded reclamation challenge: recover **1,780 biomass
 quanta before tick 900**. Pause stops the deadline. Flow and radial tools change
 movement; the HUD reports progress, admission feedback and a latched win or loss.
