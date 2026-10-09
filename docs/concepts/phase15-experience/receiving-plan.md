@@ -1,5 +1,14 @@
 # Proposed next sprint: receive a complete return-to-play loop
 
+Implementation supersession,2026-10-09: the user approved the
+[Phase15 production plan](../../phases/phase15.md), then explicitly selected an
+independent production renderer with strongly themed ImGui UI. Existing SDL
+rendering is concept/dev-test only. The assignments below are historical design
+proposals; the phase plan owns actual dispatch. Full animated cinematic quality
+is a milestone deliverable, not merely stretch after a still. Reduced-motion
+and static modes still use the production renderer. No SDL-rendering fallback
+closes the production or cinematic gates.
+
 Design handoff,2026-10-09. Architect integrates this into the phase plan after
 reviewing the current technical receiving baseline. This is a proposed workpackage,
 not a claim that Phase14 is complete or implementation agents are dispatched.

@@ -13,6 +13,14 @@ from a successful private spike.
 
 ## Accountable owners
 
+Phase15 adds a consumed graphics split inside Presentation: A owns production
+device/resources/completion and B owns view-only identity choreography and themed
+UI. W0/W1 retain shared frame/view contracts and application transitions; Runtime
+retains simulation clocks/commands. No decorative pose updates authoritative ECS,
+Spatial or gameplay geometry. SDL concept/dev-test painting remains separate from
+the native production target. The [phase decision](../decisions/phase15-production-rendering.md)
+defines lifetimes and gates before dependent dispatch.
+
 | Stream | Hierarchy/acceleration responsibility | Handoff / exclusion |
 |---|---|---|
 | Integration W0 | Simulation/ECS gather, exact-pin audit, tick/structural commit and coherent publication; appoints navigation researcher | Frozen epoch and copied values; coordinates owners without absorbing domain semantics |

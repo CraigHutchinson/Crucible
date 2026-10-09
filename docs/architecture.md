@@ -6,6 +6,15 @@ The [hierarchy responsibility map](workstreams/hierarchy-boundaries.md) suppleme
 boundaries and the gates for changing them. [Concepts](concepts/README.md) guide
 material and shape readability. Art does not define resource rules or select a backend.
 
+[Phase15](phases/phase15.md) now selects a separate production rendering consumer:
+intro and strongly themed ImGui menu establish an owned native graphics path,
+then actual mission snapshots/input migrate to it. Existing SDL ScenePainter and
+`crucible_desktop` remain explicit concept2D/dev-test tools. Production does not
+fall back to SDL rendering. SDL window/events are platform support; the concrete
+production renderer owns its device, resources and presentation. This is an
+implementation decision with hardware gates pending, not an already delivered
+renderer. See [the boundary decision](decisions/phase15-production-rendering.md).
+
 Phase12 dispatch baseline is PR24 merge `835c781605c98c79f8d10e26e2b8aab63593101e`.
 [Phase10](phases/phase10.md) extends the sequential owned command loop with fixed
 mobile/anchored/lost participation, one relay lattice, protection and hold. No ECS

@@ -1,5 +1,36 @@
 # Active work log
 
+## Phase15 production renderer reprioritisation,2026-10-09
+
+User approved the first production playable and concept-art fidelity, then
+explicitly separated existing SDL rendering into concept2D/dev-test tooling and
+the new production rendering approach as the migration target. Dear ImGui with a
+strong Crucible theme is selected for evaluation/consumption. Baseline PR31 merge
+`13642fe79c848a8509f2935d7357ad107e309c81`; root branch
+`codex/production-playable`. See [plan](phases/phase15.md) and
+[decision](decisions/phase15-production-rendering.md).
+
+Latest steering reopens DX11 selection in favor of a cross-platform foundation
+covering DX12/Vulkan and macOS/iOS Metal. Two independent source audits compared
+Filament,bgfx,wgpu-native,Dawn and SDL_GPU. Root selects Filament1.77.3 as the first
+bounded fidelity candidate, not a proved production backend; native DX12 remains
+an explicit qualification item. Exact source `d852e34` is received read-only in
+`build/phase15-sources/filament`. Its bundled ImGui is1.92.5; do not link the earlier
+separately fetched1.92.6 core into that candidate. Root owns pin/toolchain receiving.
+No C++ implementation, installs, builds or native measurements are dispatched yet.
+
+| Owner | Claim | Current status / resources |
+|---|---|---|
+| Architect/root | Common contracts, application/progress/profile, production app/main, manifests/pins/CI and central docs | Contract receiving; no CPU/GPU measurement claim |
+| foundation_resume / A | Proposed production framework adapter/materials/owned receiving | Release-pinned source/toolchain audit; guarded-sort audit preserved, implementation awaits contract checkpoint |
+| consumer_resume / B | Proposed themed ImGui frontend/font assets/choreography/owned receiving | Read-only feasibility completed; implementation awaits contract checkpoint |
+
+Architect plus at most two workers. The fresh `.worktrees/phase15-performance`
+branch is empty and retained; it is not an active optimization implementation.
+Root will create renderer/frontend worktrees only after affected owners review
+the common contracts. No worker may build or use the device without root handoff.
+Historical worktrees/evidence stay intact. Phase14 G3-G5 remain open.
+
 ## Current merge and optimization workflow, 2026-10-09
 
 User explicitly requests merging all delivered Crucible work and codifying

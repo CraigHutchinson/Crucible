@@ -13,6 +13,14 @@ review. It does not replace the central phase plan, dispatch implementation, alt
 resource rules or claim that these screens, persistence, skills or animation exist.
 Phase14's full-frame and worker performance gates remain independent and open.
 
+Implementation is now authorized through the [Phase15 plan](../../phases/phase15.md).
+The [production boundary](../../decisions/phase15-production-rendering.md) separates
+the SDL concept2D/dev-test platform from the production migration target. The
+[framework qualification](../../decisions/phase15-framework-qualification.md)
+starts with Filament Vulkan/Metal, strongly themed ImGui and explicit DX12
+qualification. These are implementation decisions; the images below remain
+generated references until native captures and interaction evidence are received.
+
 ## Three selected generated concepts
 
 ### Hero: one material, one readable identity

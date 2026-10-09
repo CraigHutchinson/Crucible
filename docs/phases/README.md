@@ -23,7 +23,7 @@ package is not a permanent agent assignment.
 | 12 | Runtime budgets and opt-in bounded diagnostics | [Plan](phase12.md), [review](../sprint-reviews/phase-12.md); complete, PR25 merged at `c4ae9c0` |
 | 13 | Consumer presentation/input/sound reconciled with measured foundations | [Plan](phase13.md), [review](../sprint-reviews/phase-13.md); P13-01 merged PR29 at `9e7fed9`; native/participant and P13-02 sound remain open |
 | 14 | Interactive100K/150K full-frame performance and bounded parallel simulation | [Plan](phase14.md), [contracts](../decisions/phase14-scale-contracts.md), [review](../sprint-reviews/phase-14.md); delivered source/design merged PR30 at `c2ca771`, major native budgets open; [optimization process](../OPTIMIZATION_PROCESS.md) |
-| Next proposal | Cinematic identity and complete return-to-play journey | [Concepts/design](../concepts/phase15-experience/README.md), [parallel receiving plan](../concepts/phase15-experience/receiving-plan.md); design only, implementation undispatched |
+| 15 | First production playable: cinematic identity, themed UI and safe return-to-play | [Plan](phase15.md), [production rendering decision](../decisions/phase15-production-rendering.md), [review](../sprint-reviews/phase-15.md); authorized contract receiving, independent production target, SDL concept/dev-test retained |
 
 The [sprint-review archive](../sprint-reviews/README.md) tracks findings, follow-ups
 and delegation lessons for every completed increment.
@@ -165,6 +165,8 @@ sound/native/participant gates also remain open. The current major sprint is
 [Phase14](phase14.md), selected by the user for complete frame performance and
 joined parallel simulation. Shader portability and second-backend work keep their
 separate capability gates; Phase14 selects at most one qualified native backend.
-The parallel [experience design](../concepts/phase15-experience/README.md) proposes
-the next balanced menu→mission→result→persisted progress→Continue slice. It does
-not close Phase14 or dispatch a campaign/renderer/save framework.
+The [Phase15 plan](phase15.md) now authorizes the balanced
+menu→mission→result→persisted progress→Continue slice. User steering selects an
+independent production renderer, with SDL rendering retained as concept/dev-test
+tooling and themed ImGui as the UI consumer. Its staged receiving does not close
+Phase14's physical performance gates.
