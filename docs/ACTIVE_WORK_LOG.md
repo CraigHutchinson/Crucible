@@ -1,8 +1,28 @@
 # Active work log
 
+## Current merge and optimization workflow, 2026-10-09
+
+User explicitly requests merging all delivered Crucible work and codifying
+VTune/vectorization/aliasing-led iteration, with standing permission to iterate
+and optimize all Sub0 libraries. PR30 merged as
+`c2ca771a9fd6746294e4f23fa5460f8a5bf05375`; its head `1f8d019` passed all ten
+hosted jobs in run37917590945. Local main received the exact merge by fast-forward.
+G3-G5 remain open; delivery is not major performance acceptance.
+
+Root owns `codex/optimization-workflow`: new optimization process/index/template,
+AGENTS/benchmark/reuse/navigation/phase/review/active records and publication.
+No worker is active: both final source-review and workflow-document attempts hit
+their usage limits before delivery. Prior independent provider/integration reviews
+and actual CI receipts remain the evidence; no new worker review is claimed.
+Root completes this documentation locally. No build or native measurement CPU/GPU
+is held. VTune version/help probes returned0; this establishes metadata availability
+only, with raw logs in `build/optimization-workflow-20261009`. Historical worktrees,
+source alternatives and native artifacts are preserved. No unrelated library work
+is merged, reset or cleaned up by this directive.
+
 ## Phase14 execution and Pub main receiving, 2026-10-08
 
-Current resumed dispatch, 2026-10-09: user resumed and explicitly permits pushing
+Prior resumed dispatch, 2026-10-09: user resumed and explicitly permits pushing
 all Crucible work to GitHub. Root reserves CPU for integration/native receiving.
 Native pre-refinement receiving at `f70ce7d` is complete:24 short process arms
 across preserved-control,1/2/4/8 worker and attribution cohorts returned0 with

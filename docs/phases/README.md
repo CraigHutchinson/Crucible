@@ -22,7 +22,7 @@ package is not a permanent agent assignment.
 
 | 12 | Runtime budgets and opt-in bounded diagnostics | [Plan](phase12.md), [review](../sprint-reviews/phase-12.md); complete, PR25 merged at `c4ae9c0` |
 | 13 | Consumer presentation/input/sound reconciled with measured foundations | [Plan](phase13.md), [review](../sprint-reviews/phase-13.md); P13-01 merged PR29 at `9e7fed9`; native/participant and P13-02 sound remain open |
-| 14 | Interactive100K/150K full-frame performance and bounded parallel simulation | [Plan](phase14.md), [contracts](../decisions/phase14-scale-contracts.md), [review](../sprint-reviews/phase-14.md); execution in progress, draft PR30, major native budgets open |
+| 14 | Interactive100K/150K full-frame performance and bounded parallel simulation | [Plan](phase14.md), [contracts](../decisions/phase14-scale-contracts.md), [review](../sprint-reviews/phase-14.md); delivered source/design merged PR30 at `c2ca771`, major native budgets open; [optimization process](../OPTIMIZATION_PROCESS.md) |
 | Next proposal | Cinematic identity and complete return-to-play journey | [Concepts/design](../concepts/phase15-experience/README.md), [parallel receiving plan](../concepts/phase15-experience/receiving-plan.md); design only, implementation undispatched |
 
 The [sprint-review archive](../sprint-reviews/README.md) tracks findings, follow-ups
@@ -159,8 +159,9 @@ End with a short retrospective: what was delivered, what was consolidated/deferr
 what review found, which uncertainty remains and how that changes the next division.
 The next phase begins by reassessing these facts rather than repeating the old team map.
 
-Latest published increment is [Phase13 P13-01](phase13.md), PR29 at `9e7fed9`.
-Its sound/native/participant gates remain open. The current major sprint is
+Latest published delivery is [Phase14 source/design](phase14.md), PR30 at `c2ca771`;
+complete-frame/input/useful-parallelism acceptance remains open. Phase13's
+sound/native/participant gates also remain open. The current major sprint is
 [Phase14](phase14.md), selected by the user for complete frame performance and
 joined parallel simulation. Shader portability and second-backend work keep their
 separate capability gates; Phase14 selects at most one qualified native backend.

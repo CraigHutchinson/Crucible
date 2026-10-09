@@ -1,5 +1,11 @@
 # Benchmark workflow
 
+Every optimization follows the [codified process](OPTIMIZATION_PROCESS.md), with
+an [iteration record](optimization/iteration-template.md). It requires profiling,
+vectorization/code-generation and aliasing review, repeated refinement, controlled
+timing and combined consumer receiving. The initial integration loop below is one
+advisory workload; it is not full-frame acceptance.
+
 ```sh
 cmake --preset bench
 cmake --build --preset bench --parallel 4
