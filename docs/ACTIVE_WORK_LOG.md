@@ -603,3 +603,16 @@ in [PR24](https://github.com/CraigHutchinson/Crucible/pull/24). Actual integrate
 reclamation SVG/provenance visually inspected; phase review owns findings/follow-ups.
 Shell HTTPS push lacks credentials; connected GitHub app publishes the identical
 reviewed tree. No binary LFS workflow or permission escalation required.
+
+
+## Sub0 integration campaign, 2026-10-09
+
+Integration owns an isolated `codex/sub0-integration-campaign` checkout from
+`9f1716410cd223ad65237ded1779a7c3b4f39d54`: this log,
+`docs/optimization/README.md` and `docs/optimization/sub0-integration.md` only.
+User confirms all libraries may be updated as one coordinated batch. The sibling
+ECS branch owns profiler failure receiving and the detailed architecture/backlog
+review. No shared runtime/pin edit, heavy CPU run or concurrent worker dispatch.
+PR33's mission work is preserved. Source review and documentation are complete;
+actual profiling, adapter implementation and combined receiving remain pending
+as recorded in the campaign. No speedup or new API is claimed.
