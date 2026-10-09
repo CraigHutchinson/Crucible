@@ -60,6 +60,15 @@ dependency tests, examples, tools and benchmarks in consumers.
 Use CMakePresets.json for local work and CI. Do not disable checksum or TLS verification.
 
 Follow CONTRIBUTING.md and docs/benchmarking.md. Keep performance measurements advisory.
+All optimization work follows `docs/OPTIMIZATION_PROCESS.md`: profile the actual
+consumer, inspect vectorization/code generation and aliasing/lifetime contracts,
+iterate with controlled comparisons, and preserve failed/raw evidence. Use
+`docs/optimization/iteration-template.md` for each mechanism and its passes.
+Standing user authorization, 2026-10-09: iterate and optimize all Sub0 libraries
+when consumed evidence points upstream. No renewed permission is needed for that
+scope; observe each repository's correctness, review, ownership and measurement
+gates. Keep Crucible policy local and receive upstream changes through pinned
+production callers. Preserve unrelated work and artifact-bearing worktrees.
 Add meaningful behavior and lifetime tests for integration changes; run Debug, Release,
 and ASan/UBSan on supported platforms. Document what actually passed and limitations.
 Run CTest through `python scripts/run_tests.py --preset <preset>`; its narrow

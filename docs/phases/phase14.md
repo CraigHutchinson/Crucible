@@ -1,7 +1,8 @@
 # Phase 14: interactive large-swarm performance milestone
 
-Status: implementation authorized 2026-10-08; Pub main received and G0a frozen.
-Reviewed planning finalized2026-10-08; runtime parallel adoption still awaits G0b.
+Status: delivered implementation merged in PR30 on2026-10-09 as `c2ca771`;
+major complete-frame/pacing/useful-parallelism acceptance G3-G5 remains open.
+Reviewed planning finalized2026-10-08; bounded row execution is now consumed.
 Architect/root is accountable from design through integration, evidence and merge.
 User selected **full-frame performance and bounded parallel simulation** as the
 major sprint target. Planning baseline is clean main
@@ -11,6 +12,14 @@ major sprint target. Planning baseline is clean main
 PR29 closes P13-01 publication, not sound/native/participant receiving. See the
 [preceding review](../sprint-reviews/phase-13.md), [contracts and design review](../decisions/phase14-scale-contracts.md),
 and [Phase14 review record](../sprint-reviews/phase-14.md).
+
+The user requested merging the safe delivered baseline while optimization continues.
+All ten hosted jobs passed at PR30 head `1f8d019` in
+[run37917590945](https://github.com/CraigHutchinson/Crucible/actions/runs/37917590945).
+This merge does not close the major native targets below. Further iterations follow
+the [optimization process](../OPTIMIZATION_PROCESS.md) and
+[receiving ledger](../optimization/README.md), including relevant upstream library
+improvements under standing user authorization.
 
 ## Outcome and two-way design
 

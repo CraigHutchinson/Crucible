@@ -5,6 +5,12 @@ as a game. Application work should produce useful library feedback: clearer cont
 reproductions, tests, integration examples and controlled performance evidence.
 Extraction is one route; improving an existing project is often the better route.
 
+Standing user authorization,2026-10-09, covers iteration and optimization across
+all Sub0 libraries. Use the [optimization process](../OPTIMIZATION_PROCESS.md),
+each library's own gates, a named real consumer and an exact upstream reproduction.
+The permission permits relevant work without renewed approval; the catalog still
+does not justify speculative dependencies or edits to unrelated active work.
+
 Review this catalog at every phase start and close. A candidate is not a commitment
 to create a repository, introduce a dependency or move working code immediately.
 Current consumption follows [full pins](../../cmake/DependencyPins.cmake), not sibling

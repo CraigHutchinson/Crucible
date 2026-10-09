@@ -256,9 +256,21 @@ their current homes. No unconsumed caches, hierarchy or generic renderer is prop
 
 ## Closure
 
-Planning and execution claims are recorded in ACTIVE_WORK_LOG. Draft
-[PR30](https://github.com/CraigHutchinson/Crucible/pull/30) tracks the source work;
-source checkpoints and isolated worker trees are retained. Measurements, final-head
-CI, major acceptance and PR/merge/local-origin verification remain pending.
+Planning and execution claims are recorded in ACTIVE_WORK_LOG.
+[PR30](https://github.com/CraigHutchinson/Crucible/pull/30) merged on2026-10-09 as
+`c2ca771a9fd6746294e4f23fa5460f8a5bf05375`. Head
+`1f8d0191d7f65d402f14fb4ea0987ce4210c50d2` passed all ten exact-head jobs in
+[run37917590945](https://github.com/CraigHutchinson/Crucible/actions/runs/37917590945):
+Windows/Linux/macOS Debug/Release, headless omission, ASan/UBSan, actual TSan and
+software Vulkan receiving. Root fetched and fast-forwarded local main to the
+verified merge. Source checkpoints and isolated worker trees are retained.
+
+The user explicitly requested merging the delivered safe baseline while iteration
+continues and authorized optimization across all Sub0 libraries. That closes
+source publication/merge, not G3-G5 or the major milestone. The
+[codified optimization process](../OPTIMIZATION_PROCESS.md) governs further
+VTune/call-cost/code-generation/vectorization/aliasing-led passes and upstream
+receiving. Its [ledger](../optimization/README.md) records current evidence and
+undispatched investigations. Measurements and major acceptance remain open.
 All old worktrees/artifacts remain preserved. Major milestone completion requires
 the plan's G1-G7; a code-only merge cannot substitute for unreceived physical budgets.

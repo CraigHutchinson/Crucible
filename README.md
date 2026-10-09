@@ -42,9 +42,13 @@ forms of the same biomass. The lattice/shatter rule now has a primitive prototyp
 Major milestone in progress: [Phase14, interactive100K/150K performance](docs/phases/phase14.md)
 defines bounded parallel simulation, whole native frame budgets and two coordinated
 agent workstreams. Scale scenario and native lifecycle checkpoints are received;
-parallel adoption and physical60Hz/60FPS acceptance remain open. Read its
+parallel implementation is merged through PR30, while physical60Hz/60FPS acceptance
+remains open. Read its
 [contracts](docs/decisions/phase14-scale-contracts.md) and
 [execution review](docs/sprint-reviews/phase-14.md) for the exact evidence and limits.
+Further refinement follows the [codified optimization workflow](docs/OPTIMIZATION_PROCESS.md):
+profiling, vectorization/assembly and aliasing checks, controlled iteration and
+upstream Sub0 improvements.
 
 The [next experience design](docs/concepts/phase15-experience/README.md) explores
 a cinematic nanite title, main menu, mission progression and safe continuation.
