@@ -1,4 +1,5 @@
 #include <array>
+#include <charconv>
 #include <fstream>
 #include <locale>
 #include <sstream>
@@ -23,6 +24,16 @@ namespace crucible::application
 {
 namespace
 {
+std::optional<unsigned> parseUnsigned(std::istringstream& fields)
+{
+    std::string token;
+    if (!(fields >> token)) return std::nullopt;
+    unsigned value{};
+    const auto parsed = std::from_chars(token.data(), token.data() + token.size(), value);
+    if (parsed.ec != std::errc{} || parsed.ptr != token.data() + token.size()) return std::nullopt;
+    return value;
+}
+
 bool isValid(const ProgressProfile& profile) noexcept
 {
     const auto mission = profile.nextMission_;
@@ -78,12 +89,19 @@ std::expected<std::optional<ProgressProfile>, ProfileStore::Error> ProfileStore:
     std::istringstream fields{std::string{bytes.data(), static_cast<std::size_t>(count)}};
     fields.imbue(std::locale::classic());
     std::string magic;
-    unsigned version{}, continuation{}, mission{}, unlocked{}, motion{}, fullscreen{}, scale{};
-    if (!(fields >> magic >> version) || magic != "CRUCIBLE_PROGRESS")
+    if (!(fields >> magic) || magic != "CRUCIBLE_PROGRESS")
         return std::unexpected(Error::malformed);
-    if (version != 1) return std::unexpected(Error::incompatible);
-    if (!(fields >> continuation >> mission >> unlocked >> motion >> fullscreen >> scale))
-        return std::unexpected(Error::malformed);
+    const auto version = parseUnsigned(fields);
+    if (!version) return std::unexpected(Error::malformed);
+    if (*version != 1) return std::unexpected(Error::incompatible);
+    std::array<unsigned, 6> values{};
+    for (auto& value : values)
+    {
+        const auto parsed = parseUnsigned(fields);
+        if (!parsed) return std::unexpected(Error::malformed);
+        value = *parsed;
+    }
+    const auto& [continuation, mission, unlocked, motion, fullscreen, scale] = values;
     fields >> std::ws;
     if (!fields.eof() || continuation > 1 || mission > 1 || unlocked > 1 || motion > 1 ||
         fullscreen > 1 || scale > 2) return std::unexpected(Error::malformed);

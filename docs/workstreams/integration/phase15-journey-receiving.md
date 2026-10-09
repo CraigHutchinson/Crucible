@@ -16,7 +16,9 @@ clock fraction; returning from pause to the menu explicitly ends that attempt.
 The paused view warns about this discard policy. New construction precedes session
 replacement, and application attempt identity does not reuse session-local IDs.
 
-An optional ProfileStore receives at most256 bytes of version1 text. It stores
+An optional ProfileStore receives at most256 bytes of version1 text. Integer
+tokens use full-consumption unsigned from_chars parsing; signed aliases and
+overflow are refused before semantic validation. It stores
 continuation mission, relay unlock and reduced-motion/fullscreen/text-scale
 preferences. Mission IDs0/1 and typography0/1/2 have explicit wire values. It stores
 no ECS state, command trace, tick checkpoint or active attempt. Continue opens a
@@ -41,10 +43,11 @@ is also refused at the next owned save transaction.
 
 MSVC19.51.36246, C++23, Ninja, separate headless Release/Debug builds using the
 unchanged Sub0 pins and received CPM cache. Both actual caller/test builds passed
-50 steps; review fixes passed their9-step incremental rebuilds.
+50 steps; review fixes passed their9-step incremental rebuilds, and the final
+unsigned-token refinement passed a6-step incremental rebuild in each.
 
 Five application CTest cases passed in each configuration through the required
-prerequisite-aware runner. Final Release3.51s and Debug21.40s are suite execution
+prerequisite-aware runner. Final Release3.60s and Debug19.95s are suite execution
 receipts, not performance benchmarks. They cover real mission win/loss, stale
 intent rejection, suspended fraction reset, independent attempts, unlock/next,
 abandonment, bounded profile format, replacement/refusal, live unsupported-file

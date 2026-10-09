@@ -93,6 +93,10 @@ void checkPersistence(const std::filesystem::path& parent)
     require(!store.tryLoad(), "Locked relay continuation was accepted");
     writeBytes(fixture.path_, "CRUCIBLE_PROGRESS 1\n0 0 0 0 0 0\nTRAILING");
     require(!store.tryLoad(), "Trailing data was accepted");
+    writeBytes(fixture.path_, "CRUCIBLE_PROGRESS -4294967295\n1 1 1 1 0 1\n");
+    require(!store.tryLoad(), "Signed version alias was accepted");
+    writeBytes(fixture.path_, "CRUCIBLE_PROGRESS 1\n-4294967295 1 1 1 0 1\n");
+    require(!store.tryLoad(), "Signed continuation alias was accepted");
     writeBytes(fixture.path_, std::string(257, 'x'));
     require(!store.tryLoad(), "Oversized profile was accepted");
 }

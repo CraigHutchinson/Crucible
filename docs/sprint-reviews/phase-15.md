@@ -41,6 +41,7 @@ workers remain the maximum; no third implementation agent is dispatched.
 | P15-F06 | Framework helpers have context/staging/clamping/failure/completion caveats | Root verified release pin; scope narrow consumed adapters and honest receipts | Qualified lifecycle/storage/instance/error receiving before promotion |
 | P15-F07 | Paused frontend Back had no controller transition | Close/discard the active attempt, clear snapshot and warn in paused view | Source review and dedicated local Release/Debug case passed; hosted/native input pending |
 | P15-F08 | A profile changed to an unsupported version after load could be overwritten | Revalidate current destination under the owned save lease | Dedicated live-version-change refusal case passed locally; uncoordinated edits during lease excluded |
+| P15-F09 | Unsigned formatted extraction can accept signed numeric aliases | Full-token unsigned from_chars parsing rejects signs/overflow | Dedicated signed-version/continuation refusal cases received locally |
 
 ## Verification and useful artifacts
 
