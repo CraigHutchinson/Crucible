@@ -50,10 +50,16 @@ Further refinement follows the [codified optimization workflow](docs/OPTIMIZATIO
 profiling, vectorization/assembly and aliasing checks, controlled iteration and
 upstream Sub0 improvements.
 
-The [next experience design](docs/concepts/phase15-experience/README.md) explores
-a cinematic nanite title, main menu, mission progression and safe continuation.
-Its inspected concept renders and director's brief are proposals; the current
-executable does not yet contain those screens, saves or Quantum abilities.
+The [Phase15 experience](docs/phases/phase15.md) is now in implementation: a
+cinematic nanite title, themed ImGui menu and safe return-to-play journey through
+an independent production renderer. Existing SDL drawing is the concept/dev-test
+platform. Filament Vulkan/Metal qualification and explicit DX12 receiving are
+recorded in the [framework decision](docs/decisions/phase15-framework-qualification.md).
+The headless `--journey` caller receives screen transitions around a real mission;
+`--journey --route --profile path` also receives mission-boundary continuation and
+preferences across relaunch. Its parent directory must already exist. See
+[receiving evidence and limits](docs/workstreams/integration/phase15-journey-receiving.md).
+These checks do not establish native cinematic/menu visuals or Quantum abilities.
 
 The desktop prototype is a bounded reclamation challenge: recover **1,780 biomass
 quanta before tick 900**. Pause stops the deadline. Flow and radial tools change

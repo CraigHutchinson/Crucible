@@ -4,8 +4,10 @@ Portable contract proposal reviewed by A/B,2026-10-09, baseline `13642fe`.
 This specializes the [production decision](phase15-production-rendering.md).
 Framework-specific sequencing/receipt APIs require the
 [candidate qualification](phase15-framework-qualification.md) before freeze.
-The initial DX11-specific API proposal is superseded. No worker implements
-dependent code until root records the reviewed checkpoint.
+The initial DX11-specific API proposal is superseded. On continuation, B reviewed
+the exact root-authored portable headers from checkpoint8bdf587; root copied those
+reviewed drafts into the isolated frontend worktree for authoring. Dependent native
+renderer code still waits for the framework-specific numerical/tool checkpoint.
 
 ## Scene producer and consumer
 
@@ -31,6 +33,9 @@ the entire packet before native mutation, rather than accepting finiteness alone
 
 B's `CinematicChoreography` owns startup-sized pose storage and evaluates from
 integer elapsed milliseconds clamped to0..12000, preserving count/order. Its
+evaluation also consumes the actual drawable aspect, finite within[1/32,32], to
+fit the camera to portrait/landscape output without retaining a native surface.
+Derived camera/FOV values still obey all scene bounds above. Its
 returned frame/pose borrow expires on next evaluation/destruction. Renderer reads
 and uploads synchronously and retains no caller span. Root's clock selects the
 settled12000ms composition for reduced motion/skip. Decorative poses do not enter
@@ -75,7 +80,18 @@ updates, outstanding upload/capture slots and total staging bytes at the exact
 framework checkpoint. Scene/drawable bounds alone do not establish these limits.
 Reject budget overflow before beginFrame. A timeout never releases storage still
 owned by an outstanding callback; retain it until settlement or qualified teardown.
-These budgets are pending qualification, not an allocation-bound claim today.
+Root/A source-derived budget freeze for R0: at most32768 vertices,98304 uint16
+indices,16 draw lists and256 commands; require the matching20-byte ImDrawVert and
+2-byte ImDrawIdx layouts. Up to3 combined upload slots reserve2MiB each, with scene
+staging at most512KiB per slot including copied poses/core intensities/transforms.
+UI has at most4 live/retired RGBA8 textures,4096 per axis,128MiB aggregate resident,
+4 distinct texture actions per frame and64MiB aggregate upload in one outstanding
+texture batch. One cold RGBA capture slot holds at most64MiB. External adapter-owned
+CPU staging is at most136MiB:6MiB ring,64MiB texture,64MiB capture and2MiB metadata
+slack. This does not bound Filament's internal heap/GPU allocation. Empty ring
+capacity skips the whole frame before beginFrame. Font atlas peaks at all allowed
+DPI/text scales and actual owned-storage retirement still require receiving;
+source-derived budgets are not measured allocation/fidelity acceptance.
 
 Receipts identify application frame and surface generation, distinguishing
 scheduled,skipped,suspended,rejected,failed and qualified drain. Scheduling is not
@@ -117,7 +133,7 @@ Root defines a product-local `application/frontend_view.hpp`, including:
   optional intent per draw; root validates origin and current screen before applying.
   Repeated completion is idempotent.
 
-Actions are Continue/New Run/Missions/Options/Back/Begin/Resume/Retry/Next,
+Actions are Continue/New Run/Missions/Options/Back/Begin/Pause/Resume/Retry/Next,
 mission selection, explicit Quit confirmation/cancel, reduced-motion/fullscreen/
 text-scale changes and Replay Intro. The values do not serialize Runtime/ECS.
 Skip Intro is explicit and consumes its triggering input. Card titles are at most

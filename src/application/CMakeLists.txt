@@ -1,0 +1,5 @@
+add_library(crucible_application game_journey.cpp profile_store.cpp)
+add_library(Crucible::Application ALIAS crucible_application)
+target_include_directories(crucible_application PUBLIC ${PROJECT_SOURCE_DIR}/include)
+target_link_libraries(crucible_application PUBLIC crucible_options Crucible::Runtime)
+set_target_properties(crucible_application PROPERTIES CXX_EXTENSIONS OFF)

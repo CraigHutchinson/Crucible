@@ -2,6 +2,8 @@
 
 Status: in progress,2026-10-09. Accountable reviewer: architect/root.
 Baseline: `13642fe79c848a8509f2935d7357ad107e309c81`, PR31 merge.
+Planning checkpoint: PR32 merged as9f1716410cd223ad65237ded1779a7c3b4f39d54 after
+all10 exact-head jobs passed on8bdf587 in run37955070682.
 Plan: [Phase15](../phases/phase15.md). Decision:
 [production rendering](../decisions/phase15-production-rendering.md).
 
@@ -10,8 +12,8 @@ Plan: [Phase15](../phases/phase15.md). Decision:
 Receive the approved cinematic/menu art direction and complete return-to-play
 journey through a new production renderer. Source feasibility changed the initial
 split: flat SDL painting remains concept/dev-test; production owns native graphics
-and consumes themed ImGui. Current work is planning/contract receiving; no new
-rendering or persistence implementation is claimed.
+and consumes themed ImGui. The first actual application controller/profile caller
+is now received headlessly; native rendering/UI migration is still in progress.
 
 The latest user steering includes DX12/Vulkan and macOS/iOS from the start. A/B
 compared existing frameworks independently; root selects Filament1.77.3 as the
@@ -37,18 +39,23 @@ workers remain the maximum; no third implementation agent is dispatched.
 | P15-F04 | Fresh InspectorSession identities are session-local | Root app owns separate attempt/transition identity | Stale result/input rejection and successful replacement fixtures |
 | P15-F05 | DX11-only selection does not cover requested modern/Apple targets | Reopen selection; candidate Filament Vulkan/Metal, DX12 qualification retained | Exact-pin build/package and real platform receiving |
 | P15-F06 | Framework helpers have context/staging/clamping/failure/completion caveats | Root verified release pin; scope narrow consumed adapters and honest receipts | Qualified lifecycle/storage/instance/error receiving before promotion |
+| P15-F07 | Paused frontend Back had no controller transition | Close/discard the active attempt, clear snapshot and warn in paused view | Source review and dedicated local Release/Debug case passed; hosted/native input pending |
+| P15-F08 | A profile changed to an unsupported version after load could be overwritten | Revalidate current destination under the owned save lease | Dedicated live-version-change refusal case passed locally; uncoordinated edits during lease excluded |
 
 ## Verification and useful artifacts
 
-Current evidence is read-only source inspection and approved CONCEPT assets.
+Current evidence includes source inspection, approved CONCEPT assets and the
+[actual headless journey/profile receiver](../workstreams/integration/phase15-journey-receiving.md).
 Final independent A/B plan reviews confirmed the matched ImGui/context/upload
 ownership direction and identified orientation/font semantics, missing explicit
 UI budget freezing and stale iOS/handoff wording. Root corrected the wording and
 orientation/font contract and made numerical UI ceilings a required checkpoint
 before dependent renderer dispatch. Those ceilings still require qualification.
-No new build, native sequence, audio, saved-game journey, participant study or
-performance acceptance has been executed. Actual captures and commands will be
-recorded at each received package. Phase14 native G3-G5 remain open.
+Application Release/Debug builds and5/5 targeted cases passed in each, including
+real mission completion->profile->relaunch. A received the exact Filament Release
+runtime/material-tool/link closure at0e8a28e; its receiving record is integrated
+with that checkpoint. No native sequence, audio, participant study or performance
+acceptance has been executed. Actual captures are pending. Phase14 G3-G5 remain open.
 
 ## Retrospective and reuse
 
