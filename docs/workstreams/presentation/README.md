@@ -1,5 +1,14 @@
 # Presentation workstream — W8b/W9
 
+Current Phase15 split: A owns the new concrete native production renderer; B owns
+the themed ImGui frontend and deterministic cinematic choreography. Root defines
+common view/frame values and owns application/profile, window/input/presentation
+sequencing, root manifests and hardware receiving. Existing ScenePainter remains
+concept2D/dev-test; no production SDL-rendering fallback is selected. Read the
+[phase plan](../../phases/phase15.md) and
+[rendering decision](../../decisions/phase15-production-rendering.md) before edits.
+Implementation awaits the reviewed contract checkpoint and exclusive dispatch.
+
 Phase14 proposed assignment: workerB owns ScenarioSnapshot capacities, scalable
 world/overlay/HUD drawing, view-only density quality and phase14 frame capture.
 Root owns DesktopApp/window wiring. Measure current native SDL first; a live GPU

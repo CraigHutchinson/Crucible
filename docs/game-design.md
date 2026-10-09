@@ -7,9 +7,12 @@ Read this before the technical [architecture](architecture.md) or work packages.
 
 The user-requested [experience expansion](concepts/phase15-experience/README.md)
 develops a cinematic nanite title, main menu/options, mission progression, safe
-continuation and bounded candidate Quantum mechanics. Its director's brief and
-parallel receiving plan are proposed next work; approved visual direction does
-not change the current physics, biomass ledger or delivered screen inventory.
+continuation and bounded candidate Quantum mechanics. Implementation is now
+authorized under [Phase15](phases/phase15.md). Its
+[production framework qualification](decisions/phase15-framework-qualification.md)
+starts with Filament Vulkan/Metal and explicitly scopes DX12 qualification.
+The approved visual direction does not change the current physics, biomass ledger
+or delivered screen inventory; native visuals and player flows remain receiving gates.
 
 Current reference: fixed2048 identities, straight FLOW/radial fields and the
 optional secure-relay loop are implemented. That mode requires 1780 reclaimed by

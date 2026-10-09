@@ -5,12 +5,14 @@ authority. A reserved folder/target does not mean its gameplay package is implem
 Read [game design](../game-design.md) for player intent and the first playable slice;
 use [concepts](../concepts/README.md) as visual exploration rather than game rules.
 Active assignments are phase-specific: see the [phase workflow](../phases/README.md)
-and [current Phase13 package](../phases/phase13.md). Retain these module folders while
+and [current Phase15 package](../phases/phase15.md). Retain these module folders while
 consolidating small coupled packages under a single phase owner when useful.
-The next major [Phase14 proposal](../phases/phase14.md) consolidates Spatial/Swarm/
-Scheduling under workerA and snapshots/presentation/frame receiving under workerB;
-root owns shared contracts/wiring. Implementation is undispatched. Read the
-[scale contracts](../decisions/phase14-scale-contracts.md) before parallel use.
+Phase15 reassigns A to the independent native production renderer and B to themed
+ImGui frontend/choreography, with disjoint files under the frozen production
+boundary. Root owns shared values, app/profile, production executable, build/pins,
+review and hardware. Existing SDL painting remains concept/dev-test. Phase14
+delivered code retains open scale gates and queued optimization, governed by its
+[scale contracts](../decisions/phase14-scale-contracts.md).
 Read the [hierarchy/acceleration responsibility map](hierarchy-boundaries.md) with
 every brief. Spatial owns occupied traversal; upstream H geometric grouping/coverage;
 Presentation view caches/policy; phase-assigned navigation owns route research.
