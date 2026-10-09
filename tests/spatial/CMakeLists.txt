@@ -12,3 +12,8 @@ add_executable(crucible_spatial_allocation_tests GridAllocationTests.cpp)
 target_link_libraries(crucible_spatial_allocation_tests PRIVATE Crucible::Spatial)
 add_test(NAME spatial_allocation_reuse COMMAND crucible_spatial_allocation_tests)
 set_tests_properties(spatial_allocation_reuse PROPERTIES LABELS spatial)
+
+add_executable(crucible_spatial_caller_scratch_tests test_caller_scratch.cpp)
+target_link_libraries(crucible_spatial_caller_scratch_tests PRIVATE Crucible::Spatial)
+add_test(NAME spatial_caller_scratch COMMAND crucible_spatial_caller_scratch_tests)
+set_tests_properties(spatial_caller_scratch PROPERTIES LABELS spatial)

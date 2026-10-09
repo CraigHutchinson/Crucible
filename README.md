@@ -14,6 +14,10 @@ forms of the same biomass. The lattice/shatter rule now has a primitive prototyp
 
 - **Play:** build/test `desktop-release`, then launch `crucible_desktop` (`.exe`
   on Windows); add `--structural` for the secure-relay mission. See commands below.
+- **Scale:** `--scale 100000` or `--scale 150000` selects an evolving large world
+  with the same steering tools, pause and restart. Windows scale mode requires
+  Direct3D11 and reports native handoff failures. Overview aggregates visual marks;
+  zoom restores individuals. Simulation neighbors remain complete.
 - **Steer:**1/2/3 attract/repel/erase,4 FLOW drag; Tab chooses one of four slots.
   Space pauses, R restarts; queued edits apply on the next completed boundary.
 - **Inspect:** middle drag pans, wheel zooms, FIT VIEW restores the camera.
@@ -26,13 +30,26 @@ forms of the same biomass. The lattice/shatter rule now has a primitive prototyp
   Default production builds omit Log; drops are counted and decoding is cold work.
 - **Automate first, then review:** [personal steps and expected results](docs/playtests/phase12-personal-review.md)
   map to passed tests. Manual review covers usability; computer control diagnoses failures.
-- **Limits:** fixed2048-sample prototype, SDL desktop with enlarged text and
+- **Limits:** fixed identities:2048 in the mission or100K/150K in scale mode;
+  SDL desktop with enlarged text and
   wrapped feedback. Sound and fullscreen-default promotion retain separate gates.
   Physical Vulkan
   offscreen receiving is separate from desktop renderer promotion and frame performance.
 - **Develop:** [prerequisites, LFS and supported checks](CONTRIBUTING.md),
   [headless scenarios](#headless-scenarios-and-investigations), and
   [phase12 evidence](docs/sprint-reviews/phase-12.md).
+
+Major milestone in progress: [Phase14, interactive100K/150K performance](docs/phases/phase14.md)
+defines bounded parallel simulation, whole native frame budgets and two coordinated
+agent workstreams. Scale scenario and native lifecycle checkpoints are received;
+parallel adoption and physical60Hz/60FPS acceptance remain open. Read its
+[contracts](docs/decisions/phase14-scale-contracts.md) and
+[execution review](docs/sprint-reviews/phase-14.md) for the exact evidence and limits.
+
+The [next experience design](docs/concepts/phase15-experience/README.md) explores
+a cinematic nanite title, main menu, mission progression and safe continuation.
+Its inspected concept renders and director's brief are proposals; the current
+executable does not yet contain those screens, saves or Quantum abilities.
 
 The desktop prototype is a bounded reclamation challenge: recover **1,780 biomass
 quanta before tick 900**. Pause stops the deadline. Flow and radial tools change
@@ -87,6 +104,9 @@ python scripts/run_tests.py --preset desktop-release
 ./build/desktop-release/src/desktop/crucible_desktop
 # Structural relay mission:
 ./build/desktop-release/src/desktop/crucible_desktop --structural
+# Evolving large worlds, separate from the quota/relay mission:
+./build/desktop-release/src/desktop/crucible_desktop --scale 100000
+./build/desktop-release/src/desktop/crucible_desktop --scale 150000
 ```
 
 Windows uses a VS developer prompt and `.exe` suffix. Linux needs X11 or Wayland
@@ -147,7 +167,7 @@ software Vulkan receiving. [Benchmarking](docs/benchmarking.md) defines advisory
 measurement and reproducible evidence.
 
 Dependencies use a checksum-verified CPM bootstrap, namespaced targets and
-[full commit pins](cmake/DependencyPins.cmake): Sub0ECS master, Sub0Pub v2, Sub0Pipeline main,
+[full commit pins](cmake/DependencyPins.cmake): Sub0ECS master, Sub0Pub main (v2 merged), Sub0Pipeline main,
 Sub0Log and Sub0HexGrid H2. Gameplay directly consumes ECS/H2; live input uses Pub v2 and completed boundaries
 use a sequential Pipeline graph. Log supplies optional bounded runtime diagnostics
 when `CRUCIBLE_ENABLE_DIAGNOSTICS=ON`; production builds omit it by default.

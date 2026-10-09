@@ -5,11 +5,29 @@
 #include <crucible/runtime/RuntimeDiagnostics.hpp>
 #endif
 #include <limits>
+#include <algorithm>
 #include <crucible/presentation/ScenarioSnapshot.hpp>
 #include <crucible/simulation.hpp>
 #include <stdexcept>
+#include <vector>
 namespace crucible::runtime {
+namespace {
+GridExtent requireExtent(GridConfig grid) {
+    const auto extent = grid.TryValidate();
+    if (!extent) throw std::invalid_argument("Invalid inspector scenario geometry");
+    return *extent;
+}
+ExecutionSettings resolveExecution(ExecutionSettings settings, std::size_t population) {
+    if (settings.workers == 0 || settings.workers > 32)
+        throw std::invalid_argument("Inspector worker count must be in 1..32");
+    if (settings.partitions == 0) settings.partitions = settings.workers == 1 ? 1 : 2 * settings.workers;
+    if (settings.partitions > 128 || settings.partitions > std::max(population, std::size_t{1}))
+        throw std::invalid_argument("Inspector partitions exceed startup bounds");
+    return settings;
+}
+}
 struct InspectorSession::Run {
+    const GridExtent extent;
     Simulation simulation;
     HeadlessSession session;
     std::optional<ReclamationMissionProgress> mission, pending_mission;
@@ -17,20 +35,26 @@ struct InspectorSession::Run {
     std::unique_ptr<IntentDelivery> delivery;
     std::unique_ptr<presentation::ScenarioSnapshot> direct_frame;
     std::unique_ptr<BoundaryPipeline> graph;
+    const std::uint64_t runId;
+    std::vector<TickObservation> tickObservations;
+    std::size_t tickObservationCount{};
+    std::uint64_t droppedTickObservations{};
     ClockDriver clock;
-    Run(std::size_t samples, HeadlessSession::Limits limits,
-            std::optional<ReclamationMissionSettings> settings, bool structural,
-            ExecutionPath execution, std::uint64_t run_id)
-        : simulation(samples, {{64, 32, 1.0F}, 4, SteeringSettings{}, ResourceSettings{},
-              structural ? std::optional{StructuralSettings{}} : std::nullopt}),
+    Run(const ScenarioSettings& scenario, HeadlessSession::Limits limits,
+            std::optional<ReclamationMissionSettings> settings,
+            ExecutionPath execution, std::uint64_t run_id, ObservationSettings observations, ExecutionSettings rowExecution)
+        : extent(requireExtent(scenario.grid)),
+          simulation(scenario.population, {scenario.grid, scenario.fieldCapacity,
+              scenario.steering, scenario.resources, scenario.structural, observations.simulationStages, rowExecution}),
           session(simulation, limits),
           delivery(execution == ExecutionPath::integrated
               ? std::make_unique<IntentDelivery>(session.GetIngress(), run_id) : nullptr),
           direct_frame(execution == ExecutionPath::direct
-              ? std::make_unique<presentation::ScenarioSnapshot>(samples, 4, 2048) : nullptr),
+              ? std::make_unique<presentation::ScenarioSnapshot>(scenario.population, scenario.fieldCapacity, extent.cells) : nullptr),
           graph(execution == ExecutionPath::integrated
-              ? std::make_unique<BoundaryPipeline>(session, simulation, samples, 4, 2048,
+              ? std::make_unique<BoundaryPipeline>(session, simulation, scenario.population, scenario.fieldCapacity, extent.cells,
                     [this](const auto& frame) { return mission ? StageMission(frame) : false; }) : nullptr),
+          runId(run_id), tickObservations(observations.capacity),
           clock(session, graph ? std::function<bool()>{[this] { return graph->IsTerminal(); }}
               : (settings ? std::function<bool()>{[this] {
                   return UpdateMission(simulation.GetBiomassLedger(), simulation.GetStructuralState(),
@@ -58,10 +82,22 @@ struct InspectorSession::Run {
                         : session.GetIngress().TryAdmitCommands(commands);
     }
     HeadlessSession::StepResult StepGraph() {
+        const bool observed = !tickObservations.empty();
+        const auto before = observed ? std::chrono::steady_clock::now() : std::chrono::steady_clock::time_point{};
+        const auto commandsBefore = observed ? session.GetTrace().size() : 0;
         pending_mission.reset();
         const auto result = graph->TryStep();
         if (result.status == HeadlessSession::StepStatus::advanced && pending_mission)
             mission = pending_mission; // noexcept value commit after successful frame publication
+        if (observed && result.status == HeadlessSession::StepStatus::advanced) {
+            const auto end = std::chrono::steady_clock::now();
+            if (tickObservationCount < tickObservations.size())
+                tickObservations[tickObservationCount++] = {runId, session.GetCompletedTick(),
+                    std::chrono::duration_cast<std::chrono::nanoseconds>(end - before),
+                    session.GetTrace().size() - commandsBefore, simulation.getTickStatistics()};
+            else if (droppedTickObservations != std::numeric_limits<std::uint64_t>::max())
+                ++droppedTickObservations;
+        }
         return result;
     }
     bool StageMission(const presentation::ScenarioSnapshot& frame) {
@@ -94,9 +130,19 @@ struct InspectorSession::Run {
 InspectorSession::InspectorSession(std::size_t samples, HeadlessSession::Limits limits,
         std::optional<ReclamationMissionSettings> mission, bool structural, ExecutionPath execution,
         Diagnostics diagnostics)
-    : samples_(samples), limits_(limits), mission_(structural && !mission ? std::optional{ReclamationMissionSettings{}} : mission),
-      structural_(structural), execution_(execution),
-      run_(std::make_unique<Run>(samples, limits, mission_, structural, execution, run_id_)) {
+    : InspectorSession(ScenarioSettings{.population = samples,
+          .structural = structural ? std::optional{StructuralSettings{}} : std::nullopt},
+          limits, structural && !mission ? std::optional{ReclamationMissionSettings{}} : mission,
+          execution, diagnostics) {}
+InspectorSession::InspectorSession(ScenarioSettings scenario, HeadlessSession::Limits limits,
+        std::optional<ReclamationMissionSettings> mission, ExecutionPath execution,
+        Diagnostics diagnostics, ObservationSettings observations, ExecutionSettings rowExecution)
+    : scenarioSettings_(scenario), limits_(limits), mission_(mission),
+      execution_(execution), observationSettings_(observations), rowExecution_(resolveExecution(rowExecution, scenario.population)) {
+    if ((observations.capacity && execution != ExecutionPath::integrated) ||
+        (observations.simulationStages && !observations.capacity))
+        throw std::invalid_argument("tick observations require integrated execution and positive attribution capacity");
+    run_ = std::make_unique<Run>(scenarioSettings_, limits, mission_, execution, run_id_, observations, rowExecution_);
 #if CRUCIBLE_ENABLE_DIAGNOSTICS
     if (diagnostics == Diagnostics::bounded) {
         try { diagnostics_ = std::make_unique<RuntimeDiagnostics>(); }
@@ -108,6 +154,12 @@ InspectorSession::InspectorSession(std::size_t samples, HeadlessSession::Limits 
 #endif
 }
 InspectorSession::~InspectorSession() = default;
+RowExecutionStorage InspectorSession::getRowExecutionStorage() const noexcept {
+    return run_->simulation.getRowExecutionStorage();
+}
+std::uint64_t InspectorSession::getRowFallbackCount() const noexcept {
+    return run_->simulation.getRowFallbackCount();
+}
 ClockDriver::PumpResult InspectorSession::TryPump(std::chrono::nanoseconds elapsed) {
     const auto result = run_->clock.TryPump(elapsed);
     if (result.advanced_ticks && run_->direct_frame && !run_->direct_frame->TryCapture(run_->simulation)) {
@@ -164,7 +216,7 @@ void InspectorSession::Close() { run_->clock.Close(); }
 void InspectorSession::Restart() {
     if (run_id_ == std::numeric_limits<std::uint64_t>::max())
         throw std::overflow_error("inspector run identifier exhausted");
-    auto replacement = std::make_unique<Run>(samples_, limits_, mission_, structural_, execution_, run_id_ + 1);
+    auto replacement = std::make_unique<Run>(scenarioSettings_, limits_, mission_, execution_, run_id_ + 1, observationSettings_, rowExecution_);
     run_->clock.Close();
     run_.swap(replacement);
     ++run_id_;
@@ -176,6 +228,12 @@ ClockDriver::Summary InspectorSession::GetSummary() const { return run_->clock.G
 std::optional<ReclamationMissionProgress> InspectorSession::GetMission() const noexcept { return run_->mission; }
 const presentation::ScenarioSnapshot& InspectorSession::GetSnapshot() const noexcept { return run_->Frame(); }
 std::span<const AppliedCommand> InspectorSession::GetTrace() const noexcept { return run_->session.GetTrace(); }
+std::span<const InspectorSession::TickObservation> InspectorSession::getTickObservations() const noexcept {
+    return std::span{run_->tickObservations}.first(run_->tickObservationCount);
+}
+std::uint64_t InspectorSession::getDroppedTickObservations() const noexcept {
+    return run_->droppedTickObservations;
+}
 const RuntimeDiagnostics* InspectorSession::GetDiagnostics() const noexcept {
 #if CRUCIBLE_ENABLE_DIAGNOSTICS
     return diagnostics_.get();

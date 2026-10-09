@@ -103,3 +103,41 @@ W10 reports full-cycle costs, memory, latency tails and limitations per consumer
 Timed runs are serialized across projects. No hierarchy outcome or new module is
 claimed. Self-review covers W0-W10 and upstream T/G/R/Q/H/X/I; actual interfaces
 still freeze in the phase before dispatch.
+
+## Phase14 proposed scale assignment
+
+[Phase14](../phases/phase14.md) introduces a proposed parallel-compute axis, not a
+hierarchy or navigation selection. This is the required all-stream responsibility
+audit before implementation dispatch. Existing production remains sequential.
+G0a freezes values/query/scratch/observation, G0b receives executor/backend adoption;
+each exact path/branch/base and resource claim is recorded at dispatch. A and B
+are proposed session owners, root is the sole shared-file/contract integrator.
+
+| Stream | Decision / edit owner | Reads -> writes and defining responsibility | Lifetime / handoff gate |
+|---|---|---|---|
+| W0 Integration | Retain / root | ECS -> owned gather; validated staged rows -> serial ECS/resource commit; shared root wiring/pins/CI | No worker ECS pointers; every partition/callback joins before commit/capture; G1/G2/G7 |
+| W1 Contracts | Retain / root | Consumed scenario/execution/observation value representation and failure/numeric policy | No native/library implementation leaks; root freeze plus affected A/B callers, G0a |
+| W2 Runtime | Retain / root | Input cutoff/clock -> resolved execution policy injected into Simulation; inline outer graph -> coherent owned publication | No Runtime dependency in Core/Scheduling; restart replaces only after joins; G1/G2 |
+| W3 Spatial | Consolidate with A | Immutable epoch/index -> complete sorted caller-owned query results | A owns spatial include/src/tests/local manifests/docs; per-partition startup scratch, no rebuild until join; G1 |
+| W3 Fields | Retain sequential / root shared requests only | Committed edits -> immutable sampling for A | No field mutation during partition epoch; math and force rules unchanged, G1 |
+| W4 Blight | Retain sequential / root shared requests only | Committed infection -> prepared spread/protection | Existing exclusive lease and joint resource commit, no parallel domain mutation; G1 |
+| W5 Swarm | Consolidate with A | Complete gathered input/Spatial/Fields -> disjoint pending row proposals | A owns swarm compartments; arithmetic/FP/order parity, no destination publication on partial failure; G1/G2 |
+| W6 Interactions | Retain sequential / root shared requests only | Post-move contacts -> stock/ledger/fuse/shatter proposals | Existing conservation/ordering and coordinator commit; not authority over view density, G1 |
+| W7 Scheduling | Activate with A | Frozen ranges/callables -> executed proposals and joined status | A owns scheduling compartments; exact Pipeline queue/dispatch/body+callback guarantees; root owns upstream pin/wiring, G0b/G2 |
+| W8a Telemetry | Retain / root | Copied numeric stage/capacity observations -> bounded records/cold decode | Existing RuntimeDiagnostics stays Runtime-owned; no logging worker ECS/index traversal, measured observation cost/loss |
+| W8b Snapshots | Consolidate with B | Committed Simulation -> startup-capacity owned frames | B owns ScenarioSnapshot paths/tests; root outer publication. Borrow expires next capture/restart; no CPU reader overlap; G1/G6 |
+| W9 Presentation | Consolidate with B | Owned frame/camera -> world/overlays/HUD/native submissions; view-only density | B owns presentation compartments; root DesktopApp/window/native wiring. Copy before GPU return; fence-retire bounded slots, G0b/G3/G6 |
+| W10 Validation | Consolidate with B; root final verdict | Root-defined copied observations -> raw timelines/schema/capture | B owns only phase14-named harness/scripts/evidence; root existing scripts/manifests and all CPU/GPU reservations. Independent fullstate/query oracles, G1-G7 |
+
+Navigation/terrain/hierarchy/native simulation compute are deferred; no folder or
+API is created for them. No ownership transfers to upstream geometry. No simulation
+LOD is permitted. Sub0Pipeline owns neutral executor guarantees; A supplies exact
+source/repro and a separately claimed upstream package, root promotes pins only
+after independent upstream receiving. The same agent cannot edit a cached dependency.
+
+Top-down receiving is a readable moving100K/150K front under actual field control;
+bottom-up receiving is complete queries, explicit storage/join bounds and whole
+frame costs. Actual influenced population/concentration and view quality are
+checkpointed before timed acceptance. Root owns shared contracts and artifact
+inventories; affected briefs refer to this audit instead of creating duplicate
+numeric policy. Agent concurrency never grants concurrent ECS, Pub or Log access.

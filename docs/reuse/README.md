@@ -16,7 +16,7 @@ the guarantees actually checked. No upstream edits were made during this catalog
 | ID / area | Current placement/status | Reuse direction and phase action | Gate / evidence |
 |---|---|---|---|
 | R01: ECS storage and identity | Sub0ECS master (v2 merged), consumed by Simulation | Feed bounded creation/identity and consumer integration findings into Sub0ECS; keep game entities/rules in Crucible | Phase 1 audit records 24-bit indices, generation reuse and lack of transactional creation guarantee; the current pin bounds creation at `Entity::kMaxEntities` (terminating) and Simulation refuses larger populations first; upstream changes need current-source reproduction and strict consumer checks |
-| R02: typed delivery | Sub0Pub v2, production scoped synchronous input | Improve callback lifetime examples and bounded ingress integration when a real input adapter arrives | Preserve explicit disconnect/drain ownership; the pinned audit is evidence, not a claim that every finding remains at current HEAD |
+| R02: typed delivery | Sub0Pub main (v2 merged), production scoped synchronous input | Improve callback lifetime examples and bounded ingress integration when a real input adapter arrives | Preserve explicit unsubscribe/drain ownership; the pinned audit is evidence, not a claim that every finding remains at current HEAD |
 | R03: execution and joining | Sub0Pipeline, production sequential boundary graph | Feed concrete bounded executor/join/cancellation requirements upstream during W7; retain game phase policy locally | Exact-version join/failure fixtures before changing pins; no new concurrency work in phase 2 |
 | R04: compact observation | Sub0Log, optional bounded RuntimeDiagnostics | Numeric refused commands and terminal summaries; existing upstream API suffices | Phase12 receives decode, exhaustion/drop accounting, scoped binding, restart and full-state parity |
 | R05: hex topology and geometry | [Sub0HexGrid H2](Sub0HexGrid.md), finite regions/complete candidates delivered; consumed by Crucible spatial Grid | Phase 3 P3-02 preserves physical/query compatibility and delivers HX-07 receiving fixtures; hierarchy is separate research | Upstream PR 4 delivers package/numerical evidence; [Phase 3 evidence](../workstreams/integration/phase3-validation.md) records complete-query/lifetime/replay promotion gates |
@@ -34,6 +34,13 @@ means the consumer/need is not yet demonstrated. Mark extracted only after the
 standalone project and Crucible consumer both pass their gates.
 
 ## How an increment feeds reusable libraries
+
+Phase14's selected [scale proposal](../phases/phase14.md) receives R03 bounded
+executor dispatch/joins with an actual Simulation caller and R06 immutable complete
+queries with a Swarm caller. Improve Pipeline only from exact-source fixtures and
+independent package plus game receiving; do not duplicate its executor locally.
+Domain/view policy stays local, H2 geometry stays upstream, R09 caches remain
+unconsumed. This is a planned disposition, not new pins or measured improvement.
 
 For a candidate or upstream finding record: originating phase/commit, domain behavior,
 product-neutral capability, named receiving consumer, existing project alternatives,

@@ -54,8 +54,8 @@ Drain bounded input commands at tick boundaries. Structural changes must occur a
 workers finish. Define overflow, teardown and borrowed-state lifetime behavior.
 
 Use target-scoped CMake requirements and CPMAddPackage in cmake/Dependencies.cmake.
-Pin full dependency commits in cmake/DependencyPins.cmake; Sub0Pub must come from
-v2 and Sub0ECS from master (v2 is merged there and its branch deleted). Disable
+Pin full dependency commits in cmake/DependencyPins.cmake; Sub0Pub comes from main
+(v2 is merged there) and Sub0ECS from master (v2 is merged there and its branch deleted). Disable
 dependency tests, examples, tools and benchmarks in consumers.
 Use CMakePresets.json for local work and CI. Do not disable checksum or TLS verification.
 

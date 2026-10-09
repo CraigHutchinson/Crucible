@@ -12,10 +12,11 @@ namespace {
 // Isolated executable: observation only, no production allocator or conditional path.
 thread_local bool observe_allocations = false;
 thread_local std::size_t observed_allocations = 0;
+thread_local std::size_t observed_bytes = 0;
 }
 
 void* operator new(std::size_t bytes) {
-    if (observe_allocations) ++observed_allocations;
+    if (observe_allocations) { ++observed_allocations; observed_bytes += bytes; }
     if (void* allocation = std::malloc(bytes == 0 ? 1 : bytes)) return allocation;
     throw std::bad_alloc{};
 }
@@ -54,6 +55,8 @@ int main() {
         crucible::interactions::Reclamation::ProtectedArea{{.5F, .5F}, 1}) && accepted;
     accepted = reclaim.TryRelease(1, 0) && accepted;
     accepted = reclaim.TryStep(blight, std::span{samples}.first(1)) && accepted;
+    // Component work remains strictly allocation-free on every toolchain.
+    accepted = observed_allocations == 0 && accepted;
     // Whole production coordinator: all64 colocated at the exact-radius relay.
     // Include mobile-only steering/grid gathering and the owned capture boundary.
     accepted = simulation.TryFuseRelay() == crucible::StructuralCommandResult::applied && accepted;
@@ -65,7 +68,10 @@ int main() {
             captured->biomass->structure_mass == 64 && accepted;
     accepted = simulation.TryCountNeighbors({.5F, .5F}, 1) == 0 && accepted;
     accepted = simulation.TryShatterRelay(1) == crucible::StructuralCommandResult::applied && accepted;
+    accepted = observed_allocations == 0 && accepted;
     simulation.tick();
+    const auto mobileTickAllocations = observed_allocations;
+    const auto mobileTickBytes = observed_bytes;
     captured = simulation.TryCopyState(owned);
     accepted = captured && captured->structural && captured->biomass && accepted;
     if (captured && captured->structural && captured->biomass)
@@ -77,6 +83,19 @@ int main() {
         accepted = owned_samples[index].activity == (index < 48 ? crucible::SampleActivity::mobile
             : crucible::SampleActivity::lost) && accepted;
     observe_allocations = false;
-    if (!accepted || observed_allocations != 0) return 2;
-    std::cout << "No ordinary new/new[] calls during reclamation or whole structural coordinator transitions\n";
+#if defined(_MSC_VER) && defined(_M_X64) && _ITERATOR_DEBUG_LEVEL > 0
+    // Received Pipeline per-job std::string move creates one checked 16-byte proxy.
+    // The empty anchored epoch skips dispatch; only the single mobile job pays it.
+    constexpr std::size_t expectedOrchestrationCalls = 1, expectedOrchestrationBytes = 16;
+#else
+    constexpr std::size_t expectedOrchestrationCalls = 0, expectedOrchestrationBytes = 0;
+#endif
+    if (!accepted || mobileTickAllocations != expectedOrchestrationCalls || mobileTickBytes != expectedOrchestrationBytes ||
+        observed_allocations != mobileTickAllocations || observed_bytes != mobileTickBytes) {
+        std::cerr << "Reclamation/structural allocation receiving failed: calls=" << observed_allocations
+            << " bytes=" << observed_bytes << " expectedOrchestrationCalls=" << expectedOrchestrationCalls << '\n';
+        return 2;
+    }
+    std::cout << "Reclamation and structural edits/copy: zero ordinary allocations; mobile row orchestration calls="
+        << mobileTickAllocations << " requestedBytes=" << mobileTickBytes << '\n';
 }

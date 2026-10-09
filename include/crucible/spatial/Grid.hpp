@@ -16,7 +16,8 @@ namespace crucible::spatial {
 struct SpatialSample { SampleId id{}; Position position{}; };
 
 /** Bounded spatial bins with complete, ID-sorted radius results.
- * Simulation owns this object. Rebuild and query require exclusive access; no input borrows persist.
+ * Simulation owns this object. Rebuild and owned-scratch queries require exclusive access.
+ * Caller-scratch queries may share an immutable index; no input borrows persist.
  */
 class Grid {
 public:
@@ -42,6 +43,20 @@ public:
      * @return Complete IDs in owned scratch, or nullopt for invalid query input.
      */
     [[nodiscard]] std::optional<std::span<const SampleId>> TryQuery(Position center, float radius) noexcept;
+
+    /** Queries an immutable index into caller-owned complete-result storage.
+     * @param center Finite physical position, clamped to the closed world bounds.
+     * @param radius Finite nonnegative inclusive radius; zero includes coincidence.
+     * @param callerScratch Storage for every committed sample, disjoint from index storage
+     * and other concurrent queries' scratch. A larger unused tail remains unchanged.
+     * @return Complete ascending IDs in callerScratch, or nullopt on invalid input or
+     * insufficient storage, with callerScratch unchanged on rejection.
+     * @note Concurrent calls require an immutable index and distinct scratch. Rebuild,
+     * destruction and owned-scratch calls must not overlap them. The result borrows
+     * callerScratch until it is overwritten or destroyed; this call retains nothing.
+     */
+    [[nodiscard]] std::optional<std::span<const SampleId>> tryQuery(
+        Position center, float radius, std::span<SampleId> callerScratch) const noexcept;
 
     /// Number of nonempty cells in the latest committed rebuild.
     [[nodiscard]] constexpr std::size_t GetOccupiedCellCount() const noexcept { return m_OccupiedCells; }

@@ -5,6 +5,12 @@ into a concrete proposed game. New mission, resource and visual choices below ar
 design proposals for iteration, not claims of implemented or playtested behavior.
 Read this before the technical [architecture](architecture.md) or work packages.
 
+The user-requested [experience expansion](concepts/phase15-experience/README.md)
+develops a cinematic nanite title, main menu/options, mission progression, safe
+continuation and bounded candidate Quantum mechanics. Its director's brief and
+parallel receiving plan are proposed next work; approved visual direction does
+not change the current physics, biomass ledger or delivered screen inventory.
+
 Current reference: fixed2048 identities, straight FLOW/radial fields and the
 optional secure-relay loop are implemented. That mode requires 1780 reclaimed by
 tick900 plus a lattice held120 consecutive completed ticks; fuse invests64,
@@ -62,6 +68,12 @@ separates reusable geometry from swarm binning and game rules. Choosing hex swar
 bins does not automatically change Blight's cardinal spread; cellular adjacency,
 finite world boundaries and visual mapping need an explicit decision and fixtures.
 The current rectangular grid is the verified implementation, not a final product constraint.
+
+The user-selected [Phase14 technical milestone](phases/phase14.md) tests a readable
+continuously evolving100K/150K swarm under live spatial control, with complete-frame
+and joined-execution evidence. Expanded-world density and same-arena crowd stress
+are distinct scenarios. This scale proposal preserves existing game rules; growth,
+attrition, terrain and sound remain subsequent received consumer work.
 
 The visible arena is a local patch of a larger world. The user's future direction
 adds terrain height for appearance and movement cost, mining that forms depressions,

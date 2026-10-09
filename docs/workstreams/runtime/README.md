@@ -1,5 +1,11 @@
 # Runtime workstream — W2
 
+Phase14 proposal retains coordinator-only ingress/clock/outer BoundaryPipeline.
+Root resolves startup execution policy into Contracts-owned values passed to
+Simulation; Core/Scheduling must not depend on Runtime. All partition bodies and
+callbacks join before capture/restart. See [scale contracts](../../decisions/phase14-scale-contracts.md)
+and [all-stream audit](../hierarchy-boundaries.md#phase14-proposed-scale-assignment).
+
 ## Hierarchy and acceleration boundary
 
 Own admission, replay/pause, deadline/catch-up and when resumable domain work runs. Scheduling owns executor joins; Spatial owns its cursor. Partial hierarchy work cannot silently complete a tick or change snapshot freshness policy.

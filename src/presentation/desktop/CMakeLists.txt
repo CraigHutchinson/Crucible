@@ -1,4 +1,4 @@
-add_library(crucible_scene_painter ScenePainter.cpp)
+add_library(crucible_scene_painter ScenePainter.cpp checked_presentation.cpp frame_completion_observer.cpp)
 add_library(Crucible::ScenePainter ALIAS crucible_scene_painter)
 target_include_directories(crucible_scene_painter PUBLIC ${PROJECT_SOURCE_DIR}/include)
 target_link_libraries(crucible_scene_painter PUBLIC crucible_options Crucible::Presentation

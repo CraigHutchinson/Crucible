@@ -35,7 +35,7 @@ Only benchmark tools are opt-in; correctness tests stay enabled.
 
 Dependency integration changes must configure from a fresh build tree and run the
 stack round-trip test. Change full SHA pins deliberately, record the source branch,
-and verify the Pub v2, ECS master and Pipeline main APIs. CPM_SOURCE_CACHE can be set in the environment;
+and verify Pub main (v2 merged), ECS master and Pipeline main APIs. CPM_SOURCE_CACHE can be set in the environment;
 CPM_Sub0ECS_SOURCE and equivalent package overrides support local checkouts.
 The CPM bootstrap is SHA256-verified and dependencies are not installed system-wide.
 

@@ -13,8 +13,9 @@ namespace crucible::spatial { class Grid; }
 
 namespace crucible::swarm {
 /** Computes bounded separation and radial steering from one immutable tick-start state.
- * Simulation owns this object and its reusable output scratch. Calls require exclusive access
- * to this object and the supplied grid. No input, field or grid borrow persists after a call.
+ * Simulation owns this object and its reusable output scratch. TryCompute requires exclusive
+ * access; caller-scratch row computation shares immutable input/settings/index only.
+ * No input, field or grid borrow persists after a call.
  * The numerical rule is specified in docs/workstreams/swarm/design.md.
  */
 class Steering {
@@ -32,6 +33,25 @@ public:
     [[nodiscard]] bool TryCompute(std::span<const SampleState> input,
                                   const fields::FieldSet& fields, spatial::Grid& grid,
                                   std::span<SampleState> output) noexcept;
+
+    /** Computes one staged row range while retaining complete neighbor input.
+     * @param fullInput Complete strictly ID-sorted tick-start samples, finite and in bounds.
+     * @param fields Immutable field values for the same tick-start epoch.
+     * @param constGrid Immutable index rebuilt from exactly fullInput positions/IDs.
+     * @param firstRow First input row to compute; pendingRows.size() is the range length.
+     * @param pendingRows Caller-owned staging, disjoint from fullInput and all active outputs.
+     * @param queryScratch Caller-owned query storage for every committed index sample,
+     * disjoint from input, outputs, index and other active queries.
+     * @return True on complete range computation. Invalid range/input, overlap or insufficient
+     * storage rejects before writes. A query/membership failure may leave staging partial;
+     * the coordinator must discard all pending ranges if any task fails.
+     * @note No allocation or owned scratch mutation. Concurrent calls require immutable
+     * input/fields/index and distinct output/query storage, joined before publication,
+     * mutation or destruction. All borrows end when this call returns.
+     */
+    [[nodiscard]] bool tryComputeRows(std::span<const SampleState> fullInput,
+        const fields::FieldSet& fields, const spatial::Grid& constGrid, std::size_t firstRow,
+        std::span<SampleState> pendingRows, std::span<SampleId> queryScratch) const noexcept;
 
 private:
     GridExtent m_Extent;

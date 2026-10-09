@@ -30,8 +30,8 @@ if(CRUCIBLE_ENABLE_SANITIZERS)
     # Keep Debug assertions/symbols; avoid unoptimized instrumentation dominating replay.
     target_compile_options(crucible_options INTERFACE -O1 -fsanitize=address,undefined -fno-omit-frame-pointer -fno-optimize-sibling-calls)
     target_link_options(crucible_options INTERFACE -fsanitize=address,undefined)
-    # Sub0Pipeline is the only compiled dependency; its SequentialExecutor is header-only.
-    foreach(dependency IN ITEMS Sub0Pipeline)
+    # Instrument both the graph core and the consumed native worker adapter.
+    foreach(dependency IN ITEMS Sub0Pipeline Sub0Pipeline_Priority)
         if(TARGET ${dependency})
             target_compile_options(${dependency} PRIVATE -O1 -fsanitize=address,undefined -fno-omit-frame-pointer -fno-optimize-sibling-calls)
             target_link_options(${dependency} PUBLIC -fsanitize=address,undefined)
@@ -54,7 +54,7 @@ add_library(crucible_core src/simulation.cpp)
 add_library(Crucible::Core ALIAS crucible_core)
 target_include_directories(crucible_core PUBLIC include)
 target_link_libraries(crucible_core PUBLIC crucible_options Crucible::Contracts Sub0ECS::Sub0ECS
-    PRIVATE Crucible::Swarm Crucible::Spatial Crucible::Fields Crucible::Blight Crucible::Interactions)
+    PRIVATE Crucible::Swarm Crucible::Spatial Crucible::Fields Crucible::Blight Crucible::Interactions Crucible::Scheduling)
 set_target_properties(crucible_core PROPERTIES CXX_EXTENSIONS OFF)
 add_subdirectory(src/runtime)
 

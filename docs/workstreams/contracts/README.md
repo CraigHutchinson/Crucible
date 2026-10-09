@@ -1,5 +1,11 @@
 # Contracts workstream — W1
 
+Phase14 proposed assignment: root defines consumed scenario/execution/observation
+values, epoch/scratch bounds, result/failure and numerical policy with affected
+callers. Runtime resolves policy; Core and Scheduling never depend on Runtime.
+G0a/G0b freeze before dependent adoption. See [scale contracts](../../decisions/phase14-scale-contracts.md)
+and [all-stream audit](../hierarchy-boundaries.md#phase14-proposed-scale-assignment).
+
 ## Hierarchy and acceleration boundary
 
 Own consumed shared snapshot/request/result values and failure/capacity compatibility. Keep epochs, snapshot rows, SampleId and ECS handles distinct; geometry, reducer algorithms and tree storage stay with their providers.

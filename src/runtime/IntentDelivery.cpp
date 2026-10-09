@@ -33,7 +33,7 @@ struct AdmissionSink final : sub0::Subscribe<IntentBatch> {
         if (trySubscribe() != sub0::SubscribeResult::Subscribed)
             throw std::runtime_error("intent sink registration failed");
     }
-    ~AdmissionSink() { disconnect(); }
+    ~AdmissionSink() { unsubscribe(); }
     void receive(const IntentBatch& batch) noexcept override {
         try {
             receipt = {batch.run_id, batch.request_id, ingress.TryAdmitCommands(batch.commands)};

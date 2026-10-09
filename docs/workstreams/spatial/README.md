@@ -1,5 +1,11 @@
 # Spatial workstream — W3
 
+Phase14 proposed assignment: workerA owns immutable concurrent index reads and
+caller-owned startup query scratch, preserving complete ascending-ID results.
+No rebuild overlaps an epoch. See [scale contracts](../../decisions/phase14-scale-contracts.md)
+and [all-stream audit](../hierarchy-boundaries.md#phase14-proposed-scale-assignment);
+the current exclusive-query API remains unchanged until received implementation.
+
 ## Hierarchy and acceleration boundary
 
 Own occupied indexes, bins, bounds caches, base occupancy/count summaries and bounded build/update/query frontiers. Consume reviewed upstream geometry/coverage; domain owners define reducer meaning, Presentation view policy, and navigation connectivity/costs.

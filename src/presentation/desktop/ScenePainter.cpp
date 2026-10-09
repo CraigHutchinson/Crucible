@@ -25,6 +25,10 @@ constexpr SDL_FColor Repel{1, 199 / 255.F, 107 / 255.F, 1};
 constexpr SDL_FColor Text{.86F, .91F, .98F, 1};
 constexpr SDL_FColor Lattice{1, .76F, .32F, 1};
 constexpr ScreenRect View{24, 96, 1232, 520};
+constexpr double DensityCellSize = 4;
+constexpr auto DensityColumns = static_cast<std::size_t>(View.width / DensityCellSize);
+constexpr auto DensityRows = static_cast<std::size_t>(View.height / DensityCellSize);
+static_assert(DensityColumns * DensityCellSize == View.width && DensityRows * DensityCellSize == View.height);
 
 bool Color(SDL_Renderer& renderer, SDL_FColor color) noexcept {
     return SDL_SetRenderDrawColorFloat(&renderer, color.r, color.g, color.b, color.a);
@@ -242,8 +246,10 @@ bool drawFeedback(SDL_Renderer& renderer, std::string_view message) noexcept {
 }
 }
 
-ScenePainter::ScenePainter(std::size_t sample_capacity, std::size_t cell_capacity)
-    : sample_capacity_{sample_capacity}, cell_capacity_{cell_capacity} {
+ScenePainter::ScenePainter(std::size_t sample_capacity, std::size_t cell_capacity, ViewPolicy policy)
+    : sample_capacity_{sample_capacity}, cell_capacity_{cell_capacity}, policy_{policy} {
+    if (policy != ViewPolicy::exact && policy != ViewPolicy::densityOverview)
+        throw std::invalid_argument("Invalid painter view policy");
     const auto count = std::max(sample_capacity, cell_capacity);
     if (count > static_cast<std::size_t>(std::numeric_limits<int>::max() / 6) ||
         count > vertices_.max_size() / 4 || count > indices_.max_size() / 6 ||
@@ -251,6 +257,7 @@ ScenePainter::ScenePainter(std::size_t sample_capacity, std::size_t cell_capacit
         throw std::length_error("ScenePainter geometry capacity is unrepresentable");
     vertices_.resize(count * 4);
     indices_.resize(count * 6);
+    if (policy == ViewPolicy::densityOverview) densityBins_.resize(DensityColumns * DensityRows);
     for (std::size_t i = 0; i < count; ++i) {
         const auto base = static_cast<int>(i * 4);
         const std::array quad{base, base + 1, base + 2, base, base + 2, base + 3};
@@ -331,23 +338,63 @@ bool ScenePainter::TryDraw(SDL_Renderer& renderer, const ScenarioSnapshot& frame
         !SDL_SetRenderScale(&renderer, 1, 1) || !Color(renderer, Background) || !SDL_RenderClear(&renderer)) return false;
     const SDL_Rect clip{24, 96, 1232, 520};
     if (!SDL_SetRenderClipRect(&renderer, &clip)) return false;
+    DrawStatistics statistics{};
+    std::size_t visibleCells = 0;
     for (std::size_t i = 0; i < blight.size(); ++i) {
         const auto col = i % config.columns, row = i / config.columns;
         const auto x = origin->x + static_cast<double>(col) * config.cell_size * scale;
         const auto y = origin->y + static_cast<double>(row) * config.cell_size * scale;
         const auto color = stocks.empty() || stocks[i] != 0 ? (blight[i] ? Infected : Stocked)
             : (blight[i] ? ExhaustedInfected : ExhaustedClear);
-        (void)Quad(vertices_.data() + i * 4, x, y, x + config.cell_size * scale, y + config.cell_size * scale, color);
+        if (Quad(vertices_.data() + visibleCells * 4, x, y,
+                 x + config.cell_size * scale, y + config.cell_size * scale, color)) ++visibleCells;
     }
-    if (!blight.empty() && !SDL_RenderGeometry(&renderer, nullptr, vertices_.data(),
-            static_cast<int>(blight.size() * 4), indices_.data(), static_cast<int>(blight.size() * 6))) return false;
+    statistics.visibleCells = visibleCells;
+    if (visibleCells && !SDL_RenderGeometry(&renderer, nullptr, vertices_.data(),
+            static_cast<int>(visibleCells * 4), indices_.data(), static_cast<int>(visibleCells * 6))) return false;
     const auto half = std::clamp(scale * .08, 2., 5.);
+    const bool density = policy_ == ViewPolicy::densityOverview && scale < 4;
+    if (density) std::ranges::fill(densityBins_, DensityBin{});
     std::size_t mobile_count = 0;
     for (const auto& sample : samples) {
         if (sample.activity != SampleActivity::mobile) continue;
+        ++statistics.authoritativeMobile;
         const auto point = *camera.TryToScreen(sample.position);
-        (void)Quad(vertices_.data() + mobile_count++ * 4, point.x - half, point.y - half,
-                   point.x + half, point.y + half, Nanite);
+        if (point.x + half <= View.x || point.y + half <= View.y ||
+            point.x - half >= View.x + View.width || point.y - half >= View.y + View.height) {
+            ++statistics.hiddenSamples;
+            continue;
+        }
+        if (density) {
+            const auto x = static_cast<std::size_t>(std::clamp((point.x - View.x) / DensityCellSize,
+                0., static_cast<double>(DensityColumns - 1)));
+            const auto y = static_cast<std::size_t>(std::clamp((point.y - View.y) / DensityCellSize,
+                0., static_cast<double>(DensityRows - 1)));
+            auto& bin = densityBins_[y * DensityColumns + x];
+            ++bin.count;
+            bin.x += std::clamp(point.x, View.x, View.x + View.width);
+            bin.y += std::clamp(point.y, View.y, View.y + View.height);
+            ++statistics.aggregatedSamples;
+        } else {
+            if (Quad(vertices_.data() + mobile_count * 4, point.x - half, point.y - half,
+                     point.x + half, point.y + half, Nanite)) {
+                ++mobile_count;
+                ++statistics.individualSamples;
+            }
+        }
+    }
+    if (density) {
+        for (const auto& bin : densityBins_) {
+            if (bin.count == 0) continue;
+            const auto count = static_cast<double>(bin.count);
+            const auto intensity = static_cast<float>(std::clamp(std::log2(1. + count) / 6., .35, 1.));
+            const SDL_FColor color{Nanite.r * intensity, Nanite.g * intensity, Nanite.b * intensity, 1};
+            const auto x = bin.x / count, y = bin.y / count;
+            if (Quad(vertices_.data() + mobile_count * 4, x - 1, y - 1, x + 1, y + 1, color)) {
+                ++mobile_count;
+                ++statistics.aggregateMarks;
+            }
+        }
     }
     if (mobile_count && !SDL_RenderGeometry(&renderer, nullptr, vertices_.data(),
             static_cast<int>(mobile_count * 4), indices_.data(), static_cast<int>(mobile_count * 6))) return false;
@@ -381,7 +428,7 @@ bool ScenePainter::TryDraw(SDL_Renderer& renderer, const ScenarioSnapshot& frame
     const char* run_state = ui.mission && ui.mission->outcome != ReclamationMissionOutcome::active
         ? "STOPPED" : (ui.paused ? "PAUSED" : "RUNNING");
     SDL_snprintf(line, sizeof line, "Tick %" PRIu64 " | Nanites %zu | %s%s | Slot %zu", info->completed_tick,
-                 mobile_count, run_state, ui.blocked ? " / BLOCKED" : "", ui.selected_slot + 1);
+                 statistics.authoritativeMobile, run_state, ui.blocked ? " / BLOCKED" : "", ui.selected_slot + 1);
     if (!Label(renderer, 24, 54, line, BodyTextScale)) return false;
     if (info->biomass) {
         const auto& mass = *info->biomass;
@@ -441,6 +488,7 @@ bool ScenePainter::TryDraw(SDL_Renderer& renderer, const ScenarioSnapshot& frame
     if (!Color(renderer, Text) || !drawFeedback(renderer, ui.message) ||
         !Label(renderer, 24, 816, "Middle pan | Wheel zoom | Tab slot | Del erase", BodyTextScale) ||
         !Label(renderer, 24, 840, "Space pause | R restart | F11 full | Esc cancel / window", BodyTextScale)) return false;
+    statistics_ = statistics;
     return true;
 }
 }

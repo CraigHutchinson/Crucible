@@ -1,5 +1,11 @@
 # Swarm workstream — W5
 
+Phase14 proposed assignment: workerA factors ordered row computation over complete
+immutable input into disjoint pending outputs; root commits only after all joins.
+Existing math/FP/order and failure-preservation stay authoritative. See
+[scale contracts](../../decisions/phase14-scale-contracts.md) and the
+[all-stream audit](../hierarchy-boundaries.md#phase14-proposed-scale-assignment).
+
 ## Hierarchy and acceleration boundary
 
 Own motion/steering math and deterministic neighbor consumption over immutable Spatial/Fields input. Propose next-state outputs; do not build occupied trees, mutate ECS or adopt visual LOD as simulation behavior. Navigation is a separately assigned research role.

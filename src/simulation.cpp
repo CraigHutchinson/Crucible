@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <chrono>
 #include <exception>
 #include <limits>
 #include <stdexcept>
@@ -15,6 +16,7 @@
 #include <crucible/spatial/Grid.hpp>
 #include <crucible/swarm/integration.hpp>
 #include <crucible/swarm/Steering.hpp>
+#include "crucible/scheduling/row_partitions.hpp"
 
 namespace crucible {
 namespace {
@@ -29,14 +31,28 @@ GridExtent RequireExtent(GridConfig grid) {
     if (!extent) throw std::invalid_argument("Invalid scenario geometry");
     return *extent;
 }
+
+Simulation::ScenarioOptions validateExecution(Simulation::ScenarioOptions options, std::size_t count) {
+    const auto settings = options.rowExecution;
+    if (!settings.workers || !settings.partitions || settings.partitions > std::max(count, std::size_t{1}) ||
+        (!options.steering && (settings.workers != 1 || settings.partitions != 1)))
+        throw std::invalid_argument("Invalid resolved scenario row execution");
+    if (settings.partitions > scheduling::RowPartitions::maxPartitions ||
+        settings.workers > static_cast<std::size_t>(std::numeric_limits<int>::max()) ||
+        count > static_cast<std::size_t>(std::numeric_limits<std::ptrdiff_t>::max()) / sizeof(SampleId) / settings.partitions)
+        throw std::length_error("Scenario partition scratch is unrepresentable");
+    return options;
+}
 }
 
 struct Simulation::ScenarioState {
     using Queries = std::tuple<sub0ecs::Query<Position, Velocity, SampleId>, sub0ecs::Query<Position>>;
     ScenarioState(ScenarioOptions options, std::size_t count)
-        : options(options), extent(RequireExtent(options.grid)), grid(options.grid, count),
+        : options(validateExecution(options, count)), extent(RequireExtent(options.grid)), grid(options.grid, count),
           fields(options.field_capacity), blight(options.grid), samples(count),
           tick_input(options.steering || options.resources ? count : 0), next_state(options.steering ? count : 0),
+          queryScratch(options.steering ? count : 0),
+          partitionScratch(options.steering ? count * (options.rowExecution.partitions - 1) : 0),
           activities(options.structural ? count : 0, SampleActivity::mobile) {
         if (options.structural) {
             const auto& settings = *options.structural;
@@ -54,6 +70,15 @@ struct Simulation::ScenarioState {
         if (options.resources) reclamation.emplace(options.grid, count, *options.resources);
         if (!blight.TrySeed(options.grid.columns / 2, options.grid.rows / 2))
             throw std::logic_error("Validated scenario seed was out of bounds");
+        if (steering) {
+            rowPartitions = std::make_unique<scheduling::RowPartitions>(count, options.rowExecution,
+                [this](scheduling::RowRange range) {
+                    auto scratch = range.partitionIndex == 0 ? std::span{queryScratch}
+                        : std::span{partitionScratch}.subspan((range.partitionIndex - 1) * queryScratch.size(), queryScratch.size());
+                    return steering->tryComputeRows(epochInput, fields, grid, range.firstRow,
+                        epochOutput.subspan(range.firstRow, range.rowCount), scratch);
+                });
+        }
     }
 
     ScenarioOptions options;
@@ -63,6 +88,12 @@ struct Simulation::ScenarioState {
     blight::Grid blight;
     std::vector<spatial::SpatialSample> samples;
     std::vector<SampleState> tick_input, next_state;
+    std::vector<SampleId> queryScratch; ///< Coordinator-owned complete-result scratch for the immutable row seam.
+    std::vector<SampleId> partitionScratch; ///< Remaining disjoint complete-result buffers, fixed at startup.
+    std::span<const SampleState> epochInput{};
+    std::span<SampleState> epochOutput{};
+    std::optional<TickStatistics> tickStatistics; ///< Only successfully committed explicit attribution observations.
+    std::uint64_t rowFallbackCount{};
     std::vector<SampleActivity> activities;
     std::optional<StructuralState> structural;
 
@@ -72,6 +103,8 @@ struct Simulation::ScenarioState {
     std::optional<swarm::Steering> steering;
     std::optional<interactions::Reclamation> reclamation;
     sub0ecs::store::World<Queries> world;
+    // Destroy/join before any captured scenario state is released.
+    std::unique_ptr<scheduling::RowPartitions> rowPartitions;
 };
 
 Simulation::Simulation(std::size_t count) { Populate(ValidatePopulation(count)); }
@@ -110,10 +143,22 @@ void Simulation::RebuildSpatial() {
 }
 
 void Simulation::tick() {
+    if (scenario_) scenario_->tickStatistics.reset();
     if (completed_ticks_ == std::numeric_limits<std::uint64_t>::max())
         throw std::overflow_error("Simulation tick identity exhausted");
     if (scenario_) {
         auto& state = *scenario_;
+        const bool observed = state.options.observeTimings;
+        using Clock = std::chrono::steady_clock;
+        auto phaseBegin = observed ? Clock::now() : Clock::time_point{};
+        TickStatistics statistics;
+        bool rowFellBack{};
+        const auto finishPhase = [&](std::chrono::nanoseconds& destination) {
+            if (!observed) return;
+            const auto end = Clock::now();
+            destination = std::chrono::duration_cast<std::chrono::nanoseconds>(end - phaseBegin);
+            phaseBegin = end;
+        };
         if (state.steering) {
             std::size_t index = 0;
             state.world.each<Position, Velocity, SampleId>([&](const Position& position, const Velocity& velocity, const SampleId& id) {
@@ -124,15 +169,42 @@ void Simulation::tick() {
             std::ranges::sort(input, {}, &SampleState::id);
             for (std::size_t i = 0; i < index; ++i)
                 state.samples[i] = {state.tick_input[i].id, state.tick_input[i].position};
-            if (!state.grid.TryRebuild(std::span{state.samples}.first(index)) ||
-                !state.steering->TryCompute(input, state.fields, state.grid, output))
-                throw std::logic_error("Scenario steering rejected tick-start state");
+            statistics.inputRows = index;
+            finishPhase(statistics.gather);
+            if (!state.grid.TryRebuild(std::span{state.samples}.first(index)))
+                throw std::logic_error("Scenario spatial index rejected tick-start state");
+            finishPhase(statistics.index);
+            {
+                state.epochInput = input;
+                state.epochOutput = output;
+                struct EpochReset {
+                    ScenarioState& state;
+                    ~EpochReset() { state.epochInput = {}; state.epochOutput = {}; }
+                } reset{state};
+                const auto outcome = state.rowPartitions->tryRun(index);
+                using Status = scheduling::RowPartitions::RunStatus;
+                if (outcome == Status::unsupportedFloatingPoint) {
+                    rowFellBack = true;
+                    // A successfully joined unsupported mode permits replacing all staging.
+                    if (!state.steering->tryComputeRows(input, state.fields, state.grid, 0, output, state.queryScratch))
+                        throw std::logic_error("Scenario sequential floating-point fallback failed");
+                } else if (outcome != Status::complete) {
+                    throw std::logic_error("Scenario row proposal failed before commit");
+                }
+                statistics.workers = outcome == Status::unsupportedFloatingPoint ? 1 : state.options.rowExecution.workers;
+                statistics.partitions = outcome == Status::unsupportedFloatingPoint ? 1 : std::min(index, state.options.rowExecution.partitions);
+                statistics.taskCapacity = state.options.rowExecution.partitions;
+            }
+            statistics.queryRows = index;
+            statistics.queryScratchCapacity = state.queryScratch.size() + state.partitionScratch.size();
+            finishPhase(statistics.propose);
             state.world.each<Position, Velocity, SampleId>([&](Position& position, Velocity& velocity, const SampleId& id) {
                 if (state.Activity(id) != SampleActivity::mobile) return;
                 const auto sample = std::ranges::lower_bound(output, id, {}, &SampleState::id);
                 position = sample->position;
                 velocity = sample->velocity;
             });
+            finishPhase(statistics.commit);
         } else {
             state.world.each<Position, Velocity, SampleId>([&](Position& position, Velocity& velocity, const SampleId& id) {
                 if (state.Activity(id) != SampleActivity::mobile) return;
@@ -148,6 +220,7 @@ void Simulation::tick() {
                 position.y = static_cast<float>(std::clamp(static_cast<double>(position.y) +
                     static_cast<double>(velocity.y) * tick_seconds, 0.0, static_cast<double>(state.extent.height)));
             });
+            finishPhase(statistics.commit);
         }
         if (state.reclamation) {
             std::size_t index = 0;
@@ -162,17 +235,37 @@ void Simulation::tick() {
         } else {
             state.blight.Step();
         }
+        finishPhase(statistics.resources);
         RebuildSpatial();
         ++completed_ticks_;
+        if (rowFellBack) ++state.rowFallbackCount; // Bounded by completed_ticks_, whose overflow is rejected before work.
         if (state.structural && state.structural->occupied &&
             state.structural->hold_ticks != std::numeric_limits<std::uint64_t>::max())
             ++state.structural->hold_ticks;
+        finishPhase(statistics.rebuild);
+        if (observed) {
+            statistics.completedTick = completed_ticks_;
+            statistics.occupiedCells = state.grid.GetOccupiedCellCount();
+            state.tickStatistics = statistics;
+        }
         return;
     }
     world_.each<Position, Velocity>([](Position& position, const Velocity& velocity) {
         swarm::integrate_position(position, velocity);
     });
     ++completed_ticks_;
+}
+std::optional<TickStatistics> Simulation::getTickStatistics() const noexcept {
+    return scenario_ ? scenario_->tickStatistics : std::nullopt;
+}
+RowExecutionStorage Simulation::getRowExecutionStorage() const noexcept {
+    if (!scenario_ || !scenario_->rowPartitions) return {};
+    const auto settings = scenario_->options.rowExecution;
+    return {scenario_->queryScratch.size() + scenario_->partitionScratch.size(), settings.partitions,
+        settings.workers > 1 ? settings.partitions : 0};
+}
+std::uint64_t Simulation::getRowFallbackCount() const noexcept {
+    return scenario_ ? scenario_->rowFallbackCount : 0;
 }
 double Simulation::checksum() {
     double sum = 0.0;

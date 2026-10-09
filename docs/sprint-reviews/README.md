@@ -20,7 +20,8 @@ consider. Read the latest review before planning or delegating another sprint.
 
 | 11 | Production Pub/Pipeline backbone; complete | [Review](phase-11.md), [plan](../phases/phase11.md) | `835c781`; [PR24](https://github.com/CraigHutchinson/Crucible/pull/24) |
 | 12 | Measured runtime budgets and bounded diagnostics; complete | [Review](phase-12.md), [plan](../phases/phase12.md) | `c4ae9c0`, [PR25](https://github.com/CraigHutchinson/Crucible/pull/25) |
-| 13 | Readable player controls; sound deferred, in progress | [Review](phase-13.md), [plan](../phases/phase13.md) | Dispatch `5b84ccd` (PR28); P13-01 receiving |
+| 13 | Readable player controls published; native/participant/sound gates open | [Review](phase-13.md), [plan](../phases/phase13.md) | `9e7fed9`, [PR29](https://github.com/CraigHutchinson/Crucible/pull/29) |
+| 14 | Interactive100K/150K full-frame performance and bounded parallel simulation; planning | [Review](phase-14.md), [plan](../phases/phase14.md) | Proposal from `9e7fed9`; implementation undispatched |
 
 ## Review procedure
 

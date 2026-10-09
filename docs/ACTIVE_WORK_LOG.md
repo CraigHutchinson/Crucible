@@ -1,5 +1,148 @@
 # Active work log
 
+## Phase14 execution and Pub main receiving, 2026-10-08
+
+Current resumed dispatch, 2026-10-09: user resumed and explicitly permits pushing
+all Crucible work to GitHub. Root reserves CPU for integration/native receiving.
+Native pre-refinement receiving at `f70ce7d` is complete:24 short process arms
+across preserved-control,1/2/4/8 worker and attribution cohorts returned0 with
+closed observations, zero FP fallbacks and received cold process-memory counters.
+Actual control N-worker refusal used the full source SHA and failed before work;
+the earlier malformed short-SHA attempt is retained separately. These probes
+establish no thermal qualification or percentile/budget acceptance. A delivered
+dense-ID refinement `87605d0`, received as `d23335b`: Debug6/6 and Release6/6
+affected checks pass, with strict zero kernel/query allocations. Root now reserves
+CPU/GPU for combined receiving and subsequent isolated native attribution.
+Combined Release56/56 passed39.94s at `466dc80`; four short1/8-worker attribution
+arms at both scales returned0 with no classifier errors or completed FP fallbacks.
+Raw diagnostics are retained in `build/phase14-dense-native-probe-04`; no qualified
+speedup or native budget is claimed. Root now releases CPU/GPU, retaining source
+review, central records and authorized publication.
+B now owns only `docs/concepts/phase15-experience/**` in isolated
+`.worktrees/phase15-experience-design`, base `f70ce7d`: user-requested cinematic
+intro, full player journey, progression/save/Quantum design and generated concepts.
+Design package `e75cf59` is received as `466dc80`; B extends only its owned docs
+with the user-provided gamer research and menu requirements (`6423de1`, received
+as `263429a`, complete). A performs a read-only
+coordinator refinement audit; neither worker runs builds or measurements.
+Root owns central design/navigation/phase records and all later code/hardware.
+Full Debug at `84d7362` passed54/55; the whole structural coordinator allocation
+fixture alone rejected the received checked-MSVC proxy. The corrected fixture
+keeps component/edit/copy work strictly zero, receives exactly1call/16B on the
+single mobile job only for checked MSVC x64, and requires zero in Release/unchecked
+STL. Targeted Debug1/1 and Release1/1 pass; original failure logs are preserved.
+Release55/55 passed40.15s at `d4b2033`. Provider `328388c` is received
+as `68dc63e`, with Debug3/3 and Release3/3, source-reviewed failure containment and
+qualified checked-MSVC orchestration costs. Worker original FP state between jobs
+remains source-reviewed rather than directly observed. B's worker-axis/native
+capture and bounded process-memory handoffs are integrated at `ced304a`/`f70ce7d`;
+original `.worktrees/phase14-frame` is clean and preserved. A's isolated
+`.worktrees/phase14-steering-refinement` is clean after dense-ID delivery.
+No upstream H2 or public prepared-epoch API is dispatched.
+Scheduling provider tree/evidence remains clean and preserved. Root owns all shared
+Simulation/Runtime/DesktopApp/main/pin/CI/doc/hardware/publication work.
+Exact merged Pipeline f730c4e receiving previously passed full Release51/51 and
+Debug51/51 (221.78s). No performance/native runs overlap these builds.
+
+User authorizes dependency update and plan execution. Root owns branch
+`phase14-large-swarm`, planning checkpoint `c801123`, current worktree. Verified
+Sub0Pub main `d566c71c47cc5aeba3ed0b615052dbe6fcd91f23` (PR35), after PR32's
+v2 promotion. Root claims pins/IntentDelivery migration, Contracts/Simulation/
+Runtime/DesktopApp shared wiring, root inventories/CI and central docs. Serial
+CPU reserved for fresh dependency receiving builds/tests; no timing run concurrent.
+Two agents perform read-only Wave0 query/executor and presentation/observer audits
+until exact G0a contracts/worktrees are dispatched. Existing historical worktrees,
+Pub local branch and its untracked editor settings are preserved. Fresh phase14
+build/source trees only; caches remain read-only. Pub main received in fresh
+MSVC19.51 Release:43/43 tests passed (35.97s), including scoped delivery/teardown,
+stack roundtrip, mission/replay and desktop receiving; checkpoint `3f85c82`.
+Compiler debug information uses Embedded (/Z7) to avoid a stale PDB-server mismatch;
+canary passes, bootstrap SHA256 verified, sources match exact pins. CPU released.
+G0a query/row/scenario/provider ownership is frozen in the decision; current
+Pipeline allocation/submission failure risks block parallel adoption until an
+upstream independently received fix. Status: Wave1 provider implementation next.
+
+| Wave1 owner | Base/branch/worktree | Exclusive edit claim | Resource and gate |
+|---|---|---|---|
+| foundation_review / A | `0bfb0d2`, phase14-kernel, `.worktrees/phase14-kernel` | Spatial/Swarm include/src/tests/local manifests and owned docs | Delivered `e6b242d`; Debug7/7 and Release7/7; CPU released |
+| consumer_review / B | `0bfb0d2`, phase14-frame, `.worktrees/phase14-frame` | Presentation include/src/tests/local manifests/docs; phase14-named harness/scripts | No heavy build/device until root reservation; preserve2K pixels, scalable native query/capture prerequisites |
+| architect/root | phase14-large-swarm, primary checkout | Contracts/Simulation/Runtime/DesktopApp/main and every shared manifest/pin/CI/doc | Owns serial compile/test/native/measurement; all provider changes through exact handoffs |
+
+Shared scenario checkpoint `4e80534` receives configurable evolving100K/150K
+desktop settings and restart identity; six affected Release tests passed. Draft
+[PR30](https://github.com/CraigHutchinson/Crucible/pull/30) owns the source checkpoint.
+Root completed combined Debug48/48 at the production row checkpoint, then the six
+affected checked-presentation desktop cases in Debug. Release receives those six
+after the lifecycle fixture's event-order correction. Physical D3D11 query/handoff
+receiving and both100K/150K production world/HUD resize/fullscreen/pause/restart/close
+checks passed; these short fixtures establish no frame-budget or visual-quality claim.
+Root CPU/GPU released. A now reserves exclusive CPU for standalone upstream
+Debug/Release fixtures and baseline builds; timing starts only after all builds end
+and the architect is notified. B authors the production capture harness source-only.
+A implements the independently
+claimed upstream executor prerequisite in Sub0Pipeline's `.worktrees/bounded-submission`
+at `fac58c0`; the bounded queue/strong rejection, constructor/scoped rollback,
+allocation-safe root/successor/trigger failure and join design is approved. Root alone
+owns upstream publication/pin receiving. No competing hardware timing run.
+Full combined/platform/race and physical frame gates remain open.
+2026-10-08 follow-through: A released CPU after five upstream alternating pairs
+and allocation captures; VTune stalled before sampling, owned processes stopped
+and no profile claimed. A/B continue the upstream capture-destruction review/fix
+source-only. Root now reserves CPU/GPU for the native capture build/classifier,
+observed sequential-control build and short production probes. No upstream build
+or competing measurement until root releases. Hosted Crucible `b3f73ba` passed
+all ten jobs including ThreadSanitizer; later source needs its own receiving.
+Root completed native harness/control receiving at `395b4b1`/`e0fb323`: full
+Release50/50 and control46/46, plus all12 short native process arms across both
+scales and none/FLOW/gather. Every process returned0 with correlated observations;
+probe rows remain ineligible for percentiles. Initial influence12.776%/10.64%,
+actual Intel Graphics D3D11/240Hz/driver receipt, pre-present overview/detail
+captures visually inspected. Cold100K pump costs about110ms per tick establish
+an attribution need, not a whole-tick percentile or budget claim. Raw owned
+artifact `build/phase14-native-probe-01` is retained. Root then received complete
+bounded boundary/stage observations at `0979218`, Release6/6; independent review
+prompted `5cf5d91`, whose new blocked-boundary fixture still awaits execution.
+Root released CPU/GPU. A exclusively receives/measures upstream `8e3eaf9`;
+B reviews and extends the native harness source-only with the root observation
+checkpoint. Root remains source/network-only until A releases. Upstream PR36
+is published; full validation must be freshly requested by a ci:full label event
+after each head change, since synchronize alone selects the routine job.
+Resume follow-through: corrected upstream PR36 head `b20428b` passed every full
+job in run37848858562, including macOS, then merged as `f730c4e`. Its portable
+fixture clears caller-owned moved-from functions without weakening any lifetime
+assertion. Clean sibling main fast-forwarded; every owned worktree/build remained.
+Root adopted exact merged Pipeline pin at `b967731`, full Release51/51 passed
+34.24s. The earlier observation correction also passed its Debug6/6; camera
+schema3 classifier23 cases passed, both source arms build. Six explicit native
+stage/camera probes at `73b4f2e` passed with complete identities/tick coverage and
+zero drops, retaining raw data/images in `build/phase14-stage-native-probe-02`.
+Cold none-route mean complete boundary94.147ms/145.959ms at100K/150K; proposal
+phase81.965ms/126.486ms dominates. These short attribution arms remain excluded
+from acceptance percentiles. The ordinary comparison control retains PR29 kernel
+bytes and matching outer clocks/camera script at `b7fc7ac`.
+Next wave: A owns new `.worktrees/phase14-scheduling` from the received pin with
+Scheduling-only source/tests/manifests/docs. Root owns every execution policy,
+Simulation/Runtime/desktop/harness shared hook, priority dependency setting and
+integration. Source implementation is authorized against reviewed C2; root holds
+CPU/GPU for exact-pin Debug receiving before granting worker tests. B performs
+independent plan/source review only until a named refinement package is dispatched.
+
+## Phase 14 major milestone planning, 2026-10-07
+
+Architect/root reviews clean main `9e7fed990c404e95ab25e699090996aeec048040`
+(PR29). User selected full-frame performance and bounded parallel simulation as
+the major target. Two read-only reviewers cover consumer and foundation evidence;
+no implementation workers or hardware measurements are dispatched. Planning claim:
+Phase14 plan/decision/review, affected stream briefs/responsibility/reuse/index docs
+and Phase13 publication reconciliation. No C++/pins/build/cache edits; no sustained
+CPU/GPU claim. Existing worktrees and all prior artifacts are preserved.
+Status: planning complete 2026-10-08; final review corrections applied, local
+documentation links/anchors and whitespace verified. Reviewers' findings and
+limitations are recorded in the decision/review. Documentation remains local and
+uncommitted; no implementation or source-delivery claim. Planning paths released.
+Implementation claims require a fresh baseline, contract checkpoint and the
+package-specific ownership/resource reservation.
+
 ## Phase 13 P13-01 readable controls, 2026-10-07
 
 Root owns `phase13-readable-controls`, based on clean main `5b84ccd` (PR28).
@@ -21,7 +164,10 @@ does not suppress execution/failure. Root reclaims serial CPU and capture/script
 rendering-spike paths for old-canvas consumers found by the extended audit.
 Consumer fixes received: spike1/1; FLOW2, mission3 and timing6 actual1280x864
 capture round trips passed; WON output inspected. CPU released again. Final-head
-hosted platform/sanitizer and PR29 merge receipt remain required.
+hosted platform/sanitizer and PR29 merge receipt were still required at that entry.
+Publication reconciliation during Phase14 planning: PR29 merged at `9e7fed9`;
+all nine final-head jobs passed at `49f702a` in run37619200451. P13-01 claim
+complete, CPU remains released. Sound/native/participant gates remain open.
 
 ## Sub0 pin refresh, 2026-10-06
 
