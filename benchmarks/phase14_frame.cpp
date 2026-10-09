@@ -60,6 +60,8 @@ struct Camera { double scale{}, x{}, y{}; };
 struct Execution {
     std::size_t workers{}, partitions{}, queryCapacity{}, taskCapacity{}, queueCapacity{};
 };
+/// Completed sequential FP recomputations, copied before warmup and after measured drain.
+struct RowFallbacks { std::uint64_t start{}, end{}; };
 /// Cold process counters; peak working set covers the process lifetime through each sample.
 struct ProcessMemory {
     bool received{};
@@ -401,7 +403,7 @@ void writeCapture(const Settings& settings, std::span<const Frame> frames, std::
     float refreshRate, float displayScale, float pixelDensity, std::uint64_t initialDiscarded, const Device& device,
     std::span<const Session::TickObservation> observations, std::size_t initialObservationCursor,
     std::uint64_t droppedObservations, crucible::presentation::ScreenRect cameraViewport, Execution execution,
-    ProcessMemory startupMemory, ProcessMemory endMemory) {
+    ProcessMemory startupMemory, ProcessMemory endMemory, RowFallbacks rowFallbacks) {
     const auto accepted = std::ranges::count_if(inputs, [](const Input& input) {
         return input.accepted && input.visible && input.status == Status::running && input.completed > 0;
     });
@@ -411,7 +413,9 @@ void writeCapture(const Settings& settings, std::span<const Frame> frames, std::
     });
     const auto advancing = std::ranges::count_if(frames, [](const Frame& frame) { return frame.app.advancedTicks > 0; });
     const bool sampleMinimum = advancing >= 1800 && duration >= 30'000'000'000LL && warmupTicks >= 120;
-    const bool qualifying = startupMemory.received && endMemory.received && !settings.profileStages && !droppedObservations && failure.empty() && !boundedOut && drained && device.received && device.driverVersion && sampleMinimum &&
+    const bool fallbackReceipt = rowFallbacks.end >= rowFallbacks.start &&
+        (execution.workers > 1 ? rowFallbacks.end == rowFallbacks.start : !rowFallbacks.start && !rowFallbacks.end);
+    const bool qualifying = fallbackReceipt && startupMemory.received && endMemory.received && !settings.profileStages && !droppedObservations && failure.empty() && !boundedOut && drained && device.received && device.driverVersion && sampleMinimum &&
         complete == static_cast<std::ptrdiff_t>(frames.size()) &&
         (settings.route == Route::none || accepted >= 300);
     std::cout << std::setprecision(17);
@@ -442,6 +446,7 @@ void writeCapture(const Settings& settings, std::span<const Frame> frames, std::
         << ",\"query_scratch_element_bytes\":" << sizeof(crucible::SampleId)
         << ",\"partition_query_scratch_bytes\":" << execution.queryCapacity * sizeof(crucible::SampleId)
         << ",\"row_task_capacity\":" << execution.taskCapacity << ",\"row_queue_capacity\":" << execution.queueCapacity
+        << ",\"row_fallbacks_start\":" << rowFallbacks.start << ",\"row_fallbacks_end\":" << rowFallbacks.end
         << ",\"columns\":" << (settings.population == 100000 ? 400 : 500)
         << ",\"rows\":" << (settings.population == 100000 ? 250 : 300)
         << ",\"cell_size\":1,\"tool_radius\":16,\"tool_magnitude\":4,\"sync_interval\":1,\"present_flags\":0"
@@ -559,6 +564,7 @@ int capture(const Settings& settings) {
     std::size_t observationCount{}, initialObservationCursor{};
     crucible::presentation::ScreenRect cameraViewport{};
     Execution execution{};
+    RowFallbacks rowFallbacks{};
     ProcessMemory startupMemory{}, endMemory{};
     std::uint64_t droppedObservations{};
     std::uint64_t firstFrame{}, captureRun{}, completedTick{}, actualWarmupTicks{};
@@ -600,6 +606,7 @@ int capture(const Settings& settings) {
         displayScale = SDL_GetWindowDisplayScale(&app.GetWindow());
         pixelDensity = SDL_GetWindowPixelDensity(&app.GetWindow());
         startupMemory = readProcessMemory();
+        rowFallbacks.start = app.GetSession().getRowFallbackCount();
         if (observer.getCapability() != Observer::Capability::direct3d11)
             throw std::runtime_error("Concrete GPU completion observer is unsupported");
         const auto warmupBegin = Clock::now();
@@ -781,6 +788,7 @@ int capture(const Settings& settings) {
             }
         }
         drained = observer.tryDrain();
+        rowFallbacks.end = app.GetSession().getRowFallbackCount();
         endMemory = readProcessMemory();
         if (!drained && failure.empty()) failure = "Completion drain failed";
         const auto samples = app.GetSession().GetSnapshot().GetSamples();
@@ -834,7 +842,7 @@ int capture(const Settings& settings) {
         {finalTrace.data(), traceCount}, quality, renderer, failure, drained, boundedOut, duration, warmupDuration,
         actualWarmupTicks, refreshRate, displayScale, pixelDensity, initialDiscarded, device,
         {observations.data(), observationCount}, initialObservationCursor, droppedObservations, cameraViewport, execution,
-        startupMemory, endMemory);
+        startupMemory, endMemory, rowFallbacks);
     return failure.empty() && !boundedOut ? 0 : 1;
 }
 }

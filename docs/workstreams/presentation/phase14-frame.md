@@ -287,7 +287,7 @@ failure or slower outlier. Probe mode uses six advancing frames/no warmup to cov
 one complete camera cycle and explicitly
 cannot receive acceptance. All per-process summaries and raw data are retained;
 pair receipt eligibility does not itself close G1/G2/G5/platform/participant gates.
-Thirty-one independent synthetic classifier fixtures are registered as
+Thirty-three independent synthetic classifier fixtures are registered as
 `phase14_capture_classification`. They exercise minima, correlation/accounting,
 occlusion/full slots, clock discard, mean-cohort quality, idle-frame dilution,
 corrupt tick/backward timing, missing driver, a four-tick pump, incomplete/duplicate/
@@ -296,10 +296,10 @@ stage attribution exclusion, both-scale detail/pan/restoration, camera no-op
 injection, actual detail geometry, operator camera cohorts, fitted input admission,
 explicit fitted restoration, the declared fixed-overview comparator, worker/storage
 provenance, copied stage/storage correlation, cold process-memory scopes and timeout
-headroom. All31 passed with
+headroom, fallback exclusion and forged fallback receipts. All33 passed with
 `python tests/presentation/desktop/test_phase14_capture.py -v` on2026-10-09;
 the exact output is retained locally in
-`build/phase14-boundary-receipts/execution-memory-classifier-final.txt`. This supplies schema coverage;
+`build/phase14-boundary-receipts/fallback-classifier.txt`. This supplies schema coverage;
 the updated C++ harness and native receipts still require architect receiving.
 
 The harness preallocates both Runtime observations and its cold-copy destination
@@ -358,7 +358,7 @@ Pass the same current binary/build/source for both provenance arms. The wrapper
 does not infer five-pair G5 closure from one process or substitute a PR29 control
 comparison for this named scheduling comparison.
 
-The31-case suite above passed on2026-10-09. Added worker fixtures
+The original31-case suite passed on2026-10-09. Added worker fixtures
 receive copied worker resolution, actual graph/queue bounds, forged scratch bytes,
 absent control storage and identical-executable worker comparisons. Exact final
 output before memory receiving is retained in `build/phase14-boundary-receipts/execution-classifier.txt`;
@@ -404,3 +404,31 @@ reconfigure so the embedded SHA/tree matches, receive classifier plus targeted C
 build/tests, then reserve a native `--probe` process before any full paired study.
 If a budget fails, retain the exact receipt and use the planned three refinement
 passes; no source-only optimization or smoke result changes Phase14 acceptance.
+
+## Completed sequential fallback receipt
+
+The execution sub-schema1 now requires `row_fallbacks_start` and
+`row_fallbacks_end`, copied from Runtime after native setup before warmup and
+after measured-loop drain before cold state-copy, reference simulation or BMP
+readback. The cumulative counter includes only completed ticks recomputed
+sequentially after a joined unsupported floating-point mode; failed ticks are
+excluded and a new run or successful restart resets it. Neither sample adds
+stage clocks or per-frame polling. Process-memory samples retain the same cold
+scope.
+
+The classifier rejects missing, negative, nonintegral, overflowing or decreasing
+counts. One-worker and preserved sequential-control arms must report both counts
+as zero. For an N-worker arm, any increase makes the entire process nonqualifying,
+including a fallback during warmup. Its summary and wrapper execution receipt
+retain both counts, `row_fallbacks_delta` and `parallel_rows_without_fallback`;
+the last field states absence of observed recomputation, not actual thread
+utilization. A probe still reports these values without receiving performance
+acceptance. No-delta counts do not supply the outstanding direct observation of
+worker rounding/sticky-flag restoration between jobs.
+
+The added fixtures retain a valid N-worker fallback receipt without percentile
+targets and reject backwards, forged one-worker/control and missing counts. The
+33-case classifier suite passed on2026-10-09; exact output remains in
+`build/phase14-boundary-receipts/fallback-classifier.txt`. Architect receiving
+must sync the Simulation/Runtime getter and the preserved control's zero getter
+before compiling this harness. Native fallback observation and G3–G5 remain open.

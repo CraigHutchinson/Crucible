@@ -48,7 +48,8 @@ def fixture():
     header.update(execution_schema=1, requested_workers=1, requested_partitions=0,
                   resolved_workers=1, resolved_partitions=1, row_execution_backend="row-partitions",
                   partition_query_scratch_capacity=100000, query_scratch_element_bytes=8,
-                  partition_query_scratch_bytes=800000, row_task_capacity=1, row_queue_capacity=0)
+                  partition_query_scratch_bytes=800000, row_task_capacity=1, row_queue_capacity=0,
+                  row_fallbacks_start=0, row_fallbacks_end=0)
     header.update(memory_schema=1, memory_api="K32GetProcessMemoryInfo",
                   memory_peak_scope="process-lifetime-through-sample",
                   memory_sample_scope="after-native-setup-and-after-measured-drain-before-cold-quality",
@@ -356,6 +357,37 @@ class ClassificationTests(unittest.TestCase):
         self.assertFalse(CAPTURE.summarize(self.records)["acceptance_sample_eligible"])
         next(row for row in self.records if row["type"] == "tick")["simulation"]["task_capacity"] = 2
         with self.assertRaisesRegex(ValueError, "execution bounds differ"):
+            CAPTURE.summarize(self.records)
+
+    def test_parallel_fallback_is_reported_without_performance_acceptance(self):
+        header = self.records[0]
+        header.update(requested_workers=4, resolved_workers=4, resolved_partitions=8,
+                      partition_query_scratch_capacity=800000, partition_query_scratch_bytes=6400000,
+                      row_task_capacity=8, row_queue_capacity=8, row_fallbacks_start=2, row_fallbacks_end=2)
+        self.assertTrue(CAPTURE.summarize(self.records)["acceptance_sample_eligible"])
+        header["row_fallbacks_end"] = 3
+        result = CAPTURE.summarize(self.records)
+        self.assertEqual(result["row_fallbacks_delta"], 1)
+        self.assertFalse(result["parallel_rows_without_fallback"])
+        self.assertFalse(result["acceptance_sample_eligible"])
+        self.assertIsNone(result["tick_boundary_p95_ns"])
+        self.assertIsNone(result["fullframe_p95_ns"])
+        self.assertFalse(result["g3_target_met"])
+        header["row_fallbacks_end"] = 1
+        with self.assertRaisesRegex(ValueError, "moved backwards"):
+            CAPTURE.summarize(self.records)
+
+    def test_forged_inline_and_missing_fallback_receipts_are_rejected(self):
+        self.records[0]["row_fallbacks_end"] = 1
+        with self.assertRaisesRegex(ValueError, "cannot report worker FP fallback"):
+            CAPTURE.summarize(self.records)
+        header = self.records[0]
+        header.update(row_execution_backend="pr29-sequential-control", partition_query_scratch_capacity=0,
+                      partition_query_scratch_bytes=0, row_task_capacity=0)
+        with self.assertRaisesRegex(ValueError, "cannot report worker FP fallback"):
+            CAPTURE.summarize(self.records)
+        del header["row_fallbacks_end"]
+        with self.assertRaisesRegex(ValueError, "Invalid row execution count"):
             CAPTURE.summarize(self.records)
 
     def test_forged_scratch_bytes_and_inline_queue_are_rejected(self):

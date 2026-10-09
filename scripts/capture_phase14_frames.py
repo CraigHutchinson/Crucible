@@ -29,8 +29,8 @@ def execution_receipt(capture):
         raise ValueError("Missing or unsupported row execution receipt")
     names = ("requested_workers", "requested_partitions", "resolved_workers", "resolved_partitions",
              "partition_query_scratch_capacity", "query_scratch_element_bytes", "partition_query_scratch_bytes",
-             "row_task_capacity", "row_queue_capacity")
-    if any(not isinstance(capture[name], int) or isinstance(capture[name], bool) or capture[name] < 0 for name in names):
+             "row_task_capacity", "row_queue_capacity", "row_fallbacks_start", "row_fallbacks_end")
+    if any(not isinstance(capture.get(name), int) or isinstance(capture[name], bool) or capture[name] < 0 for name in names):
         raise ValueError("Invalid row execution count or storage receipt")
     workers, partitions = capture["resolved_workers"], capture["resolved_partitions"]
     requested = capture["requested_partitions"]
@@ -55,7 +55,13 @@ def execution_receipt(capture):
             raise ValueError("Actual row adapter storage differs from resolved startup bounds")
     else:
         raise ValueError("Unknown row execution backend")
-    return {name: capture[name] for name in names + ("execution_schema", "row_execution_backend")}
+    start, end = capture["row_fallbacks_start"], capture["row_fallbacks_end"]
+    if end < start or end > 2 ** 64 - 1:
+        raise ValueError("Completed row fallback count moved backwards or exceeds uint64")
+    if workers == 1 and (start or end):
+        raise ValueError("One-worker or sequential control cannot report worker FP fallback")
+    return {name: capture[name] for name in names + ("execution_schema", "row_execution_backend")} | {
+        "row_fallbacks_delta": end - start, "parallel_rows_without_fallback": end == start}
 
 
 def validate_comparison(comparison, arms):
@@ -290,7 +296,7 @@ def summarize(records):
     minimum = len(cohort) >= 1800 and duration >= 30_000_000_000 and capture["warmup_ticks"] >= 120
     stable_output = bool(frames and all((row["width"], row["height"]) == (frames[0]["width"], frames[0]["height"])
                                        and row["width"] > 0 and row["height"] > 0 for row in frames))
-    eligible = (memory["process_memory_received"] and not operator_camera_events and tick_coverage and not capture["profile_stages"] and minimum and stable_output and len(handoffs) == len(frames) and capture["drained"] and capture["device_identity_received"] and capture["driver_version"] is not None and
+    eligible = (execution["parallel_rows_without_fallback"] and memory["process_memory_received"] and not operator_camera_events and tick_coverage and not capture["profile_stages"] and minimum and stable_output and len(handoffs) == len(frames) and capture["drained"] and capture["device_identity_received"] and capture["driver_version"] is not None and
                 not capture["failure"] and not capture["bounded_out"] and
                 not capture["dropped_frame_rows"] and not capture["dropped_input_rows"] and
                 (capture["route"] == 0 or len(accepted_inputs) >= 300))
@@ -506,7 +512,8 @@ def main():
                             receipt["g4_target_met"] = summary["g4_target_met"]
                             receipt["quality_pass"] = summary["quality_pass"]
                             receipt["execution"] = {name: summary[name] for name in ("resolved_workers", "resolved_partitions", "row_execution_backend",
-                                "partition_query_scratch_capacity", "partition_query_scratch_bytes", "row_task_capacity", "row_queue_capacity")}
+                                "partition_query_scratch_capacity", "partition_query_scratch_bytes", "row_task_capacity", "row_queue_capacity",
+                                "row_fallbacks_start", "row_fallbacks_end", "row_fallbacks_delta", "parallel_rows_without_fallback")}
                         except (ValueError, KeyError) as error:
                             receipt["classification_error"] = str(error)
                         save_metadata()
