@@ -101,6 +101,12 @@ has not proved operating-system durability. A generated menu has not proved font
 legibility in the real renderer. A smooth2048 scene has not proved150K full-frame
 performance. Reuse Phase14's measurement discipline, never its unclosed headline.
 
+E02/E03 and J4/J6 also receive [menu requirements M01–M11](menu-research.md):
+animation-independent ready-state input, stable focus/hit regions, PC pointer
+autonomy, binding-derived prompts, shallow repeated routes, one-level Back/Escape
+and safe Resume/Quit. Native response budgets and participant tasks there are
+proposed product gates, not timings or usability established by the approved art.
+
 ## Test and review depth
 
 Review contract placement/dependency direction, naming, ownership/lifetime and

@@ -62,6 +62,9 @@ the production art specification below takes precedence over that generated deta
   agent ownership, dependencies, independent review and acceptance evidence.
 - [Provenance](provenance.md): exact prompts, tool output identities, PNG hashes,
   inspection results and remaining risks.
+- [Menu research and response receiving](menu-research.md): bounded source note,
+  our menu-control decisions and proposed native/participant tests. Approved
+  artwork stays unchanged; visible ready controls operate independently of animation.
 
 The first next-sprint core is **menu → existing mission → explained result →
 persisted mission-boundary progression → safe continue after relaunch**. A separate

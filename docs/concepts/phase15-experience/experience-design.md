@@ -93,6 +93,13 @@ interlocked rigid form for anchored mass and contiguous crust for Blight; color
 is reinforcement. Reserve selectable contrast palettes without tying faction kind
 or resource ownership to tint. Never use ambient sound as the only denial cue.
 
+[Menu requirements M01–M11](menu-research.md) refine this proposed input policy:
+ready controls operate independently of decorative animation, PC pointer position
+is preserved, remapping updates every prompt, and Back/Resume/Quit have explicit
+safe semantics. Options returns to its origin without silently resuming a paused
+attempt. Native response targets and task-study gates there are proposals to
+receive, not behavior proven by these generated static screens.
+
 Receive smaller windows, high DPI, fullscreen, resized and ultrawide layouts with
 actual buttons and labels, not a scaled screenshot. Text must remain readable at
 the supported minimum, avoid clipped objective words and offer keyboard access to

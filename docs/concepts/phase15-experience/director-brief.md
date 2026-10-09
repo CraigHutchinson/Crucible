@@ -119,6 +119,15 @@ back to a plain title and accessible menu. A resize, DPI change, focus loss or c
 at any shot must preserve state ownership and immediately cancel pending transitions.
 Gameplay never begins just because the sequence's timer elapsed.
 
+The approved cinematic may continue decoratively behind the first-ready menu,
+but visible controls receive navigation/activation/cancel without waiting for a
+logo pose, camera move or fade. Screen-space targets and focus stay stable; no
+invisible control can activate. Intro-skip input is consumed by that transition,
+while the next fresh ready-state input works normally. Repeated launches access
+Continue directly. See [menu-control receiving](menu-research.md) for explicit
+policies, native response hypotheses and participant tasks; these are proposed
+behavior, not evidence supplied by the static storyboard.
+
 ## Fidelity and performance tiers
 
 These are proposed budgets for a separate cinematic prototype, not measured costs

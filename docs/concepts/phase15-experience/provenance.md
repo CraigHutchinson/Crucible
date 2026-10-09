@@ -96,3 +96,12 @@ PNGs are LFS pointers with the expected SHA256 objects, and preserve source outp
 The architect receives this exact commit, integrates central navigation/plan and
 publishes under the user's existing authorization. Actual Phase14 gates stay open;
 future source/native evidence must identify its own immutable checkpoint.
+
+## Menu-research follow-up
+
+The [bounded research note](menu-research.md) records the directly read user-selected
+primary discussion, its limited evidence scope, Crucible's own proposed policies
+and receiving tasks. Its source summary is150 words including the section label;
+other amendments link that note without duplicating the source summary. Approved
+concept PNGs, exact prompts, generated-output identities and hashes are unchanged.
+No new native, cursor-latency, participant or playable evidence is added.
