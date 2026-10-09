@@ -31,6 +31,10 @@ outputs and `inventory.json`; preserve the timestamped receipts when comparing
 attempts. No upstream source adaptation, installation, global Git setting or TLS
 bypass was used.
 
+Source cleanliness includes untracked files, not only tracked modifications. The
+actual full clone also passed `git status --porcelain --untracked-files=all` before
+this tightening; ignored build outputs remain outside the dependency source.
+
 ## Actual receiving, 2026-10-09
 
 The receiving checkout was `.worktrees/phase15-performance`, base `8bdf587`.

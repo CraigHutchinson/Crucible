@@ -61,7 +61,7 @@ function Invoke-Recorded([string]$Name, [string[]]$Command) {
 function Assert-PinnedSource {
     $head = (& git -C $source rev-parse HEAD | Out-String).Trim()
     if ($LASTEXITCODE -ne 0 -or $head -ne $pin) { throw "Source must be exact $pin; found $head" }
-    $dirty = @(& git -C $source status --porcelain --untracked-files=no)
+    $dirty = @(& git -C $source status --porcelain --untracked-files=all)
     if ($LASTEXITCODE -ne 0 -or $dirty.Count) {
         throw 'Source differs from the pin. An adaptation requires its own reviewed qualification receipt.'
     }

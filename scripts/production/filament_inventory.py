@@ -54,7 +54,7 @@ def main() -> int:
         raise RuntimeError("Inventory must stay in this checkout's owned build directory.")
     source, release = root / "source", root / "release"
     head = git(source, "rev-parse", "HEAD")
-    if head != PIN or git(source, "status", "--porcelain", "--untracked-files=no"):
+    if head != PIN or git(source, "status", "--porcelain", "--untracked-files=all"):
         raise RuntimeError("Inventory requires an unchanged exact-release source tree.")
     cache = (release / "CMakeCache.txt").read_text(encoding="utf-8")
     expected = {
