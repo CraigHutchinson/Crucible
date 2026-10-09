@@ -147,6 +147,22 @@ inside the row job now restores FP through unwinding before returning failure.
 Keep this failure and the qualified MSVC Debug orchestration allocation evidence
 with the provider handoff. Integrated numerical, storage and final-head gates remain open.
 
+Scheduling `328388c` is received as `68dc63e`; provider Debug3/3 and Release3/3
+pass, with zero Release first/steady/rejected/failure/recovery ordinary allocations
+at1/2/4 workers. Shared integration `d4b2033` then passes full Release55/55 (40.15s),
+including bitwise sample state, complete replay/resources, structural fuse/shatter,
+pause/restart and100K/150K worker parity. Runtime resolves and retains positive
+worker/partition bounds once, and copied receipts expose actual scratch/graph/queue
+capacities without claiming process memory or thread utilization. Full Debug at
+`84d7362` passed54/55 (270.37s); the existing whole-coordinator allocation fixture
+alone rejected the received checked-MSVC proxy. Its correction keeps all component,
+structural edit/query and capture work strictly zero, and bounds the single mobile
+graph job to exactly1call/16B only on checked MSVC x64. Release/unchecked remains
+strictly zero. Targeted Debug1/1 and Release1/1 passed; original failures are retained.
+[Exact-head run37853759147](https://github.com/CraigHutchinson/Crucible/actions/runs/37853759147)
+passed nine jobs, including actual ASan/UBSan and TSan; Windows Debug failed the
+same fixture. Corrected source still needs its own complete hosted receipt.
+
 ## Retrospective and reuse
 
 The intended scale experience requires readable density and coherent input, not

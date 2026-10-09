@@ -2,13 +2,25 @@
 
 ## Phase14 execution and Pub main receiving, 2026-10-08
 
-Current resumed dispatch: Scheduling A owns `.worktrees/phase14-scheduling`
-include/src/tests/docs/local manifests and exclusive CPU for its Debug/Release
-receiving. B completed independent Scheduling source review, with no MUST/SHOULD;
-worker original FP state between jobs remains source-reviewed rather than directly
-observed. Root owns shared Simulation/Runtime/DesktopApp/main wiring source-only
-while A builds. Exact merged Pipeline f730c4e receiving passed full Release51/51
-and Debug51/51 (221.78s). No performance or native capture runs overlap these builds.
+Current resumed dispatch, 2026-10-09: user resumed and explicitly permits pushing
+all Crucible work to GitHub. Root reserves CPU for integration/native receiving.
+Full Debug at `84d7362` passed54/55; the whole structural coordinator allocation
+fixture alone rejected the received checked-MSVC proxy. The corrected fixture
+keeps component/edit/copy work strictly zero, receives exactly1call/16B on the
+single mobile job only for checked MSVC x64, and requires zero in Release/unchecked
+STL. Targeted Debug1/1 and Release1/1 pass; original failure logs are preserved.
+Release55/55 passed40.15s at `d4b2033`. Provider `328388c` is received
+as `68dc63e`, with Debug3/3 and Release3/3, source-reviewed failure containment and
+qualified checked-MSVC orchestration costs. Worker original FP state between jobs
+remains source-reviewed rather than directly observed. B owns worker-axis/native
+capture and bounded process-memory source in `.worktrees/phase14-frame`; no builds
+overlap root. A owns Swarm source/tests/local manifests/docs in isolated
+`.worktrees/phase14-steering-refinement`, base `84d7362`, for exact dense-ID lookup
+refinement source only. No upstream H2 or public prepared-epoch API is dispatched.
+Scheduling provider tree/evidence remains clean and preserved. Root owns all shared
+Simulation/Runtime/DesktopApp/main/pin/CI/doc/hardware/publication work.
+Exact merged Pipeline f730c4e receiving previously passed full Release51/51 and
+Debug51/51 (221.78s). No performance/native runs overlap these builds.
 
 User authorizes dependency update and plan execution. Root owns branch
 `phase14-large-swarm`, planning checkpoint `c801123`, current worktree. Verified
