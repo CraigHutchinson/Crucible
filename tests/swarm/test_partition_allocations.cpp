@@ -43,23 +43,36 @@ int main()
     if (!grid.TryRebuild(gathered)) return 1;
     const auto* const queryAddress = scratch.data();
     const auto* const pendingAddress = pending.data();
-    bool valid = true;
-    observeAllocations = true;
-    for (int repetition = 0; repetition < 64; ++repetition) {
-        for (const std::size_t first : {0U, 17U, 39U}) {
-            const auto count = first == 0 ? 17 : first == 17 ? 22 : 25;
-            valid = steering.tryComputeRows(input, fields, grid, first,
-                std::span{pending}.subspan(first, count), scratch) && valid;
+    const auto receiveStorage = [&]
+    {
+        bool valid = true;
+        allocationCount = 0;
+        observeAllocations = true;
+        for (int repetition = 0; repetition < 64; ++repetition) {
+            for (const std::size_t first : {0U, 17U, 39U}) {
+                const auto count = first == 0 ? 17 : first == 17 ? 22 : 25;
+                valid = steering.tryComputeRows(input, fields, grid, first,
+                    std::span{pending}.subspan(first, count), scratch) && valid;
+            }
+            valid = !steering.tryComputeRows(input, fields, grid, input.size(),
+                std::span{pending}.first(1), scratch) && valid;
+            valid = !steering.tryComputeRows(input, fields, grid, 0,
+                pending, std::span{scratch}.first(63)) && valid;
+            valid = steering.TryCompute(input, fields, grid, pending) && valid;
         }
-        valid = !steering.tryComputeRows(input, fields, grid, input.size(),
-            std::span{pending}.first(1), scratch) && valid;
-        valid = !steering.tryComputeRows(input, fields, grid, 0,
-            pending, std::span{scratch}.first(63)) && valid;
-        valid = steering.TryCompute(input, fields, grid, pending) && valid;
+        observeAllocations = false;
+        if (!valid || allocationCount != 0 || scratch.data() != queryAddress || pending.data() != pendingAddress) {
+            std::cerr << "Kernel/query/rejection storage reuse failed; ordinary new calls=" << allocationCount << '\n';
+            return false;
+        }
+        return true;
+    };
+    if (!receiveStorage()) return 2;
+    for (std::size_t row = 0; row < input.size(); ++row)
+    {
+        input[row].id = {row + 1};
+        gathered[row].id = input[row].id;
     }
-    observeAllocations = false;
-    if (!valid || allocationCount != 0 || scratch.data() != queryAddress || pending.data() != pendingAddress) {
-        std::cerr << "Kernel/query/rejection storage reuse failed; ordinary new calls=" << allocationCount << '\n';
-        return 2;
-    }
+    if (!grid.TryRebuild(gathered)) return 1;
+    if (!receiveStorage()) return 2;
 }

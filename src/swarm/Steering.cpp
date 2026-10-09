@@ -46,6 +46,10 @@ bool computeRows(std::span<const SampleState> input, const fields::FieldSet& fie
     GridExtent extent, SteeringSettings settings, std::size_t firstRow,
     std::span<SampleState> pendingRows, const Query& query) noexcept
 {
+    // Both callers validate strict ordering first; interval size proves there are no gaps.
+    const bool contiguousIds = !input.empty() &&
+        input.back().id.value - input.front().id.value == input.size() - 1;
+    const auto firstId = input.empty() ? 0 : input.front().id.value;
     std::size_t row = 0;
     for (const auto& sample : input.subspan(firstRow, pendingRows.size())) {
         double separation_x = 0.0, separation_y = 0.0;
@@ -56,8 +60,20 @@ bool computeRows(std::span<const SampleState> input, const fields::FieldSet& fie
         if (!neighbors) return false;
         for (const auto id : *neighbors) {
             if (id == sample.id) { found_self = true; continue; }
-            const auto neighbor = std::ranges::lower_bound(input, id, {}, &SampleState::id);
-            if (neighbor == input.end() || neighbor->id != id) return false;
+            const SampleState* neighbor;
+            if (contiguousIds)
+            {
+                if (id.value < firstId) return false;
+                const auto offset = id.value - firstId;
+                if (offset >= input.size()) return false;
+                neighbor = &input[static_cast<std::size_t>(offset)];
+            }
+            else
+            {
+                const auto found = std::ranges::lower_bound(input, id, {}, &SampleState::id);
+                if (found == input.end() || found->id != id) return false;
+                neighbor = &*found;
+            }
             const double dx = static_cast<double>(sample.position.x) - neighbor->position.x;
             const double dy = static_cast<double>(sample.position.y) - neighbor->position.y;
             const double distance = std::hypot(dx, dy);

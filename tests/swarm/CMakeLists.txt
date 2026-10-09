@@ -12,3 +12,8 @@ add_executable(crucible_swarm_partition_allocation_tests test_partition_allocati
 target_link_libraries(crucible_swarm_partition_allocation_tests PRIVATE Crucible::Swarm Crucible::Spatial Crucible::Fields)
 add_test(NAME swarm_partition_allocations COMMAND crucible_swarm_partition_allocation_tests)
 set_tests_properties(swarm_partition_allocations PROPERTIES LABELS swarm)
+
+add_executable(crucible_swarm_dense_lookup_tests test_dense_lookup.cpp)
+target_link_libraries(crucible_swarm_dense_lookup_tests PRIVATE Crucible::Swarm Crucible::Spatial Crucible::Fields Crucible::Scheduling)
+add_test(NAME swarm_dense_lookup COMMAND crucible_swarm_dense_lookup_tests)
+set_tests_properties(swarm_dense_lookup PROPERTIES LABELS "swarm;scheduling;pipeline" TIMEOUT 60)
