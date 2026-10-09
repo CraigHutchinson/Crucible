@@ -93,6 +93,7 @@ struct Simulation::ScenarioState {
     std::span<const SampleState> epochInput{};
     std::span<SampleState> epochOutput{};
     std::optional<TickStatistics> tickStatistics; ///< Only successfully committed explicit attribution observations.
+    std::uint64_t rowFallbackCount{};
     std::vector<SampleActivity> activities;
     std::optional<StructuralState> structural;
 
@@ -151,6 +152,7 @@ void Simulation::tick() {
         using Clock = std::chrono::steady_clock;
         auto phaseBegin = observed ? Clock::now() : Clock::time_point{};
         TickStatistics statistics;
+        bool rowFellBack{};
         const auto finishPhase = [&](std::chrono::nanoseconds& destination) {
             if (!observed) return;
             const auto end = Clock::now();
@@ -182,6 +184,7 @@ void Simulation::tick() {
                 const auto outcome = state.rowPartitions->tryRun(index);
                 using Status = scheduling::RowPartitions::RunStatus;
                 if (outcome == Status::unsupportedFloatingPoint) {
+                    rowFellBack = true;
                     // A successfully joined unsupported mode permits replacing all staging.
                     if (!state.steering->tryComputeRows(input, state.fields, state.grid, 0, output, state.queryScratch))
                         throw std::logic_error("Scenario sequential floating-point fallback failed");
@@ -235,6 +238,7 @@ void Simulation::tick() {
         finishPhase(statistics.resources);
         RebuildSpatial();
         ++completed_ticks_;
+        if (rowFellBack) ++state.rowFallbackCount; // Bounded by completed_ticks_, whose overflow is rejected before work.
         if (state.structural && state.structural->occupied &&
             state.structural->hold_ticks != std::numeric_limits<std::uint64_t>::max())
             ++state.structural->hold_ticks;
@@ -259,6 +263,9 @@ RowExecutionStorage Simulation::getRowExecutionStorage() const noexcept {
     const auto settings = scenario_->options.rowExecution;
     return {scenario_->queryScratch.size() + scenario_->partitionScratch.size(), settings.partitions,
         settings.workers > 1 ? settings.partitions : 0};
+}
+std::uint64_t Simulation::getRowFallbackCount() const noexcept {
+    return scenario_ ? scenario_->rowFallbackCount : 0;
 }
 double Simulation::checksum() {
     double sum = 0.0;

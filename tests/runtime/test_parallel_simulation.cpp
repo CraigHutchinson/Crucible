@@ -47,6 +47,7 @@ void receiveScenario(ScenarioSettings settings, bool structural) {
         for (auto* session : sessions) require(session->TryPump(interval).advanced_ticks == 1);
         requireSame(sequential.GetSnapshot(), pair.GetSnapshot());
         requireSame(sequential.GetSnapshot(), parallel.GetSnapshot());
+        for (auto* session : sessions) require(session->getRowFallbackCount() == 0);
         require(pair.getTickObservations().back().simulation->workers == 2);
         require(pair.getTickObservations().back().simulation->partitions == 4);
         const auto statistics = *parallel.getTickObservations().back().simulation;
@@ -88,12 +89,16 @@ void receiveScenario(ScenarioSettings settings, bool structural) {
     requireSame(parallel.GetSnapshot(), received);
     for (auto* session : sessions) session->Restart();
     require(pair.getRunId() == 2 && parallel.getRunId() == 2);
+    for (auto* session : sessions) require(session->getRowFallbackCount() == 0);
     require(pair.getRowExecution().workers == 2 && pair.getRowExecution().partitions == 4);
     require(pair.getTickObservations().empty() && parallel.getTickObservations().empty());
     boundary();
 }
 
 void receiveBounds() {
+    Simulation legacy{0};
+    legacy.tick();
+    require(legacy.getRowFallbackCount() == 0);
     const ScenarioSettings settings{.population = 23};
     for (const auto execution : {ExecutionSettings{0, 1}, {33, 1}, {2, 24}, {1, 129}}) {
         bool rejected{};
@@ -107,6 +112,7 @@ void receiveBounds() {
         Session::ExecutionPath::integrated, Session::Diagnostics::disabled, {1, true}, {1, 0}};
     require(empty.TryPump(interval).advanced_ticks == 1);
     require(empty.getTickObservations().front().simulation->inputRows == 0);
+    require(empty.getRowFallbackCount() == 0);
     bool rejected{};
     try { Simulation noSteering{23, {{64, 32, 1}, 4, std::nullopt, std::nullopt, std::nullopt, false, {2, 4}}}; }
     catch (const std::invalid_argument&) { rejected = true; }

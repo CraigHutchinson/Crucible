@@ -116,6 +116,11 @@ bodies, completion callbacks and callable targets finish before any return.
 Failure to restore a saved worker environment is failed work and poisons the
 adapter against subsequent dispatch, including when another partition reports an
 unsupported install. Sequential recomputation cannot repair a persistent worker.
+Simulation counts only completed ticks recomputed after a joined unsupported-FP
+outcome; Runtime exposes this copied run-local count without phase clocks. Native
+capture samples it before warmup and after measured drain. Any increase prevents
+an N-worker arm from qualifying as parallel performance evidence; the raw fallback
+count is preserved. New runs reset the count. Failure is never relabeled fallback.
 G1 receives standard rounding modes and supported denormal controls/restoration;
 G2 receives startup/first/warm storage, partial failure joins, reuse and destruction.
 No public borrowed-executor overload or test-only production knob is introduced.

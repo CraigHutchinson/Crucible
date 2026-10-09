@@ -54,6 +54,11 @@ public:
      * @note Coordinator-only; includes retained capacity during FP fallback.
      */
     [[nodiscard]] RowExecutionStorage getRowExecutionStorage() const noexcept;
+    /** Counts completed ticks recomputed sequentially after joined unsupported FP.
+     * @return Cumulative fallback count; rejected/failed ticks are excluded.
+     * @note Coordinator-only; zero without the row adapter. No failure is masked.
+     */
+    [[nodiscard]] std::uint64_t getRowFallbackCount() const noexcept;
     [[nodiscard]] double checksum();
     /// Boundary-only field application; false leaves field slots unchanged. The
     /// legacy workload has zero slots and rejects every edit.

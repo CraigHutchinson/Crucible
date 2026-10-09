@@ -123,6 +123,11 @@ public:
      * @note Coordinator-only; no scheduler or mutable storage borrow escapes.
      */
     [[nodiscard]] RowExecutionStorage getRowExecutionStorage() const noexcept;
+    /** Copies completed Simulation ticks recomputed after unsupported FP in this run.
+     * @return Cumulative Simulation count, reset by successful restart.
+     * @note Coordinator-only; this reports sequential recomputation, not worker utilization.
+     */
+    [[nodiscard]] std::uint64_t getRowFallbackCount() const noexcept;
 private:
     struct Run;
     [[nodiscard]] CommandIngress::Admission AdmitCommand(const BoundaryCommand& command);

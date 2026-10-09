@@ -157,6 +157,9 @@ InspectorSession::~InspectorSession() = default;
 RowExecutionStorage InspectorSession::getRowExecutionStorage() const noexcept {
     return run_->simulation.getRowExecutionStorage();
 }
+std::uint64_t InspectorSession::getRowFallbackCount() const noexcept {
+    return run_->simulation.getRowFallbackCount();
+}
 ClockDriver::PumpResult InspectorSession::TryPump(std::chrono::nanoseconds elapsed) {
     const auto result = run_->clock.TryPump(elapsed);
     if (result.advanced_ticks && run_->direct_frame && !run_->direct_frame->TryCapture(run_->simulation)) {
