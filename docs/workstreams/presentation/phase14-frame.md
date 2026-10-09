@@ -287,17 +287,19 @@ failure or slower outlier. Probe mode uses six advancing frames/no warmup to cov
 one complete camera cycle and explicitly
 cannot receive acceptance. All per-process summaries and raw data are retained;
 pair receipt eligibility does not itself close G1/G2/G5/platform/participant gates.
-Twenty-three independent synthetic classifier fixtures are registered as
+Thirty-one independent synthetic classifier fixtures are registered as
 `phase14_capture_classification`. They exercise minima, correlation/accounting,
 occlusion/full slots, clock discard, mean-cohort quality, idle-frame dilution,
 corrupt tick/backward timing, missing driver, a four-tick pump, incomplete/duplicate/
 mixed-run boundaries, applied-command and bounded-prefix accounting, and explicit
 stage attribution exclusion, both-scale detail/pan/restoration, camera no-op
-injection, actual detail geometry, operator camera cohorts, fitted input admission
-explicit fitted restoration and the declared fixed-overview comparator. All23 passed with
-`python tests/presentation/desktop/test_phase14_capture.py -v` on2026-10-08;
+injection, actual detail geometry, operator camera cohorts, fitted input admission,
+explicit fitted restoration, the declared fixed-overview comparator, worker/storage
+provenance, copied stage/storage correlation, cold process-memory scopes and timeout
+headroom. All31 passed with
+`python tests/presentation/desktop/test_phase14_capture.py -v` on2026-10-09;
 the exact output is retained locally in
-`build/phase14-boundary-receipts/camera-classifier.txt`. This supplies schema coverage;
+`build/phase14-boundary-receipts/execution-memory-classifier-final.txt`. This supplies schema coverage;
 the updated C++ harness and native receipts still require architect receiving.
 
 The harness preallocates both Runtime observations and its cold-copy destination
@@ -311,6 +313,91 @@ are diagnostic evidence and never qualify G3/G4/G5. The sequential control recei
 the same Runtime outer clocks while retaining its prior Simulation/Spatial/Swarm
 bytes; it rejects stage attribution explicitly. The architect owns that separate
 receiving change and its actual source-parity receipt.
+
+## Worker axes and copied storage receiving
+
+The capture binary accepts one `--workers` unsigned integer in1..32 and one
+`--partitions` unsigned integer in0..128. Defaults are1/0. It passes these requested
+values to `DesktopApp::StartupSettings::rowExecution`; Runtime alone resolves
+partitions0. Captured resolved values come from `InspectorSession::getRowExecution()`;
+the harness does not implement a second policy resolver. Restart preserves that
+startup policy, while an unsupported-FP tick may select a sequential fallback
+without changing its configured capacity. These are worker bounds, not measured
+thread utilization.
+
+Schema3 retains the frame/tick/input/quality records and adds `execution_schema:1`.
+It records requested/resolved worker and partition values, the consumed backend,
+and actual `getRowExecutionStorage()` scratch, graph-task and queue capacities.
+Partition scratch byte accounting uses the recorded `sizeof(SampleId)`; it covers
+the retained caller-owned buffers, excluding allocator overhead, legacy grid-owned
+query storage, thread stacks, executable/device memory and process residency.
+Candidate storage is P*N SampleId slots, P graph tasks and a P queue only for
+multiple workers. The preserved PR29 control reports its absent candidate storage
+as zero and explicitly rejects workers other than1 or resolved partitions other
+than1. Legacy grid-owned query storage is separate. The classifier rejects forged
+resolution, storage or byte accounting and unsupported control axes. Earlier
+schema3 receipts without the execution sub-schema cannot establish these claims.
+
+The wrapper accepts `--baseline-workers`, `--baseline-partitions`,
+`--current-workers` and `--current-partitions`, with the same1/0 defaults. It records
+requested arm settings beside executable/source/tree/cache/pin provenance and
+checks each raw capture agrees with the launched request and declared backend.
+
+| Wrapper comparison | Required arms and interpretation |
+|---|---|
+| `--comparison pr29-control` (default) | Preserved sequential control as baseline, current row adapter as current; baseline worker/partition requests limited to1 and0/1. This does not receive G5's same-source worker comparison. |
+| `--comparison same-source-workers` | One identical executable path/hash and source/tree for both arms; baseline workers1, current workers>1. Per-arm partitions remain explicit so worker-only or worker-plus-partition comparisons are distinguishable. |
+| `--profile-stages` | Current-only attribution; baseline binaries/axes and worker-comparison cohort are rejected. Diagnostic output never receives acceptance. |
+
+Both paired modes retain five alternating processes per selected workload,
+unchanged scenario/camera/input/minimum gates, cooldown and all raw slower/failed
+receipts. Example same-source worker arguments, added to the ordinary provenance
+and uncontended capture invocation, are
+`--comparison same-source-workers --baseline-workers 1 --baseline-partitions 0 --current-workers 4 --current-partitions 0`.
+Pass the same current binary/build/source for both provenance arms. The wrapper
+does not infer five-pair G5 closure from one process or substitute a PR29 control
+comparison for this named scheduling comparison.
+
+The31-case suite above passed on2026-10-09. Added worker fixtures
+receive copied worker resolution, actual graph/queue bounds, forged scratch bytes,
+absent control storage and identical-executable worker comparisons. Exact final
+output before memory receiving is retained in `build/phase14-boundary-receipts/execution-classifier.txt`;
+the initial case-sensitive fixture-message assertion failures are retained in
+`execution-classifier-initial.txt`. C++ build, explicit control refusal and native
+worker arms still require architect receiving after source sync/checkpoint.
+
+Full paired collection uses `--sample-timeout 1200` by default, bounded30..3500
+seconds. The wrapper passes it as the binary's `--timeout-seconds`; that internal
+budget applies separately to warmup and measured sampling. The standalone binary
+also defaults to1200. Probe collection keeps its30-second internal budget.
+`--process-timeout` defaults to3600 seconds, bounded30..3600, and must exceed the
+effective internal budget. The remaining process headroom covers construction,
+drain and cold reference/image work; it does not guarantee those finish. Long
+baseline or matched-tick reference work may still time out and leave an incomplete
+receipt. Raw capture, wrapper metadata and each process receipt retain their actual
+budgets. These bounds do not relax120 warmup ticks,1800 advancing frames AND30s,
+300 accepted completed mutations, or the rule against retries/outlier deletion.
+
+## Cold native process-memory receipt
+
+The Windows harness takes exactly two cold `K32GetProcessMemoryInfo` samples:
+after native app/observer/display setup before warmup, and after measured-loop
+drain before state-copy serialization, reference simulation or BMP readback. It
+records API success/error and sample-call cost, current working set, process-lifetime
+peak working set through that sample, and current private committed usage.
+`memory_schema:1` and explicit scope strings accompany both copied samples.
+No per-frame memory query changes the measured intervals. Missing API receipts
+make a process nonqualifying; inconsistent counters or scopes are rejected.
+
+These values are distinct from configured partition scratch bytes and allocation
+counts. The peak includes startup/warmup and is not an isolated frame-allocation
+peak. Neither working set nor private commit measures GPU memory. The target uses
+`PSAPI_VERSION=2` and links Kernel32 explicitly, following
+[GetProcessMemoryInfo's API contract](https://learn.microsoft.com/en-us/windows/win32/api/psapi/nf-psapi-getprocessmemoryinfo).
+Counter meanings follow
+[PROCESS_MEMORY_COUNTERS_EX](https://learn.microsoft.com/en-us/windows/win32/api/psapi/ns-psapi-process_memory_counters_ex).
+Native API receiving remains an architect gate; the lightweight fixtures establish
+classification and preserve missing/failed samples without fabricating memory.
 
 Root handoff: include the owned manifest, commit the compiled source checkpoint,
 reconfigure so the embedded SHA/tree matches, receive classifier plus targeted C++

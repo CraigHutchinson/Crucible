@@ -23,6 +23,86 @@ def nearest_rank(values, percentile):
     return sorted(values)[max(0, math.ceil(len(values) * percentile) - 1)]
 
 
+def execution_receipt(capture):
+    """Validate copied Runtime policy and actual adapter bounds; never resolve settings for the app."""
+    if capture.get("execution_schema") != 1:
+        raise ValueError("Missing or unsupported row execution receipt")
+    names = ("requested_workers", "requested_partitions", "resolved_workers", "resolved_partitions",
+             "partition_query_scratch_capacity", "query_scratch_element_bytes", "partition_query_scratch_bytes",
+             "row_task_capacity", "row_queue_capacity")
+    if any(not isinstance(capture[name], int) or isinstance(capture[name], bool) or capture[name] < 0 for name in names):
+        raise ValueError("Invalid row execution count or storage receipt")
+    workers, partitions = capture["resolved_workers"], capture["resolved_partitions"]
+    requested = capture["requested_partitions"]
+    if (not 1 <= capture["requested_workers"] <= 32 or not 0 <= requested <= 128 or
+            workers != capture["requested_workers"] or not 1 <= partitions <= min(128, capture["population"])):
+        raise ValueError("Row execution settings exceed frozen Runtime policy")
+    expected = requested if requested else 1 if workers == 1 else 2 * workers
+    if partitions != expected:
+        raise ValueError("Copied Runtime partition resolution differs from requested policy")
+    capacity = capture["partition_query_scratch_capacity"]
+    if capture["query_scratch_element_bytes"] != 8 or capture["partition_query_scratch_bytes"] != capacity * 8:
+        raise ValueError("Partition query scratch byte accounting is inconsistent")
+    backend = capture["row_execution_backend"]
+    if backend == "pr29-sequential-control":
+        if (workers != 1 or partitions != 1 or capacity or capture["row_task_capacity"] or capture["row_queue_capacity"]):
+            raise ValueError("Sequential control reports unsupported axes or absent row storage")
+        if capture["profile_stages"]:
+            raise ValueError("Sequential control cannot receive simulation stage attribution")
+    elif backend == "row-partitions":
+        if (capacity != capture["population"] * partitions or capture["row_task_capacity"] != partitions or
+                capture["row_queue_capacity"] != (partitions if workers > 1 else 0)):
+            raise ValueError("Actual row adapter storage differs from resolved startup bounds")
+    else:
+        raise ValueError("Unknown row execution backend")
+    return {name: capture[name] for name in names + ("execution_schema", "row_execution_backend")}
+
+
+def validate_comparison(comparison, arms):
+    """Keep a preserved legacy control comparison distinct from one executable's worker arms."""
+    if comparison == "same-source-workers":
+        baseline, current = arms["baseline"], arms["current"]
+        if any(baseline[name] != current[name] for name in ("source", "source_tree", "binary", "binary_sha256")):
+            raise ValueError("Same-source worker comparison requires the identical frozen executable/source/tree")
+        if baseline["requested_workers"] != 1 or current["requested_workers"] <= 1:
+            raise ValueError("Same-source worker comparison requires one worker versus multiple workers")
+    elif comparison == "pr29-control":
+        if arms["baseline"]["requested_workers"] != 1 or arms["baseline"]["requested_partitions"] not in (0, 1):
+            raise ValueError("Preserved sequential control rejects worker or partition axes")
+    else:
+        raise ValueError("Unknown comparison cohort")
+
+
+def memory_receipt(capture):
+    """Receive two cold process samples; process-lifetime peak is distinct from frame allocation."""
+    if (capture.get("memory_schema") != 1 or capture["memory_api"] != "K32GetProcessMemoryInfo" or
+            capture["memory_peak_scope"] != "process-lifetime-through-sample" or
+            capture["memory_sample_scope"] != "after-native-setup-and-after-measured-drain-before-cold-quality"):
+        raise ValueError("Unsupported process-memory observation scope")
+    names = ("error", "working_set_bytes", "peak_working_set_bytes", "private_committed_bytes", "sample_call_ns")
+    for sample in (capture["memory_startup"], capture["memory_end"]):
+        if sample["received"] not in (False, True) or any(not isinstance(sample[name], int) or isinstance(sample[name], bool) or sample[name] < 0 for name in names):
+            raise ValueError("Invalid process-memory counter")
+        if sample["received"]:
+            if (sample["error"] or sample["working_set_bytes"] <= 0 or sample["private_committed_bytes"] <= 0 or
+                    sample["peak_working_set_bytes"] < sample["working_set_bytes"]):
+                raise ValueError("Successful process-memory receipt has inconsistent counters")
+        elif any(sample[name] for name in ("working_set_bytes", "peak_working_set_bytes", "private_committed_bytes")):
+            raise ValueError("Failed process-memory sample cannot establish memory counters")
+    received = bool(capture["memory_startup"]["received"] and capture["memory_end"]["received"])
+    if received and capture["memory_end"]["peak_working_set_bytes"] < capture["memory_startup"]["peak_working_set_bytes"]:
+        raise ValueError("Process-lifetime memory peak moved backwards")
+    return {name: capture[name] for name in ("memory_schema", "memory_api", "memory_peak_scope", "memory_sample_scope", "memory_startup", "memory_end")} | {"process_memory_received": received}
+
+
+def validate_timeouts(sample_timeout, process_timeout, probe):
+    """Keep sampling finite while reserving a larger process budget for cold reference/capture."""
+    if not 30 <= sample_timeout <= 3500 or not 30 <= process_timeout <= 3600:
+        raise ValueError("Invalid sample or external process timeout")
+    if (30 if probe else sample_timeout) >= process_timeout:
+        raise ValueError("Internal sample timeout must leave external process headroom for cold work")
+
+
 def summarize(records):
     """Validate identity/accounting first; short probes never receive percentile gates."""
     captures = [row for row in records if row.get("type") == "capture"]
@@ -32,6 +112,10 @@ def summarize(records):
     capture, quality = captures[0], qualities[0]
     if capture["schema"] != 3 or capture["completion_mode"] != "joined-yield-zero" or capture["pacing_mode"] != "fixed-60hz-skip-whole-overdue-periods":
         raise ValueError("Unsupported schema or observation arm")
+    execution = execution_receipt(capture)
+    memory = memory_receipt(capture)
+    if not isinstance(capture["internal_timeout_seconds"], int) or not 1 <= capture["internal_timeout_seconds"] <= 3600:
+        raise ValueError("Invalid captured internal timeout budget")
     frames = [row for row in records if row.get("type") == "frame"]
     inputs = [row for row in records if row.get("type") == "input"]
     traces = [row for row in records if row.get("type") == "trace"]
@@ -151,6 +235,12 @@ def summarize(records):
             counts = [stages[name] for name in ("input_rows", "query_rows", "occupied_cells", "query_scratch_capacity", "workers", "partitions", "task_capacity")]
             if stages["tick"] != row["tick"] or any(value < 0 for value in durations + counts) or sum(durations) > row["boundary_ns"]:
                 raise ValueError("Invalid copied simulation phase attribution")
+            if (stages["task_capacity"] != execution["row_task_capacity"] or
+                    stages["query_scratch_capacity"] != execution["partition_query_scratch_capacity"] or
+                    stages["workers"] not in (1, execution["resolved_workers"]) or
+                    stages["partitions"] > execution["resolved_partitions"] or
+                    stages["input_rows"] > capture["population"] or stages["query_rows"] > stages["input_rows"]):
+                raise ValueError("Simulation stage execution bounds differ from copied startup storage")
         received_ticks[identity] = row
         frame_identity = row["run"], row["frame"]
         frame_boundaries[frame_identity] = frame_boundaries.get(frame_identity, 0) + row["boundary_ns"]
@@ -200,12 +290,13 @@ def summarize(records):
     minimum = len(cohort) >= 1800 and duration >= 30_000_000_000 and capture["warmup_ticks"] >= 120
     stable_output = bool(frames and all((row["width"], row["height"]) == (frames[0]["width"], frames[0]["height"])
                                        and row["width"] > 0 and row["height"] > 0 for row in frames))
-    eligible = (not operator_camera_events and tick_coverage and not capture["profile_stages"] and minimum and stable_output and len(handoffs) == len(frames) and capture["drained"] and capture["device_identity_received"] and capture["driver_version"] is not None and
+    eligible = (memory["process_memory_received"] and not operator_camera_events and tick_coverage and not capture["profile_stages"] and minimum and stable_output and len(handoffs) == len(frames) and capture["drained"] and capture["device_identity_received"] and capture["driver_version"] is not None and
                 not capture["failure"] and not capture["bounded_out"] and
                 not capture["dropped_frame_rows"] and not capture["dropped_input_rows"] and
                 (capture["route"] == 0 or len(accepted_inputs) >= 300))
     result = {
         "schema": 3, "source": capture["source"], "source_tree": capture["source_tree"],
+        "internal_timeout_seconds": capture["internal_timeout_seconds"],
         "population": capture["population"], "route": capture["route"],
         "acceptance_sample_eligible": bool(eligible), "frame_count": len(frames),
         "running_visible_completed_handoff_frames": len(handoffs), "evolving_completed_handoff_frames": len(cohort),
@@ -240,6 +331,8 @@ def summarize(records):
         "cadence_p99_ns": None, "input_p99_ns": None, "g3_target_met": False, "g4_target_met": False,
         "scope": "Joined completion observation upper bounds; no scanout, participant or five-pair closure claim.",
     }
+    result.update(execution)
+    result.update(memory)
     if eligible:
         boundaries = [row["boundary_ns"] for row in ticks]
         result.update(tick_boundary_p95_ns=nearest_rank(boundaries, .95),
@@ -304,6 +397,9 @@ def main():
         parser.add_argument(f"--{arm}", type=Path)
         parser.add_argument(f"--{arm}-build", type=Path)
         parser.add_argument(f"--{arm}-source", type=Path)
+        parser.add_argument(f"--{arm}-workers", type=int, default=1)
+        parser.add_argument(f"--{arm}-partitions", type=int, default=0)
+    parser.add_argument("--comparison", choices=["pr29-control", "same-source-workers"], default="pr29-control")
     parser.add_argument("--output", type=Path)
     parser.add_argument("--pairs", type=int, default=5)
     parser.add_argument("--populations", nargs="+", type=int, default=[100000, 150000])
@@ -313,7 +409,8 @@ def main():
     parser.add_argument("--uncontended", action="store_true")
     parser.add_argument("--background-power-thermal", help="record observed background load, power mode and thermal condition")
     parser.add_argument("--cooldown-seconds", type=float, default=10)
-    parser.add_argument("--process-timeout", type=int, default=1800)
+    parser.add_argument("--sample-timeout", type=int, default=1200)
+    parser.add_argument("--process-timeout", type=int, default=3600)
     parser.add_argument("--quality-images", action="store_true", help="cold retained-frame pre-present BMP captures after measurement")
     args = parser.parse_args()
     if args.summarize:
@@ -325,11 +422,19 @@ def main():
         parser.error("capture requires each selected arm's binary/build/source and --output")
     if args.profile_stages and any(getattr(args, name) is not None for name in ("baseline", "baseline_build", "baseline_source")):
         parser.error("stage attribution is current-only; omit baseline arguments")
+    if args.profile_stages and (args.baseline_workers != 1 or args.baseline_partitions != 0 or args.comparison != "pr29-control"):
+        parser.error("stage attribution cannot consume baseline axes or a comparison cohort")
+    if any(not 1 <= getattr(args, arm + "_workers") <= 32 or not 0 <= getattr(args, arm + "_partitions") <= 128 for arm in arms):
+        parser.error("worker/partition axes exceed frozen Runtime startup bounds")
     if not args.uncontended or not args.background_power_thermal:
         parser.error("stop competing work and record --uncontended plus --background-power-thermal")
     if args.pairs < (1 if args.probe or args.profile_stages else 5) or args.pairs > 20 or not 0 <= args.cooldown_seconds <= 60:
         parser.error("invalid pair count or cooldown")
-    if any(value not in (100000, 150000) for value in args.populations) or not 30 <= args.process_timeout <= 3600 or len(set(args.populations)) != len(args.populations) or len(set(args.routes)) != len(args.routes):
+    try:
+        validate_timeouts(args.sample_timeout, args.process_timeout, args.probe)
+    except ValueError as error:
+        parser.error(str(error))
+    if any(value not in (100000, 150000) for value in args.populations) or len(set(args.populations)) != len(args.populations) or len(set(args.routes)) != len(args.routes):
         parser.error("invalid scale or external timeout")
     args.output.mkdir(parents=True, exist_ok=False)
     metadata = {"schema": 3, "started_utc": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
@@ -337,7 +442,9 @@ def main():
                 "background_power_thermal": args.background_power_thermal, "uncontended_attested": args.uncontended,
                 "probe": args.probe, "pairs": args.pairs, "cooldown_seconds": args.cooldown_seconds,
                 "profile_stages": args.profile_stages, "study": "current-only-attribution" if args.profile_stages else "paired-boundary-only",
+                "comparison": None if args.profile_stages else args.comparison,
                 "process_timeout_seconds": args.process_timeout, "populations": args.populations, "routes": args.routes,
+                "sample_timeout_seconds": 30 if args.probe else args.sample_timeout,
                 "completion_mode": "joined-yield-zero", "camera_script": "overview-detail-pan-v1", "results": [], "arms": {}}
     metadata["wrapper_sha256"] = hashlib.sha256(Path(__file__).read_bytes()).hexdigest()
     metadata_path = args.output / "metadata.json"
@@ -347,6 +454,10 @@ def main():
     try:
         for arm in arms:
             metadata["arms"][arm] = provenance(getattr(args, arm), getattr(args, arm + "_build"), getattr(args, arm + "_source"))
+            metadata["arms"][arm].update(requested_workers=getattr(args, arm + "_workers"),
+                                         requested_partitions=getattr(args, arm + "_partitions"))
+        if not args.profile_stages:
+            validate_comparison(args.comparison, metadata["arms"])
         save_metadata()
         for population in args.populations:
             for route in args.routes:
@@ -359,12 +470,16 @@ def main():
                         command = [information["binary"], "--source", information["source"], "--population", str(population),
                                    "--route", route, "--frames", "6" if args.probe else "1800",
                                    "--seconds", "0" if args.probe else "30", "--warmup-ticks", "0" if args.probe else "120",
-                                   "--mutations", "1" if args.probe else "300", "--timeout-seconds", "30" if args.probe else "300",
-                                   "--profile-stages", "true" if args.profile_stages else "false"]
+                                   "--mutations", "1" if args.probe else "300", "--timeout-seconds", "30" if args.probe else str(args.sample_timeout),
+                                   "--profile-stages", "true" if args.profile_stages else "false",
+                                   "--workers", str(information["requested_workers"]),
+                                   "--partitions", str(information["requested_partitions"])]
                         if args.quality_images:
                             command += ["--capture-dir", str(directory)]
                         receipt = {"arm": arm, "population": population, "route": route, "pair": pair + 1,
-                                   "command": command, "returncode": None, "timed_out": False}
+                                   "command": command, "returncode": None, "timed_out": False,
+                                   "sample_timeout_seconds": 30 if args.probe else args.sample_timeout,
+                                   "process_timeout_seconds": args.process_timeout}
                         began = time.monotonic()
                         with (directory / "raw.jsonl").open("wb") as output, (directory / "stderr.txt").open("wb") as errors:
                             try:
@@ -378,11 +493,20 @@ def main():
                             summary = summarize(read_capture(directory / "raw.jsonl"))
                             if summary["source"] != information["source"] or summary["source_tree"] != information["source_tree"]:
                                 raise ValueError("Binary source identity differs from captured checkout")
+                            if any(summary[name] != information[name] for name in ("requested_workers", "requested_partitions")):
+                                raise ValueError("Captured worker/partition requests differ from launched arm")
+                            if summary["internal_timeout_seconds"] != receipt["sample_timeout_seconds"]:
+                                raise ValueError("Captured timeout budget differs from launched arm")
+                            expected_backend = "pr29-sequential-control" if not args.profile_stages and args.comparison == "pr29-control" and arm == "baseline" else "row-partitions"
+                            if summary["row_execution_backend"] != expected_backend:
+                                raise ValueError("Captured execution backend differs from declared comparison cohort")
                             (directory / "summary.json").write_text(json.dumps(summary, indent=2), encoding="utf-8")
                             receipt["sample_eligible"] = summary["acceptance_sample_eligible"] and not args.probe and not args.profile_stages
                             receipt["g3_target_met"] = summary["g3_target_met"]
                             receipt["g4_target_met"] = summary["g4_target_met"]
                             receipt["quality_pass"] = summary["quality_pass"]
+                            receipt["execution"] = {name: summary[name] for name in ("resolved_workers", "resolved_partitions", "row_execution_backend",
+                                "partition_query_scratch_capacity", "partition_query_scratch_bytes", "row_task_capacity", "row_queue_capacity")}
                         except (ValueError, KeyError) as error:
                             receipt["classification_error"] = str(error)
                         save_metadata()

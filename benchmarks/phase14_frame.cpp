@@ -20,9 +20,11 @@
 #if defined(_WIN32)
 #include <d3d11.h>
 #include <dxgi.h>
+#include <psapi.h>
 #include <wrl/client.h>
 #endif
 
+#include "crucible/contracts/SampleId.hpp"
 #include "crucible/fields/FieldSet.hpp"
 #include "crucible/presentation/ScenarioSnapshot.hpp"
 #include "crucible/presentation/desktop/frame_completion_observer.hpp"
@@ -43,7 +45,8 @@ struct Settings {
     std::string source;
     std::string captureDirectory;
     std::size_t population{100000}, frames{1800}, maxFrames{10000}, mutations{300};
-    std::uint64_t warmupTicks{120}, seconds{30}, timeoutSeconds{300};
+    std::size_t workers{1}, partitions{};
+    std::uint64_t warmupTicks{120}, seconds{30}, timeoutSeconds{1200};
     Route route{Route::flow};
     bool profileStages{};
 };
@@ -53,6 +56,38 @@ struct Settings {
 }
 /// Copied production camera values; center is observed through its logical viewport midpoint.
 struct Camera { double scale{}, x{}, y{}; };
+/// Copied resolved startup policy and actual storage bounds; no resident-memory claim.
+struct Execution {
+    std::size_t workers{}, partitions{}, queryCapacity{}, taskCapacity{}, queueCapacity{};
+};
+/// Cold process counters; peak working set covers the process lifetime through each sample.
+struct ProcessMemory {
+    bool received{};
+    std::uint32_t error{};
+    std::size_t workingSet{}, peakWorkingSet{}, privateUsage{};
+    std::int64_t callNs{};
+};
+[[nodiscard]] ProcessMemory readProcessMemory() noexcept {
+#if defined(_WIN32)
+    const auto before = Clock::now();
+    PROCESS_MEMORY_COUNTERS_EX counters{};
+    constexpr auto counterBytes = static_cast<DWORD>(sizeof(counters));
+    counters.cb = counterBytes;
+    const bool received = K32GetProcessMemoryInfo(GetCurrentProcess(),
+        reinterpret_cast<PROCESS_MEMORY_COUNTERS*>(&counters), counterBytes) != 0;
+    const auto error = received ? 0U : GetLastError();
+    return {received, error, received ? counters.WorkingSetSize : 0,
+        received ? counters.PeakWorkingSetSize : 0, received ? counters.PrivateUsage : 0,
+        std::chrono::duration_cast<Nanoseconds>(Clock::now() - before).count()};
+#else
+    return {};
+#endif
+}
+void writeProcessMemory(ProcessMemory memory) {
+    std::cout << "{\"received\":" << memory.received << ",\"error\":" << memory.error
+        << ",\"working_set_bytes\":" << memory.workingSet << ",\"peak_working_set_bytes\":" << memory.peakWorkingSet
+        << ",\"private_committed_bytes\":" << memory.privateUsage << ",\"sample_call_ns\":" << memory.callNs << '}';
+}
 /// Owned production observations; completion timestamps are poll observation bounds.
 struct Frame {
     App::FrameStatistics app{};
@@ -135,6 +170,7 @@ struct Video {
 }
 [[nodiscard]] Settings parseSettings(int argc, char** argv) {
     Settings settings;
+    bool hasWorkers{}, hasPartitions{};
     for (int i = 1; i < argc; ++i) {
         const std::string_view option{argv[i]};
         if (++i == argc) throw std::invalid_argument("Option requires a value");
@@ -145,6 +181,15 @@ struct Video {
         else if (option == "--frames") settings.frames = static_cast<std::size_t>(parseInteger(value));
         else if (option == "--max-frames") settings.maxFrames = static_cast<std::size_t>(parseInteger(value));
         else if (option == "--mutations") settings.mutations = static_cast<std::size_t>(parseInteger(value));
+        else if (option == "--workers" || option == "--partitions") {
+            auto& seen = option == "--workers" ? hasWorkers : hasPartitions;
+            const auto count = parseInteger(value);
+            if (seen || count > (option == "--workers" ? 32U : 128U) || (option == "--workers" && count == 0))
+                throw std::invalid_argument("Worker/partition options require one bounded unsigned integer each");
+            seen = true;
+            auto& selected = option == "--workers" ? settings.workers : settings.partitions;
+            selected = static_cast<std::size_t>(count);
+        }
         else if (option == "--warmup-ticks") settings.warmupTicks = parseInteger(value);
         else if (option == "--seconds") settings.seconds = parseInteger(value);
         else if (option == "--timeout-seconds") settings.timeoutSeconds = parseInteger(value);
@@ -167,6 +212,7 @@ struct Video {
     if ((settings.population != 100000 && settings.population != 150000) || !settings.frames ||
         settings.maxFrames < settings.frames || settings.maxFrames > 100000 ||
         settings.mutations > 1000 || settings.warmupTicks > 10000 ||
+        !settings.workers || settings.workers > 32 || settings.partitions > 128 ||
         !settings.timeoutSeconds || settings.timeoutSeconds > 3600 || settings.seconds >= settings.timeoutSeconds)
         throw std::invalid_argument("Invalid bounded scale capture settings");
     return settings;
@@ -354,7 +400,8 @@ void writeCapture(const Settings& settings, std::span<const Frame> frames, std::
     std::int64_t duration, std::int64_t warmupDuration, std::uint64_t warmupTicks,
     float refreshRate, float displayScale, float pixelDensity, std::uint64_t initialDiscarded, const Device& device,
     std::span<const Session::TickObservation> observations, std::size_t initialObservationCursor,
-    std::uint64_t droppedObservations, crucible::presentation::ScreenRect cameraViewport) {
+    std::uint64_t droppedObservations, crucible::presentation::ScreenRect cameraViewport, Execution execution,
+    ProcessMemory startupMemory, ProcessMemory endMemory) {
     const auto accepted = std::ranges::count_if(inputs, [](const Input& input) {
         return input.accepted && input.visible && input.status == Status::running && input.completed > 0;
     });
@@ -364,7 +411,7 @@ void writeCapture(const Settings& settings, std::span<const Frame> frames, std::
     });
     const auto advancing = std::ranges::count_if(frames, [](const Frame& frame) { return frame.app.advancedTicks > 0; });
     const bool sampleMinimum = advancing >= 1800 && duration >= 30'000'000'000LL && warmupTicks >= 120;
-    const bool qualifying = !settings.profileStages && !droppedObservations && failure.empty() && !boundedOut && drained && device.received && device.driverVersion && sampleMinimum &&
+    const bool qualifying = startupMemory.received && endMemory.received && !settings.profileStages && !droppedObservations && failure.empty() && !boundedOut && drained && device.received && device.driverVersion && sampleMinimum &&
         complete == static_cast<std::ptrdiff_t>(frames.size()) &&
         (settings.route == Route::none || accepted >= 300);
     std::cout << std::setprecision(17);
@@ -387,6 +434,14 @@ void writeCapture(const Settings& settings, std::span<const Frame> frames, std::
         << ",\"initial_observation_cursor\":" << initialObservationCursor
         << ",\"dropped_tick_observations\":" << droppedObservations
         << ",\"profile_stages\":" << settings.profileStages
+        << ",\"execution_schema\":1,\"requested_workers\":" << settings.workers
+        << ",\"requested_partitions\":" << settings.partitions
+        << ",\"resolved_workers\":" << execution.workers << ",\"resolved_partitions\":" << execution.partitions
+        << ",\"row_execution_backend\":" << jsonString(execution.taskCapacity ? "row-partitions" : "pr29-sequential-control")
+        << ",\"partition_query_scratch_capacity\":" << execution.queryCapacity
+        << ",\"query_scratch_element_bytes\":" << sizeof(crucible::SampleId)
+        << ",\"partition_query_scratch_bytes\":" << execution.queryCapacity * sizeof(crucible::SampleId)
+        << ",\"row_task_capacity\":" << execution.taskCapacity << ",\"row_queue_capacity\":" << execution.queueCapacity
         << ",\"columns\":" << (settings.population == 100000 ? 400 : 500)
         << ",\"rows\":" << (settings.population == 100000 ? 250 : 300)
         << ",\"cell_size\":1,\"tool_radius\":16,\"tool_magnitude\":4,\"sync_interval\":1,\"present_flags\":0"
@@ -396,6 +451,7 @@ void writeCapture(const Settings& settings, std::span<const Frame> frames, std::
         << ",\"camera_viewport_width\":" << cameraViewport.width
         << ",\"camera_viewport_height\":" << cameraViewport.height
         << ",\"duration_ns\":" << duration << ",\"warmup_duration_ns\":" << warmupDuration
+        << ",\"internal_timeout_seconds\":" << settings.timeoutSeconds
         << ",\"initial_discarded_scaled_ns\":" << initialDiscarded
         << ",\"warmup_ticks\":" << warmupTicks << ",\"drained\":" << drained
         << ",\"bounded_out\":" << boundedOut << ",\"sample_minimum\":" << sampleMinimum
@@ -404,7 +460,14 @@ void writeCapture(const Settings& settings, std::span<const Frame> frames, std::
         << ",\"driver_version\":";
     if (device.driverVersion) std::cout << *device.driverVersion;
     else std::cout << "null";
-    std::cout << ",\"gpu_semantics\":\"event-query completion observed after checked native handoff; no scanout\"}\n";
+    std::cout << ",\"gpu_semantics\":\"event-query completion observed after checked native handoff; no scanout\""
+        << ",\"memory_schema\":1,\"memory_api\":\"K32GetProcessMemoryInfo\""
+        << ",\"memory_peak_scope\":\"process-lifetime-through-sample\""
+        << ",\"memory_sample_scope\":\"after-native-setup-and-after-measured-drain-before-cold-quality\",\"memory_startup\":";
+    writeProcessMemory(startupMemory);
+    std::cout << ",\"memory_end\":";
+    writeProcessMemory(endMemory);
+    std::cout << "}\n";
     for (const auto& frame : frames) {
         std::cout << "{\"type\":\"frame\",\"run\":" << frame.app.runId << ",\"frame\":" << frame.app.frameId
             << ",\"tick\":" << frame.clock.completed_tick << ",\"draw_tick\":" << frame.app.completedTick
@@ -495,6 +558,8 @@ int capture(const Settings& settings) {
     std::size_t frameCount{}, inputCount{}, traceCount{}, currentSlot{}, advancingFrames{};
     std::size_t observationCount{}, initialObservationCursor{};
     crucible::presentation::ScreenRect cameraViewport{};
+    Execution execution{};
+    ProcessMemory startupMemory{}, endMemory{};
     std::uint64_t droppedObservations{};
     std::uint64_t firstFrame{}, captureRun{}, completedTick{}, actualWarmupTicks{};
     std::uint64_t initialDiscarded{};
@@ -513,10 +578,20 @@ int capture(const Settings& settings) {
     startup.viewPolicy = crucible::presentation::desktop::ScenePainter::ViewPolicy::densityOverview;
     startup.presentationMode = App::PresentationMode::checkedD3D11;
     startup.observations = {observationCapacity(settings), settings.profileStages};
+    startup.rowExecution = {settings.workers, settings.partitions};
     const Video video;
     {
         App app{startup};
         cameraViewport = app.GetCamera().GetViewport();
+        const auto resolved = app.GetSession().getRowExecution();
+        const auto storage = app.GetSession().getRowExecutionStorage();
+        execution = {resolved.workers, resolved.partitions, storage.queryScratchCapacity, storage.taskCapacity, storage.queueCapacity};
+        if (execution.workers != settings.workers || !execution.partitions ||
+            (settings.partitions && execution.partitions != settings.partitions))
+            throw std::runtime_error("Runtime did not receive requested row execution settings");
+        if (!execution.taskCapacity && (execution.workers != 1 || execution.partitions != 1 ||
+            execution.queryCapacity || execution.queueCapacity))
+            throw std::runtime_error("Sequential control cannot consume parallel workers or partitions");
         Observer observer{app.getRenderer(), 8};
         const auto* name = SDL_GetRendererName(&app.getRenderer());
         renderer = name ? name : "unknown";
@@ -524,6 +599,7 @@ int capture(const Settings& settings) {
         if (const auto* mode = SDL_GetCurrentDisplayMode(SDL_GetDisplayForWindow(&app.GetWindow()))) refreshRate = mode->refresh_rate;
         displayScale = SDL_GetWindowDisplayScale(&app.GetWindow());
         pixelDensity = SDL_GetWindowPixelDensity(&app.GetWindow());
+        startupMemory = readProcessMemory();
         if (observer.getCapability() != Observer::Capability::direct3d11)
             throw std::runtime_error("Concrete GPU completion observer is unsupported");
         const auto warmupBegin = Clock::now();
@@ -705,6 +781,7 @@ int capture(const Settings& settings) {
             }
         }
         drained = observer.tryDrain();
+        endMemory = readProcessMemory();
         if (!drained && failure.empty()) failure = "Completion drain failed";
         const auto samples = app.GetSession().GetSnapshot().GetSamples();
         std::ranges::copy(samples, finalSamples.begin());
@@ -756,7 +833,8 @@ int capture(const Settings& settings) {
     writeCapture(settings, {frames.data(), frameCount}, {inputs.data(), inputCount},
         {finalTrace.data(), traceCount}, quality, renderer, failure, drained, boundedOut, duration, warmupDuration,
         actualWarmupTicks, refreshRate, displayScale, pixelDensity, initialDiscarded, device,
-        {observations.data(), observationCount}, initialObservationCursor, droppedObservations, cameraViewport);
+        {observations.data(), observationCount}, initialObservationCursor, droppedObservations, cameraViewport, execution,
+        startupMemory, endMemory);
     return failure.empty() && !boundedOut ? 0 : 1;
 }
 }

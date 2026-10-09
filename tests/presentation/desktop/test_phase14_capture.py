@@ -43,8 +43,19 @@ def fixture():
                   warmup_ticks=120, drained=True, failure="", bounded_out=False,
                   device_identity_received=True, driver_version=123, initial_tick=120,
                   dropped_frame_rows=0, dropped_input_rows=0, initial_discarded_scaled_ns=0,
-                  tick_observation_capacity=40124, tick_observation_count=1920,
+                  internal_timeout_seconds=1200, tick_observation_capacity=40124, tick_observation_count=1920,
                   initial_observation_cursor=120, dropped_tick_observations=0, profile_stages=False)
+    header.update(execution_schema=1, requested_workers=1, requested_partitions=0,
+                  resolved_workers=1, resolved_partitions=1, row_execution_backend="row-partitions",
+                  partition_query_scratch_capacity=100000, query_scratch_element_bytes=8,
+                  partition_query_scratch_bytes=800000, row_task_capacity=1, row_queue_capacity=0)
+    header.update(memory_schema=1, memory_api="K32GetProcessMemoryInfo",
+                  memory_peak_scope="process-lifetime-through-sample",
+                  memory_sample_scope="after-native-setup-and-after-measured-drain-before-cold-quality",
+                  memory_startup=dict(received=True, error=0, working_set_bytes=1000000,
+                                      peak_working_set_bytes=1500000, private_committed_bytes=900000, sample_call_ns=10),
+                  memory_end=dict(received=True, error=0, working_set_bytes=2000000,
+                                  peak_working_set_bytes=2500000, private_committed_bytes=1900000, sample_call_ns=12))
     quality = dict(type="quality", compared=True, cpu_ns=1234, capture_cpu_ns=0,
                    initial_nonzero_field_samples=11000, signed_mean_dx=24)
     records = [header, quality]
@@ -245,7 +256,7 @@ class ClassificationTests(unittest.TestCase):
                 row["simulation"] = dict(tick=row["tick"], gather_ns=1, index_ns=2, propose_ns=3,
                                          commit_ns=4, resources_ns=5, rebuild_ns=6, input_rows=100000,
                                          query_rows=100000, occupied_cells=50000, query_scratch_capacity=100000,
-                                         workers=1, partitions=1, task_capacity=0)
+                                         workers=1, partitions=1, task_capacity=1)
         result = CAPTURE.summarize(self.records)
         self.assertTrue(result["complete_tick_coverage"])
         self.assertFalse(result["acceptance_sample_eligible"])
@@ -259,6 +270,7 @@ class ClassificationTests(unittest.TestCase):
     def test_both_scales_receive_detail_pan_and_fitted_restoration(self):
         for population, columns, rows in ((100000, 400, 250), (150000, 500, 300)):
             self.records[0].update(population=population, columns=columns, rows=rows)
+            self.records[0].update(partition_query_scratch_capacity=population, partition_query_scratch_bytes=population * 8)
             for frame in self.records:
                 if frame["type"] == "frame":
                     frame["authoritative_mobile"] = population
@@ -316,6 +328,104 @@ class ClassificationTests(unittest.TestCase):
         self.records[0]["camera_mode"] = "six-frame-cycle"
         with self.assertRaisesRegex(ValueError, "route cohort"):
             CAPTURE.summarize(self.records)
+
+    def test_copied_worker_resolution_and_storage_are_validated(self):
+        header = self.records[0]
+        header.update(requested_workers=4, requested_partitions=0, resolved_workers=4, resolved_partitions=8,
+                      partition_query_scratch_capacity=800000, partition_query_scratch_bytes=6400000,
+                      row_task_capacity=8, row_queue_capacity=8)
+        result = CAPTURE.summarize(self.records)
+        self.assertEqual(result["resolved_partitions"], 8)
+        self.assertEqual(result["partition_query_scratch_bytes"], 6400000)
+        header["resolved_partitions"] = 7
+        with self.assertRaisesRegex(ValueError, "partition resolution"):
+            CAPTURE.summarize(self.records)
+        header["resolved_partitions"] = 8
+        header["row_queue_capacity"] = 7
+        with self.assertRaisesRegex(ValueError, "Actual row adapter storage"):
+            CAPTURE.summarize(self.records)
+
+    def test_stage_execution_bounds_must_match_copied_startup_storage(self):
+        self.records[0]["profile_stages"] = True
+        for row in self.records:
+            if row["type"] == "tick":
+                row["simulation"] = dict(tick=row["tick"], gather_ns=1, index_ns=2, propose_ns=3,
+                                         commit_ns=4, resources_ns=5, rebuild_ns=6, input_rows=100000,
+                                         query_rows=100000, occupied_cells=50000, query_scratch_capacity=100000,
+                                         workers=1, partitions=1, task_capacity=1)
+        self.assertFalse(CAPTURE.summarize(self.records)["acceptance_sample_eligible"])
+        next(row for row in self.records if row["type"] == "tick")["simulation"]["task_capacity"] = 2
+        with self.assertRaisesRegex(ValueError, "execution bounds differ"):
+            CAPTURE.summarize(self.records)
+
+    def test_forged_scratch_bytes_and_inline_queue_are_rejected(self):
+        self.records[0]["partition_query_scratch_bytes"] += 8
+        with self.assertRaisesRegex(ValueError, "scratch byte accounting"):
+            CAPTURE.summarize(self.records)
+        self.records[0]["partition_query_scratch_bytes"] -= 8
+        self.records[0]["row_queue_capacity"] = 1
+        with self.assertRaisesRegex(ValueError, "Actual row adapter storage"):
+            CAPTURE.summarize(self.records)
+
+    def test_legacy_control_cannot_receive_unconsumed_axes(self):
+        header = self.records[0]
+        header.update(row_execution_backend="pr29-sequential-control", partition_query_scratch_capacity=0,
+                      partition_query_scratch_bytes=0, row_task_capacity=0)
+        self.assertEqual(CAPTURE.summarize(self.records)["row_execution_backend"], "pr29-sequential-control")
+        header.update(requested_partitions=2, resolved_partitions=2)
+        with self.assertRaisesRegex(ValueError, "Sequential control"):
+            CAPTURE.summarize(self.records)
+        header.update(requested_partitions=1, resolved_partitions=1, profile_stages=True)
+        with self.assertRaisesRegex(ValueError, "stage attribution"):
+            CAPTURE.summarize(self.records)
+
+    def test_same_source_worker_pairs_require_one_frozen_executable(self):
+        baseline = dict(source="a" * 40, source_tree="b" * 40, binary="same.exe", binary_sha256="c" * 64,
+                        requested_workers=1, requested_partitions=0)
+        current = dict(baseline, requested_workers=4)
+        arms = dict(baseline=baseline, current=current)
+        CAPTURE.validate_comparison("same-source-workers", arms)
+        current["binary_sha256"] = "d" * 64
+        with self.assertRaisesRegex(ValueError, "identical frozen executable"):
+            CAPTURE.validate_comparison("same-source-workers", arms)
+        current["binary_sha256"] = baseline["binary_sha256"]
+        current["requested_workers"] = 1
+        with self.assertRaisesRegex(ValueError, "one worker versus multiple"):
+            CAPTURE.validate_comparison("same-source-workers", arms)
+        baseline["requested_partitions"] = 2
+        with self.assertRaisesRegex(ValueError, "sequential control rejects"):
+            CAPTURE.validate_comparison("pr29-control", arms)
+
+    def test_memory_samples_keep_process_lifetime_and_configured_bounds_distinct(self):
+        result = CAPTURE.summarize(self.records)
+        self.assertTrue(result["process_memory_received"])
+        self.assertEqual(result["memory_end"]["peak_working_set_bytes"], 2500000)
+        self.assertEqual(result["partition_query_scratch_bytes"], 800000)
+        self.records[0]["memory_peak_scope"] = "frame-allocation-peak"
+        with self.assertRaisesRegex(ValueError, "observation scope"):
+            CAPTURE.summarize(self.records)
+
+    def test_missing_memory_blocks_acceptance_and_inconsistent_peak_is_rejected(self):
+        self.records[0]["memory_end"].update(received=False, error=5, working_set_bytes=0,
+                                             peak_working_set_bytes=0, private_committed_bytes=0)
+        result = CAPTURE.summarize(self.records)
+        self.assertFalse(result["process_memory_received"])
+        self.assertFalse(result["acceptance_sample_eligible"])
+        self.assertIsNone(result["tick_boundary_p95_ns"])
+        self.records[0]["memory_end"].update(received=True, error=0, working_set_bytes=1000000,
+                                             peak_working_set_bytes=1200000, private_committed_bytes=1900000)
+        with self.assertRaisesRegex(ValueError, "peak moved backwards"):
+            CAPTURE.summarize(self.records)
+
+    def test_sample_timeout_retains_cold_process_headroom_without_changing_minima(self):
+        CAPTURE.validate_timeouts(1200, 3600, False)
+        CAPTURE.validate_timeouts(1200, 31, True)
+        for sample, process, probe in ((1200, 1200, False), (29, 3600, False), (3501, 3600, False),
+                                       (1200, 3601, False), (1200, 30, True)):
+            with self.assertRaises(ValueError):
+                CAPTURE.validate_timeouts(sample, process, probe)
+        self.records[0]["duration_ns"] = 29_999_999_999
+        self.assertFalse(CAPTURE.summarize(self.records)["acceptance_sample_eligible"])
 
 
 if __name__ == "__main__":
