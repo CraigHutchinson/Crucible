@@ -29,6 +29,14 @@ with approximately16.00/23.61ms outside proposals. These are unpaired diagnostic
 means, not frame percentiles, qualified speedups or a measured serial lower bound.
 They motivate both coordinator and kernel investigations.
 
+## Coordinated Sub0 batch
+
+The [Sub0 integration campaign](sub0-integration.md) records the 2026-10-09
+cross-library source/branch review, adapter-first proposal and dependency order.
+It covers ECS row work on Pipeline execution resources and reuse of Pub's typed
+composition APIs. Runtime implementation and physical performance qualification
+remain pending; the current control already uses one Pipeline row pool.
+
 ## Acceptance remains unchanged
 
 | Gate | Required observation |
