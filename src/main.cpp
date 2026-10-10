@@ -18,8 +18,71 @@
 #include <crucible/runtime/ReferenceMissionRoute.hpp>
 #include <crucible/presentation/ScenarioSnapshot.hpp>
 
+#include "crucible/application/game_journey.hpp"
+
 namespace {
 enum class MissionInput { none, sweeping_attractor };
+void runJourney(MissionInput input, const char* profilePath = nullptr)
+{
+    using namespace crucible;
+    using namespace application;
+    GameJourney journey{profilePath ? std::optional<std::filesystem::path>{profilePath} : std::nullopt};
+    auto navigate = [&](NavigationAction action) {
+        const auto view = journey.getFrontendView();
+        if (!journey.tryApplyIntent({view.screen_, view.transitionSerial_, action}))
+            throw std::runtime_error("Journey navigation was rejected");
+    };
+    if (journey.tryPump(std::chrono::seconds{1}) || journey.getSnapshot())
+        throw std::runtime_error("Journey advanced before play");
+    navigate(NavigationAction::skipIntro);
+    navigate(NavigationAction::newRun);
+    navigate(NavigationAction::beginMission);
+    navigate(NavigationAction::pause);
+    navigate(NavigationAction::showOptions);
+    if (journey.tryPump(std::chrono::hours{1}))
+        throw std::runtime_error("Journey advanced behind its options screen");
+    navigate(NavigationAction::back);
+    navigate(NavigationAction::resume);
+    while (journey.getFrontendView().screen_ == FrontendScreen::playing) {
+        const auto view = journey.getFrontendView();
+        if (!view.progress_) throw std::runtime_error("Journey lost its mission progress");
+        if (input == MissionInput::sweeping_attractor) {
+            if (const auto edit = runtime::GetReferenceMissionRouteEdit(view.progress_->completed_tick)) {
+                const auto admission = journey.tryAdmitFieldEdit(*edit);
+                if (!admission || admission->status != runtime::CommandIngress::AdmissionStatus::accepted)
+                    throw std::runtime_error("Journey reference route admission failed");
+            }
+        }
+        const auto pump = journey.tryPump(std::chrono::nanoseconds{16'666'667});
+        if (!pump || pump->advanced_ticks != 1)
+            throw std::runtime_error("Journey mission boundary failed");
+    }
+    const auto completed = journey.getFrontendView();
+    if (completed.screen_ != FrontendScreen::results || !completed.progress_ ||
+        journey.tryPump(std::chrono::hours{1}))
+        throw std::runtime_error("Journey terminal result was not latched");
+    const auto previousAttempt = journey.getAttemptId();
+    navigate(NavigationAction::retryMission);
+    if (journey.getAttemptId() != previousAttempt + 1 ||
+        journey.getFrontendView().progress_->completed_tick != 0)
+        throw std::runtime_error("Journey retry did not replace the attempt");
+    navigate(NavigationAction::requestQuit);
+    navigate(NavigationAction::confirmQuit);
+    if (!journey.isQuitRequested()) throw std::runtime_error("Journey exit was not confirmed");
+    if (profilePath)
+    {
+        GameJourney reloaded{std::filesystem::path{profilePath}};
+        if (!reloaded.getFrontendView().canContinue_ || reloaded.getSnapshot())
+            throw std::runtime_error("Journey continuation did not survive relaunch");
+    }
+    std::cout << "Crucible headless journey: intro/menu/briefing/play/pause/options/result/retry/quit"
+              << " outcome=" << (completed.progress_->outcome == ReclamationMissionOutcome::won ? "WON" : "LOST")
+              << " tick=" << completed.progress_->completed_tick
+              << " attempts=" << journey.getAttemptId()
+              << " persistent_progress=" << (profilePath ? "received" : "in-memory")
+              << " native_visuals=not-yet-received\n";
+}
+
 void RunMission(MissionInput input) {
     using namespace crucible;
     runtime::InspectorSession run{2048, {64, 4096}, ReclamationMissionSettings{}};
@@ -222,6 +285,16 @@ void RunScenario(const char* export_path, std::optional<crucible::ResourceSettin
 
 int main(int argc, char** argv) {
     try {
+        if (argc == 5 && std::string_view{argv[1]} == "--journey" &&
+            std::string_view{argv[2]} == "--route" && std::string_view{argv[3]} == "--profile") {
+            runJourney(MissionInput::sweeping_attractor, argv[4]);
+            return 0;
+        }
+        if ((argc == 2 || (argc == 3 && std::string_view{argv[2]} == "--route")) &&
+                std::string_view{argv[1]} == "--journey") {
+            runJourney(argc == 2 ? MissionInput::none : MissionInput::sweeping_attractor);
+            return 0;
+        }
         if (argc == 3 && std::string_view{argv[1]} == "--structural" && std::string_view{argv[2]} == "--route") {
             RunStructuralMission();
             return 0;
@@ -241,7 +314,7 @@ int main(int argc, char** argv) {
         if (argc == first_option + 2 && std::string_view{argv[first_option]} == "--export-svg")
             export_path = argv[first_option + 1];
         else if (argc != first_option)
-            throw std::invalid_argument("Usage: crucible --mission [--route] | [--reclamation] [--export-svg path.svg]");
+            throw std::invalid_argument("Usage: crucible --journey [--route [--profile path]] | --mission [--route] | [--reclamation] [--export-svg path.svg]");
         crucible::Simulation simulation{150'000};
         crucible::runtime::run_ticks(simulation, 60);
         std::cout << "Crucible headless ECS foundation: 150000 entities, 60 ticks, checksum="

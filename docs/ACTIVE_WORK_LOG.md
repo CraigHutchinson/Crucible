@@ -7,7 +7,7 @@ explicitly separated existing SDL rendering into concept2D/dev-test tooling and
 the new production rendering approach as the migration target. Dear ImGui with a
 strong Crucible theme is selected for evaluation/consumption. Baseline PR31 merge
 `13642fe79c848a8509f2935d7357ad107e309c81`; root branch
-`codex/production-playable`. See [plan](phases/phase15.md) and
+`codex/production-journey` after the planning merge. See [plan](phases/phase15.md) and
 [decision](decisions/phase15-production-rendering.md).
 
 Latest steering reopens DX11 selection in favor of a cross-platform foundation
@@ -17,19 +17,27 @@ bounded fidelity candidate, not a proved production backend; native DX12 remains
 an explicit qualification item. Exact source `d852e34` is received read-only in
 `build/phase15-sources/filament`. Its bundled ImGui is1.92.5; do not link the earlier
 separately fetched1.92.6 core into that candidate. Root owns pin/toolchain receiving.
-No C++ implementation, installs, builds or native measurements are dispatched yet.
+2026-10-09 continuation: user directs continuing and merging verified increments.
+Root dispatches isolated graphics qualification and independent consumer work from
+checkpoint `8bdf587`. No native visual or performance acceptance is claimed.
 
 | Owner | Claim | Current status / resources |
 |---|---|---|
-| Architect/root | Common contracts, application/progress/profile, production app/main, manifests/pins/CI and central docs | Contract receiving; no CPU/GPU measurement claim |
-| foundation_resume / A | Proposed production framework adapter/materials/owned receiving | Release-pinned source/toolchain audit; guarded-sort audit preserved, implementation awaits contract checkpoint |
-| consumer_resume / B | Proposed themed ImGui frontend/font assets/choreography/owned receiving | Read-only feasibility completed; implementation awaits contract checkpoint |
+| Architect/root | Common contracts, application/progress/profile, production app/main, manifests/pins/CI and central docs | Final Release5/5 andDebug5/5 passed; CPU released toB; integration/publication/source-only, no GPU claim |
+| foundation_resume / A | Graphics in `.worktrees/phase15-performance`, branch `codex/production-performance`; owned scripts/renderer/tests/docs | Qualification0e8a28e received764-stepRelease/tool/link closure; CPU released; R0 source authoring against frozen136MiB external-staging envelope |
+| consumer_resume / B | Frontend/choreography in `.worktrees/phase15-frontend`, branch `codex/production-frontend` | Holds bounded correctness-only CPU max3jobs, imports exact matchedImGuiRelease/MD archive; no GPU/window/performance campaign |
 
-Architect plus at most two workers. The fresh `.worktrees/phase15-performance`
-branch is empty and retained; it is not an active optimization implementation.
-Root will create renderer/frontend worktrees only after affected owners review
-the common contracts. No worker may build or use the device without root handoff.
+Architect plus at most two workers. The clean `.worktrees/phase15-performance`
+branch is reassigned to graphics qualification; the performance audit is retained.
+The new frontend worktree starts from the same reviewed source checkpoint.
+No worker may use the device without root handoff. A completed and released its
+bounded build; root received the real journey/profile caller in Release/Debug,
+and handed CPU to B for frontend/choreography correctness. No perf run overlaps.
 Historical worktrees/evidence stay intact. Phase14 G3-G5 remain open.
+
+Planning PR32 merged as9f1716410cd223ad65237ded1779a7c3b4f39d54 after all10 jobs
+passed on exact8bdf587 in run37955070682. Working source is not a native-rendering
+or whole-milestone completion claim.
 
 ## Current merge and optimization workflow, 2026-10-09
 

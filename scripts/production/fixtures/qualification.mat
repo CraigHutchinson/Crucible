@@ -1,0 +1,18 @@
+material {
+    name : Phase15Qualification,
+    shadingModel : lit,
+    instanced : true,
+    parameters : [
+        { type : float4, name : silverColor },
+        { type : float, name : coreIntensity }
+    ]
+}
+fragment {
+    void material(inout MaterialInputs material) {
+        prepareMaterial(material);
+        material.baseColor = materialParams.silverColor;
+        material.metallic = 0.9;
+        material.roughness = 0.25;
+        material.emissive = vec4(0.0, 0.8, 1.0, 1.0) * materialParams.coreIntensity;
+    }
+}
