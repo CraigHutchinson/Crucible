@@ -71,6 +71,16 @@ public:
      */
     [[nodiscard]] bool WriteDecoded(std::ostream& output) const;
 
+    /** Writes upstream schema-1 JSONL messages and one Crucible health object.
+     * @param[in,out] output Message destination; stop all emissions before calling.
+     * @param[in,out] health Separate health destination, including actual producer losses.
+     * @return False for invalid/damaged input or failed writes/flushes on either stream.
+     * @note Cold coordinator-only export; all borrows remain within this call.
+     * Counted producer losses do not make the recovered prefix invalid. Allocation
+     * and stream exceptions propagate; no complete health receipt is then promised.
+     */
+    [[nodiscard]] bool writeJson(std::ostream& output, std::ostream& health) const;
+
 private:
     struct Impl;
     std::unique_ptr<Impl> impl_;

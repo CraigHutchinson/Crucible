@@ -14,6 +14,7 @@ SDL_AppResult SDL_AppInit(void** state, int argc, char** argv) {
         if (!SDL_Init(SDL_INIT_VIDEO | SDL_INIT_EVENTS)) return SDL_APP_FAILURE;
         // SDL owns the callback token until SDL_AppQuit reclaims it.
         bool structural = false;
+        bool diagnosticsJson = false;
         std::optional<std::size_t> scalePopulation;
         std::optional<std::size_t> workers, partitions;
         auto window_mode = crucible::desktop::DesktopApp::WindowMode::windowed;
@@ -22,6 +23,10 @@ SDL_AppResult SDL_AppInit(void** state, int argc, char** argv) {
             if (std::string_view{argv[i]} == "--structural") structural = true;
             else if (std::string_view{argv[i]} == "--fullscreen")
                 window_mode = crucible::desktop::DesktopApp::WindowMode::fullscreen;
+            else if (std::string_view{argv[i]} == "--diagnostics-json") {
+                diagnosticsJson = true;
+                diagnostics = crucible::runtime::InspectorSession::Diagnostics::bounded;
+            }
             else if (std::string_view{argv[i]} == "--diagnostics")
                 diagnostics = crucible::runtime::InspectorSession::Diagnostics::bounded;
             else if ((std::string_view{argv[i]} == "--workers" || std::string_view{argv[i]} == "--partitions") && i + 1 < argc) {
@@ -46,6 +51,7 @@ SDL_AppResult SDL_AppInit(void** state, int argc, char** argv) {
         crucible::desktop::DesktopApp::StartupSettings settings;
         settings.rowExecution = {workers.value_or(1), partitions.value_or(0)};
         settings.diagnostics = diagnostics;
+        settings.diagnosticsJson = diagnosticsJson;
         settings.windowMode = window_mode;
         if (scalePopulation) {
             if (structural) {

@@ -50,41 +50,45 @@ void CheckFieldsAndBindings() {
     Require(reader.valid() && records.size() == 3 && reader.unreadableBytes() == 0
         && decoder.undecodableRecords() == 0, "actual pinned decoder parity");
     const auto& admission = records[0];
-    Require(admission.args_.size() == 13 && admission.site_->severity_ == sub0log::Severity::Warning
+    Require(admission.args_.size() == 15 && admission.site_->severity_ == sub0log::Severity::Warning
         && admission.site_->subsystem_ == sub0log::SubsystemId{1}, "admission schema");
-    Require(std::get<std::uint64_t>(admission.args_[0]) == 7
-        && std::get<std::uint64_t>(admission.args_[1]) == 11
-        && std::get<std::uint64_t>(admission.args_[2]) == static_cast<std::uint64_t>(CommandIngress::AdmissionStatus::full)
-        && std::get<std::uint64_t>(admission.args_[5]) == static_cast<std::uint64_t>(FieldEditKind::set_flow)
-        && std::get<std::uint64_t>(admission.args_[6]) == 3,
+    Require(std::get<std::uint64_t>(admission.args_[2]) == 7
+        && std::get<std::uint64_t>(admission.args_[3]) == 11
+        && std::get<std::uint64_t>(admission.args_[4]) == static_cast<std::uint64_t>(CommandIngress::AdmissionStatus::full)
+        && std::get<std::uint64_t>(admission.args_[7]) == static_cast<std::uint64_t>(FieldEditKind::set_flow)
+        && std::get<std::uint64_t>(admission.args_[8]) == 3,
         "owned refusal identity and operation");
-    Require(std::get<double>(admission.args_[7]) == 4 && std::get<double>(admission.args_[8]) == 5
-        && std::get<double>(admission.args_[9]) == 6 && std::get<double>(admission.args_[10]) == 7
-        && std::get<double>(admission.args_[11]) == 8 && std::get<double>(admission.args_[12]) == 9,
+    Require(std::get<double>(admission.args_[9]) == 4 && std::get<double>(admission.args_[10]) == 5
+        && std::get<double>(admission.args_[11]) == 6 && std::get<double>(admission.args_[12]) == 7
+        && std::get<double>(admission.args_[13]) == 8 && std::get<double>(admission.args_[14]) == 9,
         "copied field source survives mutation");
-    Require(records[1].args_.size() == 5
-        && std::get<std::uint64_t>(records[1].args_[2]) == static_cast<std::uint64_t>(StructuralCommandResult::stale_generation)
-        && std::get<std::uint64_t>(records[1].args_[4]) == 44,
+    Require(records[1].args_.size() == 7
+        && std::get<std::uint64_t>(records[1].args_[4]) == static_cast<std::uint64_t>(StructuralCommandResult::stale_generation)
+        && std::get<std::uint64_t>(records[1].args_[6]) == 44,
         "copied structural refusal");
     const auto& mission = records[2];
-    Require(mission.args_.size() == 6 && mission.site_->severity_ == sub0log::Severity::Info
-        && std::get<std::uint64_t>(mission.args_[0]) == 7
-        && std::get<std::uint64_t>(mission.args_[1]) == 12
-        && std::get<std::uint64_t>(mission.args_[2]) == static_cast<std::uint64_t>(ReclamationMissionOutcome::won)
-        && std::get<std::uint64_t>(mission.args_[3]) == 101
-        && std::get<std::uint64_t>(mission.args_[4]) == 99
-        && std::get<std::uint64_t>(mission.args_[5]) == 100, "copied mission summary");
+    Require(mission.args_.size() == 8 && mission.site_->severity_ == sub0log::Severity::Info
+        && std::get<std::uint64_t>(mission.args_[2]) == 7
+        && std::get<std::uint64_t>(mission.args_[3]) == 12
+        && std::get<std::uint64_t>(mission.args_[4]) == static_cast<std::uint64_t>(ReclamationMissionOutcome::won)
+        && std::get<std::uint64_t>(mission.args_[5]) == 101
+        && std::get<std::uint64_t>(mission.args_[6]) == 99
+        && std::get<std::uint64_t>(mission.args_[7]) == 100, "copied mission summary");
     auto other_reader = sub0log::SegmentReader::open(other.GetImage());
     sub0log::Decoder other_decoder;
     const auto other_records = other_decoder.decodeAll(other_reader);
-    Require(other_records.size() == 1 && std::get<std::uint64_t>(other_records[0].args_[0]) == 8,
+    Require(other_records.size() == 1 && std::get<std::uint64_t>(other_records[0].args_[2]) == 8,
         "sink images do not cross-contaminate");
     std::ostringstream output;
     Require(diagnostics.WriteDecoded(output) && output.str().find("dropped=0 truncated=0") != std::string::npos
         && output.str().find("decoded=3 unreadable=0 undecodable=0") != std::string::npos,
         "shutdown decoded export includes health");
+    std::ostringstream json, health;
+    Require(diagnostics.writeJson(json, health), "structured shutdown succeeds");
     std::ostringstream failed;
     failed.setstate(std::ios::badbit);
+    Require(!diagnostics.writeJson(failed, health), "failed JSON destination");
+    Require(!diagnostics.writeJson(json, failed), "failed health destination");
     Require(!diagnostics.WriteDecoded(failed), "output failure does not succeed");
 }
 
