@@ -624,3 +624,22 @@ review. No shared runtime/pin edit, heavy CPU run or concurrent worker dispatch.
 PR33's mission work is preserved. Source review and documentation are complete;
 actual profiling, adapter implementation and combined receiving remain pending
 as recorded in the campaign. No speedup or new API is claimed.
+
+
+## Production gather/commit optimization, 2026-10-10
+
+Root owns branch `perf/production-gather-commit` from
+`118ce62a75c8e6f1c325cc915cbc539c558a4c11`, all serial configure/build/profile/
+measurement CPU, capture tooling, shared manifests and documentation. A detached
+`../Crucible-control` worktree preserves that baseline. No other worktrees removed.
+
+- `production_mapping`: `src/simulation.cpp` and focused simulation receiving tests;
+  proposal first, implementation after production attribution.
+- `production_bench`: `benchmarks/runtime_backbone.cpp`, opt-in headless scale/stage
+  receiving through the existing actual InspectorSession, no replacement simulation.
+- Root: independently review both changes, paired capture and publication.
+
+Scope: complete production headless boundary, fixed identity and mobile subsets,
+unchanged numerical/resource rules and dependency pins. Native frame/pacing/GPU
+acceptance stays open. Skills recovered from CraigHutchinson/Agentic-CPP; Sub0
+profile with no overlay. See `docs/optimization/production-gather-commit.md`.

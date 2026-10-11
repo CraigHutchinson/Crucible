@@ -1,13 +1,18 @@
+#include <algorithm>
 #include <array>
 #include <bit>
 #include <cfenv>
 #include <chrono>
 #include <cstdint>
 #include <stdexcept>
+#include <vector>
 
+#include "crucible/fields/FieldSet.hpp"
 #include "crucible/presentation/ScenarioSnapshot.hpp"
 #include "crucible/runtime/InspectorSession.hpp"
 #include "crucible/simulation.hpp"
+#include "crucible/spatial/Grid.hpp"
+#include "crucible/swarm/Steering.hpp"
 
 namespace {
 using namespace crucible;
@@ -28,6 +33,73 @@ void requireSame(const presentation::ScenarioSnapshot& first, const presentation
         const std::array y{b.position.x, b.position.y, b.velocity.x, b.velocity.y};
         for (std::size_t component = 0; component < x.size(); ++component)
             require(std::bit_cast<std::uint32_t>(x[component]) == std::bit_cast<std::uint32_t>(y[component]));
+    }
+}
+
+void receiveCommitOracle(std::size_t population, ExecutionSettings execution, bool structural)
+{
+    const GridConfig config{32, 16, 1};
+    Simulation::ScenarioOptions options{config, 2, SteeringSettings{}, ResourceSettings{}};
+    options.rowExecution = execution;
+    if (structural) {
+        options.structural = StructuralSettings{};
+        options.structural->relay_center = population == 64 ? Position{16, 1} : Position{16, 4};
+        options.structural->eligibility_radius = population == 64 ? 32 : 6;
+    }
+    Simulation simulation{population, options};
+    presentation::ScenarioSnapshot before{population, 2, 512}, after{population, 2, 512};
+    fields::FieldSet fields{2};
+    spatial::Grid grid{config, population};
+    swarm::Steering steering{config, *options.steering, population};
+    const FieldEdit flow{FieldEditKind::set_flow, 0, {1, 4}, 12, 4, {30, 10}};
+    require(simulation.TryApplyFieldEdit(flow));
+    require(fields.TryApplyEdit(flow) == fields::EditResult::applied);
+    const auto boundary = [&] {
+        require(before.TryCapture(simulation));
+        std::vector<SampleState> input;
+        std::vector<spatial::SpatialSample> positions;
+        for (const auto& sample : before.GetSamples()) {
+            if (sample.activity != SampleActivity::mobile) continue;
+            input.push_back(sample);
+            positions.push_back({sample.id, sample.position});
+        }
+        require(std::ranges::is_sorted(input, {}, &SampleState::id));
+        require(grid.TryRebuild(positions));
+        std::vector<SampleState> expected(input.size());
+        // The public all-row reference bypasses Simulation's gather, row mapping and commit.
+        require(steering.TryCompute(input, fields, grid, expected));
+        simulation.tick();
+        require(after.TryCapture(simulation));
+        require(after.GetInfo()->completed_tick == before.GetInfo()->completed_tick + 1);
+        for (const auto& actual : after.GetSamples()) {
+            const auto previous = std::ranges::find(before.GetSamples(), actual.id, &SampleState::id);
+            require(previous != before.GetSamples().end());
+            const auto oracle = actual.activity == SampleActivity::mobile
+                ? std::ranges::find(expected, actual.id, &SampleState::id) : expected.end();
+            require(actual.activity == previous->activity);
+            if (actual.activity == SampleActivity::mobile) require(oracle != expected.end());
+            const auto& wanted = oracle == expected.end() ? *previous : *oracle;
+            const std::array observed{actual.position.x, actual.position.y, actual.velocity.x, actual.velocity.y};
+            const std::array reference{wanted.position.x, wanted.position.y, wanted.velocity.x, wanted.velocity.y};
+            for (std::size_t component = 0; component < observed.size(); ++component)
+                require(std::bit_cast<std::uint32_t>(observed[component]) ==
+                    std::bit_cast<std::uint32_t>(reference[component]));
+        }
+    };
+    boundary();
+    boundary();
+    if (!structural) return;
+    for (int cycle = 0; cycle < (population == 64 ? 1 : 2); ++cycle) {
+        require(simulation.TryFuseRelay() == StructuralCommandResult::applied);
+        const auto structure = simulation.GetStructuralState().value();
+        if (population != 64) require(structure.members.front().value > 1);
+        boundary();
+        boundary();
+        require(simulation.TryShatterRelay(structure.generation) == StructuralCommandResult::applied);
+        boundary();
+        require(std::ranges::count(after.GetSamples(), SampleActivity::lost, &SampleState::activity) ==
+            (cycle + 1) * static_cast<int>(StructuralSettings::cost - StructuralSettings::refund));
+        boundary();
     }
 }
 
@@ -133,6 +205,12 @@ int main() {
         receiveScenario(ScenarioSettings{.population = 257}, false);
     }
     require(std::fesetround(FE_TONEAREST) == 0);
+    for (const auto population : {0U, 1U, 257U})
+        receiveCommitOracle(population, {1, 1}, false);
+    for (const auto execution : {ExecutionSettings{1, 1}, ExecutionSettings{2, 4}, ExecutionSettings{4, 7}}) {
+        receiveCommitOracle(257, execution, true);
+        receiveCommitOracle(64, execution, true);
+    }
     ScenarioSettings structural;
     structural.structural = StructuralSettings{};
     structural.structural->eligibility_radius = 80;
