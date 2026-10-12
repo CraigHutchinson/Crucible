@@ -51,7 +51,10 @@ Run IDs are session-local. Record generation/offset identify the physical messag
 | 2 structural refusal | action, generation | StructuralCommandResult: disabled1, occupied2, insufficient_mass3, empty4, stale_generation5, generation_exhausted6 |
 | 3 terminal mission | reclaimed, target, deadline | ReclamationMissionOutcome: won1, lost2 |
 
-Event1 arguments9–14 are original F32 (normalized JSON numeric values); all others
+Actions are field0, fuse1 and shatter2; field kinds are set0, remove1 and
+set_flow2. Field payloads on structural actions are unused diagnostic values.
+Event1 arguments9–14 are original F32 (JSON numbers or the upstream string tags
+`nan`, `inf`, `-inf` for nonfinite refused inputs); all others
 are unsigned64. Accepted/applied/active outcomes are intentionally omitted. The
 text rendering is unchanged. Unknown app versions/events require explicit caller
 policy; never infer completeness from the absence of a record.
@@ -71,7 +74,8 @@ shatter-empty refusal and deadline loss, then independently parses every stdout 
 stderr line with Python's standard JSON parser. A second run exhausts the sink and
 verifies positive losses with a recoverable prefix. Existing binary lifetime tests,
 full-state diagnostics parity and stack round-trip remain gates. Output failures on
-both streams are covered by the C++ receiver. Hosted desktop builds cover CLI wiring;
+both streams are covered by the C++ receiver. `desktop_diagnostics_json` receives the actual desktop destructor using the
+existing SDL dummy/software fixture; hosted desktop builds also compile CLI wiring;
 headless receiving does not claim a physical interactive session.
 
 Manual review after automated gates: launch the command above, let a mission finish,
@@ -80,6 +84,23 @@ Check status/target/deadline and the final health losses. Repeat with ordinary
 `--diagnostics` to inspect text. No useful screenshot applies: behavior is a stream
 contract, and raw parsed output is the actual-state evidence.
 
-Validation and full dependency revision are recorded at publication; currently
-implementation receiving is in progress. Prior Phase13–15 native, participant,
+Initial source checkpoint15ab9b1 (tree6dba4ef) is published in Crucible PR36.
+GCC13.3 Release passed53/53 tests, including stack round-trip, full-state parity,
+source-copy lifetime and JSON parsing. Development preflight passed. Debug also passed53/53 locally. All10 hosted jobs passed at15ab9b1, including
+Windows/Linux/macOS Debug/Release, normal sanitizer, race, headless and GPU.
+The added desktop shutdown receiver and final full pin require fresh exact-head CI. Local normal LSan canary
+fails because /proc/task is inaccessible under ptrace; no suppression was applied.
+A fresh Debug configure could not fetch Sub0Log through the local network proxy
+(HTTP403); local source override uses the exact published library tree. Hosted
+builds receive the full pin without that override.
+
+Observed Release fixture health: normal3 records,0 dropped,0 truncated,
+0 unreadable/undecodable,64344 unwritten bytes; exhaustion463 recovered records,
+9539 dropped,0 truncated,0 unreadable/undecodable,5336 unwritten bytes. Serialized
+stdout was2882/530984 bytes in that run (timestamps/identifiers affect size).
+These are finite-fixture observations, not RSS or throughput benchmarks. The retained
+prefix cannot attest to a terminal event after exhaustion. The selected full pin is f5daae93010d255a112abc602e1ceb1be0d9fb7c, the reviewed
+Sub0Log PR18 head. Downstream merge requires that revision to be merged upstream
+and its downstream exact-head CI to pass. It need not pin the incidental merge
+commit: the reviewed source revision remains reachable from upstream main. Prior Phase13–15 native, participant,
 audio and renderer gates remain open and are outside this maintenance increment.

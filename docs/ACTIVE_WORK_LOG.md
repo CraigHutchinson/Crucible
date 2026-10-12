@@ -636,3 +636,10 @@ PR18 and separately received full-pin promotion are prerequisites. Reserve seria
 Debug/Release builds here; normal sanitizer canary must pass before local sanitizer
 execution. No concurrent workers. No visual change: actual JSON parser receipts
 are the useful evidence. Existing Phase13–15 native/participant gates stay open.
+The same integration claim includes tests/integration/desktop.cpp and its CMake
+registration/JSON receiver to exercise the actual desktop shutdown consumer.
+
+Checkpoint15ab9b1 received all10 hosted jobs and local Debug/Release53/53.
+Final receiving adds actual desktop shutdown parsing and full Sub0Log revision
+f5daae93010d255a112abc602e1ceb1be0d9fb7c; merge waits for upstream inclusion
+and final exact-head CI. Local normal LSan remains unavailable under ptrace.

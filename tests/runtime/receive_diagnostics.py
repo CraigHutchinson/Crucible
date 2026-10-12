@@ -25,6 +25,7 @@ def receive(*args):
         if values[1] == 3:
             assert fields[7]['type'] == 9
             values.append(int(fields[7]['value']))
+        assert len(fields) == {1: 15, 2: 7, 3: 8}[values[1]]
         assert values[0] == 1 and values[2] == 1  # app schema and session run
         events.setdefault(values[1], []).append(values)
     return events, health
