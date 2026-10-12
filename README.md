@@ -27,6 +27,8 @@ forms of the same biomass. The lattice/shatter rule now has a primitive prototyp
   Add `--fullscreen` to request fullscreen at launch; windowed remains default.
 - **Diagnostics:** configure `-DCRUCIBLE_ENABLE_DIAGNOSTICS=ON`, rebuild, then
   launch with `--diagnostics`; shutdown prints bounded decoded refusals/summaries.
+  Use `--diagnostics-json` for typed JSONL and counted-loss health; see
+  [structured diagnostics](docs/workstreams/runtime/structured-diagnostics.md).
   Default production builds omit Log; drops are counted and decoding is cold work.
 - **Automate first, then review:** [personal steps and expected results](docs/playtests/phase12-personal-review.md)
   map to passed tests. Manual review covers usability; computer control diagnoses failures.
