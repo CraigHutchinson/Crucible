@@ -643,3 +643,39 @@ Scope: complete production headless boundary, fixed identity and mobile subsets,
 unchanged numerical/resource rules and dependency pins. Native frame/pacing/GPU
 acceptance stays open. Skills recovered from CraigHutchinson/Agentic-CPP; Sub0
 profile with no overlay. See `docs/optimization/production-gather-commit.md`.
+
+Receiving completed 2026-10-12: independent source and raw-receipt review accepts
+A+B for scoped headless median pump/mission improvement. Five-round comparisons
+cover all four arms at 2048 and 100K, control/combined at 150K, and complete
+reference/structural missions. Published control and sort-only branches preserve
+reproduction; Sub0ECS PR24 owns raw receipts and the collector. Root retains all
+worktrees and failed/interrupted captures. Exact final-head CI and merges close
+publication; native acceptance remains separate. No new pins or public API.
+
+## Sub0Log issue14 receiving, 2026-10-11
+
+Root/integrator owns branch `feat/structured-diagnostics` from118ce62:
+RuntimeDiagnostics header/source and runtime tests, desktop shutdown/CLI wiring,
+Sub0Log pin, README and a runtime receiving record. Consolidate Runtime, Telemetry
+and integration under this one owner; retain domain event policy locally, reuse
+upstream JSON formatting, defer live hooks and unrelated Phase15 work. Upstream
+PR18 and separately received full-pin promotion are prerequisites. Reserve serial
+Debug/Release builds here; normal sanitizer canary must pass before local sanitizer
+execution. No concurrent workers. No visual change: actual JSON parser receipts
+are the useful evidence. Existing Phase13–15 native/participant gates stay open.
+The same integration claim includes tests/integration/desktop.cpp and its CMake
+registration/JSON receiver to exercise the actual desktop shutdown consumer.
+
+Checkpoint15ab9b1 received all10 hosted jobs and local Debug/Release53/53.
+Final receiving adds actual desktop shutdown parsing and full Sub0Log revision
+f5daae93010d255a112abc602e1ceb1be0d9fb7c; merge waits for upstream inclusion
+and final exact-head CI. Local normal LSan remains unavailable under ptrace.
+
+## JSON export optimization, 2026-10-12
+
+Root/integrator owns `perf/json-export-pin` from70b557b, dependency pin and
+optimization receiving record. Upstream scope is Sub0Log json.hpp, existing
+format benchmark, focused tests and evidence on `perf/json-append` from2bd85d5.
+Serial CPU/build reservation; no workers. Measure cold formatting first, preserve
+schema/owned output and quiescent lifetime contracts, receive actual merged
+upstream revision through runtime and desktop JSON consumers before promotion.

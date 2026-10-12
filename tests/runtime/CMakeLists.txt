@@ -57,6 +57,12 @@ target_link_libraries(crucible_backbone_parity_tests PRIVATE Crucible::Runtime C
 add_test(NAME runtime_backbone_parity COMMAND crucible_backbone_parity_tests)
 set_tests_properties(runtime_backbone_parity PROPERTIES LABELS "runtime;pub;pipeline" TIMEOUT 180)
 if(CRUCIBLE_ENABLE_DIAGNOSTICS)
+    add_executable(crucible_diagnostics_json_fixture diagnostics_json_fixture.cpp)
+    target_link_libraries(crucible_diagnostics_json_fixture PRIVATE Crucible::Runtime)
+    add_test(NAME runtime_diagnostics_json COMMAND ${Python3_EXECUTABLE}
+        ${CMAKE_CURRENT_SOURCE_DIR}/receive_diagnostics.py $<TARGET_FILE:crucible_diagnostics_json_fixture>)
+    set_tests_properties(runtime_diagnostics_json PROPERTIES LABELS "runtime;log;lifetime"
+        TIMEOUT 90 REQUIRED_FILES "$<TARGET_FILE:crucible_diagnostics_json_fixture>")
     add_executable(crucible_runtime_diagnostics_tests RuntimeDiagnostics.cpp)
     target_link_libraries(crucible_runtime_diagnostics_tests PRIVATE Crucible::Runtime Sub0Log::Sub0Log)
     add_test(NAME runtime_diagnostics COMMAND crucible_runtime_diagnostics_tests)

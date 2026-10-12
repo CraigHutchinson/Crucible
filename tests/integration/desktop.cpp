@@ -281,7 +281,24 @@ int main(int argc, char** argv) {
     if (!SDL_Init(SDL_INIT_VIDEO | SDL_INIT_EVENTS)) { std::cerr << SDL_GetError(); return 1; }
     int result{};
     try {
-        Check(); FlowEvents(); MissionEvents();
+#if CRUCIBLE_ENABLE_DIAGNOSTICS
+        if (argc == 2 && std::string_view{argv[1]} == "--export-diagnostics") {
+            crucible::desktop::DesktopApp::StartupSettings settings;
+            settings.mission = crucible::ReclamationMissionSettings{1780, 1};
+            settings.diagnostics = crucible::runtime::InspectorSession::Diagnostics::bounded;
+            settings.diagnosticsJson = true;
+            crucible::desktop::DesktopApp app{settings};
+            for (int attempt = 0; attempt < 100 &&
+                    app.GetSession().GetMission()->outcome == crucible::ReclamationMissionOutcome::active; ++attempt) {
+                SDL_Delay(20);
+                Require(app.Iterate() == SDL_APP_CONTINUE, "diagnostic mission iteration");
+            }
+            Require(app.GetSession().GetMission()->outcome == crucible::ReclamationMissionOutcome::lost,
+                "diagnostic mission reaches deadline before shutdown");
+            // The real desktop destructor exports while its session still lives.
+        } else
+#endif
+        { Check(); FlowEvents(); MissionEvents(); }
         if (argc == 3 && std::string_view{argv[1]} == "--export-mission") ExportMission(argv[2]);
     } catch (const std::exception& e) { std::cerr << e.what() << ": " << SDL_GetError() << '\n'; result = 1; }
     SDL_Quit();
