@@ -93,6 +93,18 @@ participant strategy/balance work. Prior terrain/growth/concurrent-reader
 follow-ups remain deferred. Prior iOS follow-ups are reassessed through the
 explicit Apple build/package/input and physical receiving gates above.
 
+Nanite intro behaviour was undefined by this plan and the brief (P15-F10). The
+[swarm behaviour design](../concepts/phase15-experience/nanite-swarm-design.md) defines
+the wave, assignment, lanes, docking, non-penetration and camera-driven decision LOD,
+with headless prototypes in [spikes/swarm_intro](../../spikes/swarm_intro/README.md). The
+final title stands upright (user direction). Climbing in place without a preset order
+(first-come claims, stuck contingencies, selective magnetism) is the core intent; a hybrid
+that raises the deepest letters as drawbridges while the rest climb is recommended for the
+15s sequence, with raise as the 12s fallback. Tiles interlock and morph for smooth outlines.
+The spike records Sub0Log JSONL events checked by an independent receiver.
+Its S1-S5 stages are proposals for P15-E0/R0 review, not dispatched work. Its gameplay
+stages keep camera-independent authority, with a view-owned embellishment layer.
+
 No gameplay arithmetic, biomass ledger, complete neighbor query, worker default
 or mission thresholds change for visual fidelity. Decorative intro nanites are
 view-owned and never impersonate authoritative gameplay population. Warm UI/font

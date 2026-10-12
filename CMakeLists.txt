@@ -9,6 +9,7 @@ include(CTest)
 option(CRUCIBLE_BUILD_BENCHMARKS "Build headless benchmark tools" OFF)
 option(CRUCIBLE_BUILD_RENDER_SPIKE "Build the interim owned-instance rendering experiment" OFF)
 option(CRUCIBLE_BUILD_RULE_SPIKE "Build the bounded production-state relay investigation" OFF)
+option(CRUCIBLE_BUILD_SWARM_SPIKE "Build the headless nanite swarm intro choreography spike" OFF)
 option(CRUCIBLE_BUILD_GPU_RECEIVER "Build the optional Vulkan instancing receiver" OFF)
 option(CRUCIBLE_BUILD_DESKTOP "Build the optional SDL interactive prototype" OFF)
 option(CRUCIBLE_ENABLE_SANITIZERS "Enable AddressSanitizer and UBSan" OFF)
@@ -90,6 +91,10 @@ endif()
 
 if(CRUCIBLE_BUILD_RULE_SPIKE)
     add_subdirectory(spikes/structural)
+endif()
+
+if(CRUCIBLE_BUILD_SWARM_SPIKE)
+    add_subdirectory(spikes/swarm_intro)
 endif()
 
 if(CRUCIBLE_BUILD_RENDER_SPIKE)

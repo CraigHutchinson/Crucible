@@ -80,7 +80,7 @@ jobs:
         with:
           lfs: true
       - run: python scripts/check_prerequisites.py --stage development
-      - run: cmake --preset release -DCRUCIBLE_BUILD_RULE_SPIKE=ON
+      - run: cmake --preset release -DCRUCIBLE_BUILD_RULE_SPIKE=ON -DCRUCIBLE_BUILD_SWARM_SPIKE=ON
       - run: cmake --build --preset release --parallel 4
       - run: python scripts/run_tests.py --preset release
       - name: SDL stays out of the ordinary dependency graph
