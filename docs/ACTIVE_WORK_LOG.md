@@ -643,3 +643,12 @@ Checkpoint15ab9b1 received all10 hosted jobs and local Debug/Release53/53.
 Final receiving adds actual desktop shutdown parsing and full Sub0Log revision
 f5daae93010d255a112abc602e1ceb1be0d9fb7c; merge waits for upstream inclusion
 and final exact-head CI. Local normal LSan remains unavailable under ptrace.
+
+## JSON export optimization, 2026-10-12
+
+Root/integrator owns `perf/json-export-pin` from70b557b, dependency pin and
+optimization receiving record. Upstream scope is Sub0Log json.hpp, existing
+format benchmark, focused tests and evidence on `perf/json-append` from2bd85d5.
+Serial CPU/build reservation; no workers. Measure cold formatting first, preserve
+schema/owned output and quiescent lifetime contracts, receive actual merged
+upstream revision through runtime and desktop JSON consumers before promotion.
