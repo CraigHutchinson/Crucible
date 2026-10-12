@@ -69,6 +69,15 @@ int main() {
             Compare(grid, samples, center, radius);
     const auto dense = grid.TryQuery({6, 4}, 0.0F);
     Check(dense && dense->size() >= 1024, "dense coincident results truncated");
+    std::ranges::sort(samples, {}, &SpatialSample::id);
+    Check(grid.TryRebuild(samples), "sorted rebuild rejected");
+    Compare(grid, samples, {6, 4}, 5.3F);
+    auto sortedDuplicate = samples;
+    sortedDuplicate[1].id = sortedDuplicate[0].id;
+    const auto sortedOccupied = grid.GetOccupiedCellCount();
+    Check(!grid.TryRebuild(sortedDuplicate), "sorted duplicate ID accepted");
+    Check(grid.GetOccupiedCellCount() == sortedOccupied, "sorted duplicate damaged committed grid");
+    Compare(grid, samples, {6, 4}, 5.3F);
     std::ranges::reverse(samples);
     Check(grid.TryRebuild(samples), "shuffled rebuild rejected");
     Compare(grid, samples, {6, 4}, 5.3F);

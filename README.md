@@ -32,7 +32,7 @@ forms of the same biomass. The lattice/shatter rule now has a primitive prototyp
   Default production builds omit Log; drops are counted and decoding is cold work.
 - **Automate first, then review:** [personal steps and expected results](docs/playtests/phase12-personal-review.md)
   map to passed tests. Manual review covers usability; computer control diagnoses failures.
-- **Limits:** fixed identities:2048 in the mission or100K/150K in scale mode;
+- **Limits:** fixed identities: 2048 in the mission or 100K/150K in scale mode;
   SDL desktop with enlarged text and
   wrapped feedback. Sound and fullscreen-default promotion retain separate gates.
   Physical Vulkan
@@ -41,16 +41,22 @@ forms of the same biomass. The lattice/shatter rule now has a primitive prototyp
   [headless scenarios](#headless-scenarios-and-investigations), and
   [phase12 evidence](docs/sprint-reviews/phase-12.md).
 
-Major milestone in progress: [Phase14, interactive100K/150K performance](docs/phases/phase14.md)
+Major milestone in progress: [Phase14, interactive 100K/150K performance](docs/phases/phase14.md)
 defines bounded parallel simulation, whole native frame budgets and two coordinated
 agent workstreams. Scale scenario and native lifecycle checkpoints are received;
-parallel implementation is merged through PR30, while physical60Hz/60FPS acceptance
+parallel implementation is merged through PR30, while physical 60 Hz/60 FPS acceptance
 remains open. Read its
 [contracts](docs/decisions/phase14-scale-contracts.md) and
 [execution review](docs/sprint-reviews/phase-14.md) for the exact evidence and limits.
 Further refinement follows the [codified optimization workflow](docs/OPTIMIZATION_PROCESS.md):
 profiling, vectorization/assembly and aliasing checks, controlled iteration and
-upstream Sub0 improvements.
+upstream Sub0 improvements. The [production headless optimization record](docs/optimization/production-gather-commit.md)
+tracks checked commit mapping, guarded sorting and their matched comparisons.
+Complete four-worker combined cohorts improve median pump/capture by 11.18% at
+100K and 13.23% at 150K. Fresh 2048 and complete reference/structural missions pass
+the small-workload median gate, supporting A+B promotion with unchanged pins and
+public APIs. Small-world and 100K tails are mixed. Headless evidence does not
+close native frame or input-latency gates.
 
 The [Phase15 experience](docs/phases/phase15.md) is now in implementation: a
 cinematic nanite title, themed ImGui menu and safe return-to-play journey through

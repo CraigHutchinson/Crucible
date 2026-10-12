@@ -625,6 +625,33 @@ PR33's mission work is preserved. Source review and documentation are complete;
 actual profiling, adapter implementation and combined receiving remain pending
 as recorded in the campaign. No speedup or new API is claimed.
 
+
+## Production gather/commit optimization, 2026-10-10
+
+Root owns branch `perf/production-gather-commit` from
+`118ce62a75c8e6f1c325cc915cbc539c558a4c11`, all serial configure/build/profile/
+measurement CPU, capture tooling, shared manifests and documentation. A detached
+`../Crucible-control` worktree preserves that baseline. No other worktrees removed.
+
+- `production_mapping`: `src/simulation.cpp` and focused simulation receiving tests;
+  proposal first, implementation after production attribution.
+- `production_bench`: `benchmarks/runtime_backbone.cpp`, opt-in headless scale/stage
+  receiving through the existing actual InspectorSession, no replacement simulation.
+- Root: independently review both changes, paired capture and publication.
+
+Scope: complete production headless boundary, fixed identity and mobile subsets,
+unchanged numerical/resource rules and dependency pins. Native frame/pacing/GPU
+acceptance stays open. Skills recovered from CraigHutchinson/Agentic-CPP; Sub0
+profile with no overlay. See `docs/optimization/production-gather-commit.md`.
+
+Receiving completed 2026-10-12: independent source and raw-receipt review accepts
+A+B for scoped headless median pump/mission improvement. Five-round comparisons
+cover all four arms at 2048 and 100K, control/combined at 150K, and complete
+reference/structural missions. Published control and sort-only branches preserve
+reproduction; Sub0ECS PR24 owns raw receipts and the collector. Root retains all
+worktrees and failed/interrupted captures. Exact final-head CI and merges close
+publication; native acceptance remains separate. No new pins or public API.
+
 ## Sub0Log issue14 receiving, 2026-10-11
 
 Root/integrator owns branch `feat/structured-diagnostics` from118ce62:

@@ -78,6 +78,7 @@ target_link_libraries(crucible_tick_observations_test PRIVATE Crucible::Runtime 
 add_test(NAME runtime_tick_observations COMMAND crucible_tick_observations_test)
 set_tests_properties(runtime_tick_observations PROPERTIES LABELS "runtime;pipeline;scale")
 add_executable(crucible_parallel_simulation_test test_parallel_simulation.cpp)
-target_link_libraries(crucible_parallel_simulation_test PRIVATE Crucible::Runtime Crucible::Presentation)
+target_link_libraries(crucible_parallel_simulation_test PRIVATE Crucible::Runtime Crucible::Presentation
+    Crucible::Spatial Crucible::Fields Crucible::Swarm)
 add_test(NAME runtime_parallel_simulation COMMAND crucible_parallel_simulation_test)
 set_tests_properties(runtime_parallel_simulation PROPERTIES LABELS "runtime;pipeline;scale;structural" TIMEOUT 180)
