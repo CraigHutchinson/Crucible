@@ -24,8 +24,9 @@ CYAN = (60, 230, 255)
 CYAN_DIM = (30, 90, 110)
 TIER_COLOURS = {0: (255, 190, 60), 1: (80, 210, 255), 2: (150, 110, 255), 3: (90, 90, 90)}
 TIER_NAMES = {0: "hero", 1: "near", 2: "far", 3: "hidden"}
+MAGNET_COLOURS = {1: (60, 230, 255), 2: (255, 150, 40), 3: (250, 250, 250)}   # lift, push, seat
 HEADER = re.compile(r"# time=([\d.]+) cx=([-\d.]+) cy=([-\d.]+) half_width=([\d.]+) aspect=([\d.]+)"
-                    r"(?: view=(\w+) tilt=([\d.]+))?")
+                    r"(?: view=(\w+) tilt=([\d.]+))?(?: tile=([\d.]+))?")
 
 
 def load(path):
@@ -34,13 +35,15 @@ def load(path):
     t, cx, cy, hw, aspect = (float(v) for v in groups[:5])
     view = groups[5] or "top"
     tilt = float(groups[6] or 0.4)
+    tile = float(groups[7] or 0.0)
     rows = []
     for line in lines[2:]:
         fields = line.split(",")
         x, y, z, h, act, tier, since = fields[:7]
-        wall = len(fields) > 7 and fields[7] == "1"
-        rows.append((float(x), float(y), float(z), float(h), act, int(tier), float(since), wall))
-    return {"time": t, "cx": cx, "cy": cy, "hw": hw, "aspect": aspect, "view": view, "tilt": tilt, "rows": rows}
+        plane = float(fields[7]) if len(fields) > 7 else 0.0   # tilt about x: 0 ground, pi/2 wall
+        magnet = int(fields[8]) if len(fields) > 8 else 0      # 1 lift, 2 push, 3 seat
+        rows.append((float(x), float(y), float(z), float(h), act, int(tier), float(since), plane, magnet))
+    return {"time": t, "cx": cx, "cy": cy, "hw": hw, "aspect": aspect, "view": view, "tilt": tilt, "tile": tile, "rows": rows}
 
 
 class Canvas:
@@ -118,28 +121,42 @@ def draw_frame(frame, size=(960, 540), mode="beauty"):
         order = sorted(frame["rows"], key=lambda r: (-r[1], r[2]))
     else:
         order = sorted(frame["rows"], key=lambda r: (r[4] not in rest, r[2]))
-    for x, y, z, heading, act, tier, since, wall in order:
+    for x, y, z, heading, act, tier, since, plane, magnet in order:
         px, py = project(x, y, z)
         if px < -20 or px > w + 20 or py < -20 or py > h + 20:
             continue
         c, s = math.cos(heading), math.sin(heading)
 
+        cp, sp = math.cos(plane), math.sin(plane)
+
         def corner(forward, side):
-            # A wedge lies in its sheet: the ground (x, y) or the wall face (x, z).
+            # A wedge lies in its plane: the ground (x, y), a wall face (x, z), or a letter
+            # part-way through its rise.
             ax = c * forward - s * side
             ay = s * forward + c * side
-            return project(x + ax, y, z + ay) if wall else project(x + ax, y + ay, z)
+            return project(x + ax, y + ay * cp, z + ay * sp)
 
         if mode == "tiers":
             fill = TIER_COLOURS[tier]
         else:
             fill = SILVER_DIM if act in ("dormant", "reserve") else SILVER
-            if act == "climb" or (not wall and act not in rest and z > 0.1):
+            if act == "climb" or (plane < 0.1 and act not in rest and z > 0.1):
                 fill = tuple(min(255, v + 30) for v in fill)
+            if mode == "magnets" and magnet:
+                fill = MAGNET_COLOURS[magnet]
+            elif mode == "magnets":
+                fill = (70, 74, 80) if act not in ("queue",) else (150, 150, 160)
         if scale < 3.0:
             draw.point((px, py), fill)
             continue
-        draw.polygon([corner(0.55, 0.0), corner(-0.38, 0.36), corner(-0.38, -0.36)], fill)
+        if frame["tile"] > 0.0:
+            # Tessellated: equilateral tiles (inset 4% so the joins read) that interlock.
+            radius = frame["tile"] / math.sqrt(3.0) * 0.96
+            third = 2.0 * math.pi / 3.0
+            points = [corner(radius * math.cos(a), radius * math.sin(a)) for a in (0.0, third, -third)]
+        else:
+            points = [corner(0.55, 0.0), corner(-0.38, 0.36), corner(-0.38, -0.36)]
+        draw.polygon(points, fill)
         if mode == "beauty" and scale >= 6.0:
             # Core: wake pulse decays to a steady glow; dormant cores are dark.
             if act == "dormant":
@@ -188,17 +205,25 @@ def main():
     parser.add_argument("--sheet", type=pathlib.Path)
     parser.add_argument("--tiers", type=pathlib.Path)
     parser.add_argument("--gif", type=pathlib.Path)
-    parser.add_argument("--gif-mode", default="beauty", choices=["beauty", "tiers"])
+    parser.add_argument("--gif-mode", default="beauty", choices=["beauty", "tiers", "magnets"])
+    parser.add_argument("--magnets", type=pathlib.Path, help="sheet coloured by magnet mode: cyan lift, amber push, white seat")
     parser.add_argument("--times", default="1.0,3.0,5.0,6.8,8.4,11.9")
+    parser.add_argument("--zoom", help="override the camera for sheets: cx,cy,half_width (view units)")
     args = parser.parse_args()
     frames = [load(p) for p in sorted(args.frames.glob("frame_*.csv"))]
     if not frames:
         raise SystemExit("no frame_*.csv captures found")
     times = [float(v) for v in args.times.split(",")]
+    if args.zoom:
+        cx, cy, hw = (float(v) for v in args.zoom.split(","))
+        for f in frames:
+            f["cx"], f["cy"], f["hw"] = cx, cy, hw
     if args.sheet:
         sheet(frames, times, "beauty", args.sheet)
     if args.tiers:
         sheet(frames, times, "tiers", args.tiers)
+    if args.magnets:
+        sheet(frames, times, "magnets", args.magnets)
     if args.gif:
         images = [draw_frame(f, (640, 360), args.gif_mode).image() for f in frames]
         step_ms = int(round((frames[1]["time"] - frames[0]["time"]) * 1000)) if len(frames) > 1 else 33

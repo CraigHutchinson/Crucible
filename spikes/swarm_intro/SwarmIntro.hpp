@@ -9,6 +9,7 @@
 
 #include <sub0ecs/sub0ecs.hpp>
 
+#include "SwarmDiagnostics.hpp"
 #include "Wordmark.hpp"
 
 namespace crucible::spike::swarm
@@ -55,6 +56,7 @@ enum class Act : std::uint8_t
     Moor,      ///< Surplus unit travelling to the ribbon.
     Moored,    ///< Resting in the ribbon.
     Reserve,   ///< Awake but unassigned: stays on the bed.
+    Queue,     ///< Climb build: at its letter's base, waiting to claim a slot in arrival order.
 };
 
 /** Per-unit intent. Personality values come from the seed, so behaviour is reproducible. */
@@ -69,6 +71,14 @@ struct Mind
     float speedScale = 1.0F;
     float reaction = 0.1F;       ///< Seconds between waking and moving.
     bool ribbon = false;         ///< Goal indexes the ribbon rather than the title.
+    std::int8_t letter = -1;     ///< Climb build: destination letter; the slot is claimed at its base.
+    std::uint8_t magnet = 0;     ///< Active MagnetMode, 0 when off.
+    std::uint16_t pushTicks = 0; ///< Remaining ticks of a push contingency.
+    std::uint32_t arrived = 0;   ///< Climb build: tick the unit joined its letter's queue.
+    std::uint32_t stall = 0;     ///< Ticks without progress toward the current aim.
+    std::uint32_t stuckSince = 0;   ///< Tick a stuck episode began, 0 when not stuck.
+    std::uint8_t progressAct = 0;   ///< Act the progress measure belongs to.
+    float best = 0.0F;           ///< Best progress value seen in that act.
 };
 
 /** LOD tier tags. Each tier is its own partition, so a tier system only touches its units
@@ -105,7 +115,8 @@ struct IntroSettings
     LodMode lod = LodMode::Camera;
     Build build = Build::Lying;
     float viewTilt = 0.4F;         ///< Upright builds' view: screen y = height + tilt * depth (oblique front camera).
-    int climbWindow = 12;          ///< Climb build: levels a slot may be beyond its letter's frontier before its unit climbs.
+    std::uint32_t claimCap = 96;   ///< Climb build: slots claimed but not yet locked, per letter.
+    std::uint32_t stuckTicks = 40; ///< Ticks without progress before a unit counts as stuck.
     float raiseDelay = 0.15F;      ///< Raise build: pause between a letter's last lock and its rise.
     float raiseSeconds = 0.9F;     ///< Raise build: duration of the hinge from flat to upright.
     WordmarkSettings wordmark{};
@@ -140,6 +151,15 @@ struct TickMetrics
     std::uint32_t unsupported = 0;       ///< Climb build: locks without a locked support (must stay 0).
     std::uint32_t offSurface = 0;        ///< Climb build: climbers above the base with no locked unit within reach.
     std::uint32_t raised = 0;            ///< Raise build: letters fully upright.
+    std::uint32_t claims = 0;            ///< Climb build: slots claimed this tick.
+    std::uint32_t queued = 0;            ///< Climb build: units waiting at letter bases.
+    std::uint32_t stuck = 0;             ///< Units that became stuck this tick.
+    std::uint32_t recovered = 0;         ///< Stuck units that made progress again this tick.
+    std::uint32_t pushes = 0;            ///< Push contingencies started this tick.
+    std::uint32_t reclaims = 0;          ///< Reclaim contingencies this tick.
+    std::uint32_t stuckNow = 0;          ///< Units currently stuck.
+    std::uint32_t lifted = 0;            ///< Climbers currently drawn up by lift magnetism.
+    std::uint32_t climbers = 0;          ///< Climb build: units on the wall face this tick.
     std::array<float, 6> systemMicros{};   ///< gather, signal, behaviour+negotiation, resolve, lod, metrics
 };
 
@@ -154,6 +174,7 @@ struct RenderRow
     Act act;
     Tier tier;
     float actSince;
+    std::uint8_t magnet;   ///< Active MagnetMode, 0 when off.
 };
 
 // ---- The intro --------------------------------------------------------------------------
@@ -183,6 +204,11 @@ public:
     [[nodiscard]] std::size_t ribbonCount() const { return ribbon_.size(); }
     /** @return Units given a slot by the planner. */
     [[nodiscard]] std::size_t assignedSlots() const { return assignedSlots_; }
+
+    /** Borrows a diagnostics sink for events; it must outlive every later tick. */
+    void attachDiagnostics(SwarmDiagnostics* diagnostics) { diagnostics_ = diagnostics; }
+    /** Records the end-of-run summary event, when diagnostics are attached. */
+    void recordSummary();
 
     /** Copies every unit's render state, ordered by identity. */
     void snapshot(std::vector<RenderRow>& out);
@@ -236,6 +262,12 @@ private:
     void signalSystem();
     void behaviourSystems();
     void negotiationSystem();
+    void claimSystem();
+    void contingencySystem();
+    [[nodiscard]] bool progressOf(const Pose& pose, const Mind& mind, float& value) const;
+    void setMagnet(std::uint32_t unit, Mind& mind, MagnetMode mode, bool on);
+    void pushAway(std::uint32_t unit, const Pose& pose, float& vx, float& vy) const;
+    void stagingPoint(std::uint32_t unit, const Mind& mind, float& x, float& y) const;
     void resolveSystem();
     void lodSystem();
     void metricsSystem();
@@ -252,12 +284,14 @@ private:
         bool hasFace = false;
     };
     Desire desire(const Identity& id, Pose& pose, Mind& mind);
-    bool climbDesire(Pose& pose, Mind& mind, Desire& d);
-    void advanceAct(Pose& pose, Mind& mind);
+    bool climbDesire(std::uint32_t unit, Pose& pose, Mind& mind, Desire& d);
+    void advanceAct(std::uint32_t unit, Pose& pose, Mind& mind);
     void integrate(Pose& pose, Motion& motion, float vx, float vy, const Desire& d, float turnRate);
     [[nodiscard]] float liftOf(const Identity& id, const Pose& pose, const Mind& mind) const;
     void heroChoose(const Identity& id, const Pose& pose, float& vx, float& vy);
     [[nodiscard]] bool isMover(Act act) const;
+    [[nodiscard]] bool flows(const Pose& pose, const Mind& mind) const;
+    [[nodiscard]] float seatHeading(float slotHeading, float current) const;
     [[nodiscard]] bool inView(float x, float y, float margin) const;
 
     IntroSettings settings_;
@@ -277,10 +311,21 @@ private:
     // graph over slots (depth from the ground row, BFS parent, adjacency) with lock state.
     float wallY_ = 0.0F;
     float wallBand_ = 0.0F;
-    std::vector<std::uint32_t> slotDepth_, slotParent_, slotRoot_, slotEntry_;
+    std::vector<std::uint32_t> slotDepth_, slotParent_, slotRoot_;
     std::vector<std::vector<std::uint32_t>> slotNeighbours_;
     std::vector<std::uint8_t> slotLocked_, gSlotLocked_, gSlotSeating_;
     std::array<std::uint32_t, 8> letterLocked_{};
+    std::array<float, 8> letterBaseMin_{}, letterBaseMax_{};   // ground-row x span per letter
+    std::array<std::uint32_t, 8> letterInFlight_{};   // claimed, not yet locked
+    std::array<bool, 8> letterUprightLogged_{};
+    std::vector<std::int32_t> slotOwner_;
+    std::vector<std::uint8_t> slotSupportLogged_;               // claiming unit, -1 when free
+    std::vector<std::pair<std::uint32_t, std::uint32_t>> queueScratch_;   // (arrived tick, unit)
+    std::vector<std::uint32_t> gStall_;
+    std::vector<std::uint8_t> gPush_;
+    std::vector<std::uint8_t> gLayer_;   // flows over others this tick (climb build)
+    SwarmDiagnostics* diagnostics_ = nullptr;
+    std::uint64_t claimsTotal_ = 0, stuckTotal_ = 0, recoveredTotal_ = 0;
     std::array<float, 8> letterCompleteAt_{};   // -1 until the letter's last slot locks
     std::vector<std::vector<std::uint32_t>> letterSlots_;
     std::array<int, 8> gLetterFrontier_{};   // deepest locked depth per letter at tick start; -1 none

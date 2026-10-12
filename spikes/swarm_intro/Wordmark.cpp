@@ -1,7 +1,9 @@
 #include "Wordmark.hpp"
 
+#include <algorithm>
 #include <array>
 #include <cmath>
+#include <limits>
 #include <numbers>
 
 namespace crucible::spike::swarm
@@ -175,6 +177,47 @@ std::vector<float> letterCentres(const WordmarkSettings& settings)
     return centres;
 }
 
+/** Distance from a point to a polyline. */
+float distanceTo(const Polyline& line, Point p)
+{
+    float best = std::numeric_limits<float>::max();
+    for (std::size_t i = 0; i + 1 < line.size(); ++i)
+    {
+        const Point a = line[i];
+        const Point c = line[i + 1];
+        const float dx = c.x - a.x, dy = c.y - a.y;
+        const float len2 = dx * dx + dy * dy;
+        const float t = len2 > 0.0F ? std::clamp(((p.x - a.x) * dx + (p.y - a.y) * dy) / len2, 0.0F, 1.0F) : 0.0F;
+        best = std::min(best, std::hypot(p.x - (a.x + dx * t), p.y - (a.y + dy * t)));
+    }
+    return best;
+}
+
+/** Triangles of a lattice whose centroids lie within the strokes' half thickness. Row 0
+ *  sits on the baseline, so up triangles stand on the ground with a flat edge. */
+void tessellate(const std::vector<Polyline>& lines, float w, float h, float side, float halfThickness, Point origin,
+                std::uint8_t letter, std::vector<Slot>& out)
+{
+    constexpr float pi = std::numbers::pi_v<float>;
+    const float rowHeight = side * std::sqrt(3.0F) * 0.5F;
+    const int rows = static_cast<int>(h / rowHeight) + 1;
+    const int columns = static_cast<int>(w / (side * 0.5F)) + 2;
+    for (int r = 0; r < rows; ++r)
+    {
+        for (int c = 0; c <= columns; ++c)
+        {
+            const bool up = ((r + c) & 1) == 0;
+            const Point centroid{ static_cast<float>(c) * side * 0.5F,
+                                  static_cast<float>(r) * rowHeight + rowHeight * (up ? 1.0F : 2.0F) / 3.0F };
+            if (centroid.y > h) continue;
+            float d = std::numeric_limits<float>::max();
+            for (const Polyline& line : lines) d = std::min(d, distanceTo(line, centroid));
+            if (d > halfThickness) continue;
+            out.push_back({ origin.x + centroid.x, origin.y + centroid.y, up ? pi * 0.5F : -pi * 0.5F, letter });
+        }
+    }
+}
+
 std::vector<Slot> buildWordmark(const WordmarkSettings& settings)
 {
     const float h = settings.capHeight;
@@ -187,6 +230,14 @@ std::vector<Slot> buildWordmark(const WordmarkSettings& settings)
         const Point origin{ centres[i] - w * 0.5F, -h * 0.5F };
         std::vector<Slot> raw;
         const float cap = static_cast<float>(settings.strokeRows - 1) * 0.5F * settings.pitch;
+        if (settings.tile > 0.0F)
+        {
+            std::vector<Polyline> lines;
+            for (const Polyline& line : glyph(kWord[i], w, h, inset)) lines.push_back(capped(line, cap));
+            const float halfThickness = static_cast<float>(settings.strokeRows) * 0.5F * settings.pitch;
+            tessellate(lines, w, h, settings.tile, halfThickness, origin, static_cast<std::uint8_t>(i), slots);
+            continue;
+        }
         for (const Polyline& line : glyph(kWord[i], w, h, inset))
         {
             sample(capped(line, cap), settings.pitch, settings.strokeRows, origin, static_cast<std::uint8_t>(i), raw);

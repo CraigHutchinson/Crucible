@@ -97,8 +97,10 @@ Nanite intro behaviour was undefined by this plan and the brief (P15-F10). The
 [swarm behaviour design](../concepts/phase15-experience/nanite-swarm-design.md) defines
 the wave, assignment, lanes, docking, non-penetration and camera-driven decision LOD,
 with headless prototypes in [spikes/swarm_intro](../../spikes/swarm_intro/README.md). The
-final title stands upright (user direction); assemble-flat-then-raise is recommended over
-climbing in place, which measured about 5s too slow for the brief.
+final title stands upright (user direction). Within the user-approved 15s sequence, climbing
+in place without a preset order (first-come claims, stuck contingencies, selective
+magnetism, tessellated tiles) is recommended; assemble-flat-then-raise is the 12s fallback.
+The spike records Sub0Log JSONL events checked by an independent receiver.
 Its S1-S5 stages are proposals for P15-E0/R0 review, not dispatched work. Its gameplay
 stages keep camera-independent authority, with a view-owned embellishment layer.
 

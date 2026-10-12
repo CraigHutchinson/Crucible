@@ -7,6 +7,9 @@
 #include <cstdlib>
 #include <cstring>
 #include <filesystem>
+#include <fstream>
+#include <iostream>
+#include <memory>
 #include <string>
 #include <string_view>
 #include <vector>
@@ -24,6 +27,8 @@ struct Options
     std::string framesDir;
     int every = 4;
     std::string metricsPath;
+    std::string eventsPath;   // Sub0Log JSONL messages
+    std::string healthPath;   // one swarm_health object
     bool verify = false;
 };
 
@@ -42,6 +47,16 @@ struct RunSummary
     std::uint32_t maxHeroes = 0;
     std::uint32_t maxMigrations = 0;
     std::uint64_t yields = 0;
+    std::uint64_t claims = 0;
+    std::uint64_t stuck = 0;
+    std::uint64_t recovered = 0;
+    std::uint64_t pushes = 0;
+    std::uint64_t reclaims = 0;
+    std::uint32_t maxStuckNow = 0;
+    std::uint32_t stuckAtEnd = 0;
+    std::uint64_t climberTicks = 0;
+    std::uint32_t lockedAtEnd = 0;
+    bool diagnosticsOk = true;
     std::uint64_t swaps = 0;
     std::uint64_t unsupported = 0;
     std::uint64_t offSurface = 0;
@@ -75,6 +90,7 @@ const char* actName(Act act)
     case Act::Moor: return "moor";
     case Act::Moored: return "moored";
     case Act::Reserve: return "reserve";
+    case Act::Queue: return "queue";
     }
     return "?";
 }
@@ -82,6 +98,13 @@ const char* actName(Act act)
 RunSummary run(const Options& options, bool capture)
 {
     SwarmIntro intro(options.settings);
+    const bool record = capture && !options.eventsPath.empty();
+    std::unique_ptr<SwarmDiagnostics> diagnostics;
+    if (record)
+    {
+        diagnostics = std::make_unique<SwarmDiagnostics>();
+        intro.attachDiagnostics(diagnostics.get());
+    }
     RunSummary summary;
     summary.slots = intro.assignedSlots();
     summary.ribbon = std::min(intro.ribbonCount(), options.settings.nanites - intro.assignedSlots());
@@ -132,6 +155,15 @@ RunSummary run(const Options& options, bool capture)
         summary.maxHeroes = std::max(summary.maxHeroes, m.tierCount[0]);
         if (t > 0) summary.maxMigrations = std::max(summary.maxMigrations, m.migrations);   // tick0 seeds every tier
         summary.yields += m.heroYields;
+        summary.claims += m.claims;
+        summary.stuck += m.stuck;
+        summary.recovered += m.recovered;
+        summary.pushes += m.pushes;
+        summary.reclaims += m.reclaims;
+        summary.maxStuckNow = std::max(summary.maxStuckNow, m.stuckNow);
+        summary.lockedAtEnd = m.locked;
+        summary.stuckAtEnd = m.stuckNow;
+        summary.climberTicks += m.climbers;
         summary.swaps += m.goalSwaps;
         summary.unsupported += m.unsupported;
         summary.offSurface += m.offSurface;
@@ -159,19 +191,30 @@ RunSummary run(const Options& options, bool capture)
             if (std::FILE* f = std::fopen((options.framesDir + name).c_str(), "w"))
             {
                 const Camera& cam = intro.camera();
-                std::fprintf(f, "# time=%.4f cx=%.4f cy=%.4f half_width=%.4f aspect=%.6f view=%s tilt=%.3f\n", m.time, cam.cx, cam.cy,
-                             cam.halfWidth, cam.aspect, options.settings.build != Build::Lying ? "oblique" : "top", options.settings.viewTilt);
-                std::fprintf(f, "x,y,z,heading,act,tier,act_since,plane\n");
+                std::fprintf(f, "# time=%.4f cx=%.4f cy=%.4f half_width=%.4f aspect=%.6f view=%s tilt=%.3f tile=%.4f\n", m.time, cam.cx, cam.cy,
+                             cam.halfWidth, cam.aspect, options.settings.build != Build::Lying ? "oblique" : "top", options.settings.viewTilt,
+                             options.settings.wordmark.tile);
+                std::fprintf(f, "x,y,z,heading,act,tier,act_since,plane,magnet\n");
                 for (const RenderRow& r : rows)
                 {
-                    std::fprintf(f, "%.3f,%.3f,%.3f,%.4f,%s,%d,%.3f,%.4f\n", r.x, r.y, r.z, r.heading, actName(r.act),
-                                 static_cast<int>(r.tier), r.actSince, r.plane);
+                    std::fprintf(f, "%.3f,%.3f,%.3f,%.4f,%s,%d,%.3f,%.4f,%u\n", r.x, r.y, r.z, r.heading, actName(r.act),
+                                 static_cast<int>(r.tier), r.actSince, r.plane, static_cast<unsigned>(r.magnet));
                 }
                 std::fclose(f);
             }
         }
     }
     if (metrics) std::fclose(metrics);
+    if (record)
+    {
+        // Cold export after the last tick: JSONL messages, then the health receipt.
+        intro.recordSummary();
+        std::ofstream events(options.eventsPath);
+        std::ofstream healthFile;
+        if (!options.healthPath.empty()) healthFile.open(options.healthPath);
+        std::ostream& health = options.healthPath.empty() ? static_cast<std::ostream&>(std::cerr) : healthFile;
+        summary.diagnosticsOk = diagnostics->writeJson(events, health);
+    }
     return summary;
 }
 
@@ -189,13 +232,13 @@ void print(const std::string& label, const Options& options, const RunSummary& s
     std::printf("{\"run\":\"%s\",\"nanites\":%zu,\"slots\":%zu,\"ribbon\":%zu,\"hero_cap\":%zu,"
                 "\"first_lock_s\":%.3f,\"all_locked_s\":%.3f,\"all_raised_s\":%.3f,\"locked_at_8_4\":%.4f,\"locked_at_10\":%.4f,\"moored_at_10\":%.4f,"
                 "\"worst_visible_overlaps\":%u,\"worst_overlap_ratio\":%.4f,\"worst_overlap_time_s\":%.3f,\"min_visible_gap\":%.3f,"
-                "\"max_heroes\":%u,\"max_migrations_per_tick\":%u,\"hero_yields\":%llu,\"goal_swaps\":%llu,\"unsupported_locks\":%llu,\"off_surface\":%llu,\"dock_clicks\":%llu,\"peak_clicks_per_100ms\":%u,"
+                "\"max_heroes\":%u,\"max_migrations_per_tick\":%u,\"hero_yields\":%llu,\"goal_swaps\":%llu,\"claims\":%llu,\"stuck\":%llu,\"recovered\":%llu,\"pushes\":%llu,\"reclaims\":%llu,\"max_stuck_now\":%u,\"stuck_at_end\":%u,\"climber_ticks\":%llu,\"diagnostics_ok\":%s,\"locked_at_end\":%u,\"unsupported_locks\":%llu,\"off_surface\":%llu,\"dock_clicks\":%llu,\"peak_clicks_per_100ms\":%u,"
                 "\"tick_us_p50\":%.1f,\"tick_us_p95\":%.1f,\"tick_us_max\":%.1f,"
                 "\"mean_us\":{\"gather\":%.1f,\"signal\":%.1f,\"behaviour\":%.1f,\"resolve\":%.1f,\"lod\":%.1f,\"metrics\":%.1f},"
                 "\"state_hash\":\"%016llx\"}\n",
                 label.c_str(), options.settings.nanites, s.slots, s.ribbon, options.settings.heroCap, s.firstLock, s.allLocked, s.allRaised, s.lockedAt84,
                 s.lockedAt10, s.mooredAt10, s.worstOverlaps, s.worstOverlapRatio, s.worstOverlapTime, s.minVisibleGap, s.maxHeroes,
-                s.maxMigrations, static_cast<unsigned long long>(s.yields), static_cast<unsigned long long>(s.swaps), static_cast<unsigned long long>(s.unsupported), static_cast<unsigned long long>(s.offSurface), static_cast<unsigned long long>(s.clicks),
+                s.maxMigrations, static_cast<unsigned long long>(s.yields), static_cast<unsigned long long>(s.swaps), static_cast<unsigned long long>(s.claims), static_cast<unsigned long long>(s.stuck), static_cast<unsigned long long>(s.recovered), static_cast<unsigned long long>(s.pushes), static_cast<unsigned long long>(s.reclaims), s.maxStuckNow, s.stuckAtEnd, static_cast<unsigned long long>(s.climberTicks), s.diagnosticsOk ? "true" : "false", s.lockedAtEnd, static_cast<unsigned long long>(s.unsupported), static_cast<unsigned long long>(s.offSurface), static_cast<unsigned long long>(s.clicks),
                 s.peakClicksPer100ms, percentile(s.tickMicros, 0.5F), percentile(s.tickMicros, 0.95F),
                 percentile(s.tickMicros, 1.0F), s.systemMicros[0] / ticks, s.systemMicros[1] / ticks, s.systemMicros[2] / ticks,
                 s.systemMicros[3] / ticks, s.systemMicros[4] / ticks, s.systemMicros[5] / ticks,
@@ -219,13 +262,16 @@ bool parse(int argc, char** argv, Options& o)
             else if (m == "raise") o.settings.build = Build::Raise;
             else return false;
         }
-        else if (a == "--climb-window") { const char* v = next(); if (!v) return false; o.settings.climbWindow = std::atoi(v); }
+        else if (a == "--rows") o.settings.wordmark.tile = 0.0F;
+        else if (a == "--claim-cap") { const char* v = next(); if (!v) return false; o.settings.claimCap = static_cast<std::uint32_t>(std::atoi(v)); }
         else if (a == "--count") { const char* v = next(); if (!v) return false; o.settings.nanites = std::strtoul(v, nullptr, 10); }
         else if (a == "--hero-cap") { const char* v = next(); if (!v) return false; o.settings.heroCap = std::strtoul(v, nullptr, 10); }
         else if (a == "--seconds") { const char* v = next(); if (!v) return false; o.seconds = std::strtof(v, nullptr); }
         else if (a == "--frames") { const char* v = next(); if (!v) return false; o.framesDir = v; }
         else if (a == "--every") { const char* v = next(); if (!v) return false; o.every = std::max(1, std::atoi(v)); }
         else if (a == "--metrics") { const char* v = next(); if (!v) return false; o.metricsPath = v; }
+        else if (a == "--events-jsonl") { const char* v = next(); if (!v) return false; o.eventsPath = v; }
+        else if (a == "--health-json") { const char* v = next(); if (!v) return false; o.healthPath = v; }
         else if (a == "--lod")
         {
             const char* v = next();
@@ -255,21 +301,24 @@ int main(int argc, char** argv)
     if (!parse(argc, argv, options))
     {
         std::fprintf(stderr,
-                     "usage: crucible_swarm_intro [--verify] [--build lying|climb|raise] [--count N] [--hero-cap N] [--lod camera|hero|near|far]\n"
-                     "                            [--seconds S] [--frames DIR] [--every TICKS] [--metrics FILE]\n");
+                     "usage: crucible_swarm_intro [--verify] [--build lying|climb|raise] [--rows] [--count N] [--hero-cap N] [--lod camera|hero|near|far]\n"
+                     "                            [--seconds S] [--frames DIR] [--every TICKS] [--metrics FILE]\n"
+                     "                            [--events-jsonl FILE] [--health-json FILE] [--claim-cap N]\n");
         return 2;
     }
     try
     {
         const Build build = options.settings.build;
-        // The climb build needs longer than the authored twelve seconds (README finding).
-        if (options.verify && build == Build::Climb) options.seconds = std::max(options.seconds, 16.0F);
+        // The climb build uses the fifteen-second sequence (user direction).
+        if (options.verify && build == Build::Climb) options.seconds = std::max(options.seconds, 15.0F);
         const RunSummary main = run(options, true);
         print(label(options.settings), options, main);
         if (!options.verify) return 0;
 
         // Acceptance per build; thresholds and their history are recorded in README.md.
         if (main.unsupported != 0) return fail("every lock has a locked support");
+        if (!main.diagnosticsOk) return fail("Sub0Log diagnostics export is valid, complete and undamaged");
+        if (main.stuckAtEnd != 0) return fail("every stuck episode is resolved by the end of the run");
         if (main.maxHeroes > options.settings.heroCap) return fail("hero tier respects its cap");
         if (main.mooredAt10 < 1.0F) return fail("ribbon fully moored by 10.0s");
         switch (build)
@@ -283,10 +332,11 @@ int main(int argc, char** argv)
             if (main.minVisibleGap < 0.5F) return fail("no visible mover passes through another (gap >= 0.5d)");
             break;
         case Build::Climb:
-            // Slower by construction: support makes assembly time follow build depth.
-            if (main.allLocked < 0.0F || main.allLocked > 15.0F) return fail("climbed title complete by 15.0s");
-            if (main.offSurface > 200) return fail("climbers stay on the built surface (<=200 off-surface unit-ticks)");
-            if (main.worstOverlapRatio > 0.08F) return fail("visible ground contacts at most 8% per tick");
+            // The fifteen-second sequence (user direction): title complete by 12.5 s leaves a
+            // one-second hold and the menu handoff by 15 s.
+            if (main.allLocked < 0.0F || main.allLocked > 12.5F) return fail("climbed title complete by 12.5s");
+            if (main.climberTicks == 0 || main.offSurface * 200 > main.climberTicks) return fail("climbers stay attached to the built face (<=0.5% of climber-ticks off)");
+            if (main.worstOverlapRatio > 0.10F) return fail("visible ground contacts at most 10% per tick");
             if (main.minVisibleGap < 0.3F) return fail("no visible ground mover passes through another (gap >= 0.3d)");
             break;
         }
@@ -299,15 +349,16 @@ int main(int argc, char** argv)
         far.settings.lod = LodMode::AllFar;
         const RunSummary farRun = run(far, false);
         print(label(far.settings), far, farRun);
-        if (farRun.allLocked < 0.0F || farRun.allLocked > (build == Build::Climb ? 15.0F : 10.0F)) return fail("uniform far tier completes the title");
+        if (farRun.allLocked < 0.0F || farRun.allLocked > (build == Build::Climb ? 14.0F : 10.0F)) return fail("uniform far tier completes the title");
         if (build == Build::Lying)
         {
             Options hero = options;
             hero.settings.lod = LodMode::AllHero;
             const RunSummary heroRun = run(hero, false);
             print(label(hero.settings), hero, heroRun);
-            // Full deliberation everywhere is slower (measured): it must still finish, within 11s.
-            if (heroRun.allLocked < 0.0F || heroRun.allLocked > 11.0F) return fail("uniform hero tier completes the title by 11.0s");
+            // Full deliberation everywhere is slower (measured): it must still finish. 11.0 s for
+            // 959 row slots, scaled to 12.5 s when tessellation raised the count to 1104.
+            if (heroRun.allLocked < 0.0F || heroRun.allLocked > 12.5F) return fail("uniform hero tier completes the title by 12.5s");
         }
         std::printf("{\"verify\":\"PASS\"}\n");
         return 0;

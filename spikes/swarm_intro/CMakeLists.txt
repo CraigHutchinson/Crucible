@@ -1,8 +1,15 @@
-add_executable(crucible_swarm_intro main.cpp SwarmIntro.cpp Wordmark.cpp)
-target_link_libraries(crucible_swarm_intro PRIVATE crucible_options Sub0ECS::Sub0ECS)
+add_executable(crucible_swarm_intro main.cpp SwarmIntro.cpp SwarmDiagnostics.cpp Wordmark.cpp)
+target_link_libraries(crucible_swarm_intro PRIVATE crucible_options Sub0ECS::Sub0ECS Sub0Log::Sub0Log)
 if(BUILD_TESTING)
     foreach(build IN ITEMS lying raise climb)
         add_test(NAME swarm_intro_${build} COMMAND crucible_swarm_intro --verify --build ${build})
         set_tests_properties(swarm_intro_${build} PROPERTIES LABELS "presentation;spike" TIMEOUT 300)
+    endforeach()
+    # Independent receiver for the Sub0Log JSONL diagnostics (standard-library JSON parser).
+    find_package(Python3 REQUIRED COMPONENTS Interpreter)
+    foreach(build IN ITEMS lying raise climb)
+        add_test(NAME swarm_intro_diagnostics_${build}
+            COMMAND Python3::Interpreter ${CMAKE_CURRENT_SOURCE_DIR}/verify_diagnostics.py $<TARGET_FILE:crucible_swarm_intro> --build ${build} --seconds 15)
+        set_tests_properties(swarm_intro_diagnostics_${build} PROPERTIES LABELS "presentation;spike;diagnostics" TIMEOUT 300)
     endforeach()
 endif()

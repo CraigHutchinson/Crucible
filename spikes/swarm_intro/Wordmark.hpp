@@ -10,7 +10,7 @@ struct Slot
 {
     float x = 0.0F;          ///< World position of the slot centre.
     float y = 0.0F;
-    float heading = 0.0F;    ///< Stroke tangent, radians; the wedge docks along its stroke.
+    float heading = 0.0F;    ///< Stroke tangent (rows), or +-pi/2 for an up or down triangle (tessellated).
     std::uint8_t letter = 0; ///< Index into the eight-letter word.
 };
 
@@ -21,6 +21,11 @@ struct WordmarkSettings
     float pitch = 1.15F;       ///< Slot spacing along and across a stroke.
     int strokeRows = 4;        ///< Parallel rows forming one stroke's thickness.
     float letterGap = 5.0F;    ///< Space between letter boxes.
+    /** Tessellation: when positive, slots are equilateral triangles of this side on a
+     *  triangular lattice clipped to the strokes, alternating up and down so neighbours share
+     *  edges and the letter is a solid, gap-free face. Zero samples stroke rows instead.
+     *  The default sqrt(3) gives each triangle an inscribed circle of one unit diameter. */
+    float tile = 1.7320508F;
 };
 
 /** The CRUCIBLE title as a deterministic slot list, centred on the origin.

@@ -1,11 +1,12 @@
 # Active work log
 
-## Nanite swarm behaviour design and S0-S0c spikes,2026-10-12
+## Nanite swarm behaviour design and S0-S0d spikes,2026-10-12
 
 Session `claude/crucible-nanite-swarm-design-89vg5m` claims only new paths
 `spikes/swarm_intro/` and `docs/concepts/phase15-experience/nanite-swarm-design.md`,
 plus pointer edits to the Phase15 plan/review, concept README and the opt-in
-`CRUCIBLE_BUILD_SWARM_SPIKE` option. No frontend/renderer worktree paths, pins or
+`CRUCIBLE_BUILD_SWARM_SPIKE` option (which also fetches the pinned Sub0Log). No
+frontend/renderer worktree paths, pins or
 native measurements are touched. Single-thread headless runs only; released.
 
 ## Phase15 production renderer reprioritisation,2026-10-09
