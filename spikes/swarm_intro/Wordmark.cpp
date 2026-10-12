@@ -115,6 +115,21 @@ std::vector<Polyline> glyph(char letter, float w, float h, float inset)
     return lines;
 }
 
+/** Extends both open ends by half the stroke thickness: square caps, so stems reach the
+ *  baseline (an upright title stands on every letter) and ends read crisp. */
+Polyline capped(Polyline line, float extension)
+{
+    auto extend = [extension](Point end, Point inner) {
+        const float dx = end.x - inner.x, dy = end.y - inner.y;
+        const float length = std::hypot(dx, dy);
+        return length > 1e-6F ? Point{ end.x + dx / length * extension, end.y + dy / length * extension } : end;
+    };
+    if (line.size() < 2) return line;
+    line.front() = extend(line.front(), line[1]);
+    line.back() = extend(line.back(), line[line.size() - 2]);
+    return line;
+}
+
 /** Samples a polyline at fixed arc-length pitch, emitting parallel rows across it. */
 void sample(const Polyline& line, float pitch, int rows, Point origin, std::uint8_t letter, std::vector<Slot>& out)
 {
@@ -171,9 +186,10 @@ std::vector<Slot> buildWordmark(const WordmarkSettings& settings)
         const float w = widthFactor(kWord[i]) * h;
         const Point origin{ centres[i] - w * 0.5F, -h * 0.5F };
         std::vector<Slot> raw;
+        const float cap = static_cast<float>(settings.strokeRows - 1) * 0.5F * settings.pitch;
         for (const Polyline& line : glyph(kWord[i], w, h, inset))
         {
-            sample(line, settings.pitch, settings.strokeRows, origin, static_cast<std::uint8_t>(i), raw);
+            sample(capped(line, cap), settings.pitch, settings.strokeRows, origin, static_cast<std::uint8_t>(i), raw);
         }
         // Corners and inner arc rows oversample: keep a slot only when it is a full
         // pitch-ish away from every kept slot, so docked wedges never overlap.

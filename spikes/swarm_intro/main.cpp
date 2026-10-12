@@ -34,6 +34,7 @@ struct RunSummary
     float mooredAt10 = 0.0F;
     float firstLock = -1.0F;
     float allLocked = -1.0F;
+    float allRaised = -1.0F;   // raise build: every letter upright
     std::uint32_t worstOverlaps = 0;
     float worstOverlapRatio = 0.0F;
     float worstOverlapTime = 0.0F;
@@ -42,6 +43,8 @@ struct RunSummary
     std::uint32_t maxMigrations = 0;
     std::uint64_t yields = 0;
     std::uint64_t swaps = 0;
+    std::uint64_t unsupported = 0;
+    std::uint64_t offSurface = 0;
     std::uint64_t clicks = 0;
     std::uint32_t peakClicksPer100ms = 0;
     std::vector<float> tickMicros;
@@ -51,6 +54,13 @@ struct RunSummary
     std::size_t ribbon = 0;
 };
 
+std::string label(const IntroSettings& s)
+{
+    const char* build = s.build == Build::Lying ? "lying" : (s.build == Build::Climb ? "climb" : "raise");
+    const char* lod = s.lod == LodMode::Camera ? "camera" : (s.lod == LodMode::AllHero ? "uniform-hero" : (s.lod == LodMode::AllNear ? "uniform-near" : "uniform-far"));
+    return std::string(build) + "/" + lod;
+}
+
 const char* actName(Act act)
 {
     switch (act)
@@ -59,6 +69,7 @@ const char* actName(Act act)
     case Act::Waking: return "waking";
     case Act::Lane: return "lane";
     case Act::Seek: return "seek";
+    case Act::Climb: return "climb";
     case Act::Dock: return "dock";
     case Act::Locked: return "locked";
     case Act::Moor: return "moor";
@@ -103,6 +114,7 @@ RunSummary run(const Options& options, bool capture)
         const float lockedFraction = summary.slots ? static_cast<float>(m.locked) / static_cast<float>(summary.slots) : 1.0F;
         if (m.locked > 0 && summary.firstLock < 0.0F) summary.firstLock = m.time;
         if (m.locked == summary.slots && summary.allLocked < 0.0F) summary.allLocked = m.time;
+        if (m.raised == 8 && summary.allRaised < 0.0F) summary.allRaised = m.time;
         if (std::abs(m.time - 8.4F) < 0.5F * options.settings.tickSeconds) summary.lockedAt84 = lockedFraction;
         if (std::abs(m.time - 10.0F) < 0.5F * options.settings.tickSeconds)
         {
@@ -121,6 +133,8 @@ RunSummary run(const Options& options, bool capture)
         if (t > 0) summary.maxMigrations = std::max(summary.maxMigrations, m.migrations);   // tick0 seeds every tier
         summary.yields += m.heroYields;
         summary.swaps += m.goalSwaps;
+        summary.unsupported += m.unsupported;
+        summary.offSurface += m.offSurface;
         summary.clicks += m.dockClicks;
         windowClicks += m.dockClicks;
         if (t - windowStart >= 6)
@@ -145,12 +159,13 @@ RunSummary run(const Options& options, bool capture)
             if (std::FILE* f = std::fopen((options.framesDir + name).c_str(), "w"))
             {
                 const Camera& cam = intro.camera();
-                std::fprintf(f, "# time=%.4f cx=%.4f cy=%.4f half_width=%.4f aspect=%.6f\n", m.time, cam.cx, cam.cy, cam.halfWidth, cam.aspect);
-                std::fprintf(f, "x,y,z,heading,act,tier,act_since\n");
+                std::fprintf(f, "# time=%.4f cx=%.4f cy=%.4f half_width=%.4f aspect=%.6f view=%s tilt=%.3f\n", m.time, cam.cx, cam.cy,
+                             cam.halfWidth, cam.aspect, options.settings.build != Build::Lying ? "oblique" : "top", options.settings.viewTilt);
+                std::fprintf(f, "x,y,z,heading,act,tier,act_since,plane\n");
                 for (const RenderRow& r : rows)
                 {
-                    std::fprintf(f, "%.3f,%.3f,%.3f,%.4f,%s,%d,%.3f\n", r.x, r.y, r.z, r.heading, actName(r.act),
-                                 static_cast<int>(r.tier), r.actSince);
+                    std::fprintf(f, "%.3f,%.3f,%.3f,%.4f,%s,%d,%.3f,%.4f\n", r.x, r.y, r.z, r.heading, actName(r.act),
+                                 static_cast<int>(r.tier), r.actSince, r.plane);
                 }
                 std::fclose(f);
             }
@@ -168,19 +183,19 @@ float percentile(std::vector<float> values, float p)
     return values[k];
 }
 
-void print(const char* label, const Options& options, const RunSummary& s)
+void print(const std::string& label, const Options& options, const RunSummary& s)
 {
     const double ticks = static_cast<double>(s.tickMicros.size());
     std::printf("{\"run\":\"%s\",\"nanites\":%zu,\"slots\":%zu,\"ribbon\":%zu,\"hero_cap\":%zu,"
-                "\"first_lock_s\":%.3f,\"all_locked_s\":%.3f,\"locked_at_8_4\":%.4f,\"locked_at_10\":%.4f,\"moored_at_10\":%.4f,"
+                "\"first_lock_s\":%.3f,\"all_locked_s\":%.3f,\"all_raised_s\":%.3f,\"locked_at_8_4\":%.4f,\"locked_at_10\":%.4f,\"moored_at_10\":%.4f,"
                 "\"worst_visible_overlaps\":%u,\"worst_overlap_ratio\":%.4f,\"worst_overlap_time_s\":%.3f,\"min_visible_gap\":%.3f,"
-                "\"max_heroes\":%u,\"max_migrations_per_tick\":%u,\"hero_yields\":%llu,\"goal_swaps\":%llu,\"dock_clicks\":%llu,\"peak_clicks_per_100ms\":%u,"
+                "\"max_heroes\":%u,\"max_migrations_per_tick\":%u,\"hero_yields\":%llu,\"goal_swaps\":%llu,\"unsupported_locks\":%llu,\"off_surface\":%llu,\"dock_clicks\":%llu,\"peak_clicks_per_100ms\":%u,"
                 "\"tick_us_p50\":%.1f,\"tick_us_p95\":%.1f,\"tick_us_max\":%.1f,"
                 "\"mean_us\":{\"gather\":%.1f,\"signal\":%.1f,\"behaviour\":%.1f,\"resolve\":%.1f,\"lod\":%.1f,\"metrics\":%.1f},"
                 "\"state_hash\":\"%016llx\"}\n",
-                label, options.settings.nanites, s.slots, s.ribbon, options.settings.heroCap, s.firstLock, s.allLocked, s.lockedAt84,
+                label.c_str(), options.settings.nanites, s.slots, s.ribbon, options.settings.heroCap, s.firstLock, s.allLocked, s.allRaised, s.lockedAt84,
                 s.lockedAt10, s.mooredAt10, s.worstOverlaps, s.worstOverlapRatio, s.worstOverlapTime, s.minVisibleGap, s.maxHeroes,
-                s.maxMigrations, static_cast<unsigned long long>(s.yields), static_cast<unsigned long long>(s.swaps), static_cast<unsigned long long>(s.clicks),
+                s.maxMigrations, static_cast<unsigned long long>(s.yields), static_cast<unsigned long long>(s.swaps), static_cast<unsigned long long>(s.unsupported), static_cast<unsigned long long>(s.offSurface), static_cast<unsigned long long>(s.clicks),
                 s.peakClicksPer100ms, percentile(s.tickMicros, 0.5F), percentile(s.tickMicros, 0.95F),
                 percentile(s.tickMicros, 1.0F), s.systemMicros[0] / ticks, s.systemMicros[1] / ticks, s.systemMicros[2] / ticks,
                 s.systemMicros[3] / ticks, s.systemMicros[4] / ticks, s.systemMicros[5] / ticks,
@@ -194,6 +209,17 @@ bool parse(int argc, char** argv, Options& o)
         const std::string_view a = argv[i];
         auto next = [&]() -> const char* { return i + 1 < argc ? argv[++i] : nullptr; };
         if (a == "--verify") o.verify = true;
+        else if (a == "--build")
+        {
+            const char* v = next();
+            if (!v) return false;
+            const std::string_view m = v;
+            if (m == "lying") o.settings.build = Build::Lying;
+            else if (m == "climb") o.settings.build = Build::Climb;
+            else if (m == "raise") o.settings.build = Build::Raise;
+            else return false;
+        }
+        else if (a == "--climb-window") { const char* v = next(); if (!v) return false; o.settings.climbWindow = std::atoi(v); }
         else if (a == "--count") { const char* v = next(); if (!v) return false; o.settings.nanites = std::strtoul(v, nullptr, 10); }
         else if (a == "--hero-cap") { const char* v = next(); if (!v) return false; o.settings.heroCap = std::strtoul(v, nullptr, 10); }
         else if (a == "--seconds") { const char* v = next(); if (!v) return false; o.seconds = std::strtof(v, nullptr); }
@@ -229,39 +255,60 @@ int main(int argc, char** argv)
     if (!parse(argc, argv, options))
     {
         std::fprintf(stderr,
-                     "usage: crucible_swarm_intro [--verify] [--count N] [--hero-cap N] [--lod camera|hero|near|far]\n"
+                     "usage: crucible_swarm_intro [--verify] [--build lying|climb|raise] [--count N] [--hero-cap N] [--lod camera|hero|near|far]\n"
                      "                            [--seconds S] [--frames DIR] [--every TICKS] [--metrics FILE]\n");
         return 2;
     }
     try
     {
+        const Build build = options.settings.build;
+        // The climb build needs longer than the authored twelve seconds (README finding).
+        if (options.verify && build == Build::Climb) options.seconds = std::max(options.seconds, 16.0F);
         const RunSummary main = run(options, true);
-        print(options.settings.lod == LodMode::Camera ? "camera-lod" : "uniform-lod", options, main);
+        print(label(options.settings), options, main);
         if (!options.verify) return 0;
 
-        // Acceptance for the spike, written before tuning; thresholds are recorded in README.md.
-        if (main.lockedAt84 < 0.99F) return fail("title >=99% locked by 8.4s (shot04 exit)");
-        if (main.lockedAt10 < 1.0F) return fail("title fully locked by 10.0s");
-        if (main.mooredAt10 < 1.0F) return fail("ribbon fully moored by 10.0s");
+        // Acceptance per build; thresholds and their history are recorded in README.md.
+        if (main.unsupported != 0) return fail("every lock has a locked support");
         if (main.maxHeroes > options.settings.heroCap) return fail("hero tier respects its cap");
-        if (main.worstOverlapRatio > 0.03F) return fail("visible mover contacts (<0.8d) at most 3% per tick");
-        if (main.minVisibleGap < 0.5F) return fail("no visible mover passes through another (gap >= 0.5d)");
+        if (main.mooredAt10 < 1.0F) return fail("ribbon fully moored by 10.0s");
+        switch (build)
+        {
+        case Build::Lying:
+        case Build::Raise:
+            if (main.lockedAt84 < 0.99F) return fail("title >=99% locked by 8.4s (shot04 exit)");
+            if (main.lockedAt10 < 1.0F) return fail("title fully locked by 10.0s");
+            if (build == Build::Raise && (main.allRaised < 0.0F || main.allRaised > 10.0F)) return fail("every letter upright by 10.0s (shot05 hold)");
+            if (main.worstOverlapRatio > 0.03F) return fail("visible mover contacts (<0.8d) at most 3% per tick");
+            if (main.minVisibleGap < 0.5F) return fail("no visible mover passes through another (gap >= 0.5d)");
+            break;
+        case Build::Climb:
+            // Slower by construction: support makes assembly time follow build depth.
+            if (main.allLocked < 0.0F || main.allLocked > 15.0F) return fail("climbed title complete by 15.0s");
+            if (main.offSurface > 200) return fail("climbers stay on the built surface (<=200 off-surface unit-ticks)");
+            if (main.worstOverlapRatio > 0.08F) return fail("visible ground contacts at most 8% per tick");
+            if (main.minVisibleGap < 0.3F) return fail("no visible ground mover passes through another (gap >= 0.3d)");
+            break;
+        }
 
         const RunSummary again = run(options, false);
         if (again.hash != main.hash) return fail("identical runs produce identical state");
 
-        // LOD changes cost and texture, never the outcome: uniform tiers also complete the title.
+        // LOD changes cost and texture, never the outcome: a uniform far tier completes too.
         Options far = options;
         far.settings.lod = LodMode::AllFar;
         const RunSummary farRun = run(far, false);
-        print("uniform-far", far, farRun);
-        Options hero = options;
-        hero.settings.lod = LodMode::AllHero;
-        const RunSummary heroRun = run(hero, false);
-        print("uniform-hero", hero, heroRun);
-        if (farRun.lockedAt10 < 1.0F) return fail("uniform far tier completes the title by 10.0s");
-        // Full deliberation everywhere is slower (measured): it must still finish, within 11s.
-        if (heroRun.allLocked < 0.0F || heroRun.allLocked > 11.0F) return fail("uniform hero tier completes the title by 11.0s");
+        print(label(far.settings), far, farRun);
+        if (farRun.allLocked < 0.0F || farRun.allLocked > (build == Build::Climb ? 15.0F : 10.0F)) return fail("uniform far tier completes the title");
+        if (build == Build::Lying)
+        {
+            Options hero = options;
+            hero.settings.lod = LodMode::AllHero;
+            const RunSummary heroRun = run(hero, false);
+            print(label(hero.settings), hero, heroRun);
+            // Full deliberation everywhere is slower (measured): it must still finish, within 11s.
+            if (heroRun.allLocked < 0.0F || heroRun.allLocked > 11.0F) return fail("uniform hero tier completes the title by 11.0s");
+        }
         std::printf("{\"verify\":\"PASS\"}\n");
         return 0;
     }

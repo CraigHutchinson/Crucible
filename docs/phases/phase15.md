@@ -96,7 +96,9 @@ explicit Apple build/package/input and physical receiving gates above.
 Nanite intro behaviour was undefined by this plan and the brief (P15-F10). The
 [swarm behaviour design](../concepts/phase15-experience/nanite-swarm-design.md) defines
 the wave, assignment, lanes, docking, non-penetration and camera-driven decision LOD,
-with a headless S0 prototype in [spikes/swarm_intro](../../spikes/swarm_intro/README.md).
+with headless prototypes in [spikes/swarm_intro](../../spikes/swarm_intro/README.md). The
+final title stands upright (user direction); assemble-flat-then-raise is recommended over
+climbing in place, which measured about 5s too slow for the brief.
 Its S1-S5 stages are proposals for P15-E0/R0 review, not dispatched work. Its gameplay
 stages keep camera-independent authority, with a view-owned embellishment layer.
 

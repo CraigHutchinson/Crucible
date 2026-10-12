@@ -42,7 +42,7 @@ workers remain the maximum; no third implementation agent is dispatched.
 | P15-F07 | Paused frontend Back had no controller transition | Close/discard the active attempt, clear snapshot and warn in paused view | Source review and dedicated local Release/Debug case passed; hosted/native input pending |
 | P15-F08 | A profile changed to an unsupported version after load could be overwritten | Revalidate current destination under the owned save lease | Dedicated live-version-change refusal case passed locally; uncoordinated edits during lease excluded |
 | P15-F09 | Unsigned formatted extraction can accept signed numeric aliases | Full-token unsigned from_chars parsing rejects signs/overflow | Dedicated signed-version/continuation refusal cases received locally |
-| P15-F10 | Plan and brief defined intro timing and look but no nanite behaviour (wave, assignment, collision, decision LOD) | [Swarm behaviour design](../concepts/phase15-experience/nanite-swarm-design.md) and headless S0 spike: title locked 8.28s, ≤2.4% glancing contacts, Release/Debug/ASan `--verify` pass | User review of S0; S1 native capture in the production renderer |
+| P15-F10 | Plan and brief defined intro timing and look but no nanite behaviour (wave, assignment, collision, decision LOD) | [Swarm behaviour design](../concepts/phase15-experience/nanite-swarm-design.md) and headless spike: lying S0 7.77s; upright by user direction via raise S0c (upright 9.02s) and climb S0b (13.45s, misses brief timing); Release/Debug/ASan `--verify` pass for all three | User/director choice of upright build (raise recommended); S1 native capture in the production renderer |
 
 ## Verification and useful artifacts
 

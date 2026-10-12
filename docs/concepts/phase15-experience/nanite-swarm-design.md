@@ -1,8 +1,10 @@
 # Nanite swarm behaviour: intro first, gameplay next
 
 Proposal and prototype, 2026-10-12. Extends the [director's brief](director-brief.md) and
-[experience design](experience-design.md). The S0 prototype is
-[spikes/swarm_intro](../../../spikes/swarm_intro/README.md). Nothing here changes gameplay
+[experience design](experience-design.md). The S0 to S0c prototypes are
+[spikes/swarm_intro](../../../spikes/swarm_intro/README.md). User direction, the same day:
+the final CRUCIBLE title **stands upright**; ground-based assembly is acceptable for early
+milestones. Section 5 covers the upright builds. Nothing here changes gameplay
 rules, the biomass ledger or Phase14 gates. Every later stage is a reviewable proposal and
 is not dispatched by this document.
 
@@ -107,14 +109,17 @@ stateDiagram-v2
     Waking --> Moor: reaction elapsed, ribbon goal, t ≥ ribbonAt
     Waking --> Reserve: no goal
     Lane --> Seek: lane end reached
-    Seek --> Dock: within capture radius
+    Seek --> Dock: within capture radius (lying, raise)
+    Seek --> Climb: at the wall base, slot near the frontier (climb)
+    Climb --> Dock: slot's support seated, within capture radius
     Moor --> Dock: within capture radius
     Dock --> Locked: aligned and seated (title)
     Dock --> Moored: aligned and seated (ribbon)
 ```
 
 The rest layer is Dormant, Dock, Locked, Moored and Reserve. Movers glide over it with a
-cosmetic climb height `z`, which the renderer lifts and shades.
+cosmetic climb height `z`, which the renderer lifts and shades. In the climb build,
+climbers also flow over each other in layers rather than colliding (section 5).
 
 ### Decision tiers
 
@@ -135,29 +140,73 @@ cross. Within a lane, units in wake order pair with slots in far-first order, so
 arrivals fill strokes behind later paths. Ribbon units are next in wake order. The
 remaining units stay on the bed as a reserve that wakes and settles.
 
-## 5. Prototype results
+## 5. Standing the title upright
+
+The brief's hero is a nearly frontal, readable title. Building it upright means units must
+leave the ground and interlock against gravity. That adds three questions the lying build
+never had: what supports a unit before its neighbours exist, how units reach a slot high
+on a face, and whether this fits the twelve-second timeline. S0b and S0c test two answers.
+
+| | S0b: climb in place | S0c: assemble flat, then raise |
+|---|---|---|
+| Idea | Letters grow bottom-up where they stand, like a TERMES structure or a Kilobot shape. Units climb the face of what is already built. | Each letter assembles flat behind its baseline exactly as in S0. When its last unit locks, the interlocked letter hinges up on its bottom row like a drawbridge. |
+| Support | A slot is fillable only from the ground or a locked lower neighbour. Locks never happen unsupported (verified). | The letter is one rigid interlocked body during the rise, pivoting on the ground row. |
+| Surfaces | Two connected 2D surfaces: ground and wall face, joined at the base. Climbers route over built units (shortest path, strokes linked through the ground) and flow over each other in layers. | One surface (ground); the rise is a pose transform of locked units. |
+| Title complete (1536 units) | 13.45 s (brief: 8.4 s) | 7.97 s flat; every letter upright by 9.02 s |
+| Cost (host p50 / p95) | 0.98 / 4.22 ms | 0.22 / 2.24 ms |
+| Reads as | The swarm literally builds the word, letter tops last. Strong "engineered material" story; slow. | A flat assembly that stands up in a rolling wave, letter by letter. Dramatic; keeps the brief's timing. |
+
+**Recommendation for the intro: S0c (raise), with a director review of the beat.** It meets
+the brief's timing within the shot05 hold and keeps the title's assembly readable. It
+costs the same as the lying build. Climbing stays valuable: as an optional S2 flourish (a
+few hero units finishing the top of the hero letter by climbing after it rises), and as the
+basis of upright gameplay structures (bridges, walls, self-repair in section 8).
+
+Climbing at intro pace would need a shallower build. The critical path is the deepest
+support chain (22 levels for the E's top arm) times about 0.38 s per level. A shorter cap
+height, pre-built footings during shot02, or a three-axis scaffold (below) are the levers.
+None is chosen.
+
+### Toward three-axis interlocking
+
+S0b is the "surface" interpretation: units move on surfaces and interlock within a plane.
+Full three-axis interlocking adds a depth axis: units attach on any face of a lattice cell.
+That allows overhangs, letter depth (a title with thickness), and climbing round edges onto
+the back face. It needs a 3D occupancy grid, face-based support (any locked face neighbour
+with a path to ground), routing over a 3D surface graph, and a renderer that shows depth.
+It belongs with gameplay structures (G-stages), where bridges and walls need it anyway. It
+should not be built into the intro first.
+
+## 6. Prototype results
 
 The [spike README](../../../spikes/swarm_intro/README.md) has commands, gates, the evidence
-table and images. In summary: 1536 units with camera LOD complete the title at 8.28 s
-(brief: 8.4 s) and the ribbon by 10 s. Visible contacts peak at 2.4% of movers and no pair
-comes closer than 0.62 diameter. Uniform near and far tiers reach the same result at the
-same time. The tick is 0.29 ms p50 and 1.65 ms p95 on a shared cloud host. 16,384 units
-still meet the title deadline, at 2.46 ms p50, dominated by the signal system.
+table and images for all three builds. Lying, with camera LOD and 1536 units: the title
+completes at 7.77 s (brief: 8.4 s) and the ribbon by 10 s. Visible contacts peak at 1.3% of
+movers and no pair comes closer than 0.64 diameter. Uniform near and far tiers reach the
+same result at about the same time. The tick is 0.22 ms p50 and 2.0 ms p95 on a shared
+cloud host. 16,384 units still meet the deadline, at 3.3 ms p50, dominated by the signal
+system. The raise build matches the lying build plus one second of rising. Release, Debug
+and ASan/UBSan pass every build's `--verify` with identical state hashes.
 
-![Six beats from the S0 prototype](../../../spikes/swarm_intro/evidence/beats.svg)
+![Raise build: letters assemble flat, then stand up](../../../spikes/swarm_intro/evidence/raise.svg)
+
+![Climb build: letters grow upright, bottom-up](../../../spikes/swarm_intro/evidence/climb.svg)
 
 ### Findings that shape the next iterations
 
 | ID | Finding | Consequence |
 |---|---|---|
-| SW-F1 | Reciprocal avoidance on every unit froze dense streams: 82% complete at 10 s. Right of way by wake order fixed it, but uniform hero stays 2 s slower and about 4× the cost. | Heroes stay few and embedded in a reactive stream. Right of way is part of the hero rule. Hero count also affects timing, not only cost. |
+| SW-F1 | Reciprocal avoidance on every unit froze dense streams: 82% complete at 10 s. Right of way by wake order fixed it, but uniform hero stays 2.7 s slower and about 6× the cost. | Heroes stay few and embedded in a reactive stream. Right of way is part of the hero rule. Hero count also affects timing, not only cost. |
 | SW-F2 | Lane throughput (width × speed) bounds the assembly time. | Lane width and pace are authored parameters reviewed with the camera, not emergent. |
 | SW-F3 | Local d-CAPT swaps cut contacts and time. | Keep swaps. In hero view they read as negotiation, a cheap intelligence cue. |
 | SW-F4 | The polling signal system dominates at 16K. | S3: event-driven wave front (only frontier neighbours test). |
-| SW-F5 | Up to 55 locks per 100 ms. | Audio uses authored beats and aggregated density, never per-lock sounds (matches the brief). |
-| SW-F6 | Release, Debug and ASan builds share one state hash on GCC 13. | Determinism is promising; cross-compiler equality is not claimed. Skip can jump to an authored settled state without replaying. |
+| SW-F5 | Up to 78 locks per 100 ms. | Audio uses authored beats and aggregated density, never per-lock sounds (matches the brief). |
+| SW-F6 | Release, Debug and ASan builds share each build's state hash on GCC 13. | Determinism is promising; cross-compiler equality is not claimed. Skip can jump to an authored settled state without replaying. |
+| SW-F7 | Honest bottom-up climbing completes at about 13.5 s; build depth × per-level latency is the critical path. | Climbing is not the intro's default; levers recorded in section 5. |
+| SW-F8 | Climbing worked only with sheet-by-act, ground staging, layered flow on the face, shortest-path surface routing and pipelined seating. | These five rules are the climbing vocabulary for gameplay structures. |
+| SW-F9 | Assemble-flat-then-raise is upright by 9.0 s at lying-build cost. | Recommended intro build; the raise replaces the brief's camera rise as the shot04/05 beat (director decision). |
 
-## 6. Iteration plan: building blocks with review gates
+## 7. Iteration plan: building blocks with review gates
 
 Each stage is small, has a named consumer, ends with captures and a review, and can change
 the next stage. Stages S1 to S3 are intro work under P15-E0 and R0. G-stages are
@@ -165,20 +214,24 @@ post-journey gameplay proposals.
 
 | Stage | Increment | Consumer | Review gate |
 |---|---|---|---|
-| **S0** done | Headless ECS swarm, tiers, wave, planner, lanes, docking, resolve; 2D captures | This review | User reviews beats, tiers and findings; agrees on the behaviour vocabulary |
-| **S1** | Production renderer consumes a per-tick instance packet (pose, z, act, core intensity, render LOD) from the S0 world; perspective lens path from the brief | P15-R0 Filament scene | Native capture against hero and storyboard concepts; wedges grounded; readability with bloom off and in grayscale |
-| **S2** | Choreography authoring: lanes and stroke order as data; climb arcs; traveling cyan accent; idle micro-behaviour for locked heroes (breathing core, settle wobble); skip jumps to an authored settled snapshot; reduced motion selects the still | P15-E0 frontend | Director pass (brief section 8); skip and reduced-motion receiving; temporal review of motion, not stills |
+| **S0** done | Headless ECS swarm, tiers, wave, planner, lanes, docking, resolve; lying title; 2D captures | This review | User reviews beats, tiers and findings; agrees on the behaviour vocabulary |
+| **S0b** done | Upright by climbing: support rule, build graph, two-surface climbing, staging, layered flow, surface routing, pipelined seating | This review | Records why honest climbing misses the brief's timing |
+| **S0c** done | Upright by raising: flat assembly, then each letter hinges up on its baseline | This review | User and director choose the upright build (recommended: raise) |
+| **S1** | Production renderer consumes a per-tick instance packet (world pose, plane tilt, lift, act, core intensity, render LOD) from the chosen build; perspective lens path from the brief | P15-R0 Filament scene | Native capture against hero and storyboard concepts; wedges grounded; upright title readable with bloom off and in grayscale |
+| **S2** | Choreography authoring: lanes and stroke order as data; the raise beat (what visibly lifts the letter: a wave of units pushing under the hinge, rise order and easing); optional hero-letter climbing finish; climb arcs; traveling cyan accent; idle micro-behaviour for locked heroes (breathing core, settle wobble); skip jumps to an authored settled snapshot; reduced motion selects the still | P15-E0 frontend | Director pass (brief section 8); skip and reduced-motion receiving; temporal review of motion, not stills |
 | **S3** | Performance: event-driven wave; Sub0Pipeline row ranges for behaviour and resolve; hero candidate cap per frame; optional GPU compute route for far and hidden tiers | Named device | p95 and p99 inside the brief's proposed 16.67/20 ms with rendering included; measured, never inferred from S0 |
 | **S4** | Upstream feedback: tier tag migration cost and partition churn in Sub0ECS; frozen gather and grid as a reusable pattern only if a second consumer appears | Sub0ECS | Measured reproduction; no speculative API |
 | **S5** | Menu backdrop: the ribbon idles cheaply behind the menu, never as a live mission | P15-J0 menu | Zero gameplay ticks; stops under reduced motion |
-| **G1** | Hero embellishment layer over gameplay nanites (section 7), view-owned, bounded deviation | P15-R1 mission view | Authoritative replay hash unchanged with the layer on or off |
-| **G2+** | One mechanic from section 8 at a time, each with frozen rules and fixtures | Mission design | Per mechanic, as in experience design |
+| **G1** | Hero embellishment layer over gameplay nanites (section 8), view-owned, bounded deviation | P15-R1 mission view | Authoritative replay hash unchanged with the layer on or off |
+| **G2+** | One mechanic from section 9 at a time, each with frozen rules and fixtures | Mission design | Per mechanic, as in experience design |
 
 Iteration rule: after each stage, update this document's findings, re-tune the next stage,
 and record any revision of the director's beats it caused. Behaviour vocabulary (wave,
-lane, negotiation, docking, climbing) is reused, not re-invented, in each stage.
+lane, negotiation, docking, climbing, raising) is reused, not re-invented, in each stage.
+Three-axis interlocking (section 5) enters with the first gameplay structure that needs
+it, not before.
 
-## 7. From intro to gameplay: authority and embellishment
+## 8. From intro to gameplay: authority and embellishment
 
 Gameplay nanites are authoritative, replayed and deterministic. They cannot depend on the
 camera, frame rate or window size. Camera-driven decision LOD may therefore never decide
@@ -198,7 +251,7 @@ a gameplay outcome. The proposal:
 This keeps "each nanite appears intelligent" where it can be seen, and keeps 150K units
 affordable, without risking replay divergence.
 
-## 8. Future mechanics catalogue (documented, not dispatched)
+## 9. Future mechanics catalogue (documented, not dispatched)
 
 Each candidate needs its own frozen rules, ledger impact, replay representation, fixtures
 and participant evidence before implementation, as in [experience design](experience-design.md).
@@ -208,8 +261,8 @@ and participant evidence before implementation, as in [experience design](experi
 | Mechanic | Player value | Swarm basis | Main dependency or risk |
 |---|---|---|---|
 | Flow lanes (existing direction) | Route mass with one gesture | Lane following, d-CAPT | Already the core loop |
-| Bridge / ramp forms | Cross gaps by spending mobile mass as structure | M-Blocks pivot-climbing; *Big Hero 6* | Terrain decision; traversal rules; ledger "anchored mass" |
-| Wall / shield forms | Hold a Blight front temporarily | Fused lattice variants | Protection rule, duration and ledger |
+| Bridge / ramp forms | Cross gaps by spending mobile mass as structure | M-Blocks pivot-climbing; *Big Hero 6*; S0b climbing rules; S0c raising (a span assembled flat and tipped over a gap) | Terrain decision; traversal rules; ledger "anchored mass" |
+| Wall / shield forms | Hold a Blight front temporarily | Fused lattice variants; S0b bottom-up support or S0c raise | Protection rule, duration and ledger |
 | Tool forms (ram, scoop) | Break crust or carry substrate | *Big Hero 6* shapes | New interaction rule; strong readability need |
 | Cooperative carrying | Move relay parts or objects | Collective transport | Object physics; quorum size rule |
 | Tendrils / scouting chains | Reveal or probe at range | Chain formation | Fog-of-war rule (none exists) |
@@ -240,7 +293,7 @@ outcomes; an explicit, recorded focus command may.
 Intro tie-in (optional, S2 director decision): a brief "haze resolves into wedge" beat
 where distant units enter the frame. It must not cost title readability.
 
-## 9. Open questions for review
+## 10. Open questions for review
 
 1. Is the S0 vocabulary right for the brand: wave, lanes, negotiation swaps, glide-over
    climbing, rotate-then-slide docking? Should anything feel more organic or more mechanical?
@@ -250,4 +303,9 @@ where distant units enter the frame. It must not cost title readability.
    slots plus ribbon exactly?
 4. Is the "superposition haze" presentation for distant units welcome in the intro, or
    reserved for the Quantum gameplay layer?
-5. Which section 8 mechanic should be the first post-journey gameplay spike?
+5. Which section 9 mechanic should be the first post-journey gameplay spike?
+6. Upright build: raise (recommended, 9.0 s), climb (13.5 s, the swarm visibly builds the
+   word), or a hybrid (raise, then a climbing finish on the hero letter)? If climb, which
+   lever: a longer sequence, a shorter title, or footings built during shot02?
+7. Does the raise beat replace the brief's camera rise toward a frontal baseline, or play
+   under it?

@@ -24,17 +24,23 @@ CYAN = (60, 230, 255)
 CYAN_DIM = (30, 90, 110)
 TIER_COLOURS = {0: (255, 190, 60), 1: (80, 210, 255), 2: (150, 110, 255), 3: (90, 90, 90)}
 TIER_NAMES = {0: "hero", 1: "near", 2: "far", 3: "hidden"}
-HEADER = re.compile(r"# time=([\d.]+) cx=([-\d.]+) cy=([-\d.]+) half_width=([\d.]+) aspect=([\d.]+)")
+HEADER = re.compile(r"# time=([\d.]+) cx=([-\d.]+) cy=([-\d.]+) half_width=([\d.]+) aspect=([\d.]+)"
+                    r"(?: view=(\w+) tilt=([\d.]+))?")
 
 
 def load(path):
     lines = path.read_text().splitlines()
-    t, cx, cy, hw, aspect = (float(v) for v in HEADER.match(lines[0]).groups())
+    groups = HEADER.match(lines[0]).groups()
+    t, cx, cy, hw, aspect = (float(v) for v in groups[:5])
+    view = groups[5] or "top"
+    tilt = float(groups[6] or 0.4)
     rows = []
     for line in lines[2:]:
-        x, y, z, h, act, tier, since = line.split(",")
-        rows.append((float(x), float(y), float(z), float(h), act, int(tier), float(since)))
-    return {"time": t, "cx": cx, "cy": cy, "hw": hw, "aspect": aspect, "rows": rows}
+        fields = line.split(",")
+        x, y, z, h, act, tier, since = fields[:7]
+        wall = len(fields) > 7 and fields[7] == "1"
+        rows.append((float(x), float(y), float(z), float(h), act, int(tier), float(since), wall))
+    return {"time": t, "cx": cx, "cy": cy, "hw": hw, "aspect": aspect, "view": view, "tilt": tilt, "rows": rows}
 
 
 class Canvas:
@@ -98,32 +104,42 @@ def draw_frame(frame, size=(960, 540), mode="beauty"):
     cx, cy = frame["cx"], frame["cy"]
     t = frame["time"]
 
-    def to_px(x, y):
-        return (w * 0.5 + (x - cx) * scale, h * 0.5 - (y - cy) * scale)
+    oblique = frame["view"] == "oblique"
+    tilt = frame["tilt"]
 
-    # Rest layer first, movers (and climbers) on top.
-    order = sorted(frame["rows"], key=lambda r: (r[4] not in ("dormant", "locked", "moored", "reserve"), r[2]))
-    for x, y, z, heading, act, tier, since in order:
-        px, py = to_px(x, y)
+    def project(x, y, z):
+        """World (z up) to screen. Top: looking down, lift nudges up. Oblique: front view."""
+        vx, vy = (x, z + tilt * y) if oblique else (x, y + 0.35 * z)
+        return (w * 0.5 + (vx - cx) * scale, h * 0.5 - (vy - cy) * scale)
+
+    rest = ("dormant", "locked", "moored", "reserve")
+    if oblique:
+        # Painter's order: farther (larger depth y) first; on the wall, the face over the slot.
+        order = sorted(frame["rows"], key=lambda r: (-r[1], r[2]))
+    else:
+        order = sorted(frame["rows"], key=lambda r: (r[4] not in rest, r[2]))
+    for x, y, z, heading, act, tier, since, wall in order:
+        px, py = project(x, y, z)
         if px < -20 or px > w + 20 or py < -20 or py > h + 20:
             continue
-        length = 0.55 * scale
-        width = 0.36 * scale
         c, s = math.cos(heading), math.sin(heading)
-        lift = z * 0.35 * scale   # climbers drawn slightly offset to read as riding over
-        nose = (px + c * length, py - s * length - lift)
-        left = (px - c * length * 0.7 - s * width, py + s * length * 0.7 - c * width - lift)
-        right = (px - c * length * 0.7 + s * width, py + s * length * 0.7 + c * width - lift)
+
+        def corner(forward, side):
+            # A wedge lies in its sheet: the ground (x, y) or the wall face (x, z).
+            ax = c * forward - s * side
+            ay = s * forward + c * side
+            return project(x + ax, y, z + ay) if wall else project(x + ax, y + ay, z)
+
         if mode == "tiers":
             fill = TIER_COLOURS[tier]
         else:
             fill = SILVER_DIM if act in ("dormant", "reserve") else SILVER
-            if z > 0.1:
+            if act == "climb" or (not wall and act not in rest and z > 0.1):
                 fill = tuple(min(255, v + 30) for v in fill)
         if scale < 3.0:
             draw.point((px, py), fill)
             continue
-        draw.polygon([nose, left, right], fill)
+        draw.polygon([corner(0.55, 0.0), corner(-0.38, 0.36), corner(-0.38, -0.36)], fill)
         if mode == "beauty" and scale >= 6.0:
             # Core: wake pulse decays to a steady glow; dormant cores are dark.
             if act == "dormant":
@@ -133,7 +149,7 @@ def draw_frame(frame, size=(960, 540), mode="beauty"):
             else:
                 core = CYAN
             r = max(1.0, 0.11 * scale)
-            draw.ellipse([px - r, py - lift - r, px + r, py - lift + r], core)
+            draw.ellipse([px - r, py - r, px + r, py + r], core)
     label = f"t={t:5.2f}s  half-width={frame['hw']:.1f}u"
     if mode == "tiers":
         counts = {k: 0 for k in TIER_NAMES}

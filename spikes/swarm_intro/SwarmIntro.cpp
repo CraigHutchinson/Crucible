@@ -14,7 +14,7 @@ namespace crucible::spike::swarm
 namespace
 {
 constexpr float kPi = std::numbers::pi_v<float>;
-constexpr int kResolvePasses = 4;
+constexpr int kResolvePasses = 6;
 
 /** splitmix32-style hash: deterministic personality without a shared RNG stream. */
 std::uint32_t mix(std::uint32_t v)
@@ -45,6 +45,13 @@ float smooth(float a, float b, float t)
     return a + (b - a) * t;
 }
 
+/** Climb-build climbers flow over the built face and over each other in layers, as the
+ *  Big Hero 6 microbots slide over one another; they never collide, they stack. */
+bool layered(Act act)
+{
+    return act == Act::Climb;
+}
+
 bool restAct(Act act)
 {
     return act == Act::Dormant || act == Act::Locked || act == Act::Moored || act == Act::Reserve;
@@ -68,6 +75,11 @@ SwarmIntro::SwarmIntro(IntroSettings settings)
     }
     const std::size_t n = settings_.nanites;
     slots_ = buildWordmark(settings_.wordmark);
+    // Climb build: the wall stands where the lying title's lower edge was; its face is a second
+    // interaction sheet stored above every ground position, so the sheets never interact.
+    wallY_ = -settings_.wordmark.capHeight * 0.5F;
+    wallBand_ = 40.0F;
+    buildConstruction();
     const std::vector<Pose> bed = buildBed();
     float bedTop = -std::numeric_limits<float>::max();
     for (const Pose& p : bed) bedTop = std::max(bedTop, p.y);
@@ -75,7 +87,8 @@ SwarmIntro::SwarmIntro(IntroSettings settings)
     buildRibbon();
 
     // Stage bounds for the grid: wordmark, ribbon, lanes and bed, plus a margin.
-    float minX = -90.0F, maxX = 90.0F, minY = -20.0F, maxY = 20.0F;
+    float minX = -90.0F, maxX = 90.0F, minY = -20.0F;
+    const float maxY = climbing() ? wallBand_ + settings_.wordmark.capHeight + 10.0F : 20.0F;
     for (const Pose& p : bed)
     {
         minX = std::min(minX, p.x);
@@ -116,6 +129,164 @@ SwarmIntro::SwarmIntro(IntroSettings settings)
     firstX_ = bed[first_].x;
     firstY_ = bed[first_].y;
     camera_ = cameraAt(0.0F);
+}
+
+void SwarmIntro::buildConstruction()
+{
+    // Build graph over the title's slots: adjacency within a letter, depth from the ground
+    // row by multi-source BFS, and a parent toward the ground. In the climb build, a slot is supported
+    // by the ground or by a locked neighbour of lower depth, so letters grow bottom-up and
+    // every locked unit is connected to the ground through locked units (TERMES-style).
+    const std::size_t count = slots_.size();
+    const float link = 1.6F * settings_.wordmark.pitch;
+    slotNeighbours_.assign(count, {});
+    float minY = std::numeric_limits<float>::max();
+    for (const Slot& slot : slots_) minY = std::min(minY, slot.y);
+    for (std::uint32_t a = 0; a < count; ++a)
+    {
+        for (std::uint32_t b = a + 1; b < count; ++b)
+        {
+            if (slots_[a].letter == slots_[b].letter && std::hypot(slots_[a].x - slots_[b].x, slots_[a].y - slots_[b].y) <= link)
+            {
+                slotNeighbours_[a].push_back(b);
+                slotNeighbours_[b].push_back(a);
+            }
+        }
+    }
+    constexpr std::uint32_t kUnset = std::numeric_limits<std::uint32_t>::max();
+    slotDepth_.assign(count, kUnset);
+    slotParent_.assign(count, kUnset);
+    slotRoot_.assign(count, kUnset);
+    std::deque<std::uint32_t> frontier;
+    std::array<float, 8> letterMin{};
+    letterMin.fill(std::numeric_limits<float>::max());
+    for (const Slot& slot : slots_) letterMin[slot.letter] = std::min(letterMin[slot.letter], slot.y);
+    for (std::uint32_t a = 0; a < count; ++a)
+    {
+        if (slots_[a].y - letterMin[slots_[a].letter] < 0.6F * settings_.wordmark.pitch)
+        {
+            slotDepth_[a] = 0;
+            slotParent_[a] = a;
+            slotRoot_[a] = a;
+            frontier.push_back(a);
+        }
+    }
+    while (!frontier.empty())
+    {
+        const std::uint32_t a = frontier.front();
+        frontier.pop_front();
+        for (std::uint32_t b : slotNeighbours_[a])
+        {
+            if (slotDepth_[b] != kUnset) continue;
+            slotDepth_[b] = slotDepth_[a] + 1;
+            slotParent_[b] = a;
+            slotRoot_[b] = slotRoot_[a];
+            frontier.push_back(b);
+        }
+    }
+    for (std::uint32_t a = 0; a < count; ++a)
+    {
+        if (slotDepth_[a] == kUnset) throw std::logic_error("title slot not connected to the ground row");
+    }
+    slotLocked_.assign(count, 0);
+    gSlotLocked_.assign(count, 0);
+    gSlotSeating_.assign(count, 0);
+    letterLocked_.fill(0);
+    letterCompleteAt_.fill(-1.0F);
+    letterSlots_.assign(8, {});
+    for (std::uint32_t a = 0; a < count; ++a) letterSlots_[slots_[a].letter].push_back(a);
+    // Entry point onto the wall: the ground-row slot of the same letter nearest the slot.
+    slotEntry_.assign(count, 0);
+    for (std::uint32_t a = 0; a < count; ++a)
+    {
+        float best = std::numeric_limits<float>::max();
+        for (std::uint32_t b : letterSlots_[slots_[a].letter])
+        {
+            if (slotDepth_[b] != 0) continue;
+            const float d = std::hypot(slots_[a].x - slots_[b].x, slots_[a].y - slots_[b].y);
+            if (d < best)
+            {
+                best = d;
+                slotEntry_[a] = b;
+            }
+        }
+    }
+    routeParent_.assign(count, 0);
+    routeCost_.assign(count, 0.0F);
+    routeHeap_.reserve(count * 4);
+    if (!climbing()) return;
+    // Stand the title up: height above the ground becomes the wall sheet's coordinate.
+    for (Slot& slot : slots_) slot.y = wallBand_ + (slot.y - minY) + 0.55F * settings_.diameter;
+}
+
+bool SwarmIntro::supported(std::size_t slot, std::span<const std::uint8_t> locked) const
+{
+    if (slotDepth_[slot] == 0) return true;
+    for (std::uint32_t b : slotNeighbours_[slot])
+    {
+        if (locked[b] && slotDepth_[b] < slotDepth_[slot]) return true;
+    }
+    return false;
+}
+
+void SwarmIntro::goalApproach(const Mind& mind, float& gx, float& gy) const
+{
+    // Where a seeker heads on the ground: its slot, or (climb build) the wall base below its root.
+    const Slot& slot = slots_[static_cast<std::size_t>(mind.goal)];
+    if (!climbing())
+    {
+        gx = slot.x;
+        gy = slot.y;
+        return;
+    }
+    gx = slots_[slotEntry_[static_cast<std::size_t>(mind.goal)]].x;
+    gy = wallY_ - 1.0F;
+}
+
+float SwarmIntro::raiseAngle(std::uint8_t letter) const
+{
+    const float complete = letterCompleteAt_[letter];
+    if (settings_.build != Build::Raise || complete < 0.0F) return 0.0F;
+    return smooth(0.0F, kPi * 0.5F, (time_ - complete - settings_.raiseDelay) / settings_.raiseSeconds);
+}
+
+void SwarmIntro::worldOf(const Pose& pose, const Mind& mind, float& wx, float& wy, float& wz, float& plane) const
+{
+    wx = pose.x;
+    plane = 0.0F;
+    if (onWall(mind))
+    {
+        // Wall sheet: height is the sheet coordinate; lift is a stand-off in front of the face.
+        wy = wallY_ - pose.z;
+        wz = pose.y - wallBand_;
+        plane = kPi * 0.5F;
+        return;
+    }
+    if (settings_.build == Build::Raise && mind.act == Act::Locked && !mind.ribbon)
+    {
+        // Hinge the flat letter about its baseline (the wall line), top swinging up.
+        plane = raiseAngle(slots_[static_cast<std::size_t>(mind.goal)].letter);
+        const float r = pose.y - wallY_;
+        wy = wallY_ + r * std::cos(plane);
+        wz = r * std::sin(plane) + pose.z;
+        return;
+    }
+    wy = pose.y;
+    wz = pose.z;
+}
+
+void SwarmIntro::viewOf(const Pose& pose, const Mind& mind, float& vx, float& vy) const
+{
+    if (!oblique())
+    {
+        vx = pose.x;
+        vy = pose.y;
+        return;
+    }
+    // Oblique front camera: height up the screen, depth foreshortened by the tilt.
+    float wy, wz, plane;
+    worldOf(pose, mind, vx, wy, wz, plane);
+    vy = wz + settings_.viewTilt * wy;
 }
 
 std::vector<Pose> SwarmIntro::buildBed() const
@@ -295,10 +466,17 @@ void SwarmIntro::planAssignment(std::span<const Pose> bed)
         const Lane& lane = lanes_[k];
         const float ex = lane.xs.back(), ey = lane.ys.back();
         std::vector<std::uint32_t>& ls = laneSlots[k];
+        // Lying: far-first, so early arrivals never block later paths. Climb build: bottom-up by
+        // build depth first (support), then far-first along the wall's base.
+        const bool bottomUp = climbing();
+        const float baseY = wallY_;
         std::stable_sort(ls.begin(), ls.end(), [&](std::uint32_t a, std::uint32_t b) {
-            const float da = std::hypot(slots_[a].x - ex, slots_[a].y - ey);
-            const float db = std::hypot(slots_[b].x - ex, slots_[b].y - ey);
-            return da > db;   // far-first
+            if (bottomUp && slotDepth_[a] != slotDepth_[b]) return slotDepth_[a] < slotDepth_[b];
+            const float ay = bottomUp ? baseY : slots_[a].y;
+            const float by = bottomUp ? baseY : slots_[b].y;
+            const float da = std::hypot(slots_[a].x - ex, ay - ey);
+            const float db = std::hypot(slots_[b].x - ex, by - ey);
+            return da > db;
         });
         for (std::size_t m = 0; m < laneUnits.size(); ++m)
         {
@@ -328,18 +506,27 @@ Camera SwarmIntro::cameraAt(float t) const
 {
     // Orthographic stand-in for the brief's lens path: macro, pullback, rise, hold, open.
     const float fx = firstX_;
-    const float fy = firstY_;
+    const float fy = oblique() ? settings_.viewTilt * firstY_ : firstY_;
     struct Key
     {
         float t, x, y, w;
     };
-    const std::array<Key, 7> keys{ { { 0.0F, fx, fy, 3.0F },
-                                     { 1.8F, fx, fy + 0.5F, 4.0F },
-                                     { 4.2F, 0.0F, fy + 10.0F, 50.0F },
-                                     { 6.8F, 0.0F, -6.0F, 82.0F },
-                                     { 8.4F, 0.0F, -3.0F, 80.0F },
-                                     { 10.0F, 0.0F, -4.0F, 79.0F },
-                                     { 12.0F, 0.0F, -20.0F, 96.0F } } };
+    // Upright builds: an oblique front view that rises to frame the standing title.
+    const std::array<Key, 7> uprightKeys{ { { 0.0F, fx, fy, 3.0F },
+                                            { 1.8F, fx, fy + 0.4F, 4.0F },
+                                            { 4.2F, 0.0F, fy + 6.0F, 50.0F },
+                                            { 6.8F, 0.0F, 4.0F, 82.0F },
+                                            { 8.4F, 0.0F, 6.0F, 80.0F },
+                                            { 10.0F, 0.0F, 6.0F, 79.0F },
+                                            { 12.0F, 0.0F, -4.0F, 96.0F } } };
+    const std::array<Key, 7> lyingKeys{ { { 0.0F, fx, fy, 3.0F },
+                                          { 1.8F, fx, fy + 0.5F, 4.0F },
+                                          { 4.2F, 0.0F, fy + 10.0F, 50.0F },
+                                          { 6.8F, 0.0F, -6.0F, 82.0F },
+                                          { 8.4F, 0.0F, -3.0F, 80.0F },
+                                          { 10.0F, 0.0F, -4.0F, 79.0F },
+                                          { 12.0F, 0.0F, -20.0F, 96.0F } } };
+    const std::array<Key, 7>& keys = oblique() ? uprightKeys : lyingKeys;
     Camera cam;
     std::size_t k = 0;
     while (k + 2 < keys.size() && t > keys[k + 1].t) ++k;
@@ -458,6 +645,23 @@ void SwarmIntro::tick()
 
 void SwarmIntro::gather()
 {
+    std::copy(slotLocked_.begin(), slotLocked_.end(), gSlotLocked_.begin());
+    // Pipelined interlock: a slot whose owner is nearly seated already counts as a support for
+    // motion (not for locking), so the next level starts sliding in without waiting a full dock.
+    std::copy(slotLocked_.begin(), slotLocked_.end(), gSlotSeating_.begin());
+    if (climbing())
+    {
+        world_.each<Identity, Pose, Motion, Mind>([this](Identity&, Pose& pose, Motion&, Mind& mind) {
+            if (mind.act != Act::Dock || mind.ribbon) return;
+            const Slot& slot = slots_[static_cast<std::size_t>(mind.goal)];
+            if (std::hypot(slot.x - pose.x, slot.y - pose.y) < 1.2F * settings_.diameter) gSlotSeating_[static_cast<std::size_t>(mind.goal)] = 1;
+        });
+    }
+    gLetterFrontier_.fill(-1);
+    for (std::size_t a = 0; a < slots_.size(); ++a)
+    {
+        if (gSlotLocked_[a]) gLetterFrontier_[slots_[a].letter] = std::max(gLetterFrontier_[slots_[a].letter], static_cast<int>(slotDepth_[a]));
+    }
     // Freeze the tick-start epoch: every system reads these, and writes only its own row.
     world_.each<Identity, Pose, Motion, Mind>([this](Identity& id, Pose& pose, Motion& motion, Mind& mind) {
         const std::uint32_t i = id.index;
@@ -571,10 +775,12 @@ SwarmIntro::Desire SwarmIntro::desire(const Identity&, Pose& pose, Mind& mind)
         break;
     }
     case Act::Seek:
+    case Act::Climb:
     case Act::Dock:
     case Act::Moor:
     {
         const bool ribbon = mind.ribbon;
+        if (climbing() && !ribbon && mind.act != Act::Dock && climbDesire(pose, mind, d)) return d;
         const float sx = ribbon ? ribbon_[static_cast<std::size_t>(mind.goal)].x : slots_[static_cast<std::size_t>(mind.goal)].x;
         const float sy = ribbon ? ribbon_[static_cast<std::size_t>(mind.goal)].y : slots_[static_cast<std::size_t>(mind.goal)].y;
         const float sh = ribbon ? ribbon_[static_cast<std::size_t>(mind.goal)].heading : slots_[static_cast<std::size_t>(mind.goal)].heading;
@@ -592,7 +798,7 @@ SwarmIntro::Desire SwarmIntro::desire(const Identity&, Pose& pose, Mind& mind)
             d.faceHeading = sh;
             d.hasFace = true;
             const float headingError = std::abs(wrapAngle(sh - pose.heading));
-            const float speed = std::min(6.0F, dist * 8.0F) * (headingError > 0.6F ? 0.3F : 1.0F);
+            const float speed = std::min(20.0F, dist * 24.0F) * (headingError > 0.6F ? 0.3F : 1.0F);
             if (dist > 1e-4F)
             {
                 d.vx = dx / dist * speed;
@@ -620,19 +826,198 @@ SwarmIntro::Desire SwarmIntro::desire(const Identity&, Pose& pose, Mind& mind)
     return d;
 }
 
+bool SwarmIntro::climbDesire(Pose& pose, Mind& mind, Desire& d)
+{
+    // Climb-build title units: wait in a staging band until the slot is near its letter's
+    // built frontier; walk to the wall base nearest the slot and step onto the wall face;
+    // route over built units, never across open space. Returns false once the slot's support
+    // is seated and the slot is within capture range: the caller then docks as usual.
+    const float cruise = settings_.cruiseSpeed * mind.speedScale;
+    const std::size_t goal = static_cast<std::size_t>(mind.goal);
+    auto steer = [&](float tx, float ty, float speedCap) {
+        const float dx = tx - pose.x, dy = ty - pose.y;
+        const float dist = std::hypot(dx, dy);
+        const float speed = std::min(speedCap, dist * 5.0F + 0.5F);
+        if (dist > 1e-4F)
+        {
+            d.vx = dx / dist * speed;
+            d.vy = dy / dist * speed;
+        }
+        return dist;
+    };
+    if (mind.act == Act::Seek)
+    {
+        float bx, by;
+        goalApproach(mind, bx, by);
+        // Climb only near the build frontier: the letter's deepest locked level must be within
+        // a window of the slot's depth. Units not yet due wait in a staging band set back from
+        // the wall by how far they are from their turn, keeping the base line clear.
+        const int depth = static_cast<int>(slotDepth_[goal]);
+        const int frontier = gLetterFrontier_[slots_[goal].letter];
+        const bool due = depth == 0 || (frontier >= 0 && depth <= frontier + settings_.climbWindow);
+        if (!due)
+        {
+            const float wait = static_cast<float>(depth - std::max(frontier, 0) - settings_.climbWindow);
+            // Stage under the slot itself, so a letter's queue spreads along its width.
+            steer(slots_[goal].x, by - 3.0F - std::min(wait, 12.0F) * 0.8F, cruise);
+            return true;
+        }
+        if (steer(bx, by, cruise) > 1.2F) return true;
+        // Step across the seam: the same world point, now on the wall sheet, facing up.
+        pose.x = bx;
+        pose.y = wallBand_ + 0.05F;
+        pose.heading = kPi * 0.5F;
+        mind.act = Act::Climb;
+        mind.actSince = time_;
+        d = Desire{};
+    }
+    const float climbSpeed = cruise * 0.6F;
+    const Slot& slot = slots_[goal];
+    const float toGoal = std::hypot(slot.x - pose.x, slot.y - pose.y);
+    if (supported(goal, gSlotSeating_) && toGoal < 4.0F * settings_.wordmark.pitch)
+    {
+        if (toGoal < 1.5F * settings_.diameter)
+        {
+            mind.act = Act::Dock;
+            mind.actSince = time_;
+            return false;
+        }
+        steer(slot.x, slot.y, climbSpeed);
+        return true;
+    }
+    // Route over the built surface: step to the next locked unit on a path toward the slot.
+    const std::int64_t step = surfaceStep(pose, goal);
+    if (step >= 0) steer(slots_[static_cast<std::size_t>(step)].x, slots_[static_cast<std::size_t>(step)].y, climbSpeed);
+    else steer(slots_[slotRoot_[goal]].x, wallBand_ + 0.05F, climbSpeed);   // nothing built yet: wait at the base
+    // Anticipation: close to its slot, a waiting climber already turns to the stroke's
+    // heading, so it can slide in the moment its support seats.
+    if (toGoal < 3.0F * settings_.wordmark.pitch)
+    {
+        d.faceHeading = slot.heading;
+        d.hasFace = true;
+    }
+    return true;
+}
+
+std::int64_t SwarmIntro::surfaceStep(const Pose& pose, std::size_t goal)
+{
+    // Shortest-path search over the letter's locked slots (the frozen gather) and the ground
+    // between its strokes, from the slot the climber stands on to a locked support of its goal, or failing that to the locked
+    // slot nearest the goal. Returns the next slot on that path, or -1 when nothing is built.
+    const std::vector<std::uint32_t>& letter = letterSlots_[slots_[goal].letter];
+    const float pitch = settings_.wordmark.pitch;
+    std::int64_t standing = -1;
+    float best = 2.0F * pitch;
+    for (std::uint32_t a : letter)
+    {
+        if (!gSlotSeating_[a]) continue;
+        const float d = std::hypot(slots_[a].x - pose.x, slots_[a].y - pose.y);
+        if (d < best)
+        {
+            best = d;
+            standing = a;
+        }
+    }
+    if (standing < 0)
+    {
+        // Between strokes on the base: route from the nearest built root, so walking along the
+        // base continues toward the goal instead of returning to that root.
+        float nearest = std::numeric_limits<float>::max();
+        for (std::uint32_t a : letter)
+        {
+            if (!gSlotSeating_[a] || slotDepth_[a] != 0) continue;
+            const float d = std::hypot(slots_[a].x - pose.x, slots_[a].y - pose.y);
+            if (d < nearest)
+            {
+                nearest = d;
+                standing = a;
+            }
+        }
+        if (standing < 0) return -1;
+    }
+    // Dijkstra by path length (hop counts alone send climbers back and forth along a base).
+    constexpr std::uint32_t kUnseen = std::numeric_limits<std::uint32_t>::max();
+    for (std::uint32_t a : letter)
+    {
+        routeParent_[a] = kUnseen;
+        routeCost_[a] = std::numeric_limits<float>::max();
+    }
+    using Entry = std::pair<float, std::uint32_t>;
+    routeHeap_.clear();
+    auto push = [this](float cost, std::uint32_t a) {
+        routeHeap_.push_back({ cost, a });
+        std::push_heap(routeHeap_.begin(), routeHeap_.end(), std::greater<Entry>{});
+    };
+    const auto start = static_cast<std::uint32_t>(standing);
+    routeCost_[start] = 0.0F;
+    routeParent_[start] = start;
+    push(0.0F, start);
+    std::uint32_t target = start;
+    float targetDistance = std::numeric_limits<float>::max();
+    auto relax = [&](std::uint32_t a, std::uint32_t b) {
+        const float cost = routeCost_[a] + std::hypot(slots_[a].x - slots_[b].x, slots_[a].y - slots_[b].y);
+        if (cost + 1e-5F >= routeCost_[b]) return;
+        routeCost_[b] = cost;
+        routeParent_[b] = a;
+        push(cost, b);
+    };
+    while (!routeHeap_.empty())
+    {
+        std::pop_heap(routeHeap_.begin(), routeHeap_.end(), std::greater<Entry>{});
+        const auto [cost, a] = routeHeap_.back();
+        routeHeap_.pop_back();
+        if (cost > routeCost_[a]) continue;
+        if (std::find(slotNeighbours_[goal].begin(), slotNeighbours_[goal].end(), a) != slotNeighbours_[goal].end())
+        {
+            target = a;   // nearest supporter by path length
+            break;
+        }
+        const float d = std::hypot(slots_[a].x - slots_[goal].x, slots_[a].y - slots_[goal].y);
+        if (d < targetDistance)
+        {
+            targetDistance = d;
+            target = a;
+        }
+        for (std::uint32_t b : slotNeighbours_[a])
+        {
+            if (gSlotSeating_[b]) relax(a, b);
+        }
+        // Strokes of one letter meet only at the ground: locked ground-row slots are linked
+        // by walking along the wall's base.
+        if (slotDepth_[a] != 0) continue;
+        for (std::uint32_t b : letter)
+        {
+            if (slotDepth_[b] == 0 && gSlotSeating_[b]) relax(a, b);
+        }
+    }
+    // Walk back to the first step after the standing slot.
+    std::uint32_t at = target;
+    while (at != start && routeParent_[at] != start) at = routeParent_[at];
+    return at;
+}
+
 void SwarmIntro::advanceAct(Pose& pose, Mind& mind)
 {
+    if (onWall(mind)) pose.y = std::max(pose.y, wallBand_);   // the wall sheet's floor is the ground
     if (mind.act != Act::Dock) return;
     const std::size_t goal = static_cast<std::size_t>(mind.goal);
     const float sx = mind.ribbon ? ribbon_[goal].x : slots_[goal].x;
     const float sy = mind.ribbon ? ribbon_[goal].y : slots_[goal].y;
     const float sh = mind.ribbon ? ribbon_[goal].heading : slots_[goal].heading;
-    if (std::hypot(sx - pose.x, sy - pose.y) < 0.08F && std::abs(wrapAngle(sh - pose.heading)) < 0.12F)
+    const bool structural = mind.ribbon || !climbing() || supported(goal, slotLocked_);
+    if (structural && std::hypot(sx - pose.x, sy - pose.y) < 0.12F && std::abs(wrapAngle(sh - pose.heading)) < 0.15F)
     {
         pose = { sx, sy, 0.0F, sh };
         mind.act = mind.ribbon ? Act::Moored : Act::Locked;
         mind.actSince = time_;
-        if (!mind.ribbon) ++metrics_.dockClicks;
+        if (!mind.ribbon)
+        {
+            ++metrics_.dockClicks;
+            if (climbing() && !supported(goal, slotLocked_)) ++metrics_.unsupported;
+            slotLocked_[goal] = 1;
+            const std::uint8_t letter = slots_[goal].letter;
+            if (++letterLocked_[letter] == letterSlots_[letter].size()) letterCompleteAt_[letter] = time_;
+        }
     }
 }
 
@@ -676,7 +1061,7 @@ void SwarmIntro::heroChoose(const Identity& id, const Pose& pose, float& vx, flo
     std::array<Neighbour, 24> near{};
     std::size_t count = 0;
     forNeighbours(pose.x, pose.y, 4.0F * d, [&](std::uint32_t j) {
-        if (j == id.index || !gMover_[j] || count == near.size()) return;
+        if (j == id.index || !gMover_[j] || layered(static_cast<Act>(gAct_[j])) || count == near.size()) return;
         // Right of way: yield only to units that answered the wave earlier. Mutual yielding
         // between equals freezes dense streams (measured: all-hero runs jam without this).
         const bool senior = gWake_[j] < gWake_[id.index] || (gWake_[j] == gWake_[id.index] && j < id.index);
@@ -750,11 +1135,9 @@ void SwarmIntro::behaviourSystems()
         if (restAct(mind.act)) return;
         const Desire want = desire(id, pose, mind);
         float vx = want.vx, vy = want.vy;
-        if (mind.act != Act::Dock) heroChoose(id, pose, vx, vy);
+        if (mind.act != Act::Dock && !layered(mind.act)) heroChoose(id, pose, vx, vy);
         integrate(pose, motion, vx, vy, want, 9.0F);
-        bool over = false;
-        forNeighbours(pose.x, pose.y, 0.8F * d, [&](std::uint32_t j) { over = over || restAct(static_cast<Act>(gAct_[j])); });
-        pose.z += ((over ? 0.55F : 0.0F) - pose.z) * std::min(1.0F, dt * 12.0F);
+        pose.z += (liftOf(id, pose, mind) - pose.z) * std::min(1.0F, dt * 12.0F);
         advanceAct(pose, mind);
     });
 
@@ -764,22 +1147,18 @@ void SwarmIntro::behaviourSystems()
         const Desire want = desire(id, pose, mind);
         float vx = want.vx, vy = want.vy;
         const float reach = 1.6F * d;
-        bool over = false;
+        // Docking units hold their line; climbers flow in layers instead of separating.
+        const bool committed = mind.act == Act::Dock || layered(mind.act);
         forNeighbours(pose.x, pose.y, reach, [&](std::uint32_t j) {
-            if (j == id.index) return;
+            if (j == id.index || committed || !gMover_[j] || layered(static_cast<Act>(gAct_[j]))) return;
             const float dx = pose.x - gx_[j], dy = pose.y - gy_[j];
             const float dist = std::max(std::hypot(dx, dy), 1e-3F);
-            if (!gMover_[j])
-            {
-                over = over || (dist < 0.8F * d && restAct(static_cast<Act>(gAct_[j])));
-                return;
-            }
             const float push = (reach - dist) / reach * settings_.cruiseSpeed * 0.8F;
             vx += dx / dist * push;
             vy += dy / dist * push;
         });
         integrate(pose, motion, vx, vy, want, 14.0F);
-        pose.z += ((over ? 0.55F : 0.0F) - pose.z) * std::min(1.0F, dt * 12.0F);
+        pose.z += (liftOf(id, pose, mind) - pose.z) * std::min(1.0F, dt * 12.0F);
         advanceAct(pose, mind);
     });
 
@@ -793,10 +1172,13 @@ void SwarmIntro::behaviourSystems()
         auto at = [&](int x, int y) { return static_cast<float>(cellMovers_[static_cast<std::size_t>(y) * static_cast<std::size_t>(gridW_) + static_cast<std::size_t>(x)]); };
         const float gradX = at(cx + 1, cy) - at(cx - 1, cy);
         const float gradY = at(cx, cy + 1) - at(cx, cy - 1);
-        vx -= gradX * 1.5F;
-        vy -= gradY * 1.5F;
+        if (mind.act != Act::Dock && !layered(mind.act))
+        {
+            vx -= gradX * 1.5F;
+            vy -= gradY * 1.5F;
+        }
         integrate(pose, motion, vx, vy, want, 20.0F);
-        pose.z = 0.0F;
+        pose.z = layered(mind.act) ? 0.55F : 0.0F;
         advanceAct(pose, mind);
     });
 
@@ -810,9 +1192,24 @@ void SwarmIntro::behaviourSystems()
         pose.y += motion.vy * dt;
         if (want.hasFace) pose.heading = want.faceHeading;
         else if (std::hypot(motion.vx, motion.vy) > 0.5F) pose.heading = std::atan2(motion.vy, motion.vx);
-        pose.z = 0.0F;
+        pose.z = layered(mind.act) ? 0.55F : 0.0F;
         advanceAct(pose, mind);
     });
+}
+
+float SwarmIntro::liftOf(const Identity& id, const Pose& pose, const Mind& mind) const
+{
+    // Lift off the sheet: over the rest layer one layer up; a climber over a lower-identity
+    // climber one more layer (a deterministic stacking order).
+    const float d = settings_.diameter;
+    bool over = false;
+    bool stacked = false;
+    forNeighbours(pose.x, pose.y, 0.8F * d, [&](std::uint32_t j) {
+        const Act other = static_cast<Act>(gAct_[j]);
+        over = over || restAct(other);
+        stacked = stacked || (layered(mind.act) && j < id.index && layered(other));
+    });
+    return stacked ? 1.1F : (over || layered(mind.act) ? 0.55F : 0.0F);
 }
 
 void SwarmIntro::negotiationSystem()
@@ -833,12 +1230,15 @@ void SwarmIntro::negotiationSystem()
             Mind* mi = world_.find<Mind>(entities_[i]);
             Mind* mj = world_.find<Mind>(entities_[j]);
             if (mi->act != Act::Seek || (mj->act != Act::Seek && mj->act != Act::Lane) || mi->lane != mj->lane) return;
-            const Slot& si = slots_[static_cast<std::size_t>(mi->goal)];
-            const Slot& sj = slots_[static_cast<std::size_t>(mj->goal)];
+            Slot si, sj;
+            goalApproach(*mi, si.x, si.y);
+            goalApproach(*mj, sj.x, sj.y);
             auto d2 = [](float ax, float ay, const Slot& s) { return (ax - s.x) * (ax - s.x) + (ay - s.y) * (ay - s.y); };
             const float now = d2(gx_[i], gy_[i], si) + d2(gx_[j], gy_[j], sj);
             const float swapped = d2(gx_[i], gy_[i], sj) + d2(gx_[j], gy_[j], si);
-            if (swapped + 0.5F < now)
+            // In the climb build, a swap must not move a unit to a deeper slot ahead of its support order.
+            const bool sameDepth = !climbing() || slotDepth_[static_cast<std::size_t>(mi->goal)] == slotDepth_[static_cast<std::size_t>(mj->goal)];
+            if (sameDepth && swapped + 0.5F < now)
             {
                 std::swap(mi->goal, mj->goal);
                 traded[i] = traded[j] = 1;
@@ -858,7 +1258,7 @@ void SwarmIntro::resolveSystem()
         const std::uint32_t i = id.index;
         gx_[i] = pose.x;
         gy_[i] = pose.y;
-        include[i] = (isMover(mind.act) && gTier_[i] != static_cast<std::uint8_t>(Tier::Hidden)) ? 1 : 0;
+        include[i] = (isMover(mind.act) && !layered(mind.act) && gTier_[i] != static_cast<std::uint8_t>(Tier::Hidden)) ? 1 : 0;
     });
     rebuildGrid(gx_, gy_, include);
     const float d = settings_.diameter;
@@ -901,11 +1301,11 @@ void SwarmIntro::resolveSystem()
             gy_[i] += correctionY_[i];
         }
     }
-    world_.each<Identity, Pose, Motion, Mind>([&](Identity& id, Pose& pose, Motion&, Mind&) {
+    world_.each<Identity, Pose, Motion, Mind>([&](Identity& id, Pose& pose, Motion&, Mind& mind) {
         const std::uint32_t i = id.index;
         if (!include[i]) return;
         pose.x = gx_[i];
-        pose.y = gy_[i];
+        pose.y = onWall(mind) ? std::max(gy_[i], wallBand_) : gy_[i];
     });
 }
 
@@ -926,13 +1326,15 @@ void SwarmIntro::lodSystem()
         case LodMode::AllFar: want = Tier::Far; break;
         case LodMode::Camera:
         {
-            if (!inView(pose.x, pose.y, margin))
+            float vx, vy;
+            viewOf(pose, mind, vx, vy);
+            if (!inView(vx, vy, margin))
             {
                 want = Tier::Hidden;
                 break;
             }
-            const float rx = (pose.x - cam.cx) / cam.halfWidth;
-            const float ry = (pose.y - cam.cy) / cam.halfHeight();
+            const float rx = (vx - cam.cx) / cam.halfWidth;
+            const float ry = (vy - cam.cy) / cam.halfHeight();
             const float r = std::hypot(rx, ry);
             want = (ppu >= 6.0F && r < 0.8F) ? Tier::Near : Tier::Far;
             if (ppu >= 10.0F && r < 0.45F && !restAct(mind.act)) heroCandidates_.push_back({ r, i });
@@ -1002,11 +1404,27 @@ void SwarmIntro::metricsSystem()
         const std::uint32_t i = id.index;
         gx_[i] = pose.x;
         gy_[i] = pose.y;
-        include[i] = (isMover(mind.act) && inView(pose.x, pose.y, 0.0F)) ? 1 : 0;
+        float vx, vy;
+        viewOf(pose, mind, vx, vy);
+        include[i] = (isMover(mind.act) && !layered(mind.act) && inView(vx, vy, 0.0F)) ? 1 : 0;
         metrics_.locked += mind.act == Act::Locked ? 1u : 0u;
+        // Climb-build invariant: a climber high on the wall is always on the built surface.
+        if (mind.act == Act::Climb && pose.y - wallBand_ > 1.2F)
+        {
+            const std::uint8_t letter = slots_[static_cast<std::size_t>(mind.goal)].letter;
+            const float reach = 1.5F * settings_.wordmark.pitch;
+            bool onSurface = false;
+            for (std::size_t sIdx = 0; sIdx < slots_.size() && !onSurface; ++sIdx)
+            {
+                onSurface = slots_[sIdx].letter == letter && slotLocked_[sIdx] &&
+                            std::hypot(slots_[sIdx].x - pose.x, slots_[sIdx].y - pose.y) <= reach;
+            }
+            if (!onSurface) ++metrics_.offSurface;
+        }
         metrics_.moored += mind.act == Act::Moored ? 1u : 0u;
         ++metrics_.tierCount[gTier_[i]];
     });
+    for (std::uint8_t letter = 0; letter < 8; ++letter) metrics_.raised += raiseAngle(letter) >= kPi * 0.5F - 1e-4F ? 1u : 0u;
     rebuildGrid(gx_, gy_, include);
     float minGap = std::numeric_limits<float>::max();
     for (std::uint32_t i = 0; i < include.size(); ++i)
@@ -1027,7 +1445,11 @@ void SwarmIntro::snapshot(std::vector<RenderRow>& out)
 {
     out.resize(entities_.size());
     world_.each<Identity, Pose, Motion, Mind>([&](Identity& id, Pose& pose, Motion&, Mind& mind) {
-        out[id.index] = { pose.x, pose.y, pose.z, pose.heading, mind.act, static_cast<Tier>(gTier_[id.index]), mind.actSince };
+        // World coordinates, z up. A wall-sheet unit stands in the wall plane, its lift
+        // becoming a stand-off in front of the face.
+        float wx, wy, wz, plane;
+        worldOf(pose, mind, wx, wy, wz, plane);
+        out[id.index] = { wx, wy, wz, pose.heading, plane, mind.act, static_cast<Tier>(gTier_[id.index]), mind.actSince };
     });
 }
 
