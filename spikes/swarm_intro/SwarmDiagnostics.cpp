@@ -57,11 +57,12 @@ void SwarmDiagnostics::claim(std::uint64_t tick, std::uint64_t unit, std::uint64
                  id(SwarmEvent::Claim), tick, unit, slot, letter, depth, arrivalRank, queuedTicks);
 }
 
-void SwarmDiagnostics::lock(std::uint64_t tick, std::uint64_t unit, std::uint64_t slot, std::uint64_t letter, std::uint64_t depth) noexcept
+void SwarmDiagnostics::lock(std::uint64_t tick, std::uint64_t unit, std::uint64_t slot, std::uint64_t letter, std::uint64_t depth,
+                            std::uint64_t mode) noexcept
 {
     const sub0log::Logger::ScopedBind bind{ impl_->logger };
-    sub0log_info(kSwarm, "schema={} event={} tick={} unit={} slot={} letter={} depth={}", kSchema, id(SwarmEvent::Lock), tick,
-                 unit, slot, letter, depth);
+    sub0log_info(kSwarm, "schema={} event={} tick={} unit={} slot={} letter={} depth={} mode={}", kSchema, id(SwarmEvent::Lock),
+                 tick, unit, slot, letter, depth, mode);
 }
 
 void SwarmDiagnostics::stuck(std::uint64_t tick, std::uint64_t unit, std::uint64_t act, std::uint64_t stalledTicks,

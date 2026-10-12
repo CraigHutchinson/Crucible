@@ -18,6 +18,11 @@ struct Slot
      *  along the title, y up the letter). A seated unit morphs into this shape; corners on the
      *  outline are pulled onto it, and shared corners match their neighbours exactly. */
     std::array<float, 6> shape{};
+    /** Nearest stroke segment (letter-local index, segments numbered across the glyph's
+     *  centre lines), and whether that segment is a scaffold stroke: straight, upright, at
+     *  least 45% of the cap height, and standing on the baseline. */
+    std::int16_t segment = -1;
+    bool scaffold = false;
 };
 
 /** What morphing did to the outline; zero-initialised when tessellation is off. */
