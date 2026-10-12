@@ -1,0 +1,6 @@
+add_executable(crucible_swarm_intro main.cpp SwarmIntro.cpp Wordmark.cpp)
+target_link_libraries(crucible_swarm_intro PRIVATE crucible_options Sub0ECS::Sub0ECS)
+if(BUILD_TESTING)
+    add_test(NAME swarm_intro_spike COMMAND crucible_swarm_intro --verify)
+    set_tests_properties(swarm_intro_spike PROPERTIES LABELS "presentation;spike" TIMEOUT 300)
+endif()
