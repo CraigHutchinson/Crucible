@@ -76,6 +76,10 @@ def main():
     completes = [v for v in by_event[LETTER] if v[4] == 1]
     if summary["locked_at_end"] == slots and len(completes) != 8:
         fail("eight letter-complete events when the title is complete")
+    uprights = {v[3] for v in by_event[LETTER] if v[4] == 2}
+    raised = {k for k in range(8) if (summary["raised_letters"] >> k) & 1}
+    if summary["all_raised_s"] >= 0 and uprights != raised:
+        fail("an upright event for exactly the raised letters")
 
     claims = by_event[CLAIM]
     if len(claims) != s_claims or len(claims) != summary["claims"]:
@@ -83,9 +87,11 @@ def main():
     if summary["claims"] > 0:
         # First come, first served: every locked slot was claimed at a letter's base, never
         # assigned in advance, and no unit waited in a queue longer than the sequence.
+        # Hybrid builds raise some letters with planned slots: check the letters that claim.
         claimed = {v[4] for v in claims}
-        if any(v[4] not in claimed for v in locks):
-            fail("every locked slot was claimed first")
+        claiming_letters = {v[5] for v in claims}
+        if any(v[4] not in claimed for v in locks if v[5] in claiming_letters):
+            fail("every locked slot of a climbed letter was claimed first")
         if any(v[8] > 15 * 60 for v in claims):
             fail("no claim waited in the queue longer than the sequence")
 

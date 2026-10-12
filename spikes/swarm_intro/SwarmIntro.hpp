@@ -92,10 +92,11 @@ enum class Tier : std::uint8_t { Hero, Near, Far, Hidden };
 
 // ---- Settings ---------------------------------------------------------------------------
 
-/** How the title is built. Lying is S0. Both upright builds end with the title standing on
- *  its baseline: Climb assembles it in place bottom-up, units climbing the built face (S0b);
- *  Raise assembles each letter flat, then hinges it up on its bottom row (S0c). */
-enum class Build : std::uint8_t { Lying, Climb, Raise };
+/** How the title is built. Lying is S0. The upright builds end with the title standing on
+ *  its baseline: Climb assembles it in place bottom-up, units climbing the built face (S0b,
+ *  S0d); Raise assembles each letter flat, then hinges it up on its bottom row (S0c); Hybrid
+ *  climbs some letters and raises the others like drawbridges, in one sequence (S0e). */
+enum class Build : std::uint8_t { Lying, Climb, Raise, Hybrid };
 
 /** How tiers are chosen. Uniform modes exist to prove LOD changes cost, not the outcome. */
 enum class LodMode : std::uint8_t { Camera, AllHero, AllNear, AllFar };
@@ -119,6 +120,10 @@ struct IntroSettings
     std::uint32_t stuckTicks = 40; ///< Ticks without progress before a unit counts as stuck.
     float raiseDelay = 0.15F;      ///< Raise build: pause between a letter's last lock and its rise.
     float raiseSeconds = 0.9F;     ///< Raise build: duration of the hinge from flat to upright.
+    /** Hybrid build: bit per letter (C R U C I B L E = bits 0..7) to raise; the rest climb.
+     *  Zero chooses automatically: letters whose build depth is above the median are raised,
+     *  since depth is the climb's critical path. */
+    std::uint8_t hybridRaise = 0;
     WordmarkSettings wordmark{};
 };
 
@@ -175,6 +180,8 @@ struct RenderRow
     Tier tier;
     float actSince;
     std::uint8_t magnet;   ///< Active MagnetMode, 0 when off.
+    bool shaped;           ///< Locked into a tile: `shape` holds its morphed corners.
+    std::array<float, 6> shape;   ///< Corner offsets in the letter's plane (x, up), when shaped.
 };
 
 // ---- The intro --------------------------------------------------------------------------
@@ -202,6 +209,22 @@ public:
     [[nodiscard]] std::size_t slotCount() const { return slots_.size(); }
     /** @return Number of ribbon moorings. */
     [[nodiscard]] std::size_t ribbonCount() const { return ribbon_.size(); }
+    /** @return Letters raised like drawbridges (raise build: all; hybrid: the chosen ones). */
+    [[nodiscard]] std::uint32_t raisedLetterCount() const
+    {
+        std::uint32_t n = 0;
+        for (bool r : letterRaises_) n += r ? 1u : 0u;
+        return n;
+    }
+    /** @return Bit per letter (C R U C I B L E = bits 0..7) that is raised rather than climbed. */
+    [[nodiscard]] std::uint8_t raisedLetterMask() const
+    {
+        std::uint8_t m = 0;
+        for (std::size_t i = 0; i < letterRaises_.size(); ++i) m = static_cast<std::uint8_t>(m | (letterRaises_[i] ? 1u << i : 0u));
+        return m;
+    }
+    /** @return What tile morphing did to the outline. */
+    [[nodiscard]] const WordmarkStats& wordmarkStats() const { return wordmarkStats_; }
     /** @return Units given a slot by the planner. */
     [[nodiscard]] std::size_t assignedSlots() const { return assignedSlots_; }
 
@@ -239,13 +262,16 @@ private:
     [[nodiscard]] Camera cameraAt(float t) const;
     void buildConstruction();
     [[nodiscard]] bool supported(std::size_t slot, std::span<const std::uint8_t> locked) const;
-    [[nodiscard]] bool climbing() const { return settings_.build == Build::Climb; }
+    /** True when any letter is climbed (climb or hybrid build). */
+    [[nodiscard]] bool climbing() const { return anyClimb_; }
+    /** A unit bound for a climbed letter: it claims a slot at the base and climbs. */
+    [[nodiscard]] bool climber(const Mind& mind) const { return !mind.ribbon && mind.letter >= 0; }
     [[nodiscard]] bool oblique() const { return settings_.build != Build::Lying; }
     /** The sheet follows the act, never the position: climb-build title units are on the wall
      *  from the moment they step onto it until they lock. */
     [[nodiscard]] bool onWall(const Mind& mind) const
     {
-        return climbing() && !mind.ribbon && (mind.act == Act::Climb || mind.act == Act::Dock || mind.act == Act::Locked);
+        return climber(mind) && (mind.act == Act::Climb || mind.act == Act::Dock || mind.act == Act::Locked);
     }
     /** Raise build: hinge angle of a letter, 0 flat to pi/2 upright. */
     [[nodiscard]] float raiseAngle(std::uint8_t letter) const;
@@ -298,6 +324,7 @@ private:
     World world_;
     std::vector<sub0ecs::Entity> entities_;
     std::vector<Slot> slots_;
+    WordmarkStats wordmarkStats_{};
     std::vector<Pose> ribbon_;
     std::array<Lane, 3> lanes_{};
     std::size_t assignedSlots_ = 0;
@@ -315,6 +342,8 @@ private:
     std::vector<std::vector<std::uint32_t>> slotNeighbours_;
     std::vector<std::uint8_t> slotLocked_, gSlotLocked_, gSlotSeating_;
     std::array<std::uint32_t, 8> letterLocked_{};
+    std::array<bool, 8> letterClimbs_{}, letterRaises_{};   // per-letter build mode
+    bool anyClimb_ = false;
     std::array<float, 8> letterBaseMin_{}, letterBaseMax_{};   // ground-row x span per letter
     std::array<std::uint32_t, 8> letterInFlight_{};   // claimed, not yet locked
     std::array<bool, 8> letterUprightLogged_{};

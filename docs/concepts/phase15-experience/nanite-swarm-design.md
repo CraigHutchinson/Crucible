@@ -1,7 +1,7 @@
 # Nanite swarm behaviour: intro first, gameplay next
 
 Proposal and prototype, 2026-10-12. Extends the [director's brief](director-brief.md) and
-[experience design](experience-design.md). The S0 to S0d prototypes are
+[experience design](experience-design.md). The S0 to S0e prototypes are
 [spikes/swarm_intro](../../../spikes/swarm_intro/README.md).
 
 User direction, the same day:
@@ -12,6 +12,9 @@ User direction, the same day:
 - The sequence may run to **15 s**.
 - Tiles interlock into a solid join.
 - Behaviour is recorded through Sub0Log's JSONL diagnostics.
+- Climbing is closest to the intent, but the drawbridge stays active, to combine with
+  climbing for some parts: an "ultra hybrid".
+- Nanites can morph their triangle a little so complex outlines interlock with smooth edges.
 
 Sections 5 and 6 cover these. Nothing here changes gameplay
 rules, the biomass ledger or Phase14 gates. Every later stage is a reviewable proposal and
@@ -168,13 +171,27 @@ on a face, and whether this fits the twelve-second timeline. S0b and S0c test tw
 | Cost (host p50 / p95) | 0.71 / 3.84 ms | 0.38 / 3.11 ms |
 | Reads as | The swarm literally builds the word, letter tops last. Strong "engineered material" story. | A flat assembly that stands up in a rolling wave, letter by letter. Dramatic; keeps the twelve-second timing. |
 
-**Recommendation, revised for the 15 s allowance: S0d (climb) for the intro.** It completes
-at 11.8 s, leaving a one-second hold and the menu handoff by 15 s. It shows each nanite
-deciding, queueing and recovering on its own: the intelligence the intro is meant to sell.
-**S0c (raise) is the fallback** if the sequence must stay at twelve seconds, or as a
-reduced-cost tier: it is upright by 9.2 s at the lying build's cost. Both need the
-director's review of the beat. The climb build's open issue is lane-exit crowding (finding
-SW-F13).
+### Hybrid: climbing with drawbridges (S0e)
+
+Each letter now has its own build mode. In the hybrid build, letters whose build depth is
+above the median assemble flat and swing up as drawbridges; the others climb. Depth is the
+climb's critical path, and here that means C, R, C and E (chosen automatically; a mask
+overrides). Most of the swarm still queues, claims and climbs. Raised letters use planned
+slots, and the two modes never trade slots.
+
+| Upright build (1536 units, 1,066 morphed tiles) | Title complete | Worst ground contacts | Tick p50 |
+|---|---|---|---|
+| Climb (S0d) | 12.22 s | 7.6% | 0.66 ms |
+| Hybrid (S0e) | 10.88 s; raised letters upright by 8.88 s | 3.7% | 0.60 ms |
+| Raise (S0c) | upright by 9.08 s | 1.1% | 0.32 ms |
+
+**Recommendation: the hybrid for the director's review, climbing as its core.** The swarm
+visibly builds most of the word by climbing, the intended story. The drawbridge letters add
+a mechanical contrast and take the critical path off the climb: the title completes 1.3 s
+sooner with half the ground crowding. Pure climb remains the purist variant and raise the
+twelve-second fallback. The next step is a **per-part** hybrid: for example the E's arms or
+the R's bowl assembled flat and swung onto a climbed stem, so drawbridges happen during the
+climb rather than per letter.
 
 ### Toward three-axis interlocking
 
@@ -216,6 +233,21 @@ down on a lattice clipped to the strokes. A finished letter is one gap-free face
 tiles. Support through shared vertices makes the build shallower than stroke rows (13–17
 levels instead of 22). A tile looks the same every 120°, so seating turns at most 60°.
 
+**Morphing tiles.** Locked units morph their triangle so a letter's outline follows its
+strokes:
+- A notch between two tiles in a row is filled, and a tile held by a single edge is trimmed.
+- Each lattice corner on the outline moves toward the true outline by at most 0.35 of a
+  side; ground-row corners stay grounded.
+- A quality pass scales back corner moves until every tile keeps at least half its area.
+
+Moves belong to corners, not tiles, so neighbours always agree and joins stay seamless.
+Outline error falls 51% (RMS 0.624 to 0.308 units over 408 outline corners). It is gated:
+no tile below half its area, and at least a 40% cut.
+
+![Equilateral tiles: stepped outline](../../../spikes/swarm_intro/evidence/outline-unmorphed.svg)
+
+![Morphed tiles: smooth outline, seamless joins](../../../spikes/swarm_intro/evidence/outline-morphed.svg)
+
 **Diagnostics.** A bounded in-memory Sub0Log segment records eight numeric event types:
 claim, lock, stuck, recovered, magnet, letter, summary and supported. They are exported
 after the run as upstream schema-1 JSONL with a health receipt, following Crucible's runtime
@@ -236,15 +268,17 @@ about 9,100 records per climb run, with no drops in a 4 MiB segment.
 
 The [spike README](../../../spikes/swarm_intro/README.md) has commands, gates, the evidence
 table and images for all three builds. With camera LOD and 1536 units:
-- **Lying:** complete at 8.07 s (brief: 8.4 s), the ribbon by 10 s. Visible contacts peak at
-  1.8% and no pair comes closer than 0.66 diameter. Uniform near and far tiers reach the same
-  result at about the same time.
-- **Raise:** upright by 9.18 s.
-- **Climb:** complete at 11.83 s. Ground contacts reach 9.2% at the lane exits, and climbers
-  are off the built face for 0.27% of climber-ticks.
+- **Lying:** complete at 8.12 s (brief: 8.4 s), the ribbon by 10 s. Visible contacts peak at
+  1.5% and no pair comes closer than 0.64 diameter.
+- **Raise:** upright by 9.08 s.
+- **Climb:** complete at 12.22 s. Ground contacts reach 7.6% at the lane exits, and climbers
+  are off the built face for 0.29% of climber-ticks.
+- **Hybrid:** complete at 10.88 s.
 
-Ticks run 0.25–0.71 ms p50 on a shared cloud host. 16,384 units still meet every deadline.
-Release, Debug and ASan/UBSan pass all six CTest cases with identical state hashes.
+Ticks run 0.29–0.66 ms p50 on a shared cloud host. 16,384 units still meet every deadline.
+Release, Debug and ASan/UBSan pass all eight CTest cases with identical state hashes.
+
+![Hybrid build: drawbridge letters and climbed letters](../../../spikes/swarm_intro/evidence/hybrid.svg)
 
 ![Raise build: letters assemble flat, then stand up](../../../spikes/swarm_intro/evidence/raise.svg)
 
@@ -265,9 +299,11 @@ Release, Debug and ASan/UBSan pass all six CTest cases with identical state hash
 | SW-F9 | Assemble-flat-then-raise is upright by 9.2 s at lying-build cost. | Twelve-second fallback; the raise would replace the brief's camera rise as the shot04/05 beat (director decision). |
 | SW-F10 | First-come claiming, momentum through waypoints, clinging beside unsupported tiles and a flowing heap at the base complete the climb at 11.8 s. | Recommended intro build for the 15 s sequence. |
 | SW-F11 | Stuck detection with wait, push and reclaim resolves every episode in these runs. Whole-lane car-following was rejected: lanes from rest jammed and the lying build slowed from 8 s to 15 s. | Contingency is local and episodic; queueing belongs at the base, not in the lanes. |
-| SW-F12 | Tessellation gives a solid face and a shallower build; letter outlines are stepped where the lattice is clipped. | Edge-trim (half tiles) in S2; the stepped edge is the current look. |
+| SW-F12 | Tessellation gives a solid face and a shallower build; equilateral tiles leave a stepped outline. | Addressed by morphing (SW-F16). |
 | SW-F13 | The climb build's lane exits crowd: up to 9% ground contacts at 1536 units, about 12% at scale. | Lane design (per-letter lanes or a wider landing zone) in S2, not more tuning. |
 | SW-F14 | Sub0Log JSONL diagnostics found the climb bottleneck and verify event integrity per build. | Keep event schemas with each behaviour stage; use `supported` latency as the climb's tuning metric. |
+| SW-F15 | Raising the deepest letters while the rest climb completes 1.3 s sooner than pure climbing, with half the ground crowding. | Recommended intro build; per-part drawbridges next. |
+| SW-F16 | Corner morphing of up to 0.35 side halves the outline error with every tile keeping half its area; larger limits add little. Fill and trim of spikes were prerequisites. | Default morph 0.35; faint steps on some stems are the place for a sub-tile edge piece; a gradual morph while seating belongs to S1. |
 
 ## 8. Iteration plan: building blocks with review gates
 
@@ -280,9 +316,10 @@ post-journey gameplay proposals.
 | **S0** done | Headless ECS swarm, tiers, wave, planner, lanes, docking, resolve; lying title; 2D captures | This review | User reviews beats, tiers and findings; agrees on the behaviour vocabulary |
 | **S0b** done | Upright by climbing: support rule, build graph, two-surface climbing, staging, layered flow, surface routing, pipelined seating | This review | Records why honest climbing misses the brief's timing |
 | **S0c** done | Upright by raising: flat assembly, then each letter hinges up on its baseline | This review | Twelve-second fallback |
-| **S0d** done | Climb without a preset order: first-come claims, stuck contingencies, selective magnetism, tessellated solid tiles, Sub0Log JSONL diagnostics with an independent receiver; 15 s sequence | This review | User and director choose the upright build (recommended: climb) |
+| **S0d** done | Climb without a preset order: first-come claims, stuck contingencies, selective magnetism, tessellated solid tiles, Sub0Log JSONL diagnostics with an independent receiver; 15 s sequence | This review | Climbing confirmed as the core intent (user) |
+| **S0e** done | Hybrid build (per-letter drawbridge or climb) and morphing tiles for smooth outlines | This review | Director reviews the hybrid as the intro build |
 | **S1** | Production renderer consumes a per-tick instance packet (world pose, plane tilt, lift, act, core intensity, render LOD) from the chosen build; perspective lens path from the brief | P15-R0 Filament scene | Native capture against hero and storyboard concepts; wedges grounded; upright title readable with bloom off and in grayscale |
-| **S2** | Choreography authoring: per-letter lanes or a wider landing zone (SW-F13); tile edge-trim (SW-F12); lanes and stroke order as data; the raise beat if raise is chosen (what visibly lifts the letter: a wave of units pushing under the hinge, rise order and easing); optional hero-letter climbing finish; climb arcs; traveling cyan accent; idle micro-behaviour for locked heroes (breathing core, settle wobble); skip jumps to an authored settled snapshot; reduced motion selects the still | P15-E0 frontend | Director pass (brief section 8); skip and reduced-motion receiving; temporal review of motion, not stills |
+| **S2** | Choreography authoring: per-part drawbridges during the climb (SW-F15); per-letter lanes or a wider landing zone (SW-F13); sub-tile edge pieces where stems stay stepped (SW-F16); lanes and stroke order as data; the raise beat if raise is chosen (what visibly lifts the letter: a wave of units pushing under the hinge, rise order and easing); optional hero-letter climbing finish; climb arcs; traveling cyan accent; idle micro-behaviour for locked heroes (breathing core, settle wobble); skip jumps to an authored settled snapshot; reduced motion selects the still | P15-E0 frontend | Director pass (brief section 8); skip and reduced-motion receiving; temporal review of motion, not stills |
 | **S3** | Performance: event-driven wave; Sub0Pipeline row ranges for behaviour and resolve; hero candidate cap per frame; optional GPU compute route for far and hidden tiers | Named device | p95 and p99 inside the brief's proposed 16.67/20 ms with rendering included; measured, never inferred from S0 |
 | **S4** | Upstream feedback: tier tag migration cost and partition churn in Sub0ECS; frozen gather and grid as a reusable pattern only if a second consumer appears | Sub0ECS | Measured reproduction; no speculative API |
 | **S5** | Menu backdrop: the ribbon idles cheaply behind the menu, never as a live mission | P15-J0 menu | Zero gameplay ticks; stops under reduced motion |
@@ -368,8 +405,8 @@ where distant units enter the frame. It must not cost title readability.
 4. Is the "superposition haze" presentation for distant units welcome in the intro, or
    reserved for the Quantum gameplay layer?
 5. Which section 10 mechanic should be the first post-journey gameplay spike?
-6. Upright build: climb (recommended for 15 s, complete at 11.8 s, the swarm visibly builds
-   the word) or raise (9.2 s, the twelve-second fallback)?
+6. Upright build: hybrid (recommended, 10.9 s), pure climb (12.2 s) or raise (9.1 s, the
+   twelve-second fallback)? Which parts should become drawbridges in the per-part hybrid?
 7. Does the raise beat replace the brief's camera rise toward a frontal baseline, or play
    under it?
 8. Should the claim, stuck and magnet rules carry into gameplay as the authoritative

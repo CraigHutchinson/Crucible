@@ -42,7 +42,9 @@ def load(path):
         x, y, z, h, act, tier, since = fields[:7]
         plane = float(fields[7]) if len(fields) > 7 else 0.0   # tilt about x: 0 ground, pi/2 wall
         magnet = int(fields[8]) if len(fields) > 8 else 0      # 1 lift, 2 push, 3 seat
-        rows.append((float(x), float(y), float(z), float(h), act, int(tier), float(since), plane, magnet))
+        # Locked tiles carry their morphed corners (letter plane: x along, y up the letter).
+        shape = tuple(float(v) for v in fields[9:15]) if len(fields) >= 15 else None
+        rows.append((float(x), float(y), float(z), float(h), act, int(tier), float(since), plane, magnet, shape))
     return {"time": t, "cx": cx, "cy": cy, "hw": hw, "aspect": aspect, "view": view, "tilt": tilt, "tile": tile, "rows": rows}
 
 
@@ -121,7 +123,7 @@ def draw_frame(frame, size=(960, 540), mode="beauty"):
         order = sorted(frame["rows"], key=lambda r: (-r[1], r[2]))
     else:
         order = sorted(frame["rows"], key=lambda r: (r[4] not in rest, r[2]))
-    for x, y, z, heading, act, tier, since, plane, magnet in order:
+    for x, y, z, heading, act, tier, since, plane, magnet, shape in order:
         px, py = project(x, y, z)
         if px < -20 or px > w + 20 or py < -20 or py > h + 20:
             continue
@@ -149,7 +151,11 @@ def draw_frame(frame, size=(960, 540), mode="beauty"):
         if scale < 3.0:
             draw.point((px, py), fill)
             continue
-        if frame["tile"] > 0.0:
+        if shape is not None:
+            # Morphed tile: corners in the letter's plane, mapped through the plane tilt.
+            inset = 0.97
+            points = [project(x + shape[k] * inset, y + shape[k + 1] * inset * cp, z + shape[k + 1] * inset * sp) for k in (0, 2, 4)]
+        elif frame["tile"] > 0.0:
             # Tessellated: equilateral tiles (inset 4% so the joins read) that interlock.
             radius = frame["tile"] / math.sqrt(3.0) * 0.96
             third = 2.0 * math.pi / 3.0
