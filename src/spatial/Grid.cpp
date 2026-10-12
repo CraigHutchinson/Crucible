@@ -124,7 +124,8 @@ bool Grid::TryRebuild(std::span<const SpatialSample> samples) noexcept {
         })) return false;
     std::copy(samples.begin(), samples.end(), m_Pending.begin());
     auto pending = std::span{m_Pending}.first(samples.size());
-    std::ranges::sort(pending, {}, &SpatialSample::id);
+    if (!std::ranges::is_sorted(pending, {}, &SpatialSample::id))
+        std::ranges::sort(pending, {}, &SpatialSample::id);
     if (std::ranges::adjacent_find(pending, [](const auto& left, const auto& right) {
             return left.id == right.id;
         }) != pending.end()) return false;

@@ -166,7 +166,8 @@ void Simulation::tick() {
             });
             auto input = std::span{state.tick_input}.first(index);
             auto output = std::span{state.next_state}.first(index);
-            std::ranges::sort(input, {}, &SampleState::id);
+            if (!std::ranges::is_sorted(input, {}, &SampleState::id))
+                std::ranges::sort(input, {}, &SampleState::id);
             for (std::size_t i = 0; i < index; ++i)
                 state.samples[i] = {state.tick_input[i].id, state.tick_input[i].position};
             statistics.inputRows = index;
@@ -387,7 +388,9 @@ std::optional<ScenarioStateInfo> Simulation::TryCopyState(StateCopyDestination d
         destination.samples[index++] = {id, position, velocity, state.Activity(id)};
     });
     // Population and identities are private and fixed after construction.
-    std::ranges::sort(destination.samples.first(count), {}, &SampleState::id);
+    const auto samples = destination.samples.first(count);
+    if (!std::ranges::is_sorted(samples, {}, &SampleState::id))
+        std::ranges::sort(samples, {}, &SampleState::id);
     static_cast<void>(state.fields.TryCopyEdits(destination.fields));
     for (std::size_t row = 0; row < state.options.grid.rows; ++row)
         for (std::size_t column = 0; column < state.options.grid.columns; ++column)
