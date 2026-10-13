@@ -16,6 +16,8 @@ namespace
 constexpr float kPi = std::numbers::pi_v<float>;
 constexpr int kResolvePasses = 8;
 constexpr float kLiftBoost = 1.6F;
+constexpr float kClimbBrake = 100.0F;  // climber deceleration assumed for cornering, of the 140 the motion allows
+constexpr float kCornerRunOn = 4.0F;   // run-on past a waypoint allowed on a straight continuation
 constexpr float kHeapDepth = 4.0F;   // climb build: depth in front of the wall where seekers heap and flow   // climb speed multiplier while drawn up by the built face
 
 /** splitmix32-style hash: deterministic personality without a shared RNG stream. */
@@ -532,7 +534,7 @@ void SwarmIntro::planAssignment(std::span<const Pose> bed)
     assignedSlots_ = slotted;
     std::uint32_t maxHop = 1;
     for (std::size_t k = 0; k < slotted; ++k) maxHop = std::max(maxHop, hop_[order[k]]);
-    hopDelay_ = std::max(settings_.tickSeconds, settings_.answerWindow / static_cast<float>(maxHop));
+    hopDelay_ = std::max(stepSeconds(), settings_.answerWindow / static_cast<float>(maxHop));
 
     // Letter groups per lane: C R U | C I B | L E.
     auto laneOfLetter = [](std::uint8_t letter) -> std::uint8_t { return letter < 3 ? 0 : (letter < 6 ? 1 : 2); };
@@ -578,17 +580,24 @@ void SwarmIntro::planAssignment(std::span<const Pose> bed)
         }
     }
 
-    // Ribbon moorings: next units in wake order, far-first along x from the bed centre.
+    // Ribbon moorings: the next units in wake order take the moorings farthest from the bed
+    // centre, matched by x rank so no unit crosses the stage (a crossing unit was the last
+    // to moor, measured at pace 2/3). Rank matching minimises total and worst travel along x.
     std::vector<std::uint32_t> ribbonOrder(ribbon_.size());
     for (std::uint32_t r = 0; r < ribbon_.size(); ++r) ribbonOrder[r] = r;
     std::stable_sort(ribbonOrder.begin(), ribbonOrder.end(), [&](std::uint32_t a, std::uint32_t b) {
         return std::abs(ribbon_[a].x) > std::abs(ribbon_[b].x);
     });
+    std::vector<std::uint32_t> mooringUnits(order.begin() + static_cast<std::ptrdiff_t>(slotted),
+                                            order.begin() + static_cast<std::ptrdiff_t>(slotted + moored));
+    std::vector<std::uint32_t> moorings(ribbonOrder.begin(), ribbonOrder.begin() + static_cast<std::ptrdiff_t>(moored));
+    std::stable_sort(mooringUnits.begin(), mooringUnits.end(), [&](std::uint32_t a, std::uint32_t b) { return bed[a].x < bed[b].x; });
+    std::stable_sort(moorings.begin(), moorings.end(), [&](std::uint32_t a, std::uint32_t b) { return ribbon_[a].x < ribbon_[b].x; });
     for (std::size_t m = 0; m < moored; ++m)
     {
-        Mind* mind = world_.find<Mind>(entities_[order[slotted + m]]);
+        Mind* mind = world_.find<Mind>(entities_[mooringUnits[m]]);
         mind->ribbon = true;
-        mind->goal = static_cast<std::int32_t>(ribbonOrder[m]);
+        mind->goal = static_cast<std::int32_t>(moorings[m]);
     }
 }
 
@@ -734,7 +743,7 @@ void SwarmIntro::forNeighbours(float x, float y, float radius, F&& f) const
 void SwarmIntro::tick()
 {
     metrics_ = TickMetrics{};
-    time_ = static_cast<float>(tickIndex_ + 1) * settings_.tickSeconds;
+    time_ = static_cast<float>(tickIndex_ + 1) * stepSeconds();
     camera_ = cameraAt(time_);
 
     auto start = Clock::now();
@@ -811,6 +820,7 @@ void SwarmIntro::gather()
             diagnostics_->supported(tickIndex_, q, slots_[q].letter, slotDepth_[q], owner, ownerAct, distance);
         }
     }
+    if (climbing()) updateClimbable();
     gLetterFrontier_.fill(-1);
     for (std::size_t a = 0; a < slots_.size(); ++a)
     {
@@ -998,7 +1008,7 @@ bool SwarmIntro::climbDesire(std::uint32_t unit, Pose& pose, Mind& mind, Desire&
         const float dist = std::hypot(dx, dy);
         // Waypoints keep momentum but never fling a unit past them within one tick's reach.
         const float speed = brake ? std::min(speedCap, dist * 5.0F + 0.5F)
-                                  : std::min(speedCap, dist / settings_.tickSeconds * 0.5F + settings_.cruiseSpeed * 0.25F);
+                                  : std::min(speedCap, dist / stepSeconds() * 0.5F + settings_.cruiseSpeed * 0.25F);
         if (dist > 1e-4F)
         {
             d.vx = dx / dist * speed;
@@ -1034,9 +1044,10 @@ bool SwarmIntro::climbDesire(std::uint32_t unit, Pose& pose, Mind& mind, Desire&
         const std::uint8_t letterIndex = slots_[goal].letter;
         // At the base within reach of a ground tile it can stand on (never over a gap).
         const bool atBase = std::abs(pose.y - by) < 1.2F && std::abs(pose.x - bx) < 1.2F * settings_.diameter;
-        // Nothing to climb yet (for example a scaffold stem still lying flat): wait in front of
-        // the wall rather than hang on it. Ground-row tiles can always be started.
-        if (!atBase || (slotDepth_[goal] > 0 && gLetterFrontier_[letterIndex] < 0)) return true;
+        // Nothing to climb yet: wait in front of the wall rather than hang on it. Ground-row
+        // tiles can always be started; a slot reachable only over a scaffold panel waits until
+        // that panel is upright (flat-locked panel tiles count as locked but carry nobody up).
+        if (!atBase || (slotDepth_[goal] > 0 && gLetterFrontier_[letterIndex] < 0) || !slotClimbable_[goal]) return true;
         // Step across the seam wherever the unit meets the base: same world point, now on the
         // wall sheet, facing up.
         pose.y = wallBand_ + 0.05F;
@@ -1088,13 +1099,34 @@ bool SwarmIntro::climbDesire(std::uint32_t unit, Pose& pose, Mind& mind, Desire&
     }
     // Route over the built surface: step to the next locked unit on a path toward the slot.
     // Lift magnetism: in contact with the built face, the structure draws the climber up.
-    const std::int64_t step = surfaceStep(pose, goal);
+    std::int64_t after = -1;
+    const std::int64_t step = surfaceStep(pose, goal, &after);
     const bool contact = step >= 0 && std::hypot(slots_[static_cast<std::size_t>(step)].x - pose.x,
                                                   slotWallY_[static_cast<std::size_t>(step)] - pose.y) < 2.0F * settings_.wordmark.pitch;
     const float speed = contact ? climbSpeed * kLiftBoost : climbSpeed;
     setMagnet(unit, mind, MagnetMode::Lift, contact);
-    // Waypoints carry momentum; only the final approach brakes.
-    if (step >= 0) steer(slots_[static_cast<std::size_t>(step)].x, slotWallY_[static_cast<std::size_t>(step)], speed, false);
+    // Waypoints carry momentum into a straight continuation but brake into a corner: the
+    // unit must be able to stop within the waypoint distance plus a run-on that shrinks with
+    // the turn, or its momentum carries it off the stroke (measured: a climber turning from
+    // the R's base up its stem overshot three units into the counter).
+    if (step >= 0)
+    {
+        const std::size_t s0 = static_cast<std::size_t>(step);
+        // The last waypoint before the goal is treated as a corner: what follows is the cling
+        // or the dock, both slow.
+        const float ix = slots_[s0].x - pose.x, iy = slotWallY_[s0] - pose.y;
+        const float in = std::hypot(ix, iy);
+        float straight = 0.0F;
+        if (after >= 0)
+        {
+            const std::size_t s1 = static_cast<std::size_t>(after);
+            const float ox = slots_[s1].x - slots_[s0].x, oy = slotWallY_[s1] - slotWallY_[s0];
+            const float out = std::hypot(ox, oy);
+            straight = in > 1e-3F && out > 1e-3F ? std::max(0.0F, (ix * ox + iy * oy) / (in * out)) : 1.0F;
+        }
+        const float cap = std::min(speed, std::sqrt(2.0F * kClimbBrake * (in + kCornerRunOn * straight)));
+        steer(slots_[s0].x, slotWallY_[s0], cap, false);
+    }
     else steer(slots_[slotRoot_[goal]].x, wallBand_ + 0.05F, climbSpeed);   // nothing built yet: wait at the base
     // Anticipation: close to its slot, a waiting climber already turns to the stroke's
     // heading, so it can slide in the moment its support seats.
@@ -1106,7 +1138,40 @@ bool SwarmIntro::climbDesire(std::uint32_t unit, Pose& pose, Mind& mind, Desire&
     return true;
 }
 
-std::int64_t SwarmIntro::surfaceStep(const Pose& pose, std::size_t goal)
+void SwarmIntro::updateClimbable()
+{
+    // A slot can be climbed toward once some path from the ground reaches it without crossing
+    // a scaffold panel that is still flat or rising: climbed tiles count (climbers build them),
+    // panel tiles only once standing. Recomputed when a panel stands; one BFS over the slots.
+    std::size_t standingPanelTiles = 0;
+    for (std::size_t a = 0; a < slots_.size(); ++a) standingPanelTiles += slotPanel_[a] >= 0 && slotStanding_[a] ? 1u : 0u;
+    if (standingPanelTiles == climbableEpoch_ && !slotClimbable_.empty()) return;
+    climbableEpoch_ = standingPanelTiles;
+    slotClimbable_.assign(slots_.size(), 0);
+    std::deque<std::uint32_t> frontier;
+    const auto passable = [&](std::uint32_t a) { return slotPanel_[a] < 0 || slotStanding_[a] != 0; };
+    for (std::uint32_t a = 0; a < slots_.size(); ++a)
+    {
+        if (slotDepth_[a] == 0 && passable(a))
+        {
+            slotClimbable_[a] = 1;
+            frontier.push_back(a);
+        }
+    }
+    while (!frontier.empty())
+    {
+        const std::uint32_t a = frontier.front();
+        frontier.pop_front();
+        for (std::uint32_t b : slotNeighbours_[a])
+        {
+            if (slotClimbable_[b] || !passable(b)) continue;
+            slotClimbable_[b] = 1;
+            frontier.push_back(b);
+        }
+    }
+}
+
+std::int64_t SwarmIntro::surfaceStep(const Pose& pose, std::size_t goal, std::int64_t* after)
 {
     // Shortest-path search over the letter's locked slots (the frozen gather) and the ground
     // between its strokes, from the slot the climber stands on to a locked support of its goal, or failing that to the locked
@@ -1197,9 +1262,15 @@ std::int64_t SwarmIntro::surfaceStep(const Pose& pose, std::size_t goal)
             if (slotDepth_[b] == 0 && gSlotSeating_[b]) relax(a, b);
         }
     }
-    // Walk back to the first step after the standing slot.
+    // Walk back to the first step after the standing slot, noting the step that follows it.
     std::uint32_t at = target;
-    while (at != start && routeParent_[at] != start) at = routeParent_[at];
+    std::int64_t next = -1;
+    while (at != start && routeParent_[at] != start)
+    {
+        next = at;
+        at = routeParent_[at];
+    }
+    if (after) *after = next;
     return at;
 }
 
@@ -1242,7 +1313,7 @@ void SwarmIntro::advanceAct(std::uint32_t unit, Pose& pose, Mind& mind)
 
 void SwarmIntro::integrate(Pose& pose, Motion& motion, float vx, float vy, const Desire& d, float turnRate)
 {
-    const float dt = settings_.tickSeconds;
+    const float dt = stepSeconds();
     const float accel = 140.0F * dt;
     float ax = vx - motion.vx, ay = vy - motion.vy;
     const float a = std::hypot(ax, ay);
@@ -1347,7 +1418,7 @@ void SwarmIntro::heroChoose(const Identity& id, const Pose& pose, float& vx, flo
 void SwarmIntro::behaviourSystems()
 {
     const float d = settings_.diameter;
-    const float dt = settings_.tickSeconds;
+    const float dt = stepSeconds();
 
     // Hero: full per-unit decision making (sampled RVO, anticipation, climb, nuanced turns).
     world_.each<Identity, Pose, Motion, Mind, HeroTier>([&](Identity& id, Pose& pose, Motion& motion, Mind& mind, HeroTier&) {
@@ -1625,12 +1696,13 @@ void SwarmIntro::claimSystem()
 
 void SwarmIntro::contingencySystem()
 {
-    // Stuck intelligence. A unit whose progress stalls for stuckTicks decides what to do:
+    // Stuck intelligence. A unit whose progress stalls for stuckSeconds decides what to do:
     // Wait when a senior unit beside it is still moving (it is simply queued behind it);
     // otherwise Push, switching on repelling magnetism briefly so juniors and idle units step
     // aside. Still stuck after three times as long, a seeker or climber Reclaims: it gives up
     // its slot and takes a free one (rejoining the queue on the ground). Serial, identity order.
-    const std::uint32_t limit = settings_.stuckTicks;
+    const auto ticksFor = [&](float seconds) { return std::max(1u, static_cast<std::uint32_t>(seconds / stepSeconds() + 0.5F)); };
+    const std::uint32_t limit = ticksFor(settings_.stuckSeconds);
     world_.each<Identity, Pose, Motion, Mind>([&](Identity& id, Pose& pose, Motion&, Mind& mind) {
         const std::uint32_t i = id.index;
         if (mind.pushTicks > 0 && --mind.pushTicks == 0) setMagnet(i, mind, MagnetMode::Push, false);
@@ -1672,7 +1744,7 @@ void SwarmIntro::contingencySystem()
             const Contingency choice = seniorMoving ? Contingency::Wait : Contingency::Push;
             if (choice == Contingency::Push)
             {
-                mind.pushTicks = 30;
+                mind.pushTicks = static_cast<std::uint16_t>(std::min(65535u, ticksFor(settings_.pushSeconds)));
                 setMagnet(i, mind, MagnetMode::Push, true);
                 ++metrics_.pushes;
             }

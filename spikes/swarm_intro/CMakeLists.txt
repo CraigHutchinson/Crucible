@@ -9,7 +9,7 @@ if(BUILD_TESTING)
     find_package(Python3 REQUIRED COMPONENTS Interpreter)
     foreach(build IN ITEMS lying raise climb hybrid scaffold)
         add_test(NAME swarm_intro_diagnostics_${build}
-            COMMAND Python3::Interpreter ${CMAKE_CURRENT_SOURCE_DIR}/verify_diagnostics.py $<TARGET_FILE:crucible_swarm_intro> --build ${build} --seconds 15)
+            COMMAND Python3::Interpreter ${CMAKE_CURRENT_SOURCE_DIR}/verify_diagnostics.py $<TARGET_FILE:crucible_swarm_intro> --build ${build})
         set_tests_properties(swarm_intro_diagnostics_${build} PROPERTIES LABELS "presentation;spike;diagnostics" TIMEOUT 300)
     endforeach()
 endif()
