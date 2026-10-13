@@ -14,7 +14,7 @@ Four PNGs were imported through Git LFS into `docs/concepts/nanite/assets/` in a
 follow-up (hashes verified against provenance.md); the docs embed them.
 
 
-## Nanite swarm behaviour design and S0-S0l spikes,2026-10-12/13
+## Nanite swarm behaviour design and S0-S0m spikes,2026-10-12/13
 
 Session `claude/crucible-nanite-swarm-design-89vg5m` claims only new paths
 `spikes/swarm_intro/` and `docs/concepts/phase15-experience/nanite-swarm-design.md`,

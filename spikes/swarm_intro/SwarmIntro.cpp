@@ -1651,16 +1651,14 @@ void SwarmIntro::behaviourSystems()
         advanceAct(id.index, pose, mind);
     });
 
-    // Hidden: analytic goal motion only; no neighbour queries and no overlap handling.
+    // Hidden: goal motion only; no neighbour queries and no overlap handling. It shares the
+    // other tiers' motion model (acceleration limit, turn rate), so off-screen units reach the
+    // same goals: setting velocity directly made units overshoot a waypoint every tick and
+    // turn back forever, and two climb slots were never filled in isolation (SW-F31).
     world_.each<Identity, Pose, Motion, Mind, HiddenTier>([&](Identity& id, Pose& pose, Motion& motion, Mind& mind, HiddenTier&) {
         if (restAct(mind.act)) return;
         const Desire want = desire(id, pose, mind);
-        motion.vx = want.vx;
-        motion.vy = want.vy;
-        pose.x += motion.vx * dt;
-        pose.y += motion.vy * dt;
-        if (want.hasFace) pose.heading = want.faceHeading;
-        else if (std::hypot(motion.vx, motion.vy) > 0.5F) pose.heading = std::atan2(motion.vy, motion.vx);
+        integrate(pose, motion, want.vx, want.vy, want, 20.0F);
         pose.z = flows(pose, mind) ? settings_.body.height : 0.0F;
         advanceAct(id.index, pose, mind);
     });
@@ -2044,7 +2042,7 @@ void SwarmIntro::resolveSystem()
 
 void SwarmIntro::lodSystem()
 {
-    // Decision LOD from the camera: who earns full per-unit intelligence this tick.
+    // Decision LOD (lod mode): who earns full per-unit intelligence this tick.
     const Camera& cam = camera_;
     const float margin = 0.15F * cam.halfWidth + 4.0F * settings_.diameter;
     const float ppu = cam.pixelsPerUnit();
@@ -2057,6 +2055,29 @@ void SwarmIntro::lodSystem()
         case LodMode::AllHero: want = Tier::Hero; break;
         case LodMode::AllNear: want = Tier::Near; break;
         case LodMode::AllFar: want = Tier::Far; break;
+        case LodMode::AllHidden: want = Tier::Hidden; break;
+        case LodMode::Activity:
+        {
+            // What the unit is doing decides how much it thinks; the camera does not. Building
+            // acts get separation (near) and compete for the hero cap by how contended they
+            // are; cruising and mooring units take the O(1) crowd response (far). Nothing is
+            // hidden: off-screen units run the same logic as on-screen ones.
+            const bool building = !mind.ribbon && (mind.act == Act::Seek || mind.act == Act::Queue ||
+                                                   mind.act == Act::Climb || mind.act == Act::Dock);
+            want = building ? Tier::Near : Tier::Far;
+            if (!building || restAct(mind.act)) break;
+            // Contention first: stuck, pushing, docking, climbing, queueing, seeking.
+            float rank = 5.0F;
+            if (mind.stuckSince != 0) rank = 0.0F;
+            else if (mind.pushTicks > 0) rank = 1.0F;
+            else if (mind.act == Act::Dock) rank = 2.0F;
+            else if (mind.act == Act::Climb) rank = 3.0F;
+            else if (mind.act == Act::Queue) rank = 4.0F;
+            // Within a rank, the longest in its act first (fraction keeps ranks apart).
+            const float age = std::clamp((time_ - mind.actSince) / 100.0F, 0.0F, 0.99F);
+            heroCandidates_.push_back({ rank + (1.0F - age), i });
+            break;
+        }
         case LodMode::Camera:
         {
             float vx, vy;
@@ -2082,7 +2103,7 @@ void SwarmIntro::lodSystem()
         }
         desiredTier_[i] = static_cast<std::uint8_t>(want);
     });
-    if (settings_.lod == LodMode::Camera)
+    if (settings_.lod == LodMode::Camera || settings_.lod == LodMode::Activity)
     {
         const std::size_t cap = std::min(settings_.heroCap, heroCandidates_.size());
         std::partial_sort(heroCandidates_.begin(), heroCandidates_.begin() + static_cast<std::ptrdiff_t>(cap), heroCandidates_.end());
@@ -2128,7 +2149,7 @@ void SwarmIntro::lodSystem()
             }
             if ((to == Tier::Hero) != (round == 1)) continue;
             if (round == 0) pendingTicks_[i] = static_cast<std::uint8_t>(std::min(255, pendingTicks_[i] + 1));
-            const bool immediate = from == Tier::Hidden || settings_.lod != LodMode::Camera;
+            const bool immediate = from == Tier::Hidden || (settings_.lod != LodMode::Camera && settings_.lod != LodMode::Activity);
             if (!immediate && pendingTicks_[i] < 6 && round == 0) continue;
             if (to == Tier::Hero && heroes >= heroCap) continue;
             migrate(i, from, to);

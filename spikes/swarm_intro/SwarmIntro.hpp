@@ -103,7 +103,10 @@ enum class Tier : std::uint8_t { Hero, Near, Far, Hidden };
 enum class Build : std::uint8_t { Lying, Climb, Raise, Hybrid, Scaffold };
 
 /** How tiers are chosen. Uniform modes exist to prove LOD changes cost, not the outcome. */
-enum class LodMode : std::uint8_t { Camera, AllHero, AllNear, AllFar };
+/** Decision LOD: who earns which behaviour tier. Camera: by on-screen position and size.
+ *  Activity: by what a unit is doing, independent of the camera (the camera then drives
+ *  only presentation fidelity). All*: one tier for every unit, the isolation gates. */
+enum class LodMode : std::uint8_t { Camera, AllHero, AllNear, AllFar, AllHidden, Activity };
 
 struct IntroSettings
 {
@@ -125,7 +128,7 @@ struct IntroSettings
     float answerWindow = 1.9F;     ///< Wave reaches the last slotted unit by answerAt+window.
     float ribbonAt = 5.6F;         ///< Surplus units leave the bed for the ribbon (shot05 lead-in).
     std::size_t heroCap = 128;     ///< Upper bound on full per-unit decision makers.
-    LodMode lod = LodMode::Camera;
+    LodMode lod = LodMode::Activity;   ///< Decision LOD; the camera drives only presentation fidelity (S0m).
     Build build = Build::Lying;
     float viewTilt = 0.4F;         ///< Upright builds' view: screen y = height + tilt * depth (oblique front camera).
     std::uint32_t claimCap = 96;   ///< Climb build: slots claimed but not yet locked, per letter and depth layer.

@@ -78,7 +78,16 @@ struct RunSummary
 std::string label(const IntroSettings& s)
 {
     const char* build = s.build == Build::Lying ? "lying" : (s.build == Build::Climb ? "climb" : (s.build == Build::Raise ? "raise" : (s.build == Build::Hybrid ? "hybrid" : "scaffold")));
-    const char* lod = s.lod == LodMode::Camera ? "camera" : (s.lod == LodMode::AllHero ? "uniform-hero" : (s.lod == LodMode::AllNear ? "uniform-near" : "uniform-far"));
+    const char* lod = "uniform-far";
+    switch (s.lod)
+    {
+    case LodMode::Camera: lod = "camera"; break;
+    case LodMode::Activity: lod = "activity"; break;
+    case LodMode::AllHero: lod = "uniform-hero"; break;
+    case LodMode::AllNear: lod = "uniform-near"; break;
+    case LodMode::AllFar: lod = "uniform-far"; break;
+    case LodMode::AllHidden: lod = "uniform-hidden"; break;
+    }
     return std::string(build) + "/" + lod;
 }
 
@@ -321,6 +330,8 @@ bool parse(int argc, char** argv, Options& o)
             else if (m == "hero") o.settings.lod = LodMode::AllHero;
             else if (m == "near") o.settings.lod = LodMode::AllNear;
             else if (m == "far") o.settings.lod = LodMode::AllFar;
+            else if (m == "hidden") o.settings.lod = LodMode::AllHidden;
+            else if (m == "activity") o.settings.lod = LodMode::Activity;
             else return false;
         }
         else return false;
@@ -341,7 +352,7 @@ int main(int argc, char** argv)
     if (!parse(argc, argv, options))
     {
         std::fprintf(stderr,
-                     "usage: crucible_swarm_intro [--verify] [--build lying|climb|raise|hybrid|scaffold] [--raise-letters MASK] [--rows] [--morph F] [--layers N] [--count N] [--hero-cap N] [--lod camera|hero|near|far]\n"
+                     "usage: crucible_swarm_intro [--verify] [--build lying|climb|raise|hybrid|scaffold] [--raise-letters MASK] [--rows] [--morph F] [--layers N] [--count N] [--hero-cap N] [--lod camera|activity|hero|near|far|hidden]\n"
                      "                            [--seconds S] [--pace P] [--close-pace P] [--frames DIR] [--every TICKS] [--metrics FILE]\n"
                      "                            [--events-jsonl FILE] [--health-json FILE] [--claim-cap N]\n");
         return 2;
@@ -397,22 +408,33 @@ int main(int argc, char** argv)
         const RunSummary again = run(options, false);
         if (again.hash != main.hash) return fail("identical runs produce identical state");
 
-        // LOD changes cost and texture, never the outcome: a uniform far tier completes too.
-        Options far = options;
-        far.settings.lod = LodMode::AllFar;
-        const RunSummary farRun = run(far, false);
-        print(label(far.settings), far, farRun);
-        if (farRun.allLocked < 0.0F || farRun.allLocked > (build == Build::Climb || build == Build::Hybrid || build == Build::Scaffold ? 14.0F : 10.0F)) return fail("uniform far tier completes the title");
-        if (build == Build::Lying)
+        // Isolation: every discrete decision tier, given the whole swarm on its own, must
+        // converge to the same goal (LOD changes cost and texture, never the outcome), and so
+        // must the other LOD mode. Convergence: the title locked (and raised) by the end of
+        // the build's sequence, every lock supported, no unit left stuck. Visible tiers keep
+        // the contact gates; hidden units are never drawn, so they have none. How closely the
+        // tiers agree is reported (spread), not yet gated: full deliberation (hero) is the
+        // slowest (SW-F31).
+        const bool climbs = build == Build::Climb || build == Build::Hybrid || build == Build::Scaffold;
+        const float deadline = climbs ? 15.0F : 12.0F;
+        const LodMode other = options.settings.lod == LodMode::Camera ? LodMode::Activity : LodMode::Camera;
+        float fastest = main.allLocked, slowest = main.allLocked;
+        for (const LodMode mode : { other, LodMode::AllHero, LodMode::AllNear, LodMode::AllFar, LodMode::AllHidden })
         {
-            Options hero = options;
-            hero.settings.lod = LodMode::AllHero;
-            const RunSummary heroRun = run(hero, false);
-            print(label(hero.settings), hero, heroRun);
-            // Full deliberation everywhere is slower (measured): it must still finish. 11.0 s for
-            // 959 row slots, scaled to 12.5 s when tessellation raised the count to 1104.
-            if (heroRun.allLocked < 0.0F || heroRun.allLocked > 12.5F) return fail("uniform hero tier completes the title by 12.5s");
+            Options tier = options;
+            tier.settings.lod = mode;
+            const RunSummary r = run(tier, false);
+            print(label(tier.settings), tier, r);
+            if (r.allLocked < 0.0F || r.allLocked > deadline) return fail("every LOD tier in isolation completes the title within the sequence");
+            if (r.panels > 0 && (r.allRaised < 0.0F || r.allRaised > deadline)) return fail("every LOD tier in isolation raises every panel within the sequence");
+            if (r.unsupported != 0) return fail("every LOD tier in isolation locks only on locked supports");
+            if (r.stuckAtEnd != 0) return fail("every LOD tier in isolation resolves every stuck episode");
+            if (mode != LodMode::AllHidden && (r.worstOverlapRatio > 0.03F || r.minVisibleGap < 0.5F))
+                return fail("every visible LOD tier in isolation keeps contacts at most 3% and gaps at least 0.5d");
+            fastest = std::min(fastest, r.allLocked);
+            slowest = std::max(slowest, r.allLocked);
         }
+        std::printf("{\"isolation\":{\"fastest_s\":%.3f,\"slowest_s\":%.3f,\"spread_s\":%.3f}}\n", fastest, slowest, slowest - fastest);
         std::printf("{\"verify\":\"PASS\"}\n");
         return 0;
     }
