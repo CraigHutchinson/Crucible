@@ -376,8 +376,9 @@ int main(int argc, char** argv)
             // one-second hold and the menu handoff by 15 s.
             if (main.allLocked < 0.0F || main.allLocked > 12.5F) return fail("climbed title complete by 12.5s");
             if (main.climberTicks == 0 || main.offSurface * 200 > main.climberTicks) return fail("climbers stay attached to the built face (<=0.5% of climber-ticks off)");
-            if (main.worstOverlapRatio > 0.10F) return fail("visible ground contacts at most 10% per tick");
-            if (main.minVisibleGap < 0.3F) return fail("no visible ground mover passes through another (gap >= 0.3d)");
+            // Tightened with lane branching (S0h): was 10% and 0.3d while lane exits funnelled.
+            if (main.worstOverlapRatio > 0.03F) return fail("visible ground contacts at most 3% per tick");
+            if (main.minVisibleGap < 0.5F) return fail("no visible ground mover passes through another (gap >= 0.5d)");
             break;
         }
 
