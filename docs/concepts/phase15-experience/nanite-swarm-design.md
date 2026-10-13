@@ -154,22 +154,25 @@ climbers also flow over each other in layers rather than colliding (section 5).
 
 ### The nanite's 3D body (S0j)
 
-The director brief defines the unit: "an engineered low asymmetrical triangular body, with
-distinct beveled planes, a recessed protected cyan core and dark mechanical seams", the
-same construction for letter bodies and foreground units. S0j gives the prototype that
-body, specified once (`NaniteBody.hpp`) and consumed twice: the simulation takes its
-stacking heights from it, the renderer builds its mesh from it (frame captures carry the
-dimensions, and a test holds the Python defaults to the C++ ones).
+The concepts define the unit's shape: in `docs/concepts/units-v1.png` and the phase 15 hero,
+a nanite is a slender arrowhead dart, with a raised spine from the rear to the nose, faceted
+plates falling away from it, a steep rear facet and a cyan core set into the body. The
+director brief adds "an engineered low asymmetrical triangular body, with distinct beveled
+planes, a recessed protected cyan core and dark mechanical seams", the same construction
+for letter bodies and foreground units. S0j gives the prototype that body, specified once
+(`NaniteBody.hpp`) and consumed twice: the simulation takes its stacking heights from it,
+the renderer builds its mesh from it (frame captures carry the dimensions, and a test holds
+the Python defaults to the C++ ones).
 
 | Part | Construction | Why |
 |---|---|---|
-| Footprint | The tile: a triangle whose inscribed circle is one diameter, morphed on locked tiles | The tessellation, the support graph and the morph are unchanged |
-| Walls | Vertical, from the footprint to a shoulder | Any tiling of footprints stays flush in 3D: neighbours share wall quads, so a solid letter has no gaps |
-| Chamfer | From the shoulder inward to an inset top face; the nose chamfer is twice the rear ones | The brief's beveled planes; the seams between bodies are the chamfers' V-grooves |
-| Top | Slopes from the rear (0.55 d) to the nose (0.30 d) | The wedge: an asymmetric silhouette that reads its heading even when small |
-| Core | A recessed hexagon on the top face, toward the rear where the body is thickest | Protected core; locked cores settle to a steady glow, subordinate to the silver |
+| Footprint | A free unit: a dart 1.9 × 0.9 diameters, nose forward. A locked unit: its (morphed) title tile, nose at the apex | Darts as in the concepts; tiles keep the tessellation, support graph and morph unchanged (the nanites morph as they seat) |
+| Walls | Vertical, from the footprint to a low shoulder | Any tiling of footprints stays flush in 3D: neighbours share wall quads, so a solid letter has no gaps |
+| Spine | From just behind the nose (0.22 d high) to just inside the rear edge (0.55 d) | The concept's raised keel; the low nose and high rear make the wedge read its heading |
+| Roof | Five facets from the shoulder ring to the spine, the rear one steep | The beveled planes; in a letter they give the hero's faceted, pyramidal surface; the seams are the facets' V-grooves |
+| Core | A cyan diamond set into the spine near the rear, on the two rear-side facets | Protected core; locked cores settle to a steady glow, subordinate to the silver |
 
-The body height (0.55 diameter) was already the prototype's stacking step: a climber over
+The spine height (0.55 diameter) was already the prototype's stacking step: a climber over
 the rest layer rose 0.55, a stacked climber 1.1. Those now come from the body, so a
 single-layer run is bit-identical. A depth layer (S0i) is one body thick: 0.55 instead of
 the placeholder 1.0, which moves the front layer and so changes two-layer state hashes.
@@ -179,7 +182,8 @@ Rendering follows the brief's tactical LOD: at 6 pixels per unit and up, bodies 
 and the core's recess ring from 10 px, because closer to the title distance they turn the
 letters into texture; below 6 px units are silhouettes, below 3 px points. This is still a
 2D stand-in: one key light and flat shading with a controlled highlight, no shadows, no
-real-time materials. S1 takes the same body into the production renderer.
+real-time materials, and a free dart snaps to its tile footprint when it locks (a gradual
+morph is S1). S1 takes the same body into the production renderer.
 
 ### Decision tiers
 
@@ -355,9 +359,9 @@ Moves belong to corners, not tiles, so neighbours always agree and joins stay se
 Outline error falls 51% (RMS 0.624 to 0.308 units over 408 outline corners). It is gated:
 no tile below half its area, and at least a 40% cut.
 
-![Equilateral tiles: stepped outline](../../../spikes/swarm_intro/evidence/outline-unmorphed.svg)
+![Equilateral tiles: stepped outline](../../../spikes/swarm_intro/evidence/outline-unmorphed.png)
 
-![Morphed tiles: smooth outline, seamless joins](../../../spikes/swarm_intro/evidence/outline-morphed.svg)
+![Morphed tiles: smooth outline, seamless joins](../../../spikes/swarm_intro/evidence/outline-morphed.png)
 
 **Diagnostics.** A bounded in-memory Sub0Log segment records eight numeric event types:
 claim, lock, stuck, recovered, magnet, letter, summary and supported. They are exported
@@ -371,9 +375,9 @@ waypoint. Fixing that took the climb from not finishing in 16 s to 11.8 s. This 
 second consumer of Sub0Log's JSONL path in Crucible, and the first with high event volume:
 about 9,100 records per climb run, with no drops in a 4 MiB segment.
 
-![Climb build: magnet modes (cyan lift, white seat, amber push)](../../../spikes/swarm_intro/evidence/climb-magnets.svg)
+![Climb build: magnet modes (cyan lift, white seat, amber push)](../../../spikes/swarm_intro/evidence/climb-magnets.png)
 
-![Climb build close-up: climbers flowing over solid tiles](../../../spikes/swarm_intro/evidence/climb-closeup.svg)
+![Climb build close-up: climbers flowing over solid tiles](../../../spikes/swarm_intro/evidence/climb-closeup.png)
 
 ## 7. Prototype results
 
@@ -393,11 +397,11 @@ Ticks run 0.11–0.48 ms p50 per presented tick on a shared cloud host. 16,384 u
 meet every deadline. Release, Debug and ASan/UBSan pass all ten CTest cases with identical
 state hashes.
 
-![Hybrid build: drawbridge letters and climbed letters](../../../spikes/swarm_intro/evidence/hybrid.svg)
+![Hybrid build: drawbridge letters and climbed letters](../../../spikes/swarm_intro/evidence/hybrid.png)
 
-![Raise build: letters assemble flat, then stand up](../../../spikes/swarm_intro/evidence/raise.svg)
+![Raise build: letters assemble flat, then stand up](../../../spikes/swarm_intro/evidence/raise.png)
 
-![Climb build: letters grow upright, bottom-up](../../../spikes/swarm_intro/evidence/climb.svg)
+![Climb build: letters grow upright, bottom-up](../../../spikes/swarm_intro/evidence/climb.png)
 
 ### Findings that shape the next iterations
 
@@ -427,7 +431,7 @@ state hashes.
 | SW-F23 | Staggered layers of the same tiling give 3D interlocking with the existing support rule: face links between overlapping wedges of adjacent layers carry depth through the bond. Two layers (2,146 tiles, 3,072 units) pass every gate; scaffold completes at 10.68 s. | S0i; `--layers 2`. The intro can carry depth if the director wants a title with thickness; the cost is units (twice the tiles) and per-tick time (scaffold p50 1.1–1.3 ms against 0.5 ms). |
 | SW-F24 | Doubling the tiles crowded the stage: wider lanes alone fixed lying and raise; climbing letters' waiting crowds needed to heap (flow over each other) like the wall-base heap. Panels deadlocked once when a front panel wedge waited on a climbed wedge behind it. | Capacity rules scale with the layer count; face backing for flat assembly counts only the same flat body. |
 | SW-F25 | Three layers leave one enclosed front-layer pocket unfilled. | A no-enclosed-holes build order (TERMES) before more than two layers. |
-| SW-F26 | A 3D body with vertical walls on the tile footprint keeps the tessellation gap-free in 3D with no change to the build: neighbours share wall quads, the chamfers form the seams. The existing stacking step (0.55 d) is the body height. | S0j; one body specification (`NaniteBody.hpp`) feeds the simulation and the renderer, tested for parity. S1 consumes it. |
+| SW-F26 | A 3D body with vertical walls on the tile footprint keeps the tessellation gap-free in 3D with no change to the build: neighbours share wall quads, the roof facets form the seams. The concept dart (spine, faceted roof, core in the spine) works on any triangular footprint, so free darts and locked tiles share one construction. The existing stacking step (0.55 d) is the spine height. | S0j; one body specification (`NaniteBody.hpp`) feeds the simulation and the renderer, tested for parity. S1 consumes it. |
 | SW-F27 | Full seams and recess rings at title distance (8 px per unit) turned the letters to texture. | LOD the details, not just the mesh: silhouette and core first, seams only close up (brief: tactical LODs preserve silhouette and core location). |
 | SW-F16 | Corner morphing of up to 0.35 side halves the outline error with every tile keeping half its area; larger limits add little. Fill and trim of spikes were prerequisites. | Default morph 0.35; faint steps on some stems are the place for a sub-tile edge piece; a gradual morph while seating belongs to S1. |
 

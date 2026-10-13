@@ -49,26 +49,31 @@ assembly.
 
 ## The 3D nanite body (S0j)
 
-Each nanite is a low, asymmetric, beveled wedge with a recessed cyan core, as the
-director brief describes the concept unit. `NaniteBody.hpp` specifies it once:
-- the **footprint** is the tile (inscribed circle one diameter; a locked unit's is its
-  morphed tile), and the **walls** rise vertically from it, so neighbours share wall
+Each nanite is the concepts' slender arrowhead dart (`docs/concepts/units-v1.png`): a raised
+spine from the rear to the nose, faceted plates falling away from it, a steep rear facet
+and a cyan core set into the spine. `NaniteBody.hpp` specifies it once:
+- a **free unit's footprint** is a dart (1.9 × 0.9 diameters); a **locked unit's** is its
+  morphed tile, nose at the apex, so the nanites change shape as they seat;
+- **walls** rise vertically from the footprint to a low shoulder, so neighbours share wall
   quads and a tessellated letter stays gap-free in 3D;
-- a **chamfer** runs from the walls' shoulder inward to the top face, twice as wide at the
-  nose, and the **top** slopes from the rear (0.55 d) to the nose (0.30 d): a wedge that
-  reads its heading;
-- the **core** is a recessed hexagon on the top face toward the rear; a locked unit's core
-  settles to a steady glow, subordinate to the silver.
+- the **spine** runs from just behind the nose (0.22 d high) to just inside the rear edge
+  (0.55 d), and five **roof facets** join it to the shoulders: the beveled planes, and in a
+  letter the hero's faceted surface;
+- the **core** is a cyan diamond in the spine near the rear; a locked unit's core settles to
+  a steady glow, subordinate to the silver.
 
 The simulation takes its stacking heights from the body (the rest-layer lift and the depth
-layer are one body height), and frame captures carry the dimensions in their header. The
+layer are one spine height), and frame captures carry the dimensions in their header. The
 renderer (`nanite_mesh.py`) builds every body's mesh in one batched pass, lights it with a
 cool grazing key and a controlled highlight, culls back faces and paints faces far to near.
 Detail is levelled by on-screen size: meshes from 6 px per unit, seams from 14 px and core
 recess rings from 10 px; silhouettes below 6 px and points below 3 px.
 `test_nanite_mesh.py` checks the mesh invariants (footprint and vertical walls, shared
-walls between neighbours, outward faces, the wedge, the core on the top face) and that its
-defaults match `NaniteBody.hpp`.
+walls between neighbours, outward faces, the spine, the core on the roof, the dart) and
+that its defaults match `NaniteBody.hpp`.
+
+Evidence images are PNG sheets stored through Git LFS (256-colour palette, tens of
+kilobytes each), not SVG: mesh frames made vector sheets of up to 2 MB.
 
 ## 3D tessellation (S0i)
 
@@ -212,7 +217,7 @@ cmake --build --preset release --target crucible_swarm_intro
 ctest --preset release -R swarm_intro      # 7 --verify cases, 6 diagnostics receivers, the mesh test
 ./build/release/spikes/swarm_intro/crucible_swarm_intro --build scaffold \
     --events-jsonl events.jsonl --health-json health.json --frames frames --every 1
-python3 spikes/swarm_intro/render_swarm.py frames --sheet beats.svg --magnets magnets.svg \
+python3 spikes/swarm_intro/render_swarm.py frames --sheet beats.png --magnets magnets.png \
     --times 6.0,7.0,7.8,8.6,9.6,11.3 --mp4 intro.mp4     # MP4 needs ffmpeg on PATH
 ```
 
@@ -300,27 +305,27 @@ p50 fell because the per-tick work shrinks with the smaller step. The whole sequ
 
 ### Lying (S0)
 
-![Lying build: six beats](evidence/beats.svg)
+![Lying build: six beats](evidence/beats.png)
 
 Beats at 1.0, 3.0, 5.0, 6.8, 8.4 and 11.9 s: one wedge wakes; the answer wave spreads and
 units turn toward their lanes; three lanes, each splaying into a fan over its second half;
 tiles fill far-first while the surplus leaves for
 the ribbon; title complete; camera opens.
 
-![Lying build: LOD tiers](evidence/tiers.svg)
+![Lying build: LOD tiers](evidence/tiers.png)
 
 Same frames coloured by decision tier: amber hero, cyan near, violet far.
 
 ### Raise (S0c)
 
-![Raise build: six beats](evidence/raise.svg)
+![Raise build: six beats](evidence/raise.png)
 
 At 5.0, 6.8, 7.6, 8.4, 9.2 and 11.9 s through the oblique camera: letters assembling flat;
 nearly complete; the first letters rising; most upright; all upright; camera opens.
 
 ### Hybrid (S0e)
 
-![Hybrid build: drawbridge letters and climbed letters](evidence/hybrid.svg)
+![Hybrid build: drawbridge letters and climbed letters](evidence/hybrid.png)
 
 At 6.0, 7.0, 7.8, 8.4, 9.2 and 10.5 s: the first C has already swung up while the swarm
 climbs the U, I, B and L; the R and second C rise; the E rises as the climbed letters grow;
@@ -328,12 +333,12 @@ the climbed letters finish; complete at 9.2 s.
 
 ### Scaffold (S0f)
 
-![Scaffold build: stems swing up, the swarm climbs them](evidence/scaffold.svg)
+![Scaffold build: stems swing up, the swarm climbs them](evidence/scaffold.png)
 
 At 6.0, 7.0, 7.8, 8.6, 9.6 and 10.5 s: stems assembled flat; the first stems and the Cs swing
 up; climbers gather at the bases; arms and bowls grow from the standing stems; complete.
 
-![Scaffold close-up: B, L and E](evidence/scaffold-closeup.svg)
+![Scaffold close-up: B, L and E](evidence/scaffold-closeup.png)
 
 The B, L and E at 6.6, 7.2, 7.8, 8.4, 9.2 and 10.5 s: the L and E stems rise as drawbridges
 (foreshortened while rising) while climbers wait at the E's base; then they pour over the
@@ -341,28 +346,29 @@ standing stems to build the E's arms and the B's bowls.
 
 ### The 3D nanite body (S0j)
 
-![3D nanite bodies: the wake, macro to pullback](evidence/body-macro.svg)
+![3D nanite bodies: the wake, macro to pullback](evidence/body-macro.png)
 
-Shot01 to shot02 at 0.6, 1.0, 1.4, 2.0, 3.0 and 4.0 s: the bed of dormant wedges (dark
-cores), the first core lit, the answer wave lighting neighbours, units lifting off the bed
-and the stream forming. Bevels, the sloped tops and the recessed cores read at macro range;
-by 4.0 s the camera is far enough that units are small bodies with bright cores.
+Shot01 to shot02 at 0.6, 1.4, 2.0, 2.4, 3.0 and 4.0 s: the bed of dormant darts (dark
+cores), the first core lit, the answer wave lighting neighbours, darts lifting off the bed
+and the stream forming. The spines, faceted roofs and cores read at macro range; heading
+away from the camera a dart shows its steep rear facet and core; by 4.0 s units are small
+bodies with bright cores.
 
-![3D nanite bodies in the title: B and L at 35 degrees of yaw](evidence/body-title.svg)
+![3D nanite bodies in the title: B and L at 35 degrees of yaw](evidence/body-title.png)
 
 The B and L at 8.6, 9.6 and 11.0 s, yawed 35°: the finished letters are faceted plates of
-wedges with flush walls and chamfer seams; the L stem stands as a raised panel; climbers
+ridged tiles with flush walls and facet seams, like the hero concept; the L stem stands as a raised panel; climbers
 still flowing over the B are lit brighter; settled cores glow steadily.
 
 ### 3D tessellation (S0i)
 
-![Two depth layers: the scaffold build seen at 30 degrees of yaw](evidence/layers.svg)
+![Two depth layers: the scaffold build seen at 30 degrees of yaw](evidence/layers.png)
 
 The scaffold build with two staggered layers, the camera yawed 30° so the depth shows: stem
 panels assemble flat as two-layer slabs and swing up; climbers build both layers of the
 arms and bowls, the front layer held by the face behind it; complete at 10.6 s.
 
-![Two depth layers, close-up of the B, L and E](evidence/layers-closeup.svg)
+![Two depth layers, close-up of the B, L and E](evidence/layers-closeup.png)
 
 The B, L and E at 35° of yaw: the L stem rising as a slab, its thickness and the back
 layer's darker edge visible; the staggered joints between the layers show where tile
@@ -370,9 +376,9 @@ edges cross.
 
 ### Morphing tiles
 
-![Equilateral tiles: saw-tooth outline](evidence/outline-unmorphed.svg)
+![Equilateral tiles: saw-tooth outline](evidence/outline-unmorphed.png)
 
-![Morphed tiles: outline follows the strokes](evidence/outline-morphed.svg)
+![Morphed tiles: outline follows the strokes](evidence/outline-morphed.png)
 
 The C, R and U at 12.5, 13.5 and 14.9 s in the climb build, first with `--morph 0`, then
 with the default morph. The bowls, counters and stroke ends follow the outline; joins stay
@@ -380,17 +386,17 @@ seamless.
 
 ### Climb (S0b, S0d)
 
-![Climb build: six beats](evidence/climb.svg)
+![Climb build: six beats](evidence/climb.png)
 
 At 5.0, 6.5, 8.0, 9.5, 11.0 and 14.9 s: footings; letters growing bottom-up; climbers
 pouring over the face; readable; nearly complete; complete at 11.0 s with the hold and camera
 opening by 15 s (22.5 s on screen).
 
-![Climb build: selective magnetism](evidence/climb-magnets.svg)
+![Climb build: selective magnetism](evidence/climb-magnets.png)
 
 The same frames by magnet mode: cyan lift, white seat, amber push; grey units are off.
 
-![Climb build: close-up of the C and R](evidence/climb-closeup.svg)
+![Climb build: close-up of the C and R](evidence/climb-closeup.png)
 
 At 6.5–12.0 s: climbers (lighter) flowing over the solid tiles, the build front rising, and
 the finished letters as single faces.

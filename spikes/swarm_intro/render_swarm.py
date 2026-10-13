@@ -7,8 +7,8 @@ camera. It shows choreography, spacing and LOD tiers; it is not production fidel
     crucible_swarm_intro --frames frames --every 2
     python3 render_swarm.py frames --sheet beats.svg --tiers tiers.svg --gif intro.gif
 
-Sheets ending in .svg are written as vectors (the committed evidence); other extensions
-are rasterised with Pillow. Sheet --times are choreography seconds; GIF and MP4 play at the
+Sheets ending in .png (the committed evidence, stored through Git LFS) are rasterised with a
+256-colour palette to stay small; .svg writes vectors; other extensions are plain rasters. Sheet --times are choreography seconds; GIF and MP4 play at the
 presentation pace recorded in each capture (see IntroSettings::pace).
 
     crucible_swarm_intro --build scaffold --frames frames --every 1
@@ -232,21 +232,21 @@ def draw_bodies(draw, bodies, frame, size, scale, oblique, tilt, cyaw, syaw):
     w, h = size
     cx, cy = frame["cx"], frame["cy"]
     body = frame["body"]
-    side = frame["tile"] if frame["tile"] > 0.0 else math.sqrt(3.0)
     n = len(bodies)
     origin = np.array([[b[0], b[1], b[2]] for b in bodies])
     heading = np.array([b[3] for b in bodies])
     plane = np.array([b[4] for b in bodies])
     shaped = np.array([b[5] is not None for b in bodies])
-    free = nanite_mesh.equilateral(side)
+    free = nanite_mesh.dart(body)
     corners = np.empty((n, 3, 2))
     for k, b in enumerate(bodies):
         corners[k] = np.array(b[5]).reshape(3, 2) if b[5] is not None else free
-    # Free units point with corner 0 (their heading); a title tile with its apex (corner 2).
+    # Free units are darts pointing along their heading (corner 0); a locked unit takes its
+    # tile's footprint with the nose at the tile's apex (corner 2).
     nose = np.where(shaped, 2, 0)
     local = nanite_mesh.build(corners, nose, body)
     world = nanite_mesh.to_world(local, origin, heading, plane, ~shaped)
-    disc, halo = nanite_mesh.core(local, nose, body)
+    disc, halo = nanite_mesh.core(local, body)
     disc = nanite_mesh.to_world(disc, origin, heading, plane, ~shaped)
     halo = nanite_mesh.to_world(halo, origin, heading, plane, ~shaped)
     # View: the direction along which screen position is constant, pointing away from us.
@@ -282,11 +282,15 @@ def draw_bodies(draw, bodies, frame, size, scale, oblique, tilt, cyaw, syaw):
             role = nanite_mesh.ROLE[f]
             seam = tuple(int(v * 0.5) for v in colour) if role != "wall" and scale >= SEAM_SCALE else None
             polys.append((float(centre @ away), [tuple(p) for p in pts[k, list(face)]], colour, seam))
-            if role == "top" and core is not None:
-                if scale >= RING_SCALE:
-                    ring = tuple(int(v * 0.30) for v in base)
-                    polys.append((float(centre @ away) - 1e-3, [tuple(p) for p in halo_pts[k]], ring, None))
-                polys.append((float(centre @ away) - 2e-3, [tuple(p) for p in disc_pts[k]], core, None))
+        # The core spans the two rear-side facets either side of the spine: drawn just in
+        # front of them whenever either faces the camera.
+        holders = [f for f in nanite_mesh.CORE_FACES if facing[k, f] > 1e-4]
+        if core is not None and holders:
+            depth = min(float(world[k, list(nanite_mesh.FACES[f])].mean(axis=0) @ away) for f in holders)
+            if scale >= RING_SCALE:
+                ring = tuple(int(v * 0.30) for v in base)
+                polys.append((depth - 1e-3, [tuple(p) for p in halo_pts[k]], ring, None))
+            polys.append((depth - 2e-3, [tuple(p) for p in disc_pts[k]], core, None))
     polys.sort(key=lambda item: -item[0])
     for _, points, colour, seam in polys:
         draw.polygon(points, colour, seam)
@@ -311,6 +315,12 @@ def sheet(frames, times, mode, path, yaw=0.0):
     out = Image.new("RGB", (width, height), (40, 40, 40))
     for i, tile in enumerate(tiles):
         out.paste(tile.image(), ((i % columns) * 644, (i // columns) * 364))
+    if path.suffix == ".png":
+        # Committed evidence is PNG through Git LFS: a 256-colour palette keeps a sheet to a
+        # few hundred kilobytes (the flat-shaded frames have few distinct colours).
+        out = out.quantize(colors=256, method=Image.Quantize.MEDIANCUT, dither=Image.Dither.NONE)
+        out.save(path, optimize=True)
+        return
     out.save(path)
 
 

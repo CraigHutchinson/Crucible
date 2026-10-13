@@ -3,26 +3,28 @@
 namespace crucible::spike::swarm
 {
 /** The nanite's 3D body, the single source for the simulation's stacking heights and the
- *  renderer's mesh (director brief: "an engineered low asymmetrical triangular body, with
- *  distinct beveled planes, a recessed protected cyan core and dark mechanical seams";
- *  letter bodies and foreground units share the same construction).
+ *  renderer's mesh (nanite_mesh.py). The concepts (docs/concepts/units-v1.png, the phase 15
+ *  hero) show a slender arrowhead dart: a raised spine from the rear to the nose, faceted
+ *  plates falling away from it, a steep rear facet and a cyan core set into the spine. The
+ *  director brief: "an engineered low asymmetrical triangular body, with distinct beveled
+ *  planes, a recessed protected cyan core and dark mechanical seams"; letter bodies and
+ *  foreground units share the same construction.
  *
- *  Footprint: a triangle whose inscribed circle is one diameter, so a side is sqrt(3)
- *  diameters, the title's tile. A locked unit's footprint is its morphed tile. Side walls
- *  rise vertically from the footprint, so any tiling of footprints stays flush and gap-free
- *  in 3D; a chamfer then runs from the walls' shoulder to an inset top face. The body is a
- *  wedge: the top slopes from the rear edge down to the nose (the corner it points with),
- *  and the nose chamfer is wider than the rear ones, so the silhouette reads its heading.
- *  The core sits in a recess on the top face, toward the rear, where the body is thickest.
- *  All lengths are in nanite diameters. */
+ *  The construction works on any triangular footprint with a nose corner: vertical walls to
+ *  a low shoulder, a spine from just behind the nose (low) to just inside the rear edge
+ *  (high), and five roof facets from the shoulder ring to the spine. A free unit's footprint
+ *  is a dart; a locked unit's is its (morphed) title tile, so the walls of neighbouring tiles
+ *  coincide and a tessellated letter stays gap-free in 3D. All lengths are in nanite
+ *  diameters; fractions are of the named distance. */
 struct NaniteBody
 {
-    float height = 0.55F;       ///< Rear height: one stacking layer (climbers flowing over the rest layer, depth layers).
-    float noseHeight = 0.30F;   ///< Height at the nose: the wedge's ramp.
-    float shoulder = 0.55F;     ///< Fraction of the local height where the vertical wall meets the chamfer.
-    float bevel = 0.16F;        ///< Rear corners' chamfer: top corner inset toward the centroid, fraction of its distance.
-    float noseBevel = 0.34F;    ///< Nose chamfer, wider: the asymmetry that points the body.
-    float coreRadius = 0.15F;   ///< Recessed core radius.
-    float coreOffset = 0.12F;   ///< Core shift from the top face's centroid toward the rear edge.
+    float height = 0.55F;       ///< Spine height at the rear: one stacking layer (climbers over the rest layer, depth layers).
+    float noseHeight = 0.22F;   ///< Spine height at its front: the wedge's ramp.
+    float shoulder = 0.40F;     ///< Wall height as a fraction of the local spine height.
+    float spineFront = 0.28F;   ///< Spine front: from the nose toward the centroid.
+    float spineRear = 0.14F;    ///< Spine rear: from the rear edge's midpoint toward the centroid.
+    float dartLength = 1.90F;   ///< Free unit footprint: nose to rear edge (the concept dart is about twice as long as wide).
+    float dartWidth = 0.90F;    ///< Free unit footprint: rear edge width.
+    float coreLength = 0.36F;   ///< Core diamond length along the spine.
 };
 } // namespace crucible::spike::swarm
