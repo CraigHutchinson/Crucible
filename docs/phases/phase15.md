@@ -104,7 +104,8 @@ for the 15s sequence, with raise as the 12s fallback. The sequence plays at 2/3 
 to 1/2 while a cinematic camera follows the construction close up before pulling out to the
 whole logo (28.8s on screen), so the climbing reads. Decision LOD blends each unit's
 activity with camera focus through adjustable levers and a deterministic budget, heroes
-deliberate on a duty cycle, and every behaviour tier is gated to converge on its own. Tiles interlock and morph for smooth outlines, and can stack in staggered depth layers (3D tessellation); each nanite renders as a low-poly tetrahedral proxy (shell, recessed shields, one core) of the [nanite design space](../concepts/nanite/README.md), which owns its form.
+deliberate on a duty cycle, and every behaviour tier is gated to converge on its own. A rule-based camera operator
+journeys with the construction under motion limits. Tiles interlock and morph for smooth outlines, and can stack in staggered depth layers (3D tessellation); each nanite renders as a low-poly tetrahedral proxy (shell, recessed shields, one core) of the [nanite design space](../concepts/nanite/README.md), which owns its form.
 The spike records Sub0Log JSONL events checked by an independent receiver.
 Its S1-S5 stages are proposals for P15-E0/R0 review, not dispatched work. Its gameplay
 stages keep camera-independent authority, with a view-owned embellishment layer.

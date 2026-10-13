@@ -48,6 +48,9 @@ User direction, the same day:
   interleaved duty cycle, a System 1 of cheap functions every tick and a System 2 of
   decisions at a lower cadence; presentation interpolated or extrapolated to the display
   rate (section 4, S0n).
+- 2026-10-13: the camera should be a fluid journey, with rotation and fly-through; not hard
+  coded but responsive or predictive, a semi-intelligent camera operator; smoothing what
+  exists is close enough for now, without learned models (section 4, S0o).
 
 Sections 4 to 6 cover these. Times in this document are **choreography seconds**: the
 authored beats. At the default pace of 2/3 a viewer sees each 1.5× longer, and the close-up
@@ -171,6 +174,20 @@ or oblique, and the input to camera LOD:
    from one side of the title to the other as it moves along it ("around").
 3. Four seconds before the sequence ends, the pull-out to the whole title; the hold; and a
    1.5 s opening toward the menu that extends the sequence.
+
+**Camera operator (S0o).** The follow camera above made close-ups, but no journey:
+building runs on several letters at once, so the busiest section flipped between the ends of
+the title and the camera crossed it at full speed (SW-F35). The camera is now operated in two
+parts. The operator (System 2, four times a presented second) chooses the shot: the scripted
+path outside the tour; inside it, title sections scored by building now and building
+predicted (units heading for slots there), discounted by the travel to reach them and
+favouring the current sweep, held at least 3 s, framed to the activity's spread, creeping in
+while held, widening on long moves (the fly-through arc) and orbiting with a slow drift. The
+rig (System 1, every tick) moves toward the shot on critically damped springs under pan,
+acceleration, zoom and yaw limits in presented time. No learned model is involved: these are
+a camera operator's rules of thumb (look where the action will be, do not whip-pan, hold a
+shot, travel with purpose) made deterministic. A learned or authored shot grammar can
+replace the operator later without changing the rig.
 
 The camera reads the previous tick's state, so the run stays deterministic. It is still a
 2D stand-in: there is no perspective, so "through" is a close dolly past the letters, not a
@@ -360,8 +377,8 @@ on a face, and whether this fits the twelve-second timeline. S0b and S0c test tw
 | Order | None preset (S0d): units queue at their letter's base and claim the lowest supportable tile nearest them, first come, first served. | Planned slots, as in S0. |
 | Support | A tile is fillable only from the ground or a locked lower neighbour. Locks never happen unsupported (verified). | The letter is one rigid interlocked body during the rise, pivoting on the ground row. |
 | Surfaces | Two connected 2D surfaces: ground and wall face, joined at the base. Climbers route over built units (shortest path, strokes linked through the ground), drawn up by lift magnetism, and flow over each other in layers. | One surface (ground); the rise is a pose transform of locked units. |
-| Title complete (1536 units) | 10.85 s (S0b with a preset order: 13.45 s) | 7.78 s flat; every letter upright by 8.83 s |
-| Cost (host p50 / p95 per presented tick) | 0.64 / 3.42 ms | 0.37 / 1.44 ms |
+| Title complete (1536 units) | 11.10 s (S0b with a preset order: 13.45 s) | 7.72 s flat; every letter upright by 8.77 s |
+| Cost (host p50 / p95 per presented tick) | 0.64 / 5.13 ms | 0.35 / 1.50 ms |
 | Reads as | The swarm literally builds the word, letter tops last. Strong "engineered material" story. | A flat assembly that stands up in a rolling wave, letter by letter. Dramatic; keeps the twelve-second timing. |
 
 ### Hybrid: climbing with drawbridges (S0e)
@@ -374,10 +391,10 @@ slots, and the two modes never trade slots.
 
 | Upright build (1536 units, 1,066 morphed tiles) | Title complete | Worst ground contacts | Tick p50 |
 |---|---|---|---|
-| Climb (S0d) | 10.85 s | 0% | 0.64 ms |
-| Hybrid (S0e) | 9.00 s; raised letters upright by 7.99 s | 0% | 0.46 ms |
-| Scaffold (S0f) | 10.57 s; stem panels upright by 7.93 s | 0% | 0.79 ms |
-| Raise (S0c) | upright by 8.83 s | 0% | 0.37 ms |
+| Climb (S0d) | 11.10 s | 0% | 0.64 ms |
+| Hybrid (S0e) | 9.02 s; raised letters upright by 8.00 s | 0% | 0.51 ms |
+| Scaffold (S0f) | 11.28 s; stem panels upright by 8.12 s | 0% | 0.69 ms |
+| Raise (S0c) | upright by 8.77 s | 0% | 0.35 ms |
 
 Choreography seconds with lane branching (S0h) and blend LOD (S0n); on screen the S0l tour
 plays at half speed.
@@ -397,7 +414,7 @@ ground reaches its slot without crossing a panel that is still flat or rising (S
 that rule, climbers went up beside a lying stem and hung off the face until it rose.
 
 **Recommendation, revised: the scaffold build for the director's review.** It completes at
-10.57 s (19.9 s on screen with the S0l tour), with climbers on the built face and no
+11.28 s (21.0 s on screen with the S0l tour), with climbers on the built face and no
 visible contacts. It keeps
 climbing as the core, since the swarm still climbs every arm, bowl and the U. And it turns the drawbridge into a structural beat: stems swing up as
 scaffolds the swarm then climbs. The hybrid (whole letters) and pure climb remain variants;
@@ -567,19 +584,18 @@ The [spike README](../../../spikes/swarm_intro/README.md) has commands, gates, t
 table and images for every build. With blend LOD (S0n), the S0l tour camera and 1536
 units (choreography seconds; on screen the tour plays at half speed, the rest at 2/3):
 - **Lying:** complete at 7.71 s (brief: 8.4 s), the ribbon by 10 s.
-- **Raise:** upright by 8.83 s.
-- **Climb:** complete at 10.85 s; 5 of 78,919 climber-ticks off the built face.
-- **Hybrid:** complete at 9.00 s.
-- **Scaffold:** complete at 10.57 s, stem panels upright by 7.93 s; 4 of 43,638 climber-ticks
-  off the face.
+- **Raise:** upright by 8.77 s.
+- **Climb:** complete at 11.10 s; no climber off the built face.
+- **Hybrid:** complete at 9.02 s.
+- **Scaffold:** complete at 11.28 s, stem panels upright by 8.12 s; no climber off the face.
 - **Isolation:** every discrete tier converges in every build; the spread across tiers is
   0.7 to 2.0 s (2.8 s on the two-layer climb), hero the slowest (SW-F31). Switched levers
   and a budget converge too (S0n).
 - **Every build:** no visible contacts (centres closer than 0.8 diameter) at 1536 units and
-  no pair closer than 0.8 diameter; 1.3% at 4,096 units on the scaffold. Lane branching took
+  no pair closer than 0.8 diameter, at 4,096 and 16,384 units too. Lane branching took
   them to 0% (SW-F21); blend LOD keeps cruising units under the camera in the near tier.
 
-Ticks run 0.37–0.79 ms p50 per presented tick on a shared cloud host. 16,384 units still
+Ticks run 0.35–0.69 ms p50 per presented tick on a shared cloud host. 16,384 units still
 meet every deadline. Release and ASan/UBSan pass all fifteen CTest cases, and identical runs
 give identical state hashes.
 
@@ -618,6 +634,7 @@ give identical state hashes.
 | SW-F24 | Doubling the tiles crowded the stage: wider lanes alone fixed lying and raise; climbing letters' waiting crowds needed to heap (flow over each other) like the wall-base heap. Panels deadlocked once when a front panel wedge waited on a climbed wedge behind it. | Capacity rules scale with the layer count; face backing for flat assembly counts only the same flat body. |
 | SW-F25 | Three layers leave one enclosed front-layer pocket unfilled. | A no-enclosed-holes build order (TERMES) before more than two layers. |
 | SW-F26 | A 3D body with vertical walls on the tile footprint keeps the tessellation gap-free in 3D with no change to the build: neighbours share wall quads, the roof facets form the seams. The concept dart (spine, faceted roof, core in the spine) works on any triangular footprint, so free darts and locked tiles share one construction. The existing stacking step (0.55 d) is the spine height. | S0j; one body specification (`NaniteBody.hpp`) feeds the simulation and the renderer, tested for parity. The dart form was superseded by the design space (SW-F28). |
+| SW-F35 | Following the busiest section with hysteresis gave close-ups but no journey: with several letters building at once the busiest section flipped between the ends of the title every 2 to 3 s, and the camera crossed at full speed over finished letters (pan up to 1.75 frame widths a second, 126 fw/s² jerks, yaw 32 °/s). | A camera operator: sections discounted by travel and favouring the current sweep, 3 s holds, springs under limits. A left-to-right journey with the construction, pan at most 0.6 fw/s, no jerks; gated by `--verify`. |
 | SW-F34 | Rebuilding the frames between every 4th capture (a 15 Hz simulation shown at 60 Hz) puts interpolated ground movers within 0.024 d at p95 (mean 0.009 d), extrapolated within 0.14 d (mean 0.035 d); every 8th, 0.078 and 0.30 d. The worst cases (0.8 to 1.5 d) are act changes, which neither method predicts. | Interpolate by default: one tick of latency for exactness. Extrapolate only for a late tick, and blend back. S1's renderer can run the simulation below the display rate. |
 | SW-F33 | System 2 every 2 ticks halves deliberations at no cost to completion or contacts; every 3 or 4 still converges, contacts on the scaffold rise to 2.1% and 2.7%. Blending camera focus (0.5) with activity (1) restores on-screen collision fidelity (contacts 0%, activity LOD had 1.2%) and fixes activity LOD's slow two-layer climb (12.25 to 10.99 s), with 3,000 to 5,600 deliberations a run against activity's 16,000 to 24,000. Hero isolation with System 2 every 2 ticks overran the two-layer climb (15.26 s): a whole swarm of plan-holders is slower than a capped few. | Blend is the default, System 2 every 2 ticks. The isolation gate runs heroes at full cadence; the duty cycle is gated by the main and switched-lever runs. |
 | SW-F32 | Wall-time calibration put every tier near 1.6 µs per unit, so tiers barely changed cost. Callgrind showed the shared work: every lane unit searched its whole projection window each tick (13% of a tick) and every unit queried neighbours for pushers that almost never existed (5%). Stopping the search at its first rise and skipping the query when nobody pushes cut a scaffold tick by 17% (3.85 to 3.19 billion instructions over 10 s) with identical behaviour. Per mover-tick, a hero deliberation is then about 7,800 instructions and holding a plan 2,250; resolve (about 4,100 per visible mover) is 46% of a tick. A budget of 4,000 cost units bottoms out near 5,300 at the wave's peak. | Profile in instructions, not wall time, on a shared host. Tier levers act on behaviour; the next lever is resolve (fewer passes off focus) or parallel rows (S3). |
@@ -650,6 +667,7 @@ post-journey gameplay proposals.
 | **S0l** done | Cinematic camera: macro, then a follow camera over the busiest building with yaw around the title, pull-out, hold, opening (+1.5 s); pace eases to 1/2 during the close-up (28.8 s on screen for 15 s builds); activity floor for camera LOD (SW-F30) | This review | Director reviews the tour video (scaffold) for readability of construction and pacing |
 | **S0m** done | Decision LOD by activity (default; camera drives only presentation); isolation gate for every discrete tier; hidden tier shares the motion model and converges (SW-F31); spread reported | This review | Equivalence tolerance per tier (later); whether visible cruising units read well at the far tier |
 | **S0n** done | Blend LOD (camera focus and activity, dynamic levers) as the default; hero System 1 and System 2 (deliberation every 2 ticks); calm-unit route cadence; deterministic decision budget; two profiled fixes (−17% instructions per tick); renderer interpolation and extrapolation (`--fps`, `--reconstruct`); switched-lever and budget gates | This review | The director judges the default; per-device budget calibration; resolve LOD (S3) |
+| **S0o** done | Camera operator: System 2 shot choice (now and predicted building, travel cost, sweep, holds, framing, push-in, fly-through arc, orbit); System 1 spring rig under motion limits; camera smoothness gate | This review | The director judges the journey; an authored or learned shot grammar later |
 | **S1** | Production renderer consumes a per-tick instance packet (world pose, plane tilt, lift, act, core intensity, render LOD) from the chosen build; perspective lens path from the brief | P15-R0 Filament scene | Native capture against hero and storyboard concepts; bodies grounded; upright title readable with bloom off and in grayscale |
 | **S2** | Choreography authoring: which strokes are panels, as authored data (SW-F17); sub-tile edge pieces where stems stay stepped (SW-F16); lanes and stroke order as data; the raise beat if raise is chosen (what visibly lifts the letter: a wave of units pushing under the hinge, rise order and easing); optional hero-letter climbing finish; climb arcs; traveling cyan accent; idle micro-behaviour for locked heroes (breathing core, settle wobble); skip jumps to an authored settled snapshot; reduced motion selects the still | P15-E0 frontend | Director pass (brief section 8); skip and reduced-motion receiving; temporal review of motion, not stills |
 | **S3** | Performance and decision LOD: the blend levers (S0n) tuned per device and calibrated to time; resolve passes as a fidelity lever; the equivalence gate (section 4 backlog); event-driven wave; Sub0Pipeline row ranges for behaviour and resolve; hero candidate cap per frame; optional GPU compute route for far and hidden tiers | Named device | p95 and p99 inside the brief's proposed 16.67/20 ms with rendering included; measured, never inferred from S0 |

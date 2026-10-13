@@ -3,6 +3,7 @@
 // See README.md for the questions this spike answers and what it does not claim.
 
 #include <algorithm>
+#include <cmath>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
@@ -54,6 +55,9 @@ struct RunSummary
     std::uint64_t deliberations = 0;   // hero System 2 deliberations
     std::vector<float> predictedCost;  // per tick, cost units
     float minFidelity = 1.0F;
+    // Camera motion in presented seconds (S0o): screen-relative pan (frame widths per second),
+    // pan acceleration, zoom (log units per second) and yaw (degrees per second), maxima.
+    float camPan = 0.0F, camPanAccel = 0.0F, camZoom = 0.0F, camYaw = 0.0F;
     std::uint64_t claims = 0;
     std::uint64_t stuck = 0;
     std::uint64_t recovered = 0;
@@ -148,6 +152,8 @@ RunSummary run(const Options& options, bool capture)
     }
     if (capture && !options.framesDir.empty()) std::filesystem::create_directories(options.framesDir);
     std::vector<RenderRow> rows;
+    Camera lastCam{};
+    float lastPanX = 0.0F, lastPanY = 0.0F;
     std::uint32_t windowClicks = 0;
     int windowStart = 0;
     for (int t = 0; t < ticks; ++t)
@@ -171,6 +177,22 @@ RunSummary run(const Options& options, bool capture)
             intro.setLevers(levers);
         }
         intro.tick();
+        {
+            const Camera& cam = intro.camera();
+            const float dt = options.settings.tickSeconds;
+            if (t > 0)
+            {
+                const float frame = 2.0F * lastCam.halfWidth;
+                const float px = (cam.cx - lastCam.cx) / dt / frame, py = (cam.cy - lastCam.cy) / dt / frame;
+                summary.camPan = std::max(summary.camPan, std::hypot(px, py));
+                if (t > 1) summary.camPanAccel = std::max(summary.camPanAccel, std::hypot(px - lastPanX, py - lastPanY) / dt);
+                summary.camZoom = std::max(summary.camZoom, std::abs(std::log(cam.halfWidth / lastCam.halfWidth)) / dt);
+                summary.camYaw = std::max(summary.camYaw, std::abs(cam.yaw - lastCam.yaw) / dt);
+                lastPanX = px;
+                lastPanY = py;
+            }
+            lastCam = cam;
+        }
         const TickMetrics& m = intro.metrics();
         float total = 0.0F;
         for (std::size_t s = 0; s < m.systemMicros.size(); ++s)
@@ -301,6 +323,7 @@ void print(const std::string& label, const Options& options, const RunSummary& s
                 "\"mean_us\":{\"gather\":%.1f,\"signal\":%.1f,\"behaviour\":%.1f,\"resolve\":%.1f,\"lod\":%.1f,\"metrics\":%.1f},"
                 "\"outline\":{\"corners\":%zu,\"rms_before\":%.3f,\"rms_after\":%.3f,\"max_morph\":%.3f,\"min_area_ratio\":%.3f},"
                 "\"pace\":%.4f,\"close_pace\":%.4f,\"presentation\":{\"length_s\":%.3f,\"all_locked_s\":%.3f,\"all_raised_s\":%.3f},"
+                "\"camera\":{\"pan_max\":%.3f,\"pan_accel_max\":%.3f,\"zoom_max\":%.3f,\"yaw_max\":%.2f},"
                 "\"deliberations\":%llu,\"cost_p50\":%.1f,\"cost_p95\":%.1f,\"cost_max\":%.1f,\"min_fidelity\":%.2f,"
                 "\"state_hash\":\"%016llx\"}\n",
                 label.c_str(), options.settings.nanites, s.slots, s.ribbon, options.settings.levers.heroCap, s.firstLock, s.allLocked, s.allRaised, static_cast<unsigned>(s.raisedMask), s.panels, s.lockedAt84,
@@ -312,6 +335,7 @@ void print(const std::string& label, const Options& options, const RunSummary& s
                 s.wordmark.boundaryCorners, s.wordmark.outlineRmsBefore, s.wordmark.outlineRmsAfter, s.wordmark.maxMorph,
                 s.wordmark.minAreaRatio, pace, static_cast<double>(options.settings.closePace), static_cast<double>(s.shownLength),
                 static_cast<double>(s.shownLocked), static_cast<double>(s.shownRaised),
+                static_cast<double>(s.camPan), static_cast<double>(s.camPanAccel), static_cast<double>(s.camZoom), static_cast<double>(s.camYaw),
                 static_cast<unsigned long long>(s.deliberations), percentile(s.predictedCost, 0.5F), percentile(s.predictedCost, 0.95F),
                 percentile(s.predictedCost, 1.0F), static_cast<double>(s.minFidelity), static_cast<unsigned long long>(s.hash));
 }
@@ -441,6 +465,13 @@ int main(int argc, char** argv)
             if (main.minVisibleGap < 0.5F) return fail("no visible ground mover passes through another (gap >= 0.5d)");
             break;
         }
+
+        // The camera moves like an operated camera, not a cut (S0o): screen-relative limits in
+        // presented seconds, with margin over the rig's own caps (0.6 frame widths a second,
+        // 1.2 per second squared, 0.9 log zoom and 12 degrees a second); a change of zoom adds
+        // apparent pan, hence the margin.
+        if (main.camPan > 0.9F || main.camPanAccel > 2.5F || main.camZoom > 1.0F || main.camYaw > 15.0F)
+            return fail("camera moves smoothly: pan <= 0.9 frame widths/s, pan acceleration <= 2.5 fw/s^2, zoom <= 1.0 log/s, yaw <= 15 deg/s");
 
         const RunSummary again = run(options, false);
         if (again.hash != main.hash) return fail("identical runs produce identical state");

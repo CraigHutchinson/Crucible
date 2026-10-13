@@ -729,94 +729,231 @@ Camera SwarmIntro::cameraAt(float t) const
     return cam;
 }
 
-void SwarmIntro::updateCamera()
+namespace
+{
+// Camera operator (S0o). Rig springs: natural frequencies in radians per presented second
+// (critically damped, so no overshoot); limits in frame widths, log zoom and degrees per
+// presented second, chosen so a move reads as a camera move rather than a cut.
+constexpr float kRigPosition = 1.4F;
+constexpr float kRigZoom = 1.2F;
+constexpr float kRigYaw = 1.0F;
+constexpr float kMaxPan = 0.6F;        // frame widths per second, in any direction
+constexpr float kMaxPanAccel = 1.2F;   // frame widths per second squared
+constexpr float kMaxZoom = 0.9F;       // log units per second (x2.5 in a second)
+constexpr float kMaxYaw = 12.0F;       // degrees per second
+constexpr float kPlanEvery = 0.25F;    // presented seconds between operator plans
+constexpr float kMinHold = 3.0F;       // presented seconds a section is held before moving on
+
+// One critically damped spring step toward `target`, with a speed limit.
+void spring(float& x, float& v, float target, float omega, float maxSpeed, float maxAccel, float dt)
+{
+    float accel = omega * omega * (target - x) - 2.0F * omega * v;
+    accel = std::clamp(accel, -maxAccel, maxAccel);
+    v = std::clamp(v + accel * dt, -maxSpeed, maxSpeed);
+    x += v * dt;
+}
+
+// The same for a 2D position, its speed and acceleration limited as vectors (no faster diagonals).
+void spring2(float& x, float& y, float& vx, float& vy, float tx, float ty, float omega, float maxSpeed, float maxAccel, float dt)
+{
+    float ax = omega * omega * (tx - x) - 2.0F * omega * vx;
+    float ay = omega * omega * (ty - y) - 2.0F * omega * vy;
+    const float a = std::hypot(ax, ay);
+    if (a > maxAccel)
+    {
+        ax *= maxAccel / a;
+        ay *= maxAccel / a;
+    }
+    vx += ax * dt;
+    vy += ay * dt;
+    const float v = std::hypot(vx, vy);
+    if (v > maxSpeed)
+    {
+        vx *= maxSpeed / v;
+        vy *= maxSpeed / v;
+    }
+    x += vx * dt;
+    y += vy * dt;
+}
+} // namespace
+
+void SwarmIntro::planShot(float presented)
 {
     const Camera scripted = cameraAt(time_);
     const float tourTo = sequenceSeconds() - kOpenSeconds - kTourEnd;
+    // Outside the tour the operator takes the scripted path (macro, pull-out, opening); inside,
+    // its own shot, blended in and out so the hand-over is a move, not a cut.
     const float blend = smooth(0.0F, 1.0F, std::min((time_ - kTourFrom) / 0.8F, (tourTo - time_) / 1.0F));
-    if (blend <= 0.0F)
-    {
-        camera_ = scripted;
-        followX_ = scripted.cx;
-        followY_ = scripted.cy;
-        return;
-    }
     const float span = titleMaxX_ - titleMinX_;
     const float left = titleMinX_ + 0.10F * span;
     const float right = titleMaxX_ - 0.10F * span;
     const float closeW = 0.13F * span;
-    // Where is the title being built? Count docking, climbing and just-locked units per title
-    // section; the camera holds its section until another is clearly busier.
-    constexpr int kBins = 16;
-    std::array<std::uint32_t, kBins> count{};
-    std::array<float, kBins> sumX{}, sumY{};
-    float headY = std::numeric_limits<float>::lowest();
-    world_.each<Identity, Pose, Motion, Mind>([&](Identity&, Pose& pose, Motion&, Mind& mind) {
-        if (mind.ribbon || mind.goal < 0) return;
-        const bool building = mind.act == Act::Dock || mind.act == Act::Climb || (mind.act == Act::Locked && time_ - mind.actSince < 0.6F);
-        if (!building) return;
-        float vx, vy;
-        viewOf(pose, mind, vx, vy);
-        const int bin = std::clamp(static_cast<int>((vx - titleMinX_) / span * kBins), 0, kBins - 1);
-        ++count[static_cast<std::size_t>(bin)];
-        sumX[static_cast<std::size_t>(bin)] += vx;
-        sumY[static_cast<std::size_t>(bin)] += vy;
-    });
-    // A section is two bins wide (about the close-up's width).
-    auto busy = [&](int b) { return count[static_cast<std::size_t>(b)] + (b + 1 < kBins ? count[static_cast<std::size_t>(b + 1)] : 0U); };
-    int best = 0;
-    for (int b = 1; b < kBins; ++b)
-        if (busy(b) > busy(best)) best = b;
-    if (focusBin_ < 0 || busy(best) * 2 > busy(focusBin_) * 3 + 8) focusBin_ = best;
-    float targetX = followX_, targetY = followY_;
-    const std::uint32_t n = busy(focusBin_);
-    if (n >= 6)
+    float x = scripted.cx, y = scripted.cy, w = scripted.halfWidth;
+    if (blend > 0.0F)
     {
-        const auto b = static_cast<std::size_t>(focusBin_);
-        const float sx = sumX[b] + (b + 1 < kBins ? sumX[b + 1] : 0.0F);
-        const float sy = sumY[b] + (b + 1 < kBins ? sumY[b + 1] : 0.0F);
-        targetX = sx / static_cast<float>(n);
-        targetY = 0.5F * (sy / static_cast<float>(n) + titleMidY_);   // keep the letter in frame
+        // Where is the title being built, and where is it about to be? Building units (docking,
+        // climbing, just locked) count fully; units heading for a slot count half, at their slot.
+        constexpr int kBins = 16;
+        std::array<float, kBins> weight{}, sumX{}, sumXX{}, sumY{};
+        float headY = std::numeric_limits<float>::lowest();
+        auto bin = [&](float vx) { return std::clamp(static_cast<int>((vx - titleMinX_) / span * kBins), 0, kBins - 1); };
+        world_.each<Identity, Pose, Motion, Mind>([&](Identity&, Pose& pose, Motion&, Mind& mind) {
+            if (mind.ribbon || mind.goal < 0) return;
+            const bool building = mind.act == Act::Dock || mind.act == Act::Climb || (mind.act == Act::Locked && time_ - mind.actSince < 0.6F);
+            const bool arriving = mind.act == Act::Seek || mind.act == Act::Queue;
+            if (!building && !arriving) return;
+            float vx, vy;
+            if (building)
+            {
+                viewOf(pose, mind, vx, vy);
+            }
+            else
+            {
+                const Slot& slot = slots_[static_cast<std::size_t>(mind.goal)];
+                vx = slot.x;
+                vy = titleMidY_;
+            }
+            const float k = building ? 1.0F : 0.5F;
+            const auto b = static_cast<std::size_t>(bin(vx));
+            weight[b] += k;
+            sumX[b] += k * vx;
+            sumXX[b] += k * vx * vx;
+            sumY[b] += k * vy;
+        });
+        // A section is three bins (the frame and its edges).
+        auto section = [&](int c, float& wsum, float& mx, float& sx, float& my) {
+            wsum = mx = sx = my = 0.0F;
+            float xx = 0.0F;
+            for (int b = std::max(0, c - 1); b <= std::min(kBins - 1, c + 1); ++b)
+            {
+                wsum += weight[static_cast<std::size_t>(b)];
+                mx += sumX[static_cast<std::size_t>(b)];
+                xx += sumXX[static_cast<std::size_t>(b)];
+                my += sumY[static_cast<std::size_t>(b)];
+            }
+            if (wsum <= 0.0F) return;
+            mx /= wsum;
+            my /= wsum;
+            sx = std::sqrt(std::max(0.0F, xx / wsum - mx * mx));
+        };
+        // A camera operator weighs what a shot shows against the cost of getting there: activity
+        // is discounted by the travel (about two letters halves it), and a move that continues
+        // the camera's sweep is preferred to one that turns back, so the tour journeys along
+        // the title instead of crossing it back and forth (S0o trace: a pure busiest-section rule
+        // crossed the whole title every 2 to 3 s and showed finished letters on the way).
+        const float reach = 0.25F * span;
+        auto utility = [&](float wsum, float cx) {
+            const float d = cx - rig_.x;
+            const float along = rig_.vx * d > 0.0F ? 1.2F : (std::abs(rig_.vx) > 0.05F * closeW ? 0.8F : 1.0F);
+            return wsum * along / (1.0F + std::abs(d) / reach);
+        };
+        int best = 0;
+        float bestU = -1.0F, bestW = 0.0F;
+        for (int c = 0; c < kBins; ++c)
+        {
+            float wsum, cx, sxc, myc;
+            section(c, wsum, cx, sxc, myc);
+            if (wsum <= 0.0F) continue;
+            const float u = utility(wsum, cx);
+            if (u > bestU)
+            {
+                bestU = u;
+                bestW = wsum;
+                best = c;
+            }
+        }
+        float heldW = 0.0F, mx = 0.0F, sx = 0.0F, my = 0.0F;
+        if (shot_.section >= 0) section(shot_.section, heldW, mx, sx, my);
+        const float heldU = heldW > 0.0F ? utility(heldW, mx) : 0.0F;
+        // Cinematic hold: stay on a section for kMinHold, then move only to one clearly more
+        // worth the trip, or when the held one has gone quiet.
+        const bool held = shot_.section >= 0 && presented - shot_.since < kMinHold && heldW > 2.0F;
+        const bool better = bestU > 1.3F * heldU + 1.0F || heldW <= 2.0F;
+        if (bestW >= 6.0F && !held && (shot_.section < 0 || better) && best != shot_.section)
+        {
+            shot_.section = best;
+            shot_.since = presented;
+        }
+        float tx, ty, tw;
+        if (shot_.section >= 0 && (bestW >= 6.0F || heldW > 2.0F))
+        {
+            float wsum;
+            section(shot_.section, wsum, mx, sx, my);
+            // Frame the activity: wide enough for its spread, about two letters at most; creep
+            // in while the shot holds (a slow push-in), up to a fifth.
+            const float creep = 1.0F - 0.2F * std::clamp((presented - shot_.since) / 6.0F, 0.0F, 1.0F);
+            tx = std::clamp(mx, left, right);
+            ty = 0.5F * (my + titleMidY_);
+            tw = std::clamp(1.6F * sx + 5.0F, 0.08F * span, 0.16F * span) * creep;
+        }
+        else
+        {
+            // Nothing building yet: the head of the stream, with the stream trailing below.
+            float sxh = 0.0F, syh = 0.0F;
+            std::uint32_t m = 0;
+            world_.each<Identity, Pose, Motion, Mind>([&](Identity&, Pose& pose, Motion&, Mind& mind) {
+                if (restAct(mind.act) || mind.ribbon) return;
+                float vx, vy;
+                viewOf(pose, mind, vx, vy);
+                headY = std::max(headY, vy);
+            });
+            world_.each<Identity, Pose, Motion, Mind>([&](Identity&, Pose& pose, Motion&, Mind& mind) {
+                if (restAct(mind.act) || mind.ribbon) return;
+                float vx, vy;
+                viewOf(pose, mind, vx, vy);
+                if (vy < headY - 0.5F * closeW) return;
+                sxh += vx;
+                syh += vy;
+                ++m;
+            });
+            tx = m ? sxh / static_cast<float>(m) : rig_.x;
+            ty = m ? syh / static_cast<float>(m) - 0.25F * closeW : rig_.y;
+            tw = closeW;
+        }
+        // Fly-through: a long move widens on the way and comes back in on arrival.
+        const float travel = std::abs(tx - rig_.x) / std::max(1e-3F, std::exp(rig_.logW));
+        tw *= 1.0F + 0.35F * std::clamp(travel - 1.0F, 0.0F, 2.0F);
+        x = scripted.cx + (tx - scripted.cx) * blend;
+        y = scripted.cy + (ty - scripted.cy) * blend;
+        w = std::exp(std::log(scripted.halfWidth) + (std::log(tw) - std::log(scripted.halfWidth)) * blend);
     }
     else
     {
-        // Nothing building yet: frame the head of the stream as it approaches the title.
-        float sx = 0.0F, sy = 0.0F;
-        std::uint32_t m = 0;
-        world_.each<Identity, Pose, Motion, Mind>([&](Identity&, Pose& pose, Motion&, Mind& mind) {
-            if (restAct(mind.act) || mind.ribbon) return;
-            float vx, vy;
-            viewOf(pose, mind, vx, vy);
-            headY = std::max(headY, vy);
-        });
-        world_.each<Identity, Pose, Motion, Mind>([&](Identity&, Pose& pose, Motion&, Mind& mind) {
-            if (restAct(mind.act) || mind.ribbon) return;
-            float vx, vy;
-            viewOf(pose, mind, vx, vy);
-            if (vy < headY - 0.5F * closeW) return;
-            sx += vx;
-            sy += vy;
-            ++m;
-        });
-        if (m > 0)
-        {
-            targetX = sx / static_cast<float>(m);
-            targetY = sy / static_cast<float>(m) - 0.25F * closeW;   // the head toward the top, the stream behind
-        }
+        shot_.section = -1;
     }
-    targetX = std::clamp(targetX, left, right);
-    // Critically smooth pursuit (time constant 0.6 choreography seconds).
-    const float follow = 1.0F - std::exp(-stepSeconds() / 0.6F);
-    followX_ += (targetX - followX_) * follow;
-    followY_ += (targetY - followY_) * follow;
-    // Orbit: the view turns with the camera's place along the title, from one side to the other.
+    // Orbit: the view turns with the camera's place along the title, plus a slow drift.
     const float turn = oblique() ? 28.0F : 0.0F;
-    const float along = std::clamp((followX_ - left) / std::max(1e-3F, right - left), 0.0F, 1.0F);
-    camera_ = scripted;
-    camera_.cx = scripted.cx + (followX_ - scripted.cx) * blend;
-    camera_.cy = scripted.cy + (followY_ - scripted.cy) * blend;
-    camera_.halfWidth = std::exp(std::log(scripted.halfWidth) + (std::log(closeW) - std::log(scripted.halfWidth)) * blend);
-    camera_.yaw = scripted.yaw + (turn * (1.0F - 2.0F * along) - scripted.yaw) * blend;
+    const float along = std::clamp((rig_.x - left) / std::max(1e-3F, right - left), 0.0F, 1.0F);
+    const float orbit = turn * (1.0F - 2.0F * along) + (oblique() ? 6.0F * std::sin(presented * 2.0F * kPi / 11.0F) : 0.0F);
+    shot_.x = x;
+    shot_.y = y;
+    shot_.logW = std::log(w);
+    shot_.yaw = scripted.yaw + (orbit - scripted.yaw) * blend;
+    shot_.planned = presented;
+}
+
+void SwarmIntro::updateCamera()
+{
+    const float presented = static_cast<float>(tickIndex_) * settings_.tickSeconds;
+    if (!rig_.ready)
+    {
+        const Camera start = cameraAt(time_);
+        rig_ = { start.cx, start.cy, std::log(start.halfWidth), start.yaw, 0.0F, 0.0F, 0.0F, 0.0F, true };
+        shot_ = {};
+    }
+    if (shot_.planned < 0.0F || presented - shot_.planned >= kPlanEvery - 1e-6F) planShot(presented);
+    // System 1: the rig moves toward the shot under speed and acceleration limits scaled by the
+    // current frame width, so a wide shot can travel further in the same screen-relative time.
+    const float dt = settings_.tickSeconds;
+    const float frame = 2.0F * std::exp(rig_.logW);
+    spring2(rig_.x, rig_.y, rig_.vx, rig_.vy, shot_.x, shot_.y, kRigPosition, kMaxPan * frame, kMaxPanAccel * frame, dt);
+    spring(rig_.logW, rig_.vw, shot_.logW, kRigZoom, kMaxZoom, 4.0F * kMaxZoom, dt);
+    spring(rig_.yaw, rig_.vyaw, shot_.yaw, kRigYaw, kMaxYaw, 4.0F * kMaxYaw, dt);
+    camera_ = Camera{};
+    camera_.cx = rig_.x;
+    camera_.cy = rig_.y;
+    camera_.halfWidth = std::exp(rig_.logW);
+    camera_.yaw = rig_.yaw;
 }
 
 bool SwarmIntro::inView(float x, float y, float margin) const
