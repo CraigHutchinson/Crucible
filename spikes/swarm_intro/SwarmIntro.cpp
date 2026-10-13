@@ -128,12 +128,24 @@ SwarmIntro::SwarmIntro(IntroSettings settings)
         // Lane width scales with the tiles it carries: depth layers multiply the flow through
         // the same three lanes, and flow is density x width x speed.
         mind.laneOffset = (unit(seed, 3) - 0.5F) * 8.0F * static_cast<float>(std::max(1, settings_.wordmark.layers));
-        entities_.push_back(world_.create(Identity{ i, seed }, bed[i], Motion{}, mind, HiddenTier{ 0 }));
+        entities_.push_back(world_.create(Identity{ i, seed }, bed[i], Motion{}, mind, HiddenTier{ 0, {} }));
         gTier_[i] = static_cast<std::uint8_t>(Tier::Hidden);
     }
     planAssignment(bed);
     firstX_ = bed[first_].x;
     firstY_ = bed[first_].y;
+    titleMinX_ = std::numeric_limits<float>::max();
+    titleMaxX_ = std::numeric_limits<float>::lowest();
+    float lowY = std::numeric_limits<float>::max(), highY = std::numeric_limits<float>::lowest();
+    for (const Slot& slot : slots_)
+    {
+        titleMinX_ = std::min(titleMinX_, slot.x);
+        titleMaxX_ = std::max(titleMaxX_, slot.x);
+        lowY = std::min(lowY, slot.y);
+        highY = std::max(highY, slot.y);
+    }
+    // Upright, a letter stands on the wall line, its height on screen plus the tilted depth.
+    titleMidY_ = oblique() ? 0.5F * settings_.wordmark.capHeight + settings_.viewTilt * wallY_ : 0.5F * (lowY + highY);
     camera_ = cameraAt(0.0F);
 }
 
@@ -634,41 +646,75 @@ void SwarmIntro::planAssignment(std::span<const Pose> bed)
     }
 }
 
+constexpr float kMinFidelity = 0.1F;   // the budget controller never drops fidelity below this
+
 // ---- Camera -----------------------------------------------------------------------------
+
+namespace
+{
+// The close-up tour (cameraAt): it starts following the stream at kTourFrom and pans across
+// the title until kTourEnd before the build's sequence ends; the closing pull-out then
+// frames the whole title and holds for kOpenSeconds past the sequence.
+constexpr float kTourFrom = 2.2F;
+constexpr float kTourEnd = 4.0F;
+constexpr float kOpenSeconds = 1.5F;
+constexpr float kPaceEase = 0.6F;   // choreography seconds easing into and out of closePace
+} // namespace
+
+float SwarmIntro::sequenceSeconds() const
+{
+    return (climbing() ? 15.0F : 12.0F) + kOpenSeconds;
+}
+
+float SwarmIntro::paceAt(float t) const
+{
+    const float tourTo = sequenceSeconds() - kOpenSeconds - kTourEnd;
+    const float in = std::clamp((t - kTourFrom) / kPaceEase, 0.0F, 1.0F);
+    const float out = std::clamp((tourTo - t) / kPaceEase, 0.0F, 1.0F);
+    return smooth(settings_.pace, settings_.closePace, std::min(in, out));
+}
+
+float SwarmIntro::presentAt(float t) const
+{
+    // Integrated in fine fixed steps; deterministic, for reports and frame headers only.
+    constexpr float h = 1.0F / 1200.0F;
+    double shown = 0.0;
+    float s = 0.0F;
+    for (; s + h <= t; s += h) shown += static_cast<double>(h) / static_cast<double>(paceAt(s + 0.5F * h));
+    shown += static_cast<double>(t - s) / static_cast<double>(paceAt(s));
+    return static_cast<float>(shown);
+}
 
 Camera SwarmIntro::cameraAt(float t) const
 {
-    // Orthographic stand-in for the brief's lens path: macro, pullback, rise, hold, open.
+    // Orthographic stand-in for the brief's lens path. A macro on the first unit to wake,
+    // then a close-up tour: follow the stream to the title's left end, dolly along the
+    // letters as they build while the oblique view turns from one side to the other, then
+    // pull out to the whole title, hold, and open toward the menu.
     const float fx = firstX_;
     const float fy = oblique() ? settings_.viewTilt * firstY_ : firstY_;
+    const float span = titleMaxX_ - titleMinX_;
+    const float left = titleMinX_ + 0.10F * span;
+    const float right = titleMaxX_ - 0.10F * span;
+    const float closeW = 0.13F * span;   // about two letters across
+    const float sequence = sequenceSeconds() - kOpenSeconds;
+    const float tourTo = sequence - kTourEnd;
     struct Key
     {
-        float t, x, y, w;
+        float t, x, y, w, yaw;
     };
-    // Upright builds: an oblique front view that rises to frame the standing title.
-    const std::array<Key, 7> uprightKeys{ { { 0.0F, fx, fy, 3.0F },
-                                            { 1.8F, fx, fy + 0.4F, 4.0F },
-                                            { 4.2F, 0.0F, fy + 6.0F, 50.0F },
-                                            { 6.8F, 0.0F, 4.0F, 82.0F },
-                                            { 8.4F, 0.0F, 6.0F, 80.0F },
-                                            { 10.0F, 0.0F, 6.0F, 79.0F },
-                                            { 12.0F, 0.0F, -4.0F, 96.0F } } };
-    const std::array<Key, 7> lyingKeys{ { { 0.0F, fx, fy, 3.0F },
-                                          { 1.8F, fx, fy + 0.5F, 4.0F },
-                                          { 4.2F, 0.0F, fy + 10.0F, 50.0F },
-                                          { 6.8F, 0.0F, -6.0F, 82.0F },
-                                          { 8.4F, 0.0F, -3.0F, 80.0F },
-                                          { 10.0F, 0.0F, -4.0F, 79.0F },
-                                          { 12.0F, 0.0F, -20.0F, 96.0F } } };
-    // Climb build: the user-approved fifteen-second sequence holds the build longer.
-    const std::array<Key, 7> climbKeys{ { { 0.0F, fx, fy, 3.0F },
-                                          { 1.8F, fx, fy + 0.4F, 4.0F },
-                                          { 4.2F, 0.0F, fy + 6.0F, 50.0F },
-                                          { 7.0F, 0.0F, 4.0F, 82.0F },
-                                          { 12.5F, 0.0F, 6.0F, 80.0F },
-                                          { 13.5F, 0.0F, 6.0F, 79.0F },
-                                          { 15.0F, 0.0F, -4.0F, 96.0F } } };
-    const std::array<Key, 7>& keys = climbing() ? climbKeys : (oblique() ? uprightKeys : lyingKeys);
+    const float wideY = oblique() ? 6.0F : -3.0F;
+    const float openY = oblique() ? -4.0F : -20.0F;
+    const float turn = oblique() ? 28.0F : 0.0F;   // degrees; the top view does not turn
+    const std::array<Key, 9> keys{ { { 0.0F, fx, fy, 3.0F, 0.0F },
+                                     { 1.8F, fx, fy + 0.4F, 4.0F, 0.0F },
+                                     { kTourFrom, fx, fy + 1.0F, 12.0F, 0.4F * turn },   // widen on the bed; the follow camera takes over
+                                     { kTourFrom + 1.4F, left, titleMidY_, closeW, turn },
+                                     { tourTo, right, titleMidY_, closeW, -turn },
+                                     { tourTo + 1.8F, 0.0F, wideY, 80.0F, -0.3F * turn },
+                                     { sequence, 0.0F, wideY, 79.0F, 0.0F },
+                                     { sequence + 0.75F * kOpenSeconds, 0.0F, openY, 96.0F, 0.0F },
+                                     { sequence + kOpenSeconds, 0.0F, openY, 96.0F, 0.0F } } };
     Camera cam;
     std::size_t k = 0;
     while (k + 2 < keys.size() && t > keys[k + 1].t) ++k;
@@ -679,7 +725,98 @@ Camera SwarmIntro::cameraAt(float t) const
     cam.cy = smooth(a.y, b.y, f);
     // Zoom interpolates in log space so the pullback reads as a steady dolly.
     cam.halfWidth = std::exp(smooth(std::log(a.w), std::log(b.w), f));
+    cam.yaw = smooth(a.yaw, b.yaw, f);
     return cam;
+}
+
+void SwarmIntro::updateCamera()
+{
+    const Camera scripted = cameraAt(time_);
+    const float tourTo = sequenceSeconds() - kOpenSeconds - kTourEnd;
+    const float blend = smooth(0.0F, 1.0F, std::min((time_ - kTourFrom) / 0.8F, (tourTo - time_) / 1.0F));
+    if (blend <= 0.0F)
+    {
+        camera_ = scripted;
+        followX_ = scripted.cx;
+        followY_ = scripted.cy;
+        return;
+    }
+    const float span = titleMaxX_ - titleMinX_;
+    const float left = titleMinX_ + 0.10F * span;
+    const float right = titleMaxX_ - 0.10F * span;
+    const float closeW = 0.13F * span;
+    // Where is the title being built? Count docking, climbing and just-locked units per title
+    // section; the camera holds its section until another is clearly busier.
+    constexpr int kBins = 16;
+    std::array<std::uint32_t, kBins> count{};
+    std::array<float, kBins> sumX{}, sumY{};
+    float headY = std::numeric_limits<float>::lowest();
+    world_.each<Identity, Pose, Motion, Mind>([&](Identity&, Pose& pose, Motion&, Mind& mind) {
+        if (mind.ribbon || mind.goal < 0) return;
+        const bool building = mind.act == Act::Dock || mind.act == Act::Climb || (mind.act == Act::Locked && time_ - mind.actSince < 0.6F);
+        if (!building) return;
+        float vx, vy;
+        viewOf(pose, mind, vx, vy);
+        const int bin = std::clamp(static_cast<int>((vx - titleMinX_) / span * kBins), 0, kBins - 1);
+        ++count[static_cast<std::size_t>(bin)];
+        sumX[static_cast<std::size_t>(bin)] += vx;
+        sumY[static_cast<std::size_t>(bin)] += vy;
+    });
+    // A section is two bins wide (about the close-up's width).
+    auto busy = [&](int b) { return count[static_cast<std::size_t>(b)] + (b + 1 < kBins ? count[static_cast<std::size_t>(b + 1)] : 0U); };
+    int best = 0;
+    for (int b = 1; b < kBins; ++b)
+        if (busy(b) > busy(best)) best = b;
+    if (focusBin_ < 0 || busy(best) * 2 > busy(focusBin_) * 3 + 8) focusBin_ = best;
+    float targetX = followX_, targetY = followY_;
+    const std::uint32_t n = busy(focusBin_);
+    if (n >= 6)
+    {
+        const auto b = static_cast<std::size_t>(focusBin_);
+        const float sx = sumX[b] + (b + 1 < kBins ? sumX[b + 1] : 0.0F);
+        const float sy = sumY[b] + (b + 1 < kBins ? sumY[b + 1] : 0.0F);
+        targetX = sx / static_cast<float>(n);
+        targetY = 0.5F * (sy / static_cast<float>(n) + titleMidY_);   // keep the letter in frame
+    }
+    else
+    {
+        // Nothing building yet: frame the head of the stream as it approaches the title.
+        float sx = 0.0F, sy = 0.0F;
+        std::uint32_t m = 0;
+        world_.each<Identity, Pose, Motion, Mind>([&](Identity&, Pose& pose, Motion&, Mind& mind) {
+            if (restAct(mind.act) || mind.ribbon) return;
+            float vx, vy;
+            viewOf(pose, mind, vx, vy);
+            headY = std::max(headY, vy);
+        });
+        world_.each<Identity, Pose, Motion, Mind>([&](Identity&, Pose& pose, Motion&, Mind& mind) {
+            if (restAct(mind.act) || mind.ribbon) return;
+            float vx, vy;
+            viewOf(pose, mind, vx, vy);
+            if (vy < headY - 0.5F * closeW) return;
+            sx += vx;
+            sy += vy;
+            ++m;
+        });
+        if (m > 0)
+        {
+            targetX = sx / static_cast<float>(m);
+            targetY = sy / static_cast<float>(m) - 0.25F * closeW;   // the head toward the top, the stream behind
+        }
+    }
+    targetX = std::clamp(targetX, left, right);
+    // Critically smooth pursuit (time constant 0.6 choreography seconds).
+    const float follow = 1.0F - std::exp(-stepSeconds() / 0.6F);
+    followX_ += (targetX - followX_) * follow;
+    followY_ += (targetY - followY_) * follow;
+    // Orbit: the view turns with the camera's place along the title, from one side to the other.
+    const float turn = oblique() ? 28.0F : 0.0F;
+    const float along = std::clamp((followX_ - left) / std::max(1e-3F, right - left), 0.0F, 1.0F);
+    camera_ = scripted;
+    camera_.cx = scripted.cx + (followX_ - scripted.cx) * blend;
+    camera_.cy = scripted.cy + (followY_ - scripted.cy) * blend;
+    camera_.halfWidth = std::exp(std::log(scripted.halfWidth) + (std::log(closeW) - std::log(scripted.halfWidth)) * blend);
+    camera_.yaw = scripted.yaw + (turn * (1.0F - 2.0F * along) - scripted.yaw) * blend;
 }
 
 bool SwarmIntro::inView(float x, float y, float margin) const
@@ -780,8 +917,8 @@ void SwarmIntro::forNeighbours(float x, float y, float radius, F&& f) const
 void SwarmIntro::tick()
 {
     metrics_ = TickMetrics{};
-    time_ = static_cast<float>(tickIndex_ + 1) * stepSeconds();
-    camera_ = cameraAt(time_);
+    time_ += stepSeconds();   // pace eases slower while the camera tours close up
+    updateCamera();
 
     auto start = Clock::now();
     gather();
@@ -864,6 +1001,7 @@ void SwarmIntro::gather()
         if (gSlotLocked_[a]) gLetterFrontier_[slots_[a].letter] = std::max(gLetterFrontier_[slots_[a].letter], static_cast<int>(slotDepth_[a]));
     }
     // Freeze the tick-start epoch: every system reads these, and writes only its own row.
+    gPushers_ = 0;
     world_.each<Identity, Pose, Motion, Mind>([this](Identity& id, Pose& pose, Motion& motion, Mind& mind) {
         const std::uint32_t i = id.index;
         gx_[i] = pose.x;
@@ -876,6 +1014,7 @@ void SwarmIntro::gather()
         gStall_[i] = mind.stall;
         gLayer_[i] = flows(pose, mind) ? 1 : 0;
         gPush_[i] = mind.pushTicks > 0 ? 1 : 0;
+        gPushers_ += gPush_[i];
         gGoal_[i] = (mind.act == Act::Seek || (mind.act == Act::Lane && mind.laneS > 0.0F)) ? mind.goal : -1;
     });
     rebuildGrid(gx_, gy_, allOnes_);
@@ -946,18 +1085,18 @@ SwarmIntro::Desire SwarmIntro::desire(const Identity& id, Pose& pose, Mind& mind
         constexpr float kLookahead = 4.0F;
         float lx, ly, tx, ty;
         const float end = lane.cumulative.back();
-        // Project onto the lane centre line inside a short forward window; progress is monotonic.
+        // Project onto the lane centre line inside a short forward window; progress is
+        // monotonic. Distance falls to the nearest point and then rises, so the search stops
+        // at the first rise (S0n profile: the full window was 13% of a tick).
         float bestS = mind.laneS;
         float bestD = std::numeric_limits<float>::max();
         for (float s = mind.laneS; s <= std::min(end, mind.laneS + 8.0F); s += 0.5F)
         {
             lanePoint(lane, s, lx, ly, tx, ty);
             const float dd = (lx - pose.x) * (lx - pose.x) + (ly - pose.y) * (ly - pose.y);
-            if (dd < bestD)
-            {
-                bestD = dd;
-                bestS = s;
-            }
+            if (dd >= bestD) break;
+            bestD = dd;
+            bestS = s;
         }
         mind.laneS = bestS;
         // Branch toward the slot over the lane's tail (shot03): each unit leaves for where it is
@@ -1455,16 +1594,41 @@ void SwarmIntro::heroChoose(const Identity& id, const Pose& pose, float& vx, flo
 
 void SwarmIntro::behaviourSystems()
 {
-    const float d = settings_.diameter;
     const float dt = stepSeconds();
 
     // Hero: full per-unit decision making (sampled RVO, anticipation, climb, nuanced turns).
-    world_.each<Identity, Pose, Motion, Mind, HeroTier>([&](Identity& id, Pose& pose, Motion& motion, Mind& mind, HeroTier&) {
+    // System 2 deliberates every heroPeriod ticks, staggered by identity; on the ticks between,
+    // System 1 holds the last decision relative to the current desire and separates
+    // reactively. Docking and flowing (layered) units have nothing to deliberate.
+    const std::uint32_t period = std::max<std::uint32_t>(1, settings_.levers.heroPeriod);
+    world_.each<Identity, Pose, Motion, Mind, HeroTier>([&](Identity& id, Pose& pose, Motion& motion, Mind& mind, HeroTier& hero) {
         if (restAct(mind.act)) return;
         const Desire want = desire(id, pose, mind);
         float vx = want.vx, vy = want.vy;
         pushAway(id.index, pose, vx, vy);
-        if (mind.act != Act::Dock && !flows(pose, mind)) heroChoose(id, pose, vx, vy);
+        if (mind.act != Act::Dock && !flows(pose, mind))
+        {
+            const float speed = std::hypot(vx, vy);
+            if (!hero.planned || (tickIndex_ + id.index) % period == 0)
+            {
+                const float before = std::atan2(vy, vx);
+                heroChoose(id, pose, vx, vy);
+                ++metrics_.deliberations;
+                const float after = std::hypot(vx, vy);
+                hero.planTurn = speed > 0.5F && after > 1e-3F ? wrapAngle(std::atan2(vy, vx) - before) : 0.0F;
+                hero.planScale = speed > 0.5F ? after / speed : 1.0F;
+                hero.planned = true;
+            }
+            else
+            {
+                const float c = std::cos(hero.planTurn), s = std::sin(hero.planTurn);
+                const float hx = (c * vx - s * vy) * hero.planScale;
+                const float hy = (s * vx + c * vy) * hero.planScale;
+                vx = hx;
+                vy = hy;
+                separate(id.index, pose, mind, vx, vy);
+            }
+        }
         integrate(pose, motion, vx, vy, want, 9.0F);
         pose.z += (liftOf(id, pose, mind) - pose.z) * std::min(1.0F, dt * 12.0F);
         advanceAct(id.index, pose, mind);
@@ -1475,30 +1639,22 @@ void SwarmIntro::behaviourSystems()
         if (restAct(mind.act)) return;
         const Desire want = desire(id, pose, mind);
         float vx = want.vx, vy = want.vy;
-        const float reach = 1.6F * d;
         // Docking units hold their line; climbers flow in layers instead of separating.
         const bool committed = mind.act == Act::Dock || flows(pose, mind);
         if (!committed)
         {
             pushAway(id.index, pose, vx, vy);
         }
-        forNeighbours(pose.x, pose.y, reach, [&](std::uint32_t j) {
-            if (j == id.index || committed || !gMover_[j] || gLayer_[j]) return;
-            const float dx = pose.x - gx_[j], dy = pose.y - gy_[j];
-            const float dist = std::max(std::hypot(dx, dy), 1e-3F);
-            const float push = (reach - dist) / reach * settings_.cruiseSpeed * 0.8F;
-            vx += dx / dist * push;
-            vy += dy / dist * push;
-        });
+        separate(id.index, pose, mind, vx, vy);
         integrate(pose, motion, vx, vy, want, 14.0F);
         pose.z += (liftOf(id, pose, mind) - pose.z) * std::min(1.0F, dt * 12.0F);
         advanceAct(id.index, pose, mind);
     });
 
     // Far: O(1) crowd response from the per-cell mover density gradient (continuum-style).
-    world_.each<Identity, Pose, Motion, Mind, FarTier>([&](Identity& id, Pose& pose, Motion& motion, Mind& mind, FarTier&) {
+    world_.each<Identity, Pose, Motion, Mind, FarTier>([&](Identity& id, Pose& pose, Motion& motion, Mind& mind, FarTier& tier) {
         if (restAct(mind.act)) return;
-        const Desire want = desire(id, pose, mind);
+        const Desire want = plannedDesire(id, pose, mind, tier.route);
         float vx = want.vx, vy = want.vy;
         const int cx = std::clamp(static_cast<int>((pose.x - gridMinX_) / cell_), 1, gridW_ - 2);
         const int cy = std::clamp(static_cast<int>((pose.y - gridMinY_) / cell_), 1, gridH_ - 2);
@@ -1516,16 +1672,14 @@ void SwarmIntro::behaviourSystems()
         advanceAct(id.index, pose, mind);
     });
 
-    // Hidden: analytic goal motion only; no neighbour queries and no overlap handling.
-    world_.each<Identity, Pose, Motion, Mind, HiddenTier>([&](Identity& id, Pose& pose, Motion& motion, Mind& mind, HiddenTier&) {
+    // Hidden: goal motion only; no neighbour queries and no overlap handling. It shares the
+    // other tiers' motion model (acceleration limit, turn rate), so off-screen units reach the
+    // same goals: setting velocity directly made units overshoot a waypoint every tick and
+    // turn back forever, and two climb slots were never filled in isolation (SW-F31).
+    world_.each<Identity, Pose, Motion, Mind, HiddenTier>([&](Identity& id, Pose& pose, Motion& motion, Mind& mind, HiddenTier& tier) {
         if (restAct(mind.act)) return;
-        const Desire want = desire(id, pose, mind);
-        motion.vx = want.vx;
-        motion.vy = want.vy;
-        pose.x += motion.vx * dt;
-        pose.y += motion.vy * dt;
-        if (want.hasFace) pose.heading = want.faceHeading;
-        else if (std::hypot(motion.vx, motion.vy) > 0.5F) pose.heading = std::atan2(motion.vy, motion.vx);
+        const Desire want = plannedDesire(id, pose, mind, tier.route);
+        integrate(pose, motion, want.vx, want.vy, want, 20.0F);
         pose.z = flows(pose, mind) ? settings_.body.height : 0.0F;
         advanceAct(id.index, pose, mind);
     });
@@ -1621,9 +1775,64 @@ void SwarmIntro::setMagnet(std::uint32_t unit, Mind& mind, MagnetMode mode, bool
     if (diagnostics_) diagnostics_->magnet(tickIndex_, unit, mode, on);
 }
 
+void SwarmIntro::separate(std::uint32_t unit, const Pose& pose, const Mind& mind, float& vx, float& vy) const
+{
+    // Boids-style separation from ground movers; docking units hold their line and climbers
+    // flow in layers instead.
+    if (mind.act == Act::Dock || flows(pose, mind)) return;
+    const float reach = 1.6F * settings_.diameter;
+    forNeighbours(pose.x, pose.y, reach, [&](std::uint32_t j) {
+        if (j == unit || !gMover_[j] || gLayer_[j]) return;
+        const float dx = pose.x - gx_[j], dy = pose.y - gy_[j];
+        const float dist = std::max(std::hypot(dx, dy), 1e-3F);
+        const float push = (reach - dist) / reach * settings_.cruiseSpeed * 0.8F;
+        vx += dx / dist * push;
+        vy += dy / dist * push;
+    });
+}
+
+SwarmIntro::Desire SwarmIntro::plannedDesire(const Identity& id, Pose& pose, Mind& mind, RouteCache& route)
+{
+    // Only lane cruising is calm enough to hold a plan: arrival, docking and climbing steer
+    // to a point and would overshoot it on a stale plan (as hidden motion once did, SW-F31).
+    const std::uint32_t period = routePeriod_;
+    if (mind.act == Act::Lane && route.valid && period > 1 && (tickIndex_ + id.index) % period != 0)
+    {
+        Desire held;
+        held.vx = route.vx;
+        held.vy = route.vy;
+        held.faceHeading = route.face;
+        held.hasFace = route.hasFace;
+        return held;
+    }
+    const Desire want = desire(id, pose, mind);
+    route = { want.vx, want.vy, want.faceHeading, want.hasFace, mind.act == Act::Lane };
+    ++metrics_.routes;
+    return want;
+}
+
+float SwarmIntro::activityOf(const Mind& mind)
+{
+    if (mind.stuckSince != 0) return 1.0F;
+    if (mind.pushTicks > 0) return 0.95F;
+    switch (mind.act)
+    {
+    case Act::Dock: return 0.85F;
+    case Act::Climb: return 0.75F;
+    case Act::Queue: return 0.65F;
+    case Act::Seek: return 0.55F;
+    case Act::Lane:
+    case Act::Moor: return 0.15F;
+    case Act::Waking: return 0.10F;
+    default: return 0.0F;
+    }
+}
+
 void SwarmIntro::pushAway(std::uint32_t unit, const Pose& pose, float& vx, float& vy) const
 {
-    // A pushing neighbour's repulsion: movers step aside to clear a stuck unit's path.
+    // A pushing neighbour's repulsion: movers step aside to clear a stuck unit's path. Most
+    // ticks nobody pushes, and then there is nothing to query (S0n profile: 5% of a tick).
+    if (gPushers_ == 0) return;
     const float reach = 2.5F * settings_.diameter;
     forNeighbours(pose.x, pose.y, reach, [&](std::uint32_t j) {
         if (j == unit || !gPush_[j]) return;
@@ -1857,6 +2066,14 @@ void SwarmIntro::resolveSystem()
         gx_[i] = pose.x;
         gy_[i] = pose.y;
         include[i] = (isMover(mind.act) && !flows(pose, mind) && gTier_[i] != static_cast<std::uint8_t>(Tier::Hidden)) ? 1 : 0;
+        // Camera fidelity under a budget: below half fidelity, far units off screen keep only
+        // their density-gradient separation; nobody can see their contacts (S0n).
+        if (include[i] && fidelity_ < 0.5F && gTier_[i] == static_cast<std::uint8_t>(Tier::Far))
+        {
+            float vx, vy;
+            viewOf(pose, mind, vx, vy);
+            if (!inView(vx, vy, 0.15F * camera_.halfWidth + 4.0F * settings_.diameter)) include[i] = 0;
+        }
     });
     rebuildGrid(gx_, gy_, include);
     const float d = settings_.diameter;
@@ -1909,7 +2126,7 @@ void SwarmIntro::resolveSystem()
 
 void SwarmIntro::lodSystem()
 {
-    // Decision LOD from the camera: who earns full per-unit intelligence this tick.
+    // Decision LOD (lod mode): who earns full per-unit intelligence this tick.
     const Camera& cam = camera_;
     const float margin = 0.15F * cam.halfWidth + 4.0F * settings_.diameter;
     const float ppu = cam.pixelsPerUnit();
@@ -1922,13 +2139,69 @@ void SwarmIntro::lodSystem()
         case LodMode::AllHero: want = Tier::Hero; break;
         case LodMode::AllNear: want = Tier::Near; break;
         case LodMode::AllFar: want = Tier::Far; break;
+        case LodMode::AllHidden: want = Tier::Hidden; break;
+        case LodMode::Blend:
+        {
+            // Two drivers, weighed by the levers: camera focus asks for actor fidelity of
+            // motion and collision where the viewer looks (size on screen and centrality);
+            // activity asks for decisions where interaction is complex. Off screen, units
+            // with calm acts (lane, ribbon) go hidden; building units never do (SW-F30).
+            const LodLevers& lv = settings_.levers;
+            float vx, vy;
+            viewOf(pose, mind, vx, vy);
+            const bool seen = inView(vx, vy, margin);
+            float view = 0.0F;
+            if (seen)
+            {
+                const float rx = (vx - cam.cx) / cam.halfWidth;
+                const float ry = (vy - cam.cy) / cam.halfHeight();
+                view = std::clamp(1.0F - std::hypot(rx, ry), 0.0F, 1.0F) * std::clamp(ppu / 10.0F, 0.0F, 1.0F);
+            }
+            const float activity = activityOf(mind);
+            const float weight = std::max(1e-3F, lv.viewWeight + lv.activityWeight);
+            const float score = (lv.viewWeight * view + lv.activityWeight * activity) / weight;
+            // The budget controller lowers fidelity by raising the bar for the near tier.
+            const float nearMin = lv.nearMin + (1.0F - fidelity_) * (1.0F - lv.nearMin) * 0.5F;
+            if (!seen && activity < 0.5F) want = Tier::Hidden;
+            else want = score >= nearMin ? Tier::Near : Tier::Far;
+            if (!restAct(mind.act) && score >= lv.heroMin) heroCandidates_.push_back({ 1.0F - score, i });
+            break;
+        }
+        case LodMode::Activity:
+        {
+            // What the unit is doing decides how much it thinks; the camera does not. Building
+            // acts get separation (near) and compete for the hero cap by how contended they
+            // are; cruising and mooring units take the O(1) crowd response (far). Nothing is
+            // hidden: off-screen units run the same logic as on-screen ones.
+            const bool building = !mind.ribbon && (mind.act == Act::Seek || mind.act == Act::Queue ||
+                                                   mind.act == Act::Climb || mind.act == Act::Dock);
+            want = building ? Tier::Near : Tier::Far;
+            if (!building || restAct(mind.act)) break;
+            // Contention first: stuck, pushing, docking, climbing, queueing, seeking.
+            float rank = 5.0F;
+            if (mind.stuckSince != 0) rank = 0.0F;
+            else if (mind.pushTicks > 0) rank = 1.0F;
+            else if (mind.act == Act::Dock) rank = 2.0F;
+            else if (mind.act == Act::Climb) rank = 3.0F;
+            else if (mind.act == Act::Queue) rank = 4.0F;
+            // Within a rank, the longest in its act first (fraction keeps ranks apart).
+            const float age = std::clamp((time_ - mind.actSince) / 100.0F, 0.0F, 0.99F);
+            heroCandidates_.push_back({ rank + (1.0F - age), i });
+            break;
+        }
         case LodMode::Camera:
         {
             float vx, vy;
             viewOf(pose, mind, vx, vy);
             if (!inView(vx, vy, margin))
             {
-                want = Tier::Hidden;
+                // Activity floor: units building the title (seeking, queueing, climbing,
+                // docking) keep at least the far tier off screen. Hidden-tier motion has no
+                // separation, and a close-up camera leaving part of the title unseen let
+                // hidden climbers and the seekers below them stall until it pulled out (SW-F30).
+                const bool building = !mind.ribbon && (mind.act == Act::Seek || mind.act == Act::Queue ||
+                                                       mind.act == Act::Climb || mind.act == Act::Dock);
+                want = building ? Tier::Far : Tier::Hidden;
                 break;
             }
             const float rx = (vx - cam.cx) / cam.halfWidth;
@@ -1941,9 +2214,14 @@ void SwarmIntro::lodSystem()
         }
         desiredTier_[i] = static_cast<std::uint8_t>(want);
     });
-    if (settings_.lod == LodMode::Camera)
+    // The budget scales the hero cap with fidelity (at least 8 heroes stay).
+    const std::size_t heroCapNow = settings_.levers.budget > 0.0F
+                                       ? std::max<std::size_t>(std::min<std::size_t>(8, settings_.levers.heroCap),
+                                                               static_cast<std::size_t>(static_cast<float>(settings_.levers.heroCap) * fidelity_))
+                                       : settings_.levers.heroCap;
+    if (settings_.lod == LodMode::Camera || settings_.lod == LodMode::Activity || settings_.lod == LodMode::Blend)
     {
-        const std::size_t cap = std::min(settings_.heroCap, heroCandidates_.size());
+        const std::size_t cap = std::min(heroCapNow, heroCandidates_.size());
         std::partial_sort(heroCandidates_.begin(), heroCandidates_.begin() + static_cast<std::ptrdiff_t>(cap), heroCandidates_.end());
         for (std::size_t k = 0; k < cap; ++k) desiredTier_[heroCandidates_[k].second] = static_cast<std::uint8_t>(Tier::Hero);
     }
@@ -1953,7 +2231,7 @@ void SwarmIntro::lodSystem()
     // promotions respect the cap, after demotions.
     std::uint32_t heroes = 0;
     for (std::uint8_t t : gTier_) heroes += t == static_cast<std::uint8_t>(Tier::Hero) ? 1u : 0u;
-    const std::size_t heroCap = settings_.lod == LodMode::AllHero ? gTier_.size() : settings_.heroCap;
+    const std::size_t heroCap = settings_.lod == LodMode::AllHero ? gTier_.size() : heroCapNow;
     auto migrate = [&](std::uint32_t i, Tier from, Tier to) {
         const sub0ecs::Entity e = entities_[i];
         switch (from)
@@ -1967,8 +2245,8 @@ void SwarmIntro::lodSystem()
         {
         case Tier::Hero: world_.add(e, HeroTier{ tickIndex_ }); ++heroes; break;
         case Tier::Near: world_.add(e, NearTier{ tickIndex_ }); break;
-        case Tier::Far: world_.add(e, FarTier{ tickIndex_ }); break;
-        case Tier::Hidden: world_.add(e, HiddenTier{ tickIndex_ }); break;
+        case Tier::Far: world_.add(e, FarTier{ tickIndex_, {} }); break;
+        case Tier::Hidden: world_.add(e, HiddenTier{ tickIndex_, {} }); break;
         }
         gTier_[i] = static_cast<std::uint8_t>(to);
         pendingTicks_[i] = 0;
@@ -1987,12 +2265,51 @@ void SwarmIntro::lodSystem()
             }
             if ((to == Tier::Hero) != (round == 1)) continue;
             if (round == 0) pendingTicks_[i] = static_cast<std::uint8_t>(std::min(255, pendingTicks_[i] + 1));
-            const bool immediate = from == Tier::Hidden || settings_.lod != LodMode::Camera;
+            const bool immediate = from == Tier::Hidden || settings_.lod == LodMode::AllHero || settings_.lod == LodMode::AllNear ||
+                                   settings_.lod == LodMode::AllFar || settings_.lod == LodMode::AllHidden;
             if (!immediate && pendingTicks_[i] < 6 && round == 0) continue;
             if (to == Tier::Hero && heroes >= heroCap) continue;
             migrate(i, from, to);
         }
     }
+
+    // Predicted decision cost of this assignment for the next tick (cost units), and the
+    // budget controller: deterministic, from tier populations, never from wall time, so runs
+    // stay replayable. Over budget, fidelity drops quickly; well under, it recovers slowly.
+    const LodLevers& lv = settings_.levers;
+    std::array<std::uint32_t, 4> movers{};
+    std::uint32_t farUnseen = 0;   // far movers off screen: unresolved below half fidelity
+    world_.each<Identity, Pose, Motion, Mind>([&](Identity& id, Pose& pose, Motion&, Mind& mind) {
+        if (restAct(mind.act)) return;
+        ++movers[gTier_[id.index]];
+        if (lv.budget > 0.0F && gTier_[id.index] == static_cast<std::uint8_t>(Tier::Far))
+        {
+            float vx, vy;
+            viewOf(pose, mind, vx, vy);
+            farUnseen += inView(vx, vy, margin) ? 0U : 1U;
+        }
+    });
+    const std::uint32_t period = std::max<std::uint32_t>(1, lv.heroPeriod);
+    const float heroMovers = static_cast<float>(movers[static_cast<std::size_t>(Tier::Hero)]);
+    const float deliberating = heroMovers / static_cast<float>(period);
+    metrics_.predictedCost = deliberating * lv.costHero + (heroMovers - deliberating) * lv.costHeroHold +
+                             static_cast<float>(movers[static_cast<std::size_t>(Tier::Near)]) * lv.costNear +
+                             static_cast<float>(movers[static_cast<std::size_t>(Tier::Far)] - (fidelity_ < 0.5F ? farUnseen : 0U)) * lv.costFar +
+                             static_cast<float>(fidelity_ < 0.5F ? farUnseen : 0U) * lv.costFarUnseen +
+                             static_cast<float>(movers[static_cast<std::size_t>(Tier::Hidden)]) * lv.costHidden;
+    if (lv.budget > 0.0F)
+    {
+        if (metrics_.predictedCost > lv.budget) fidelity_ = std::max(kMinFidelity, fidelity_ - 0.05F);
+        else if (metrics_.predictedCost < 0.85F * lv.budget) fidelity_ = std::min(1.0F, fidelity_ + 0.01F);
+    }
+    else
+    {
+        fidelity_ = 1.0F;
+    }
+    metrics_.fidelity = fidelity_;
+    // Below half fidelity the controller also stretches the route cadence of calm units, to 4.
+    const std::uint32_t stretch = fidelity_ >= 0.5F ? 1U : (fidelity_ >= 0.3F ? 2U : 4U);
+    routePeriod_ = std::max<std::uint32_t>(1, std::max(lv.routePeriod, stretch));
 }
 
 void SwarmIntro::metricsSystem()
@@ -2028,7 +2345,7 @@ void SwarmIntro::metricsSystem()
             if (!onSurface) ++metrics_.offSurface;
         }
         metrics_.moored += mind.act == Act::Moored ? 1u : 0u;
-        ++metrics_.tierCount[gTier_[i]];
+        if (!restAct(mind.act)) ++metrics_.tierCount[gTier_[i]];   // movers: the units that spend decisions
     });
     for (std::size_t k = 0; k < panels_.size(); ++k)
     {
@@ -2059,7 +2376,7 @@ void SwarmIntro::metricsSystem()
 void SwarmIntro::snapshot(std::vector<RenderRow>& out)
 {
     out.resize(entities_.size());
-    world_.each<Identity, Pose, Motion, Mind>([&](Identity& id, Pose& pose, Motion&, Mind& mind) {
+    world_.each<Identity, Pose, Motion, Mind>([&](Identity& id, Pose& pose, Motion& motion, Mind& mind) {
         // World coordinates, z up. A wall-sheet unit stands in the wall plane, its lift
         // becoming a stand-off in front of the face.
         float wx, wy, wz, plane;
@@ -2067,7 +2384,8 @@ void SwarmIntro::snapshot(std::vector<RenderRow>& out)
         const bool shaped = mind.act == Act::Locked && !mind.ribbon && settings_.wordmark.tile > 0.0F;
         const std::uint8_t layer = !mind.ribbon && mind.goal >= 0 ? slots_[static_cast<std::size_t>(mind.goal)].layer : 0;
         out[id.index] = { wx, wy, wz, pose.heading, plane, mind.act, static_cast<Tier>(gTier_[id.index]), mind.actSince, mind.magnet,
-                          layer, shaped, shaped ? slots_[static_cast<std::size_t>(mind.goal)].shape : std::array<float, 6>{} };
+                          layer, shaped, shaped ? slots_[static_cast<std::size_t>(mind.goal)].shape : std::array<float, 6>{},
+                          std::hypot(motion.vx, motion.vy) };
     });
 }
 
