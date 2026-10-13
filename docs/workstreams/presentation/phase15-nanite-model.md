@@ -194,10 +194,10 @@ which switches a renderer must fade if it can only afford some.
 
 | Dolly, 6–150 px, 300 frames | Hard cut | 0.25 s cross-fade |
 | --- | ---: | ---: |
-| Largest switch jump in one frame | 6.5% | 0.85% |
+| Largest switch jump in one frame | 6.5% | 0.84% |
 | 99th percentile jump | 4.8% | 0.83% |
 | Unit's own motion per frame (reference) | mean 3.4%, up to 6.7% | |
-| Difference from always-highest detail | mean 4.3%, worst 10.5% (at 8 px) | mean 4.2%, worst 10.0% |
+| Difference from always-highest detail | mean 4.2%, worst 10.0% (at 8 px) | mean 4.2%, worst 10.0% |
 
 With the fade, every switch adds less change per frame than the motion that causes it; the
 remaining difference from always-highest detail is the cost of the simplification at small
