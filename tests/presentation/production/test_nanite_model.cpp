@@ -114,8 +114,70 @@ int main()
                 }
             }
         }
-        require(triangles({NaniteStructure::Silhouette, NaniteSurface::Flat}) == 4,
-            "The lowest detail on both axes is exactly one tetrahedron");
+        require(triangles({NaniteStructure::Silhouette, NaniteSurface::Flat}) <= 64,
+            "The lowest detail on both axes stays a few dozen triangles");
+
+        // Every level at rest stays inside the shell tetrahedron, for any variant, so a
+        // renderer stepping between levels keeps the outline. Open plates may leave it.
+        const auto planes = [](float stretch)
+        {
+            const std::array<Vec, 4> c{{{0.0F, 0.0F, 0.57735027F + 0.9F * stretch}, {-0.5F, 0.0F, -0.28867513F},
+                {0.5F, 0.0F, -0.28867513F}, {0.0F, 0.81649658F, 0.0F}}};
+            std::array<std::pair<Vec, Vec>, 4> result{};
+            const std::array<std::array<int, 3>, 4> f{{{0, 2, 1}, {0, 1, 3}, {1, 2, 3}, {2, 0, 3}}};
+            for (int face = 0; face < 4; ++face)
+            {
+                Vec normal = cross(sub(c[f[face][1]], c[f[face][0]]), sub(c[f[face][2]], c[f[face][0]]));
+                const int other = 6 - f[face][0] - f[face][1] - f[face][2];
+                if (dot(normal, sub(c[other], c[f[face][0]])) > 0.0F) normal = {-normal[0], -normal[1], -normal[2]};
+                const float length = std::sqrt(dot(normal, normal));
+                result[face] = {c[f[face][0]], {normal[0] / length, normal[1] / length, normal[2] / length}};
+            }
+            return result;
+        };
+        const auto inside = [&](const NaniteMesh& mesh, float stretch, float tolerance, NaniteMaterial only, bool all)
+        {
+            const auto shell = planes(stretch);
+            for (const auto& vertex : mesh.vertices_)
+            {
+                if (!all && vertex.material_ != only) continue;
+                for (const auto& [point, normal] : shell)
+                {
+                    if (dot(sub(vertex.position_, point), normal) > tolerance) return false;
+                }
+            }
+            return true;
+        };
+        for (const auto structure : structures)
+        {
+            for (const auto surface : surfaces)
+            {
+                for (const std::uint32_t variant : {0U, 7U, 123456U})
+                {
+                    for (const float stretch : {0.0F, 1.0F})
+                    {
+                        const NaniteDetail detail{structure, surface};
+                        require(inside(buildNanite(detail, {stretch, 0.0F, 1.0F}, variant), stretch, 2e-3F,
+                            NaniteMaterial::Silver, true), name(detail) + ": a closed unit leaves its silhouette");
+                    }
+                }
+            }
+        }
+
+        // Variants change the unit's irregularity, never its parts or triangle count.
+        for (const auto structure : structures)
+        {
+            const NaniteDetail detail{structure, NaniteSurface::Bevel};
+            const auto first = buildNanite(detail, {}, 1);
+            const auto second = buildNanite(detail, {}, 2);
+            require(first.indices_.size() == second.indices_.size(), name(detail) + ": variants differ in size");
+            checkWellFormed(second, name(detail) + " variant 2");
+            if (structure >= NaniteStructure::Frame)
+            {
+                require(positionsOf(first, NaniteMaterial::Silver) != positionsOf(second, NaniteMaterial::Silver),
+                    name(detail) + ": variants must differ");
+            }
+        }
 
         // Each axis adds triangles on its own, whatever the other axis holds.
         for (std::size_t s = 0; s < structures.size(); ++s)
@@ -135,8 +197,8 @@ int main()
             for (const auto& vertex : buildNanite(detail).vertices_) seen[static_cast<int>(vertex.material_)] = true;
             return seen;
         };
-        require(materials({NaniteStructure::Silhouette, NaniteSurface::Bevel}) == std::array{true, false, false, false},
-            "Silhouette is one silver shell");
+        require(materials({NaniteStructure::Silhouette, NaniteSurface::Bevel}) == std::array{true, true, false, true},
+            "Silhouette is a silver shell with opaque graphite windows onto a luminous facet");
         require(materials({NaniteStructure::Frame, NaniteSurface::Flat}) == std::array{true, true, false, true},
             "Frame has silver rails, graphite hubs and a luminous core");
         require(materials({NaniteStructure::Shielded, NaniteSurface::Flat}) == std::array{true, true, true, true},
@@ -171,17 +233,8 @@ int main()
                 require(std::sqrt(dot(d, d)) < 0.122F * 0.8F, "Heart must keep clearance inside its housing");
             }
         }
-        const auto shell = buildNanite({NaniteStructure::Silhouette, NaniteSurface::Flat});
-        for (const auto& p : positionsOf(buildNanite({NaniteStructure::Shielded, NaniteSurface::Hero}), NaniteMaterial::Housing))
-        {
-            for (std::size_t index = 0; index < shell.indices_.size(); index += 3)
-            {
-                const auto& a = shell.vertices_[shell.indices_[index]].position_;
-                const Vec normal = cross(sub(shell.vertices_[shell.indices_[index + 1]].position_, a),
-                    sub(shell.vertices_[shell.indices_[index + 2]].position_, a));
-                require(dot(sub(p, a), normal) < 0.0F, "Housing must stay inside the shell");
-            }
-        }
+        require(inside(buildNanite({NaniteStructure::Shielded, NaniteSurface::Hero}), 0.0F, -0.05F, NaniteMaterial::Housing, false),
+            "Housing must stay well inside the shell");
 
         // Identical inputs give identical bytes; nonfinite postures fall back to rest.
         const auto first = buildNanite({NaniteStructure::Articulated, NaniteSurface::Hero}, {0.3F, 0.4F, 1.0F});

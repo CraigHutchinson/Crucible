@@ -14,10 +14,10 @@ std::vector<float> interleaved; // x y z nx ny nz material
 extern "C"
 {
 /// Builds one unit; returns its vertex count. Read with labVertices/labIndices/labIndexCount.
-EMSCRIPTEN_KEEPALIVE int labBuild(int structure, int surface, float stretch, float open, float heartTurn)
+EMSCRIPTEN_KEEPALIVE int labBuild(int structure, int surface, float stretch, float open, float heartTurn, unsigned variant)
 {
     mesh = buildNanite({static_cast<NaniteStructure>(structure & 3), static_cast<NaniteSurface>(surface & 3)},
-        {stretch, open, heartTurn});
+        {stretch, open, heartTurn}, variant);
     interleaved.clear();
     for (const auto& vertex : mesh.vertices_)
     {

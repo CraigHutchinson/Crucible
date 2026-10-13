@@ -112,6 +112,7 @@ table.budget tr.on td { color: var(--accent); }
             <label class="row" for="stretch">Stretch <input id="stretch" type="range" min="0" max="1" step="0.01" value="0"><output id="stretchOut">0.00</output></label>
             <label class="row" for="open">Open <input id="open" type="range" min="0" max="1" step="0.01" value="0.35"><output id="openOut">0.35</output></label>
             <label class="row" for="spin">Heart spin <input id="spin" type="range" min="0" max="2" step="0.05" value="0.6"><output id="spinOut">0.60</output></label>
+            <label class="row" for="variant">Variant <input id="variant" type="range" min="0" max="63" step="1" value="0"><output id="variantOut">0</output></label>
             <label class="check" for="cycle"><input id="cycle" type="checkbox"> Play the travel and contact cycle</label>
         </div>
         <div class="group">
@@ -158,10 +159,10 @@ import { OutputPass } from "three/addons/postprocessing/OutputPass.js";
 const STRUCTURES = ["Silhouette", "Frame", "Shielded", "Articulated"];
 const SURFACES = ["Flat", "Chamfer", "Bevel", "Hero"];
 const STRUCTURE_HINTS = [
-    "One closed tetrahedron. Swarm distance.",
-    "Silver edge rails and graphite hubs around one solid luminous core.",
-    "Recessed face shields, a glass housing and a separate heart crystal.",
-    "Hinged shield plates, jointed rails, cradle struts and housing edges.",
+    "One closed tetrahedron; each face windowed down to a glowing facet, no transparency.",
+    "Silver edge rails and graphite hubs around a dark core whose faces open onto glowing facets.",
+    "Uneven, clipped and tilted face shields, a glass housing and a separate heart crystal.",
+    "Split hinged plates with stacked armour, jointed and collared rails, cradle struts and housing edges.",
 ];
 const SURFACE_HINTS = [
     "Sharp planar parts: fewest triangles.",
@@ -175,7 +176,7 @@ const CORE_CENTRE = new THREE.Vector3(0, 0.81649658 * 0.25, 0);
 
 const state = {
     view: "unit", structure: 3, surface: 2, stretch: 0, open: 0.35, spin: 0.6, cycle: false,
-    palette: "cyan", turntable: true, bloom: true, glass: true, wire: false, underside: false,
+    palette: "cyan", variant: 0, turntable: true, bloom: true, glass: true, wire: false, underside: false,
 };
 const $ = (id) => document.getElementById(id);
 const statusEl = $("status");
@@ -192,7 +193,7 @@ try {
 // ---- Generator access -------------------------------------------------------------
 function build(structure, surface, posture) {
     const t0 = performance.now();
-    const vertexCount = wasm._labBuild(structure, surface, posture.stretch, posture.open, posture.turn);
+    const vertexCount = wasm._labBuild(structure, surface, posture.stretch, posture.open, posture.turn, posture.variant ?? state.variant);
     const vertexPtr = wasm._labVertices() >> 2;
     const indexCount = wasm._labIndexCount();
     const indexPtr = wasm._labIndices() >> 2;
@@ -284,7 +285,7 @@ const materials = {
     glass: new THREE.MeshPhysicalMaterial({ color: 0xffffff, metalness: 0, roughness: 0.06, transmission: 1, thickness: 0.04,
         ior: 1.45, attenuationDistance: 0.25, transparent: true }),
     smoke: new THREE.MeshStandardMaterial({ color: 0x0b1418, metalness: 0.2, roughness: 0.1, transparent: true, opacity: 0.32, depthWrite: false }),
-    heart: new THREE.MeshStandardMaterial({ color: 0x0b2a30, emissiveIntensity: 2.4, roughness: 0.25, metalness: 0, flatShading: true }),
+    heart: new THREE.MeshStandardMaterial({ color: 0x0b2a30, emissiveIntensity: 3.4, roughness: 0.25, metalness: 0, flatShading: true }),
 };
 const wireMaterial = new THREE.MeshBasicMaterial({ color: 0x8fe9f7, wireframe: true, transparent: true, opacity: 0.35 });
 function materialSet() {
@@ -303,7 +304,7 @@ function applyPalette() {
 
 const composer = new EffectComposer(renderer);
 composer.addPass(new RenderPass(scene, camera));
-const bloom = new UnrealBloomPass(new THREE.Vector2(256, 256), 0.55, 0.3, 2.0);
+const bloom = new UnrealBloomPass(new THREE.Vector2(256, 256), 0.6, 0.3, 3.0);
 composer.addPass(bloom);
 composer.addPass(new OutputPass());
 
@@ -359,7 +360,7 @@ function layout(time) {
                 const near = row === 0 && Math.abs(col) <= 1;
                 const [s, q] = near ? preset.hero : preset.swarm;
                 const jitter = Math.sin(index * 12.9898) * 0.18;
-                const built = addUnit(s, q, { stretch: 0, open: near ? p.open : 0, turn: p.turn + index },
+                const built = addUnit(s, q, { stretch: 0, open: near ? p.open : 0, turn: p.turn + index, variant: index + 1 },
                     col * 1.5 + (row % 2) * 0.75 + jitter, -row * 1.45 + jitter);
                 units.at(-1).mesh.rotation.y = Math.sin(index * 3.1) * 0.6;
                 if (near && col === 0) lastStats = built;
@@ -407,6 +408,7 @@ function updatePanel() {
     $("structureHint").textContent = STRUCTURE_HINTS[state.structure];
     $("surfaceHint").textContent = SURFACE_HINTS[state.surface];
     for (const id of ["stretch", "open", "spin"]) $(id + "Out").textContent = Number(state[id]).toFixed(2);
+    $("variantOut").textContent = String(state.variant);
     const s = lastStats;
     if (s) {
         $("stats").innerHTML = [
@@ -443,7 +445,7 @@ wireSegment("view", "view", String);
 wireSegment("structure", "structure");
 wireSegment("surface", "surface");
 wireSegment("palette", "palette", String);
-for (const id of ["stretch", "open", "spin"]) $(id).addEventListener("input", (e) => { state[id] = Number(e.target.value); dirty = true; });
+for (const id of ["stretch", "open", "spin", "variant"]) $(id).addEventListener("input", (e) => { state[id] = Number(e.target.value); dirty = true; });
 for (const id of ["cycle", "turntable", "bloom", "glass", "wire", "underside"]) {
     $(id).addEventListener("change", (e) => { state[id] = e.target.checked; dirty = true; });
 }
@@ -487,7 +489,7 @@ function placeLabels() {
     }
     const v = new THREE.Vector3();
     for (const unit of units) {
-        v.copy(unit.mesh.position).setY(-0.05).add(new THREE.Vector3(0, 0, 0.78)).project(camera);
+        v.copy(unit.mesh.position).setY(-0.05).add(new THREE.Vector3(0, 0, 0.5)).project(camera);
         unit.tag.style.left = `${(v.x * 0.5 + 0.5) * box.width}px`;
         unit.tag.style.top = `${(-v.y * 0.5 + 0.5) * box.height}px`;
         if (unit.axis) {
