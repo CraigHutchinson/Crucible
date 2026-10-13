@@ -50,7 +50,11 @@ public:
     };
     /// Queues cold readback of one future composed scene-plus-UI frame.
     struct CaptureRequest { std::uint64_t frameId_{}, surfaceGeneration_{}; };
-    /// Owns bottom-up RGBA8 pixels after the framework's readback callback.
+    /** Owns tightly packed top-down RGBA8 pixels after the readback callback.
+     * @note Vulkan's pinned copy/reshape path preserves top-left image row order;
+     * readPixels' bottom-left rectangle coordinates do not reverse output rows.
+     * Apple Metal's source path has the same order but native receiving remains open.
+     */
     struct CaptureResult
     {
         std::uint64_t frameId_{}, surfaceGeneration_{};
@@ -78,6 +82,9 @@ public:
     ProductionRenderer& operator=(ProductionRenderer&&) = delete;
 
     /** Copies a fully validated scene/UI packet into a free bounded upload slot.
+     * @param frame Synchronous borrowed scene packet.
+     * @param drawData Synchronous borrowed draw data from the current context.
+     * @param frameId Monotonic application submission identity; retry after skip.
      * @return Correlated scheduled/skipped/suspended/rejected/failed disposition.
      * @note Borrowed inputs expire on return. Rejects before accepting beginFrame;
      * every accepted framework frame is ended, including a later recoverable error.
@@ -85,6 +92,7 @@ public:
     [[nodiscard]] FrameReceipt tryRender(const CinematicFrame& frame,
         const ImDrawData& drawData, std::uint64_t frameId);
     /** Drains outstanding work before replacing the surface extent.
+     * @param extent Requested drawable pixels; a zero axis suspends rendering.
      * @return A new surface generation on success; zero extent suspends submission.
      * @note Rejected extents retain the previous surface. Pending captures refuse resize.
      */
@@ -95,6 +103,7 @@ public:
      */
     [[nodiscard]] Status beginUiFrame();
     /** Reserves the single cold readback slot for a future frame on this surface.
+     * @param request Future application frame ID and current surface generation.
      * @return scheduled for a reserved request; skipped/rejected/failed otherwise.
      * @throws std::bad_alloc Cold capture storage cannot be replenished after transfer.
      * @note Retry the targeted frame ID after a skipped submission; later IDs are
@@ -106,10 +115,13 @@ public:
      */
     [[nodiscard]] std::optional<CaptureResult> takeCapture();
     /** Joins/purges with a bounded framework timeout without freeing pending storage.
+     * @param timeout Maximum framework-fence wait duration.
      * @return Qualified drained, timeout (storage retained), or failed.
      */
     [[nodiscard]] DrainStatus tryDrain(std::chrono::nanoseconds timeout);
-    /// Returns copied backend/pin/instancing/texture capabilities without allocation.
+    /** Returns copied backend/pin/instancing/texture capabilities without allocation.
+     * @return Actual initialized capabilities and current drawable surface epoch.
+     */
     [[nodiscard]] Metadata getMetadata() const noexcept;
 
 private:

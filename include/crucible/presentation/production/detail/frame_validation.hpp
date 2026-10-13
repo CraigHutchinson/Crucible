@@ -6,7 +6,11 @@
 
 namespace crucible::presentation::production::detail
 {
-/// Checks the complete shared packet before any native frame/resource mutation.
+/** Checks the complete shared packet before any native frame/resource mutation.
+ * @param frame Synchronous borrowed scene packet.
+ * @return True when primitive scene bounds and camera geometry are valid.
+ * @note Native derived-transform capability validation remains a separate gate.
+ */
 [[nodiscard]] inline bool isValidFrame(const CinematicFrame& frame) noexcept
 {
     const auto isPosition = [](const auto& values)

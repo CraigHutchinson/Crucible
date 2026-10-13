@@ -93,6 +93,11 @@ participant strategy/balance work. Prior terrain/growth/concurrent-reader
 follow-ups remain deferred. Prior iOS follow-ups are reassessed through the
 explicit Apple build/package/input and physical receiving gates above.
 
+2026-10-13 renderer continuation is tracked in the
+[main reconciliation and receiving record](../workstreams/integration/phase15-production-continuation.md).
+The earlier twelve-second choreography is a renderer fixture until the evolved
+upright swarm and proposed body receive their own native integration gates.
+
 Nanite intro behaviour was undefined by this plan and the brief (P15-F10). The
 [swarm behaviour design](../concepts/phase15-experience/nanite-swarm-design.md) defines
 the wave, assignment, lanes, docking, non-penetration and camera-driven decision LOD,

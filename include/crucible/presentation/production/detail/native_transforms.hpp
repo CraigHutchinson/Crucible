@@ -13,6 +13,7 @@
 namespace crucible::presentation::production::detail
 {
 /** Builds only transforms whose pinned instance-normal path stays finite.
+ * @param pose Scene pose already accepted by packet validation.
  * @return Model matrix or refusal, without clamping/renormalizing the pose.
  * @note Mirrors FInstanceBuffer::prepare's cofactor/prescale derivation from the
  * received release. Finite model entries alone do not prove valid normal math.

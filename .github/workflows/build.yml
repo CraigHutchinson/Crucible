@@ -22,14 +22,10 @@ jobs:
       - name: Build the exact production dependency with this runner's compiler
         shell: pwsh
         run: |
-          git -c core.longpaths=true clone --depth 1 --branch v1.77.3 --single-branch --config core.longpaths=true https://github.com/google/filament.git build/phase15-qualification/source
-          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-          $pin = (git -C build/phase15-qualification/source rev-parse HEAD).Trim()
-          if ($pin -ne 'd852e34cd5629a6f3851d613dcd17aa0ffd025a2') { throw 'Unexpected Filament release source' }
-          cmake -S build/phase15-qualification/source -B build/phase15-qualification/release -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DCMAKE_POLICY_DEFAULT_CMP0141=NEW -DCMAKE_MSVC_DEBUG_INFORMATION_FORMAT=Embedded -DUSE_STATIC_CRT=OFF -DFILAMENT_WINDOWS_CI_BUILD=ON -DFILAMENT_SHORTEN_MSVC_COMPILATION=OFF -DFILAMENT_SKIP_SAMPLES=ON -DFILAMENT_SKIP_SDL2=ON -DFILAMENT_BUILD_TESTING=OFF -DFILAMENT_SUPPORTS_VULKAN=ON -DFILAMENT_SUPPORTS_OPENGL=OFF -DFILAMENT_SUPPORTS_METAL=OFF -DFILAMENT_SUPPORTS_WEBGPU=OFF -DFILAMENT_ENABLE_MATDBG=OFF -DFILAMENT_ENABLE_FGVIEWER=OFF -DFILAMENT_ENABLE_EXCEPTIONS=ON -DFILAMENT_ENABLE_RTTI=ON -DFILAMENT_ENABLE_LTO=OFF
-          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-          cmake --build build/phase15-qualification/release --target filament matc resgen imgui --parallel 3
-          exit $LASTEXITCODE
+          $vs = & "${env:ProgramFiles(x86)}/Microsoft Visual Studio/Installer/vswhere.exe" -latest -products '*' -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property installationPath
+          $compiler = (Get-Command cl.exe).Source
+          if ($compiler -notmatch '[\\/]MSVC[\\/]([^\\/]+)[\\/]bin[\\/]Hostx64[\\/]x64[\\/]cl.exe$') { throw 'Expected x64 MSVC compiler' }
+          ./scripts/production/qualify_filament.ps1 -Stage all -Jobs 3 -VsInstallationPath $vs -ExpectedToolset $Matches[1]
       - name: Build the actual production caller and materials
         run: |
           cmake --preset production-release
@@ -46,6 +42,9 @@ jobs:
             build/production-release/compile_commands.json
             build/production-release/src/presentation/production/crucible/presentation/production/resources/*.filamat
             build/phase15-qualification/release/CMakeCache.txt
+            build/phase15-qualification/logs
+            build/phase15-qualification/inventory.json
+            build/phase15-qualification/compiler_macros.i
   build:
     strategy:
       fail-fast: false

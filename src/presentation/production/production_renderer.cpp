@@ -27,6 +27,7 @@
 #include <filament/TextureSampler.h>
 #include <filament/VertexBuffer.h>
 #include <filament/View.h>
+#include <filament/Viewport.h>
 #include <imgui.h>
 #include <limits>
 #include <math/mat3.h>
@@ -892,6 +893,11 @@ ProductionRenderer::FrameReceipt ProductionRenderer::tryRender(const CinematicFr
     try
     {
         state.updateTextures(drawData);
+        // The pinned beginFrame commits material descriptors through Engine::prepare.
+        // Populate every used sampler and resource before that commit, including the
+        // first UI frame; changing bindings afterward misses the current frame commit.
+        state.prepareScene(slot, frame);
+        state.prepareUi(slot, drawData);
         if (!state.renderer_->beginFrame(state.swapChain_))
         {
             state.failed_ = state.engine_->hasUnrecoverableFailure();
@@ -911,8 +917,6 @@ ProductionRenderer::FrameReceipt ProductionRenderer::tryRender(const CinematicFr
         };
         {
             EndFrame finish{state};
-            state.prepareScene(slot, frame);
-            state.prepareUi(slot, drawData);
             state.renderer_->render(state.view_);
             state.renderer_->render(state.uiView_);
             if (state.captureRequest_ && !state.captureSubmitted_ && state.captureRequest_->frameId_ == frameId)

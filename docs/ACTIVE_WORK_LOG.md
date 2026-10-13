@@ -1,5 +1,25 @@
 # Active work log
 
+## Production renderer continuation, 2026-10-13
+
+Root preserved all interrupted source in checkpoint `d9dc500` and merged reviewed
+main `a988a70`, including PR33, diagnostics/performance integration, the S0j swarm
+prototype and newer nanite form studies. No worktree/artifact was reset or removed.
+The original twelve-second choreography remains a renderer receiving fixture;
+upright slower assembly and the proposed articulated body need their own native
+consumer/geometry receiving before replacing it.
+
+| Owner | Exclusive paths | Resources |
+|---|---|---|
+| Root | Shared application contracts/wrappers, manifests/pins/CI, qualification script and central docs | Serial combined builds/tests and GPU receiving, max3 compiler jobs |
+| graphics_integration | Production importer, renderer implementation/private validation/local manifest/tests | Source only; no builds or device use |
+| native_consumer | `src/game/game_main.cpp` and its local manifest | Source only; no builds or device use |
+
+Other recorded design/diagnostics sessions have released CPU. Historical worktrees
+and failed/partial evidence remain intact. Native capture, Apple/Linux production
+qualification, DX12, audio, participant feedback and Phase14 performance gates
+remain open.
+
 ## Single nanite design study, 2026-10-13
 
 Session `codex/nanite-design-study` owns `docs/concepts/nanite/**` and bounded

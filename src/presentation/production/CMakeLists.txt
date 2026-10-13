@@ -1,3 +1,13 @@
+add_library(crucible_cinematic_choreography cinematic_choreography.cpp)
+add_library(Crucible::CinematicChoreography ALIAS crucible_cinematic_choreography)
+target_include_directories(crucible_cinematic_choreography PUBLIC "${PROJECT_SOURCE_DIR}/include")
+target_link_libraries(crucible_cinematic_choreography PUBLIC crucible_options)
+set_target_properties(crucible_cinematic_choreography PROPERTIES CXX_EXTENSIONS OFF)
+
+if(NOT CRUCIBLE_BUILD_GAME)
+    return()
+endif()
+
 if(NOT TARGET Crucible::FilamentRuntime OR NOT TARGET Crucible::ImGui OR NOT TARGET SDL3::SDL3)
     message(FATAL_ERROR "Production renderer requires the qualified Filament runtime and SDL3 platform targets.")
 endif()
@@ -48,13 +58,3 @@ target_include_directories(crucible_production_renderer PUBLIC "${PROJECT_SOURCE
 target_link_libraries(crucible_production_renderer PUBLIC Crucible::FilamentRuntime Crucible::ImGui SDL3::SDL3
     PRIVATE crucible_options)
 set_target_properties(crucible_production_renderer PROPERTIES CXX_EXTENSIONS OFF)
-add_library(crucible_cinematic_choreography cinematic_choreography.cpp)
-add_library(Crucible::CinematicChoreography ALIAS crucible_cinematic_choreography)
-target_include_directories(crucible_cinematic_choreography PUBLIC "${PROJECT_SOURCE_DIR}/include")
-target_link_libraries(crucible_cinematic_choreography PUBLIC crucible_options)
-set_target_properties(crucible_cinematic_choreography PROPERTIES CXX_EXTENSIONS OFF)
-
-if(NOT CRUCIBLE_BUILD_GAME)
-    return()
-endif()
-
