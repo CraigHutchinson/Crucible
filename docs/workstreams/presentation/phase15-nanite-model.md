@@ -98,7 +98,7 @@ structure read as "very safe", missing the natural, slightly jagged character of
 renders.
 
 **Opaque inner detail.** Every face of the Silhouette level now carries a window: a silver
-rim, graphite walls sloping into the body and, at the bottom, an inverted luminous facet
+rim, walls sloping into the body (graphite in M2, silver since M3) and, at the bottom, an inverted luminous facet
 (`emitWindowedFace`). The heart reads from any side with no transparency. (M3 then matched
 the window to the shielded level's and added corner caps: 76 triangles.) The Frame level's solid cyan core becomes a dark housing whose
 faces open onto luminous facets the same way. Both are ordinary opaque triangles, so the
