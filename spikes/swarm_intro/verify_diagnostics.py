@@ -87,11 +87,13 @@ def main():
     if summary["claims"] > 0:
         # First come, first served: every locked slot was claimed at a letter's base, never
         # assigned in advance, and no unit waited in a queue longer than the sequence.
-        # Hybrid builds raise some letters with planned slots: check the letters that claim.
+        # Climbed tiles are claimed at the base (lock mode 1); drawbridge and lying tiles are
+        # planned (mode 0) and never claimed.
         claimed = {v[4] for v in claims}
-        claiming_letters = {v[5] for v in claims}
-        if any(v[4] not in claimed for v in locks if v[5] in claiming_letters):
-            fail("every locked slot of a climbed letter was claimed first")
+        if any(v[4] not in claimed for v in locks if v[7] == 1):
+            fail("every climbed tile was claimed before it locked")
+        if any(v[4] in claimed for v in locks if v[7] == 0):
+            fail("no planned tile was claimed")
         if any(v[8] > 15 * 60 for v in claims):
             fail("no claim waited in the queue longer than the sequence")
 

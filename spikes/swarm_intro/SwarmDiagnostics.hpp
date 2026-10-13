@@ -13,7 +13,7 @@ namespace crucible::spike::swarm
 enum class SwarmEvent : std::uint64_t
 {
     Claim = 1,       ///< unit, slot, letter, depth, arrival_rank, queued_ticks
-    Lock = 2,        ///< unit, slot, letter, depth
+    Lock = 2,        ///< unit, slot, letter, depth, mode (0 planned slot, 1 claimed at the base)
     Stuck = 3,       ///< unit, act, stalled_ticks, contingency
     Recovered = 4,   ///< unit, act, stuck_ticks
     Magnet = 5,      ///< unit, mode, on
@@ -53,7 +53,8 @@ public:
     /** Records one event. Unused trailing arguments are omitted per event schema. */
     void claim(std::uint64_t tick, std::uint64_t unit, std::uint64_t slot, std::uint64_t letter, std::uint64_t depth,
                std::uint64_t arrivalRank, std::uint64_t queuedTicks) noexcept;
-    void lock(std::uint64_t tick, std::uint64_t unit, std::uint64_t slot, std::uint64_t letter, std::uint64_t depth) noexcept;
+    void lock(std::uint64_t tick, std::uint64_t unit, std::uint64_t slot, std::uint64_t letter, std::uint64_t depth,
+              std::uint64_t mode) noexcept;
     void stuck(std::uint64_t tick, std::uint64_t unit, std::uint64_t act, std::uint64_t stalledTicks, Contingency contingency) noexcept;
     void recovered(std::uint64_t tick, std::uint64_t unit, std::uint64_t act, std::uint64_t stuckTicks) noexcept;
     void magnet(std::uint64_t tick, std::uint64_t unit, MagnetMode mode, bool on) noexcept;

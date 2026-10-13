@@ -95,8 +95,10 @@ enum class Tier : std::uint8_t { Hero, Near, Far, Hidden };
 /** How the title is built. Lying is S0. The upright builds end with the title standing on
  *  its baseline: Climb assembles it in place bottom-up, units climbing the built face (S0b,
  *  S0d); Raise assembles each letter flat, then hinges it up on its bottom row (S0c); Hybrid
- *  climbs some letters and raises the others like drawbridges, in one sequence (S0e). */
-enum class Build : std::uint8_t { Lying, Climb, Raise, Hybrid };
+ *  climbs some letters and raises the others like drawbridges (S0e); Scaffold raises the tall
+ *  grounded stems as drawbridge panels first, then the swarm climbs them to finish arms and
+ *  bowls, raising stemless deep letters whole (S0f). */
+enum class Build : std::uint8_t { Lying, Climb, Raise, Hybrid, Scaffold };
 
 /** How tiers are chosen. Uniform modes exist to prove LOD changes cost, not the outcome. */
 enum class LodMode : std::uint8_t { Camera, AllHero, AllNear, AllFar };
@@ -209,18 +211,13 @@ public:
     [[nodiscard]] std::size_t slotCount() const { return slots_.size(); }
     /** @return Number of ribbon moorings. */
     [[nodiscard]] std::size_t ribbonCount() const { return ribbon_.size(); }
-    /** @return Letters raised like drawbridges (raise build: all; hybrid: the chosen ones). */
-    [[nodiscard]] std::uint32_t raisedLetterCount() const
-    {
-        std::uint32_t n = 0;
-        for (bool r : letterRaises_) n += r ? 1u : 0u;
-        return n;
-    }
-    /** @return Bit per letter (C R U C I B L E = bits 0..7) that is raised rather than climbed. */
+    /** @return Drawbridge panels: whole letters (raise, hybrid) or stems (scaffold). */
+    [[nodiscard]] std::uint32_t panelCount() const { return static_cast<std::uint32_t>(panels_.size()); }
+    /** @return Bit per letter (C R U C I B L E = bits 0..7) with at least one raised panel. */
     [[nodiscard]] std::uint8_t raisedLetterMask() const
     {
         std::uint8_t m = 0;
-        for (std::size_t i = 0; i < letterRaises_.size(); ++i) m = static_cast<std::uint8_t>(m | (letterRaises_[i] ? 1u << i : 0u));
+        for (const Panel& panel : panels_) m = static_cast<std::uint8_t>(m | (1u << panel.letter));
         return m;
     }
     /** @return What tile morphing did to the outline. */
@@ -273,8 +270,8 @@ private:
     {
         return climber(mind) && (mind.act == Act::Climb || mind.act == Act::Dock || mind.act == Act::Locked);
     }
-    /** Raise build: hinge angle of a letter, 0 flat to pi/2 upright. */
-    [[nodiscard]] float raiseAngle(std::uint8_t letter) const;
+    /** Hinge angle of a drawbridge panel, 0 flat to pi/2 upright. */
+    [[nodiscard]] float panelAngle(std::size_t panel) const;
     /** World position (z up) and plane tilt of a unit. */
     void worldOf(const Pose& pose, const Mind& mind, float& wx, float& wy, float& wz, float& plane) const;
     void viewOf(const Pose& pose, const Mind& mind, float& vx, float& vy) const;
@@ -342,11 +339,25 @@ private:
     std::vector<std::vector<std::uint32_t>> slotNeighbours_;
     std::vector<std::uint8_t> slotLocked_, gSlotLocked_, gSlotSeating_;
     std::array<std::uint32_t, 8> letterLocked_{};
-    std::array<bool, 8> letterClimbs_{}, letterRaises_{};   // per-letter build mode
+    /** A drawbridge panel: tiles assembled flat behind the baseline, hinged up as one rigid
+     *  interlocked body once all are locked. */
+    struct Panel
+    {
+        std::uint8_t letter = 0;
+        std::uint32_t tiles = 0;
+        std::uint32_t locked = 0;
+        float completeAt = -1.0F;
+        bool uprightLogged = false;
+    };
+    std::vector<Panel> panels_;
+    std::vector<std::uint8_t> slotClimbs_;   // per tile: climbed (1) or assembled flat (0)
+    std::vector<std::int16_t> slotPanel_;    // per tile: panel index, -1 when climbed or lying
+    std::vector<std::uint8_t> slotStanding_; // locked and, for panel tiles, upright: wall support
+    std::vector<float> slotWallY_;           // every tile's standing position on the wall sheet
+    std::array<bool, 8> letterClimbs_{};     // letter has any climbed tile
     bool anyClimb_ = false;
     std::array<float, 8> letterBaseMin_{}, letterBaseMax_{};   // ground-row x span per letter
     std::array<std::uint32_t, 8> letterInFlight_{};   // claimed, not yet locked
-    std::array<bool, 8> letterUprightLogged_{};
     std::vector<std::int32_t> slotOwner_;
     std::vector<std::uint8_t> slotSupportLogged_;               // claiming unit, -1 when free
     std::vector<std::pair<std::uint32_t, std::uint32_t>> queueScratch_;   // (arrived tick, unit)

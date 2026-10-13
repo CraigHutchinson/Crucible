@@ -1,7 +1,7 @@
 # Nanite swarm intro spike
 
 Headless, deterministic prototype of the CRUCIBLE title sequence's swarm behaviour: building
-blocks S0 to S0e of the
+blocks S0 to S0f of the
 [nanite swarm design](../../docs/concepts/phase15-experience/nanite-swarm-design.md).
 It answers a narrow question: **can a few thousand view-owned nanites perform the
 director's beats with intelligent-looking behaviour near the camera, cheap non-penetrating
@@ -17,20 +17,22 @@ User direction, 2026-10-12:
 - Climbing is closest to the intent, but the drawbridge stays available to combine with it
   (the hybrid build).
 - Nanites morph their triangle a little so complex outlines come out smooth.
+- Each iteration is pushed and merged.
 
 It is not production rendering, audio, a gameplay system or a native performance budget.
 The images are concept2D/dev-test captures through stand-in cameras: top-down orthographic
 for the lying build, and an oblique front view (screen height = z + 0.4 × depth) for the
 upright builds.
 
-## Four builds
+## Five builds
 
 | `--build` | Stage | How the title forms | Title complete (1536 units) |
 |---|---|---|---|
 | `lying` (default) | S0 | Units assemble the title flat on the substrate, each with a planned slot. | 8.12 s |
-| `raise` | S0c | Each letter assembles flat behind its baseline. As soon as its last unit locks, the interlocked letter hinges up on its bottom row like a drawbridge, letters rising one after another. | 8.03 s flat, upright 9.08 s |
-| `climb` | S0b, S0d | Letters grow upright in place, bottom-up. No preset slots: units queue at their letter's base and claim slots first come, first served. They climb the built face with lift magnetism, and recover from getting stuck by waiting, pushing or reclaiming. Uses the 15 s sequence. | 12.22 s |
-| `hybrid` | S0e | Both at once. Letters whose build depth is above the median (the climb's critical path) assemble flat and swing up as drawbridges; the rest climb. Automatic choice here: C, R, C and E raise; U, I, B and L climb. `--raise-letters MASK` chooses by hand (bit 0 = first C). Uses the 15 s sequence. | 10.88 s; raised letters upright by 8.88 s |
+| `raise` | S0c | Each letter assembles flat behind its baseline. As soon as its last unit locks, the interlocked letter hinges up on its bottom row like a drawbridge, letters rising one after another. | 8.00 s flat, upright 9.05 s |
+| `climb` | S0b, S0d | Letters grow upright in place, bottom-up. No preset slots: units queue at their letter's base and claim slots first come, first served. They climb the built face with lift magnetism, and recover from getting stuck by waiting, pushing or reclaiming. Uses the 15 s sequence. | 11.38 s |
+| `hybrid` | S0e | Whole letters both ways. Letters whose build depth is above the median (the climb's critical path) assemble flat and swing up as drawbridges; the rest climb. Automatic choice here: C, R, C and E raise; U, I, B and L climb. `--raise-letters MASK` chooses by hand (bit 0 = first C). Uses the 15 s sequence. | 11.17 s; raised letters upright by 9.00 s |
+| `scaffold` | S0f | Per-part drawbridges, combined with climbing. Tall, straight, upright strokes standing on the baseline become drawbridge panels: the R's stem and leg, the I, and the B, L and E stems. They assemble flat and swing up first as scaffolds, and the swarm then climbs them to finish the arms and bowls. Deep letters without such a stroke (the two Cs) raise whole; the U climbs. Uses the 15 s sequence. | 10.75 s; all 8 panels upright by 8.60 s |
 
 The climb build runs on two connected surfaces: the ground and the wall face. The wall face
 is stored as a second interaction surface, offset so the two never interact, and joined to
@@ -81,7 +83,7 @@ arrival or identity order, so every build is deterministic.
 | Claim (climb) | Units queued at a letter's base claim slots in arrival order. A slot is claimable once it could soon be supported: on the ground row, or with a lower neighbour locked or claimed. Picks the lowest such slot nearest the unit; at most `claimCap` (96) claims in flight per letter. | First come, first served; Kilobot local decisions |
 | Behaviour: Hero | Sampled velocity obstacles against senior neighbours (right of way by wake order). Turns toward its goal before moving (anticipation), climbs over resting units, docks with a ritual. At most `heroCap` units. | RVO / ORCA, Disney animation principles |
 | Behaviour: Near / Far / Hidden | Reactive separation; O(1) density gradient; analytic goal motion. All respond to a neighbour's push magnetism. | Boids, continuum crowds, crowd LOD |
-| Hybrid (hybrid) | Each letter has its own build mode. Raised letters use planned slots and the drawbridge; climbed letters use claims and climbing. Negotiation never swaps across modes. | – |
+| Build modes | Each tile is climbed, or belongs to a drawbridge panel (a whole letter, or one stroke in the scaffold build), or lies flat. Panel tiles use planned slots and hinge up together. A tile is wall support only once it **stands**: climbed tiles on locking, panel tiles when their panel is upright. Climbers route over standing tiles at their standing positions, step onto the wall only beside a ground tile they can stand on, and do not step on before anything in their letter stands (unless their own tile is on the ground row). Climbed tiles above a panel can be claimed while the panel is still flat, so their units are waiting at the base when it swings up. Negotiation never swaps across modes or panels. | Scaffold-first construction |
 | Climb (climb) | Walks to the base under its slot and steps onto the face wherever it meets the base. Routes over built units by shortest path, with the ground linking strokes; waypoints keep momentum. Clings to a built neighbour's edge beside an unsupported slot. Slides in once a lower neighbour is seated, and locks only on a locked support. | M-Blocks, Big Hero 6 microbots |
 | Negotiation | Neighbouring seekers in the same lane swap slots when that lowers summed squared distance (climb: same depth only, owners updated). | d-CAPT |
 | Contingency | Detects a stall (no progress for 40 ticks) and chooses a response (next table). | Freezing-robot avoidance; multi-robot deadlock recovery |
@@ -127,7 +129,7 @@ Every event's arguments are unsigned 64-bit: `[app_schema=1, event, tick, …]`.
 | Event | Remaining arguments |
 |---|---|
 | 1 claim | unit, slot, letter, depth, arrival rank, queued ticks |
-| 2 lock | unit, slot, letter, depth |
+| 2 lock | unit, slot, letter, depth, mode (0 planned, 1 claimed) |
 | 3 stuck | unit, act, stalled ticks, contingency (1 wait, 2 push, 3 reclaim) |
 | 4 recovered | unit, act, stuck ticks |
 | 5 magnet | unit, mode (1 lift, 2 push, 3 seat), on |
@@ -161,13 +163,13 @@ to 11.8 s (with the earlier 1,104 unmorphed tiles).
 ```sh
 cmake --preset release -DCRUCIBLE_BUILD_SWARM_SPIKE=ON
 cmake --build --preset release --target crucible_swarm_intro
-ctest --preset release -R swarm_intro      # 4 --verify cases + 4 diagnostics receivers
+ctest --preset release -R swarm_intro      # 5 --verify cases + 5 diagnostics receivers
 ./build/release/spikes/swarm_intro/crucible_swarm_intro --build climb --seconds 15 \
     --events-jsonl events.jsonl --health-json health.json --frames frames --every 4
 python3 spikes/swarm_intro/render_swarm.py frames --sheet beats.svg --magnets magnets.svg --gif intro.gif
 ```
 
-Options: `--build lying|raise|climb|hybrid`, `--raise-letters MASK`, `--morph F` (0.35), `--rows`, `--count N` (1536), `--hero-cap N` (128),
+Options: `--build lying|raise|climb|hybrid|scaffold`, `--raise-letters MASK`, `--morph F` (0.35), `--rows`, `--count N` (1536), `--hero-cap N` (128),
 `--claim-cap N` (96), `--lod camera|hero|near|far`, `--seconds S`, `--metrics FILE`.
 Renderer: `--tiers`, `--magnets` (cyan lift, amber push, white seat), `--gif-mode`, and
 `--zoom cx,cy,half_width`.
@@ -190,7 +192,7 @@ tuning. Gates set or changed after a measurement are marked †.
     per tick, and no visible pair closer than 0.5 diameter.
   - Raise: every letter upright by 10.0 s.
 - **Lying:** a uniform hero tier completes by 12.5 s† (11.0 s for 959 row slots, scaled for 1,104 tiles).
-- **Hybrid:** raised letters upright by 13.5 s†, plus the climb gates.
+- **Hybrid and scaffold:** every drawbridge panel upright by 13.5 s†, plus the climb gates.
 - **Climb** (15 s sequence):
   - Title complete by 12.5 s, leaving a hold and the menu handoff by 15 s.
   - At most 0.5%† of climber-ticks off the built face. Attached means touching it: within a
@@ -204,19 +206,20 @@ advisory host wall time with diagnostics excluded, not a device budget. 1,066 mo
 
 | Run | Title complete | Upright | Worst contacts / min gap | Stuck → recovered | Tick p50 / p95 |
 |---|---|---|---|---|---|
-| Lying, camera LOD, 1536 | 8.12 s | – | 1.5% / 0.64 d | 3 → 3 | 0.29 / 2.96 ms |
-| Lying, uniform hero | 10.75 s | – | 0.2% / 0.80 d | 120 → 120 | 1.71 / 7.33 ms |
-| Raise, camera LOD, 1536 | 8.03 s | 9.08 s | 1.1% / 0.67 d | 1 → 1 | 0.32 / 3.34 ms |
-| Climb, camera LOD, 1536 | 12.22 s | 12.22 s | 7.6% / 0.40 d | 68 → 68 | 0.66 / 4.39 ms |
-| Hybrid, camera LOD, 1536 | 10.88 s | 8.88 s (raised) | 3.7% / 0.56 d | 30 → 30 | 0.60 / 3.27 ms |
-| Hybrid, 4096 | 10.65 s | 8.95 s | 4.9% / 0.52 d | 13 → 13 | 1.07 / 3.97 ms |
-| Hybrid, 16384 | 10.28 s | 9.15 s | 4.6% / 0.45 d | 20 → 20 | 3.10 / 7.44 ms |
+| Lying, camera LOD, 1536 | 8.12 s | – | 1.5% / 0.64 d | 3 → 3 | 0.30 / 4.03 ms |
+| Raise, camera LOD, 1536 | 8.00 s | 9.05 s | 1.0% / 0.56 d | 1 → 1 | 0.33 / 3.69 ms |
+| Climb, camera LOD, 1536 | 11.38 s | 11.38 s | 9.1% / 0.36 d | 52 → 52 | 0.72 / 4.11 ms |
+| Hybrid, camera LOD, 1536 | 11.17 s | 9.00 s (raised) | 4.3% / 0.57 d | 16 → 16 | 0.61 / 3.53 ms |
+| Scaffold, camera LOD, 1536 | 10.75 s | 8.60 s (panels) | 5.9% / 0.46 d | 34 → 34 | 0.75 / 3.58 ms |
+| Scaffold, 4096 | 11.58 s | 8.87 s | 9.0% / 0.41 d | 31 → 31 | 1.40 / 4.30 ms |
+| Scaffold, 16384 | 11.60 s | 8.73 s | 7.3% / 0.44 d | 68 → 68 | 4.56 / 7.90 ms |
 
-Climb, 1536 units: 110 off-surface of 38,422 climber-ticks (0.29%), no reclaims. Hybrid: 42 of
-15,082 (0.28%). Release, Debug and ASan/UBSan pass all eight CTest cases (four `--verify`, four
-diagnostics receivers). They produce the same state hashes with this compiler (15 s runs, 1536
-units: lying `40f1f97d249b7f5c`, raise `5f27ecaec4db325a`, climb `3bb18280fd4cd9a9`, hybrid
-`01287c3d4480a493`). Cross-compiler or cross-platform bit equality is not claimed.
+Off the built face: climb 71 of 37,323 climber-ticks (0.19%), hybrid 36 of 14,958 (0.24%),
+scaffold 93 of 22,586 (0.41%). Release, Debug and ASan/UBSan pass all ten CTest cases (five
+`--verify`, five diagnostics receivers). They produce the same state hashes with this
+compiler (15 s runs, 1536 units: lying `40f1f97d249b7f5c`, raise `1e100bf4b8a9d63f`, climb
+`3d9ae5e19269ee9f`, hybrid `df77a2ef1cd21365`, scaffold `4eee04e8cc8e3a09`).
+Cross-compiler or cross-platform bit equality is not claimed.
 
 ### Lying (S0)
 
@@ -245,6 +248,18 @@ At 6.0, 7.4, 8.2, 9.0, 10.0 and 11.5 s: the first C has already swung up while t
 climbs the U, I, B and L; the R and second C rise; the E rises as the climbed letters grow;
 the climbed letters finish; complete.
 
+### Scaffold (S0f)
+
+![Scaffold build: stems swing up, the swarm climbs them](evidence/scaffold.svg)
+
+At 6.0, 7.0, 7.8, 8.6, 9.6 and 10.8 s: stems assembled flat; the first stems and the Cs swing
+up; climbers gather at the bases; arms and bowls grow from the standing stems; complete.
+
+![Scaffold close-up: B, L and E](evidence/scaffold-closeup.svg)
+
+The B, L and E from 6.8 to 10.8 s: the L and E stems rise as drawbridges (foreshortened while
+rising), then climbers pour over them to build the E's arms and the B's bowls.
+
 ### Morphing tiles
 
 ![Equilateral tiles: saw-tooth outline](evidence/outline-unmorphed.svg)
@@ -260,7 +275,7 @@ seamless.
 ![Climb build: six beats](evidence/climb.svg)
 
 At 5.0, 6.5, 8.0, 9.5, 11.0 and 14.9 s: footings; letters growing bottom-up; climbers
-pouring over the face; readable; nearly complete; complete at 12.2 s with the hold and camera
+pouring over the face; readable; nearly complete; complete at 11.4 s with the hold and camera
 opening by 15 s.
 
 ![Climb build: selective magnetism](evidence/climb-magnets.svg)
@@ -295,7 +310,7 @@ the finished letters as single faces.
 9. **Raise keeps the brief's timing and the upright ending** at no extra simulation cost.
 10. **First-come claiming at the base beats a preset order.** Claims are just-in-time, each
     the lowest supportable tile nearest the unit, and the build finished at 11.8 s instead of
-    13.5 s (1,104 equilateral tiles; 12.2 s with today's 1,066 morphed tiles). Three changes made the difference, all found through the diagnostics log:
+    13.5 s (1,104 equilateral tiles; 11.4 s with today's 1,066 morphed tiles and entry rules). Three changes made the difference, all found through the diagnostics log:
     - waypoints keep momentum;
     - climbers cling beside an unsupported slot;
     - seekers heaped at the wall's base flow over each other.
@@ -312,17 +327,29 @@ the finished letters as single faces.
     1536 units, more at scale. That is a lane design issue (exits narrow as flow peaks), not
     a tuning one. Per-letter lanes or a wider landing zone are the follow-up.
 
-14. **The hybrid is the fastest upright build and the calmest.** Raising the four deepest
-    letters removes the climb's critical path: complete at 10.9 s instead of 12.2 s, with
-    contacts down from 7.6% to 3.7% because fewer units converge on the wall. The drawbridge
-    stays a live building block: per letter now, per part (for example the E's arms swung
-    onto a climbed stem) as the next step.
+14. **The whole-letter hybrid halves the crowding.** Raising the four deepest letters removes
+    much of the climb's critical path and leaves fewer units converging on the wall:
+    contacts fall from 9.1% to 4.3%. It finishes at 11.2 s against pure climbing's 11.4 s;
+    when measured before the S0f entry rules, the gap was 10.9 s against 12.2 s. Per-part
+    drawbridges (finding 16) go further.
 15. **A little morph smooths a lot.** Moving outline corners by up to 0.35 of a side halves
     the outline error (−51%) with every tile keeping half its area. Larger limits help little
     (0.5 gives −50%, 0.7 gives −52%) because the area-quality pass holds them back. Fill and
     trim were needed first: without them the lone spikes at stroke ends cannot move far
     enough. Faint steps remain on some vertical stems, the clearest place for a later
     sub-tile edge piece.
+
+16. **Per-part drawbridges make scaffolds.** Raising the tall grounded stems first, then
+    climbing them, completes at 10.75 s. That is the fastest climbing build, with all eight
+    panels upright by 8.6 s. Two rules made it work: raised tiles support climbers only once
+    upright, at their standing positions (otherwise climbers steered to the flat tiles'
+    ground coordinates and stalled); and arm tiles can be claimed while their stem is flat,
+    so units wait at the base ready for the swing.
+17. **Entry points matter as much as routes.** Stepping onto the wall over a gap between
+    strokes left climbers hanging 2–2.7 units from anything built. Entering only beside a
+    ground tile they can stand on brought scaffold off-surface time from 1.2% to 0.4%, and
+    also sped up pure climbing (12.2 s to 11.4 s). The hybrid slowed from 10.3 s to 11.2 s
+    under the same rule: its climbed letters now wait for real footholds.
 
 ## Limits
 

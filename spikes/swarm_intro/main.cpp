@@ -68,12 +68,13 @@ struct RunSummary
     std::size_t slots = 0;
     WordmarkStats wordmark{};
     std::uint8_t raisedMask = 0;
+    std::uint32_t panels = 0;
     std::size_t ribbon = 0;
 };
 
 std::string label(const IntroSettings& s)
 {
-    const char* build = s.build == Build::Lying ? "lying" : (s.build == Build::Climb ? "climb" : (s.build == Build::Raise ? "raise" : "hybrid"));
+    const char* build = s.build == Build::Lying ? "lying" : (s.build == Build::Climb ? "climb" : (s.build == Build::Raise ? "raise" : (s.build == Build::Hybrid ? "hybrid" : "scaffold")));
     const char* lod = s.lod == LodMode::Camera ? "camera" : (s.lod == LodMode::AllHero ? "uniform-hero" : (s.lod == LodMode::AllNear ? "uniform-near" : "uniform-far"));
     return std::string(build) + "/" + lod;
 }
@@ -111,7 +112,8 @@ RunSummary run(const Options& options, bool capture)
     summary.slots = intro.assignedSlots();
     summary.wordmark = intro.wordmarkStats();
     summary.raisedMask = intro.raisedLetterMask();
-    const std::uint32_t raiseTarget = intro.raisedLetterCount();
+    const std::uint32_t raiseTarget = intro.panelCount();
+    summary.panels = raiseTarget;
     summary.ribbon = std::min(intro.ribbonCount(), options.settings.nanites - intro.assignedSlots());
     const int ticks = static_cast<int>(options.seconds / options.settings.tickSeconds + 0.5F);
     std::FILE* metrics = nullptr;
@@ -240,14 +242,14 @@ void print(const std::string& label, const Options& options, const RunSummary& s
 {
     const double ticks = static_cast<double>(s.tickMicros.size());
     std::printf("{\"run\":\"%s\",\"nanites\":%zu,\"slots\":%zu,\"ribbon\":%zu,\"hero_cap\":%zu,"
-                "\"first_lock_s\":%.3f,\"all_locked_s\":%.3f,\"all_raised_s\":%.3f,\"raised_letters\":%u,\"locked_at_8_4\":%.4f,\"locked_at_10\":%.4f,\"moored_at_10\":%.4f,"
+                "\"first_lock_s\":%.3f,\"all_locked_s\":%.3f,\"all_raised_s\":%.3f,\"raised_letters\":%u,\"panels\":%u,\"locked_at_8_4\":%.4f,\"locked_at_10\":%.4f,\"moored_at_10\":%.4f,"
                 "\"worst_visible_overlaps\":%u,\"worst_overlap_ratio\":%.4f,\"worst_overlap_time_s\":%.3f,\"min_visible_gap\":%.3f,"
                 "\"max_heroes\":%u,\"max_migrations_per_tick\":%u,\"hero_yields\":%llu,\"goal_swaps\":%llu,\"claims\":%llu,\"stuck\":%llu,\"recovered\":%llu,\"pushes\":%llu,\"reclaims\":%llu,\"max_stuck_now\":%u,\"stuck_at_end\":%u,\"climber_ticks\":%llu,\"diagnostics_ok\":%s,\"locked_at_end\":%u,\"unsupported_locks\":%llu,\"off_surface\":%llu,\"dock_clicks\":%llu,\"peak_clicks_per_100ms\":%u,"
                 "\"tick_us_p50\":%.1f,\"tick_us_p95\":%.1f,\"tick_us_max\":%.1f,"
                 "\"mean_us\":{\"gather\":%.1f,\"signal\":%.1f,\"behaviour\":%.1f,\"resolve\":%.1f,\"lod\":%.1f,\"metrics\":%.1f},"
                 "\"outline\":{\"corners\":%zu,\"rms_before\":%.3f,\"rms_after\":%.3f,\"max_morph\":%.3f,\"min_area_ratio\":%.3f},"
                 "\"state_hash\":\"%016llx\"}\n",
-                label.c_str(), options.settings.nanites, s.slots, s.ribbon, options.settings.heroCap, s.firstLock, s.allLocked, s.allRaised, static_cast<unsigned>(s.raisedMask), s.lockedAt84,
+                label.c_str(), options.settings.nanites, s.slots, s.ribbon, options.settings.heroCap, s.firstLock, s.allLocked, s.allRaised, static_cast<unsigned>(s.raisedMask), s.panels, s.lockedAt84,
                 s.lockedAt10, s.mooredAt10, s.worstOverlaps, s.worstOverlapRatio, s.worstOverlapTime, s.minVisibleGap, s.maxHeroes,
                 s.maxMigrations, static_cast<unsigned long long>(s.yields), static_cast<unsigned long long>(s.swaps), static_cast<unsigned long long>(s.claims), static_cast<unsigned long long>(s.stuck), static_cast<unsigned long long>(s.recovered), static_cast<unsigned long long>(s.pushes), static_cast<unsigned long long>(s.reclaims), s.maxStuckNow, s.stuckAtEnd, static_cast<unsigned long long>(s.climberTicks), s.diagnosticsOk ? "true" : "false", s.lockedAtEnd, static_cast<unsigned long long>(s.unsupported), static_cast<unsigned long long>(s.offSurface), static_cast<unsigned long long>(s.clicks),
                 s.peakClicksPer100ms, percentile(s.tickMicros, 0.5F), percentile(s.tickMicros, 0.95F),
@@ -273,6 +275,7 @@ bool parse(int argc, char** argv, Options& o)
             else if (m == "climb") o.settings.build = Build::Climb;
             else if (m == "raise") o.settings.build = Build::Raise;
             else if (m == "hybrid") o.settings.build = Build::Hybrid;
+            else if (m == "scaffold") o.settings.build = Build::Scaffold;
             else return false;
         }
         else if (a == "--rows") o.settings.wordmark.tile = 0.0F;
@@ -316,7 +319,7 @@ int main(int argc, char** argv)
     if (!parse(argc, argv, options))
     {
         std::fprintf(stderr,
-                     "usage: crucible_swarm_intro [--verify] [--build lying|climb|raise|hybrid] [--raise-letters MASK] [--rows] [--morph F] [--count N] [--hero-cap N] [--lod camera|hero|near|far]\n"
+                     "usage: crucible_swarm_intro [--verify] [--build lying|climb|raise|hybrid|scaffold] [--raise-letters MASK] [--rows] [--morph F] [--count N] [--hero-cap N] [--lod camera|hero|near|far]\n"
                      "                            [--seconds S] [--frames DIR] [--every TICKS] [--metrics FILE]\n"
                      "                            [--events-jsonl FILE] [--health-json FILE] [--claim-cap N]\n");
         return 2;
@@ -325,7 +328,7 @@ int main(int argc, char** argv)
     {
         const Build build = options.settings.build;
         // The climb build uses the fifteen-second sequence (user direction).
-        if (options.verify && (build == Build::Climb || build == Build::Hybrid)) options.seconds = std::max(options.seconds, 15.0F);
+        if (options.verify && (build == Build::Climb || build == Build::Hybrid || build == Build::Scaffold)) options.seconds = std::max(options.seconds, 15.0F);
         const RunSummary main = run(options, true);
         print(label(options.settings), options, main);
         if (!options.verify) return 0;
@@ -353,7 +356,8 @@ int main(int argc, char** argv)
             if (main.minVisibleGap < 0.5F) return fail("no visible mover passes through another (gap >= 0.5d)");
             break;
         case Build::Hybrid:
-            if (main.allRaised < 0.0F || main.allRaised > 13.5F) return fail("raised letters upright by 13.5s");
+        case Build::Scaffold:
+            if (main.allRaised < 0.0F || main.allRaised > 13.5F) return fail("every drawbridge panel upright by 13.5s");
             [[fallthrough]];
         case Build::Climb:
             // The fifteen-second sequence (user direction): title complete by 12.5 s leaves a
@@ -373,7 +377,7 @@ int main(int argc, char** argv)
         far.settings.lod = LodMode::AllFar;
         const RunSummary farRun = run(far, false);
         print(label(far.settings), far, farRun);
-        if (farRun.allLocked < 0.0F || farRun.allLocked > (build == Build::Climb || build == Build::Hybrid ? 14.0F : 10.0F)) return fail("uniform far tier completes the title");
+        if (farRun.allLocked < 0.0F || farRun.allLocked > (build == Build::Climb || build == Build::Hybrid || build == Build::Scaffold ? 14.0F : 10.0F)) return fail("uniform far tier completes the title");
         if (build == Build::Lying)
         {
             Options hero = options;

@@ -398,6 +398,27 @@ void tessellate(const std::vector<Polyline>& lines, float w, float h, float side
                 slot.shape[2 * k + 1] = corners[k].y - centroid.y;
             }
             stats.minAreaRatio = std::min(stats.minAreaRatio, areaRatio(corners));
+            // Nearest stroke segment, numbered across all centre lines of the glyph.
+            float bestD = std::numeric_limits<float>::max();
+            std::int16_t index = 0;
+            for (const Polyline& line : lines)
+            {
+                for (std::size_t k = 0; k + 1 < line.size(); ++k, ++index)
+                {
+                    const Point a = line[k], e = line[k + 1];
+                    const float dx = e.x - a.x, dy = e.y - a.y;
+                    const float len2 = dx * dx + dy * dy;
+                    const float t = len2 > 0.0F ? std::clamp(((centroid.x - a.x) * dx + (centroid.y - a.y) * dy) / len2, 0.0F, 1.0F) : 0.0F;
+                    const float dd = std::hypot(centroid.x - (a.x + dx * t), centroid.y - (a.y + dy * t));
+                    if (dd < bestD)
+                    {
+                        bestD = dd;
+                        slot.segment = index;
+                        slot.scaffold = std::sqrt(len2) >= 0.45F * h && std::abs(dy) >= std::abs(dx) &&
+                                        std::min(a.y, e.y) <= halfThickness;
+                    }
+                }
+            }
             out.push_back(slot);
         }
     }
