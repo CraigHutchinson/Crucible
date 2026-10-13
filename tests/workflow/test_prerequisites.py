@@ -533,5 +533,75 @@ class RunnerPrerequisiteIntegrationTests(unittest.TestCase):
                     self.assertIn("Custom test preset requires --prerequisite-build-dir", error.getvalue())
 
 
+
+class ReportTests(unittest.TestCase):
+    """A blocked receipt says which required checks blocked it and why, beside the JSON."""
+
+    TIMED_OUT = {"schema": 1, "stage": "development", "ok": False, "compiler": "cl", "elapsed_seconds": 36.484,
+                 "checks": [{"name": "cmake", "status": "pass", "required": True, "detail": "cmake version 3.31"},
+                            {"name": "cxx23_expected", "status": "unknown", "required": True,
+                             "detail": "compiler_canary timed out after 30s\ncapability.cpp", "returncode": 1,
+                             "command": ["cl", "/nologo", "/std:c++latest", "capability.cpp", "/link"],
+                             "elapsed_seconds": 30.421, "timeout_seconds": 30.0},
+                            {"name": "ninja", "status": "fail", "required": False, "detail": "optional"}]}
+
+    def test_summary_names_the_blocking_check_its_reason_and_limit(self):
+        text = prerequisites.summarize(self.TIMED_OUT)
+        self.assertIn("1 required check(s) did not pass", text)
+        self.assertIn("cxx23_expected: unknown", text)
+        self.assertIn("compiler_canary timed out after 30s", text)
+        self.assertIn("ran 30.4s of a 30s limit", text)
+        self.assertIn("command: cl /nologo /std:c++latest", text)
+        self.assertIn("raise --timeout/--budget", text)
+        self.assertNotIn("exit code", text)   # a timed-out probe's code is the kill's, not the tool's
+        self.assertIn("passed: cmake", text)
+        self.assertNotIn("ninja", text.split("passed:")[0])   # optional checks never block
+
+    def test_failed_probe_reports_its_exit_code_and_passing_receipt_is_one_line(self):
+        failed = {"ok": False, "checks": [{"name": "cmake", "status": "fail", "detail": "CMake >=3.25 required", "returncode": 2}]}
+        self.assertIn("exit code 2", prerequisites.summarize(failed))
+        self.assertIn("missing or broken", prerequisites.summarize(failed))
+        self.assertEqual("Prerequisites passed: 1 checks.", prerequisites.summarize({"ok": True, "checks": [{"name": "python", "status": "pass"}]}))
+        self.assertIn("error: no inventory", prerequisites.summarize({"ok": False, "error": "no inventory"}))
+
+    def test_github_actions_annotations_and_step_summary(self):
+        self.assertEqual([], prerequisites.github_annotations(self.TIMED_OUT, {}))
+        with tempfile.TemporaryDirectory() as directory:
+            summary = Path(directory) / "summary.md"
+            stream = io.StringIO()
+            prerequisites.report(self.TIMED_OUT, stream, {"GITHUB_ACTIONS": "true", "GITHUB_STEP_SUMMARY": str(summary)})
+            lines = stream.getvalue().splitlines()
+            annotations = [line for line in lines if line.startswith("::error ")]
+            self.assertEqual(1, len(annotations))
+            self.assertTrue(annotations[0].startswith("::error title=Prerequisite cxx23_expected unknown::"))
+            markdown = summary.read_text()
+        self.assertIn("### Prerequisites blocked", markdown)
+        self.assertIn("| cxx23_expected | unknown | yes | 30.4s / 30s |", markdown)
+
+    def test_annotation_escapes_workflow_command_characters(self):
+        receipt = {"ok": False, "checks": [{"name": "a,b:c", "status": "fail", "detail": "50%\nnext"}]}
+        line = prerequisites.github_annotations(receipt, {"GITHUB_ACTIONS": "true"})[0]
+        self.assertIn("title=Prerequisite a%2Cb%3Ac fail::", line)
+        self.assertNotIn("\n", line)
+        self.assertIn("50%25", line)
+
+    def test_main_keeps_stdout_json_and_explains_on_stderr(self):
+        with patch.object(prerequisites, "check_prerequisites", return_value=self.TIMED_OUT), \
+                patch.object(prerequisites.sys, "argv", ["check_prerequisites.py", "--stage", "development"]), \
+                patch.dict(os.environ, {"GITHUB_ACTIONS": "", "GITHUB_STEP_SUMMARY": ""}), \
+                redirect_stdout(io.StringIO()) as output, redirect_stderr(io.StringIO()) as error:
+            self.assertEqual(1, prerequisites.main())
+        self.assertEqual(self.TIMED_OUT, json.loads(output.getvalue()))
+        self.assertIn("cxx23_expected: unknown", error.getvalue())
+
+    def test_recorded_probe_keeps_its_timeout(self):
+        def probe(name, command, *, timeout, env):
+            return {"status": "pass", "returncode": 0, "output": "cmake version 3.30.0" if name == "cmake" else "",
+                    "timeout_seconds": timeout, "elapsed_seconds": 0.1}
+        receipt = prerequisites.check_prerequisites(None, None, stage="development", probe=probe, env={}, timeout=12, budget=60)
+        cmake = next(item for item in receipt["checks"] if item["name"] == "cmake")
+        self.assertEqual(12, cmake["timeout_seconds"])
+
+
 if __name__ == "__main__":
     unittest.main()

@@ -24,6 +24,10 @@ frontend/renderer worktree paths, pins or
 native measurements are touched. Single-thread headless runs only; released.
 S0k (design consolidation) edits pointer text in `docs/concepts/nanite/` to
 record that the swarm renderer's body is a proxy of that space's form.
+At the user's request (a Windows CI preflight timed out with only the raw receipt),
+this session also edits `scripts/check_prerequisites.py`, `scripts/run_tests.py`,
+`tests/workflow/test_prerequisites.py` and CONTRIBUTING.md to report why a
+preflight blocked; receipt contents and gating are unchanged.
 
 ## Phase15 production renderer reprioritisation,2026-10-09
 
