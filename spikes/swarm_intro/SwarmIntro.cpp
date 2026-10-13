@@ -2059,7 +2059,7 @@ void SwarmIntro::metricsSystem()
 void SwarmIntro::snapshot(std::vector<RenderRow>& out)
 {
     out.resize(entities_.size());
-    world_.each<Identity, Pose, Motion, Mind>([&](Identity& id, Pose& pose, Motion&, Mind& mind) {
+    world_.each<Identity, Pose, Motion, Mind>([&](Identity& id, Pose& pose, Motion& motion, Mind& mind) {
         // World coordinates, z up. A wall-sheet unit stands in the wall plane, its lift
         // becoming a stand-off in front of the face.
         float wx, wy, wz, plane;
@@ -2067,7 +2067,8 @@ void SwarmIntro::snapshot(std::vector<RenderRow>& out)
         const bool shaped = mind.act == Act::Locked && !mind.ribbon && settings_.wordmark.tile > 0.0F;
         const std::uint8_t layer = !mind.ribbon && mind.goal >= 0 ? slots_[static_cast<std::size_t>(mind.goal)].layer : 0;
         out[id.index] = { wx, wy, wz, pose.heading, plane, mind.act, static_cast<Tier>(gTier_[id.index]), mind.actSince, mind.magnet,
-                          layer, shaped, shaped ? slots_[static_cast<std::size_t>(mind.goal)].shape : std::array<float, 6>{} };
+                          layer, shaped, shaped ? slots_[static_cast<std::size_t>(mind.goal)].shape : std::array<float, 6>{},
+                          std::hypot(motion.vx, motion.vy) };
     });
 }
 

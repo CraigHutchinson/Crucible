@@ -49,6 +49,7 @@ The earlier director brief explicitly requested a low asymmetric wedge. The tetr
 | Pose/action | Readable behaviour |
 | --- | --- |
 | Rest | Shell compact, stable contacts, cyan core recessed. |
+| Travel | The shell elongates along the heading with speed, nose leading, and compacts again before docking; the core stays rigid, the same size and orientation (user direction, 2026-10-13; prototyped by the swarm proxy, S0k). |
 | Wake | A restrained core pulse precedes a small opening/settling of the nearest shield. |
 | Inspect/reach | One short edge mechanism extends toward a potential contact; the rest remain compact. |
 | Contact/transfer | Establish a visible new contact before releasing an old one. Shell movement gives purpose to the change in body pose. |

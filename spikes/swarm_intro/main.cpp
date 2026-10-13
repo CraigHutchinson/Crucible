@@ -201,15 +201,15 @@ RunSummary run(const Options& options, bool capture)
                 const Camera& cam = intro.camera();
                 const NaniteBody& body = options.settings.body;
                 std::fprintf(f, "# time=%.6f cx=%.4f cy=%.4f half_width=%.4f aspect=%.6f view=%s tilt=%.3f tile=%.4f pace=%.6f "
-                                "body=%.4f,%.4f,%.4f,%.4f\n", m.time, cam.cx,
+                                "body=%.4f,%.4f,%.4f,%.4f,%.4f,%.4f\n", m.time, cam.cx,
                              cam.cy, cam.halfWidth, cam.aspect, options.settings.build != Build::Lying ? "oblique" : "top",
                              options.settings.viewTilt, options.settings.wordmark.tile, options.settings.pace, body.height, body.span,
-                             body.lean, body.core);
-                std::fprintf(f, "x,y,z,heading,act,tier,act_since,plane,magnet,layer,s0x,s0y,s1x,s1y,s2x,s2y\n");
+                             body.lean, body.core, body.stretch, body.stretchSpeed);
+                std::fprintf(f, "x,y,z,heading,act,tier,act_since,plane,magnet,layer,speed,s0x,s0y,s1x,s1y,s2x,s2y\n");
                 for (const RenderRow& r : rows)
                 {
-                    std::fprintf(f, "%.3f,%.3f,%.3f,%.4f,%s,%d,%.3f,%.4f,%u,%u", r.x, r.y, r.z, r.heading, actName(r.act),
-                                 static_cast<int>(r.tier), r.actSince, r.plane, static_cast<unsigned>(r.magnet), static_cast<unsigned>(r.layer));
+                    std::fprintf(f, "%.3f,%.3f,%.3f,%.4f,%s,%d,%.3f,%.4f,%u,%u,%.3f", r.x, r.y, r.z, r.heading, actName(r.act),
+                                 static_cast<int>(r.tier), r.actSince, r.plane, static_cast<unsigned>(r.magnet), static_cast<unsigned>(r.layer), r.speed);
                     if (r.shaped)
                     {
                         std::fprintf(f, ",%.4f,%.4f,%.4f,%.4f,%.4f,%.4f", r.shape[0], r.shape[1], r.shape[2], r.shape[3], r.shape[4], r.shape[5]);

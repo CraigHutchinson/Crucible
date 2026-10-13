@@ -24,6 +24,8 @@ User direction, 2026-10-12:
 - 2026-10-13: the nanite becomes a **3D shape like the original concepts** (S0j).
 - 2026-10-13: consolidate the design: the [nanite design space](../../docs/concepts/nanite/README.md)
   owns the unit's form; the body here is a proxy of it (S0k).
+- 2026-10-13: moving nanites are elongated: the core never changes, the shell reshapes (S0k).
+  Backlog: organic, freeform construction (design section 5, O-stages).
 
 **Times are choreography seconds** (the authored beats) unless marked "on screen". At the
 default `--pace 0.6667`, each tick shows 1/60 s but advances the choreography by 1/90 s, so a
@@ -62,7 +64,11 @@ values the simulation and the renderer share:
   (a disclosed docking envelope, not a claim that the articulated unit tessellates);
 - the apex **leans** toward the nose so the heading reads;
 - the **core** is one regular tetrahedron, base down under the apex, its edge 0.40 of the
-  shell's base edge, clamped to stay 0.04 d inside every face.
+  shell's base edge, clamped to stay 0.04 d inside every face;
+- a **moving** free unit's shell **stretches** with speed (`stretch` 0.9 of the span at
+  `stretchSpeed` 24 d/s, eased): the nose reaches ahead while the rear edge, the apex and the
+  core stay. The stretched shell contains the compact one, so the core stays enclosed and
+  unchanged; locked units never stretch. Captures carry each unit's speed.
 
 The renderer (`nanite_mesh.py`) splits each shell face into graphite vertex hubs, silver
 edge rails and shield segments recessed around a window, view-owned decoration. All four
@@ -79,8 +85,8 @@ S0j's first body was the original concepts' arrowhead dart; the design space's r
 PR #43 superseded it. Swapping the proxy in changed no simulation state: every state hash
 is identical. `test_nanite_mesh.py` checks the proxy's invariants (base is the tile, shared
 base edges between neighbours, apex one layer up and leaned toward the nose, outward faces,
-one regular core inside the shell with clearance, parts covering each face around one
-window, shields recessed) and that its defaults match `NaniteBody.hpp`.
+one regular core inside the shell with clearance, a moving shell stretching around the
+unchanged core, parts covering each face around one window, shields recessed) and that its defaults match `NaniteBody.hpp`.
 
 Evidence images are PNG sheets stored through Git LFS (256-colour palette, tens of
 kilobytes each), not SVG: mesh frames made vector sheets of up to 2 MB.
@@ -288,7 +294,7 @@ a device budget. 1,066 morphed tiles. Times are choreography seconds; on screen 
 Off the built face: climb 0 of 59,537 climber-ticks, hybrid 0 of 24,241, scaffold 3 of
 33,327. Release, Debug and ASan/UBSan pass all thirteen CTest cases (seven `--verify`, six
 diagnostics receivers). They produce the same state hashes with this compiler (22.5 s on
-screen, 1536 units: lying `3c951c0d05bdb744`, raise `1efad3ea9ba609a3`, climb
+screen, 1536 units: lying `1969899065d5ba50`, raise `1eb6bbfca44dc013`, climb
 `e920c8aee60c63c8`, hybrid `efa270be5513e8b4`, scaffold `b75543d06ac47437`). Cross-compiler
 or cross-platform bit equality is not claimed.
 
@@ -363,6 +369,12 @@ cores), the first core lit, the answer wave lighting neighbours, units lifting o
 and the stream forming. At macro range each shell shows its hubs, rails and recessed
 shields, with the one core seen through the windows; by 4.0 s units are small bodies with
 bright windows.
+
+![Moving nanites: shells stretched in the lanes](evidence/body-motion.png)
+
+A lane at 3.0, 3.6 and 4.2 s (scaffold build): cruising units are long low bodies leading
+with the nose, the core unchanged at the rear hump; units slowing at the lane's end compact
+again.
 
 ![Nanite bodies in the title: B and L at 35 degrees of yaw](evidence/body-title.png)
 

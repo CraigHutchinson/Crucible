@@ -15,6 +15,11 @@ triangle `span` on a side; a locked unit's is its (morphed) title tile, so neigh
 shells share base edges and the letter's footprint stays gap-free. That docked envelope is
 a disclosed proxy: the design space does not claim the articulated unit tessellates.
 
+A moving unit's shell elongates along its heading with speed (`stretch`, `stretch_speed`):
+the nose reaches forward while the rear edge and the apex stay, a long low body leading with
+its nose. The core is computed from the compact shell and never changes; the stretched base
+contains the compact base, so the stretched shell contains the compact shell and its core.
+
 The core is a regular tetrahedron (edge `core` x the shell's mean base edge), base down,
 centred under the apex, lifted clear of the surface and shrunk where a squat docked shell
 would not hold it; tests hold it inside the shell.
@@ -25,8 +30,8 @@ import math
 
 import numpy as np
 
-DEFAULT_BODY = {"height": 0.55, "span": 1.10, "lean": 0.16, "core": 0.40}
-BODY_KEYS = ("height", "span", "lean", "core")
+DEFAULT_BODY = {"height": 0.55, "span": 1.10, "lean": 0.16, "core": 0.40, "stretch": 0.90, "stretch_speed": 24.0}
+BODY_KEYS = ("height", "span", "lean", "core", "stretch", "stretch_speed")
 
 # View-owned part breakdown of every shell face, as fractions of the way from each corner
 # toward the face centroid (rail, window) or along an edge (hub).
@@ -57,6 +62,31 @@ def footprint(body):
     r = body["span"] / math.sqrt(3.0)
     third = 2.0 * math.pi / 3.0
     return np.array([[r * math.cos(a), r * math.sin(a)] for a in (0.0, third, -third)])
+
+
+def stretch_amount(speed, body):
+    """0 at rest to 1 at `stretch_speed`, eased (smoothstep) so cruising reads as one shape."""
+    t = np.clip(np.asarray(speed, dtype=float) / max(body["stretch_speed"], 1e-6), 0.0, 1.0)
+    return t * t * (3.0 - 2.0 * t)
+
+
+def elongate(verts, amount, body):
+    """Stretch shells (N, 4, 3), vertex 0 the nose, along their nose direction by `amount`
+    (N,) in [0, 1]. Only the nose moves, so the result contains the compact shell."""
+    out = np.array(verts, dtype=float, copy=True)
+    centroid = out[:, 0:3, :2].mean(axis=1)
+    forward = out[:, 0, :2] - centroid
+    forward /= np.maximum(np.linalg.norm(forward, axis=1, keepdims=True), 1e-12)
+    reach = (np.asarray(amount, dtype=float) * body["stretch"] * body["span"])[:, None]
+    out[:, 0, :2] += forward * reach
+    return out
+
+
+def outline(body, amount):
+    """A free unit's silhouette (its stretched base) in its heading frame, for one unit."""
+    verts = np.zeros((1, 4, 3))
+    verts[0, 0:3, :2] = footprint(body)
+    return elongate(verts, np.array([amount]), body)[0, 0:3, :2]
 
 
 def shell(corners, nose, body):

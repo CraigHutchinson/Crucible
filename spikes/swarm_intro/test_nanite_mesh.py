@@ -4,7 +4,8 @@
 The docked letter's footprint is gap-free only if a shell's base is exactly its tile; the
 stacking layer is the apex height; the renderer's culling and lighting need outward
 normals; the design space asks for ONE regular tetrahedron core, protected inside the shell
-and clear of the surface; the shell's parts must cover each face around one window. The
+and clear of the surface, unchanged while a moving shell stretches; the shell's parts must
+cover each face around one window. The
 defaults must match NaniteBody.hpp, the single source of the dimensions. Exit code 77
 (skipped) when numpy is unavailable.
 """
@@ -146,6 +147,31 @@ class NaniteMeshTest(unittest.TestCase):
                 expected = -nanite_mesh.RECESS if role == "shield" else 0.0
                 np.testing.assert_allclose(depth, expected, atol=1e-9)
 
+    def test_moving_shell_stretches_around_an_unchanged_core(self):
+        compact = nanite_mesh.shell(nanite_mesh.footprint(BODY)[None], np.array([0]), BODY)
+        heart = nanite_mesh.core(compact, BODY)
+        self.assertEqual(float(nanite_mesh.stretch_amount(0.0, BODY)), 0.0)
+        self.assertEqual(float(nanite_mesh.stretch_amount(BODY["stretch_speed"] * 2, BODY)), 1.0)
+        previous = 0.0
+        for speed in np.linspace(0.0, BODY["stretch_speed"], 7):
+            amount = nanite_mesh.stretch_amount(np.array([speed]), BODY)
+            self.assertGreaterEqual(amount[0], previous)   # longer the faster
+            previous = amount[0]
+            moving = nanite_mesh.elongate(compact, amount, BODY)
+            np.testing.assert_allclose(moving[0, 1:4], compact[0, 1:4])   # rear edge and apex stay
+            length = moving[0, 0, 0] - moving[0, 1, 0]
+            compact_length = compact[0, 0, 0] - compact[0, 1, 0]
+            self.assertAlmostEqual(length - compact_length, amount[0] * BODY["stretch"] * BODY["span"])
+            self.assertAlmostEqual(moving[0, 1, 1] - moving[0, 2, 1], BODY["span"])   # same width
+            # The compact shell's base lies inside the stretched base: the core stays enclosed.
+            for p in compact[0, 0:3, :2]:
+                self.assertTrue(inside(p, moving[0, 0:3, :2]))
+            nrm = nanite_mesh.normals(moving)
+            for f, face in enumerate(nanite_mesh.SHELL_FACES):
+                reach = (heart[0] - moving[0, face[0]]) @ nrm[0, f]
+                self.assertTrue(np.all(reach <= -nanite_mesh.CLEARANCE + 1e-9), (speed, f))
+        np.testing.assert_allclose(nanite_mesh.outline(BODY, 0.0), nanite_mesh.footprint(BODY))
+
     def test_upright_plane_turns_the_sides_toward_the_camera(self):
         _, _, verts = self.bodies()
         world = nanite_mesh.to_world(verts[:1], np.zeros((1, 3)), np.zeros(1), np.array([math.pi / 2]), np.array([True]))
@@ -156,6 +182,7 @@ class NaniteMeshTest(unittest.TestCase):
         text = ",".join(f"{BODY[k]:.4f}" for k in nanite_mesh.BODY_KEYS)
         self.assertEqual(nanite_mesh.parse_body(text), {k: round(BODY[k], 4) for k in nanite_mesh.BODY_KEYS})
         self.assertEqual(nanite_mesh.parse_body("0.55,0.22,0.40,0.28,0.14,1.90,0.90,0.36"), BODY)   # S0j dart layout: defaults
+        self.assertEqual(nanite_mesh.parse_body("0.55,1.1,0.16,0.4"), BODY)   # S0k layout: defaults
 
 
 if __name__ == "__main__":

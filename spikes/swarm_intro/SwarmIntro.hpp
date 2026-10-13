@@ -194,6 +194,7 @@ struct RenderRow
     std::uint8_t layer;    ///< Depth layer of the title tile the unit is bound for (0 otherwise).
     bool shaped;           ///< Locked into a tile: `shape` holds its morphed corners.
     std::array<float, 6> shape;   ///< Corner offsets in the letter's plane (x, up), when shaped.
+    float speed;                  ///< Diameters per choreography second (the renderer stretches moving shells).
 };
 
 // ---- The intro --------------------------------------------------------------------------

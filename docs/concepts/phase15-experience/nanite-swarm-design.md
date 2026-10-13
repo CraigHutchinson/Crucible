@@ -30,6 +30,11 @@ User direction, the same day:
   concepts (section 4, S0j).
 - 2026-10-13: consolidate the design updates: the nanite design space (PR #44) owns the
   unit's form, and the prototype's body follows it as a proxy (section 4, S0k).
+- 2026-10-13: moving nanites take an elongated form: the central tetrahedron never changes,
+  the outer shell reshapes (section 4, S0k).
+- 2026-10-13, backlog: make construction organic instead of predefined: units choose the next
+  viable site near the structure, bind by pseudo-magnetic attraction and fill any target
+  shape's skin or volume, measured by coverage (section 5, O-stages).
 
 Sections 4 to 6 cover these. Times in this document are **choreography seconds**: the
 authored beats. At the default pace of 2/3 a viewer sees each 1.5× longer, so the 15 s
@@ -187,6 +192,12 @@ the renderer with a proxy of that direction:
 - **Parts:** each face splits into three graphite hubs, three silver edge rails and three
   shield segments recessed below the face plane around a window. All four windows open onto
   the same core; through them the shell's dark inside frames it.
+- **Moving shell:** a free unit's shell elongates with its speed: the nose reaches ahead by
+  up to 0.9 of the span (eased, full at 24 d/s) while the rear edge and the apex stay, so a
+  lane unit becomes a long low body leading with its nose, and a unit slowing to dock
+  compacts again. The core is sized and placed from the compact shell and never changes; the
+  stretched shell contains the compact one, so the core stays enclosed. Locked units never
+  stretch. Captures carry each unit's speed for this.
 - **Core:** exactly one regular tetrahedron, base down, under the apex and clear of the
   surface. Its edge is 0.40 of the shell's mean base edge, clamped to keep 0.04 d from every
   shell face (a squat docked shell on a large tile bounds it). Faces are flat cyan, each one
@@ -342,6 +353,62 @@ construction avoids exactly this with a no-enclosed-holes rule in the build orde
 follow-up before more than two layers. Overhangs and climbing round edges onto the back
 face remain with the gameplay structures (G-stages).
 
+### Backlog: organic construction, a freeform lattice (O-stages)
+
+User direction, 2026-10-13: make the construction more organic instead of predefined.
+
+Today every build is predefined. The wordmark is tessellated into slots before the run. A
+support graph orders them, and units claim slots from that list. Lanes and entry points
+have fixed directions, and each unit seats at a fixed orientation (nose to its tile's apex).
+
+The proposal:
+
+- **No slot list.** The input is a target and a fill mode: a cube, a sphere, an arbitrary
+  mesh or the title, filled either as a skin or as a volume.
+- **Units decide on arrival.** A unit near the structure picks the next viable site. A site
+  is viable when the unit is supported there, adds coverage and can be fitted. The shell
+  mutates to fit, so a unit can bind on any of its tetrahedral vertices, edges or faces, not
+  one predefined direction.
+- **Coverage is the progress metric:** how much of the target's surface or volume is
+  covered, with gaps and overfill outside the target, instead of slots filled.
+- **Binding is pseudo-magnetic.** Within range, units twist to align and pull together
+  until the contact is stable. A unit's poles (one, two or three active contacts:
+  bipolar, tripolar) decide the lattice topology it forms.
+
+Building blocks, smallest first (rows O1 to O4, section 8):
+
+1. **O1, arbitrary clumping:** all units within range magnetise and form whatever structure
+   results, then settle stable. No target and no judgement; this tests the binding model,
+   settling, determinism and cost.
+2. **O2, shape-directed clumping:** a target field (signed distance to the cube, sphere or
+   mesh) weights the attraction; skin or volume fill. Coverage is compared with a
+   predefined tiling of the same target.
+3. **O3, judgement:** when and where to bind, whether a contact is bipolar or tripolar, and
+   when to release and re-seat a poor fit. Local rules only: stigmergy and TERMES-style
+   no-enclosed-holes order (SW-F25), no global plan.
+4. **O4, the title as a freeform target,** against the scaffold build.
+
+Constraints carried in:
+
+- The state hash must stay deterministic with any decision LOD.
+- Letters must stay readable: coverage alone does not guarantee crisp strokes or open
+  counters.
+- Pairwise attraction needs the spatial grid to stay bounded.
+- What a shell can physically do belongs to the [single-unit study](../nanite/single-unit-study.md)
+  (edge fingers, contacts). The simulation therefore needs an abstract binding model
+  (contact sites per vertex, edge and face), and the renderer shows the shell adapting.
+- The S0k moving shell already separates a rigid core from a reshaping shell.
+
+Prior art to read first:
+
+- Kilobot self-assembly (a seed, gradients and edge-following into a given shape);
+- M-Blocks (magnetic pivoting);
+- freeform modular robots with magnetic, orientation-free connections (FreeBOT);
+- claytronics and programmable matter;
+- diffusion-limited aggregation, as the plain clumping baseline.
+
+Not dispatched: the O-stages follow the intro review gates and need their own fixtures.
+
 ## 6. Cooperation, magnetism and diagnostics (S0d)
 
 **No preset order.** In the climb build the planner gives a unit only a destination letter.
@@ -456,6 +523,7 @@ state hashes.
 | SW-F24 | Doubling the tiles crowded the stage: wider lanes alone fixed lying and raise; climbing letters' waiting crowds needed to heap (flow over each other) like the wall-base heap. Panels deadlocked once when a front panel wedge waited on a climbed wedge behind it. | Capacity rules scale with the layer count; face backing for flat assembly counts only the same flat body. |
 | SW-F25 | Three layers leave one enclosed front-layer pocket unfilled. | A no-enclosed-holes build order (TERMES) before more than two layers. |
 | SW-F26 | A 3D body with vertical walls on the tile footprint keeps the tessellation gap-free in 3D with no change to the build: neighbours share wall quads, the roof facets form the seams. The concept dart (spine, faceted roof, core in the spine) works on any triangular footprint, so free darts and locked tiles share one construction. The existing stacking step (0.55 d) is the spine height. | S0j; one body specification (`NaniteBody.hpp`) feeds the simulation and the renderer, tested for parity. The dart form was superseded by the design space (SW-F28). |
+| SW-F29 | Unit speeds are bimodal: about 10 d/s approaching and climbing, about 28 d/s in the lanes. Stretching only the nose keeps the compact shell (and so the core) inside the moving one; drawing the rear edge back at the same width would not. | Full stretch at 24 d/s: lanes read as streams of long bodies, climbers part-stretched, docked units compact. Shell motion stays view-owned; the swarm only publishes speed. |
 | SW-F28 | A tetrahedral proxy of the design space's form fits the build unchanged: the shell's base on the tile keeps the letter's footprint gap-free, and an apex one stacking layer high left every state hash identical. A regular core sized from the base edge poked through the squat shell on large tiles (up to 0.06 d) and is clamped to clear every face. | S0k; the form lives in one place (the design space), the swarm keeps the height and the docking envelope. The rig, the underside and the reactor housing need the single-unit study, not the swarm renderer. |
 | SW-F27 | Full seams and recess rings at title distance (8 px per unit) turned the letters to texture. | LOD the details, not just the mesh: silhouette and core first, seams only close up (brief: tactical LODs preserve silhouette and core location). |
 | SW-F16 | Corner morphing of up to 0.35 side halves the outline error with every tile keeping half its area; larger limits add little. Fill and trim of spikes were prerequisites. | Default morph 0.35; faint steps on some stems are the place for a sub-tile edge piece; a gradual morph while seating belongs to S1. |
@@ -478,11 +546,15 @@ post-journey gameplay proposals.
 | **S0h** done | Lane branching: units leave the lane over its tail for their own destinations (SW-F21); progress baseline per goal (SW-F22); tighter contact gates | PR #41 | Merged |
 | **S0i** done | 3D tessellation: staggered depth layers, face links, face backing for flat assembly, capacity scaled by layers; renderer yaw, layer shading and tile edges | PR #42 | Director reviews whether the title has depth (one or two layers) |
 | **S0j** done | 3D nanite body: one specification for simulation and renderer; beveled wedge with recessed core; mesh renderer with lighting, culling and detail LOD; mesh invariant tests | PR #43 | Merged; the form was reviewed in the design space (PR #44) and superseded |
-| **S0k** done | Design consolidation: the design space owns the form; the renderer's body becomes a tetrahedral proxy (shell, hubs, rails, recessed shields with windows, one regular core inside); simulation unchanged | This review | Director compares the proxy with the core-corrected form study (macro and title close-up) |
+| **S0k** done | Design consolidation: the design space owns the form; the renderer's body becomes a tetrahedral proxy (shell, hubs, rails, recessed shields with windows, one regular core inside), its shell elongating with speed around the unchanged core; simulation unchanged | This review | Director compares the proxy with the core-corrected form study (macro and title close-up) |
 | **S1** | Production renderer consumes a per-tick instance packet (world pose, plane tilt, lift, act, core intensity, render LOD) from the chosen build; perspective lens path from the brief | P15-R0 Filament scene | Native capture against hero and storyboard concepts; bodies grounded; upright title readable with bloom off and in grayscale |
 | **S2** | Choreography authoring: which strokes are panels, as authored data (SW-F17); sub-tile edge pieces where stems stay stepped (SW-F16); lanes and stroke order as data; the raise beat if raise is chosen (what visibly lifts the letter: a wave of units pushing under the hinge, rise order and easing); optional hero-letter climbing finish; climb arcs; traveling cyan accent; idle micro-behaviour for locked heroes (breathing core, settle wobble); skip jumps to an authored settled snapshot; reduced motion selects the still | P15-E0 frontend | Director pass (brief section 8); skip and reduced-motion receiving; temporal review of motion, not stills |
 | **S3** | Performance and decision LOD: activity-driven and blended tiers against camera tiers (section 4 backlog); event-driven wave; Sub0Pipeline row ranges for behaviour and resolve; hero candidate cap per frame; optional GPU compute route for far and hidden tiers | Named device | p95 and p99 inside the brief's proposed 16.67/20 ms with rendering included; measured, never inferred from S0 |
 | **S4** | Upstream feedback: tier tag migration cost and partition churn in Sub0ECS; frozen gather and grid as a reusable pattern only if a second consumer appears | Sub0ECS | Measured reproduction; no speculative API |
+| **O1** | Arbitrary-shape clumping: every unit in range is drawn by pseudo-magnetic binding into whatever aggregate forms, and settles stable (section 5, organic construction) | Headless spike | Deterministic settle; no interpenetration; stability held for a set time; per-tick cost bounded by a spatial grid |
+| **O2** | Shape-directed clumping: a target (cube, sphere, arbitrary mesh) with a skin or volume fill; coverage replaces slot counts | Headless spike | Coverage, gaps and overfill against a predefined tiling of the same target |
+| **O3** | Judgement: when and where to bind, how many poles (bipolar, tripolar), when to release and re-seat; local rules only | Headless spike | No enclosed holes or deadlocks; coverage and time against O2 |
+| **O4** | The title as a freeform target, compared with the scaffold build | Director review | Readability (open counters, crisp strokes), timing within 15 s, contacts |
 | **S5** | Menu backdrop: the ribbon idles cheaply behind the menu, never as a live mission | P15-J0 menu | Zero gameplay ticks; stops under reduced motion |
 | **G1** | Hero embellishment layer over gameplay nanites (section 9), view-owned, bounded deviation | P15-R1 mission view | Authoritative replay hash unchanged with the layer on or off |
 | **G2+** | One mechanic from section 10 at a time, each with frozen rules and fixtures | Mission design | Per mechanic, as in experience design |
@@ -572,6 +644,8 @@ where distant units enter the frame. It must not cost title readability.
 9. Is 2/3 the right pace, and should it be uniform? Slowing only the climb (the stream-in
    could stay brisk) is a time warp of the choreography clock, cheap to author.
 10. Should decision LOD follow activity as well as the view (section 4 backlog)?
+11. Organic construction (section 5): skin or volume fill for the title, and which poles a
+    shell offers (vertices, edges, faces), once the single-unit rig defines its contacts?
 11. Should the title have depth (S0i)? Two layers read as a solid slab from an angle and
     cost twice the units; a frontal camera barely shows them.
 7. Does the raise beat replace the brief's camera rise toward a frontal baseline, or play

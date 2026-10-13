@@ -57,15 +57,17 @@ def load(path):
     columns = lines[1].split(",")
     first_corner = columns.index("s0x") if "s0x" in columns else len(columns)
     layer_at = columns.index("layer") if "layer" in columns else None
+    speed_at = columns.index("speed") if "speed" in columns else None
     for line in lines[2:]:
         fields = line.split(",")
         x, y, z, h, act, tier, since = fields[:7]
         plane = float(fields[7]) if len(fields) > 7 else 0.0   # tilt about x: 0 ground, pi/2 wall
         magnet = int(fields[8]) if len(fields) > 8 else 0      # 1 lift, 2 push, 3 seat
         layer = int(fields[layer_at]) if layer_at is not None else 0   # depth layer (3D tessellation)
+        speed = float(fields[speed_at]) if speed_at is not None else 0.0   # moving shells stretch
         # Locked tiles carry their morphed corners (letter plane: x along, y up the letter).
         shape = tuple(float(v) for v in fields[first_corner:first_corner + 6]) if len(fields) >= first_corner + 6 else None
-        rows.append((float(x), float(y), float(z), float(h), act, int(tier), float(since), plane, magnet, shape, layer))
+        rows.append((float(x), float(y), float(z), float(h), act, int(tier), float(since), plane, magnet, shape, layer, speed))
     return {"time": t, "cx": cx, "cy": cy, "hw": hw, "aspect": aspect, "view": view, "tilt": tilt, "tile": tile, "pace": pace, "body": body, "rows": rows}
 
 
@@ -157,9 +159,8 @@ def draw_frame(frame, size=(960, 540), mode="beauty", yaw=0.0):
     else:
         order = sorted(frame["rows"], key=lambda r: (r[4] not in rest, r[2]))
     deepest = max((r[10] for r in frame["rows"]), default=0)
-    free = nanite_mesh.footprint(frame["body"])   # a free unit's silhouette: its shell's base
     bodies = []   # close enough for 3D bodies: drawn together, depth-sorted face by face
-    for x, y, z, heading, act, tier, since, plane, magnet, shape, layer in order:
+    for x, y, z, heading, act, tier, since, plane, magnet, shape, layer, speed in order:
         px, py = project(x, y, z)
         if px < -20 or px > w + 20 or py < -20 or py > h + 20:
             continue
@@ -201,7 +202,7 @@ def draw_frame(frame, size=(960, 540), mode="beauty", yaw=0.0):
         else:
             core = CYAN
         if scale >= MESH_SCALE:
-            bodies.append((x, y, z, heading, plane, shape, fill, core if mode == "beauty" else None))
+            bodies.append((x, y, z, heading, plane, shape, fill, core if mode == "beauty" else None, speed))
             continue
         if shape is not None:
             # Morphed tile: corners in the letter's plane, mapped through the plane tilt.
@@ -213,7 +214,9 @@ def draw_frame(frame, size=(960, 540), mode="beauty", yaw=0.0):
             third = 2.0 * math.pi / 3.0
             points = [corner(radius * math.cos(a), radius * math.sin(a)) for a in (0.0, third, -third)]
         else:
-            points = [corner(a, b) for a, b in free]
+            # A free unit's silhouette: its shell's base, stretched with speed.
+            stretch = float(nanite_mesh.stretch_amount(speed, frame["body"]))
+            points = [corner(a, b) for a, b in nanite_mesh.outline(frame["body"], stretch)]
         draw.polygon(points, fill)
     if bodies:
         draw_bodies(draw, bodies, frame, size, scale, oblique, tilt, cyaw, syaw)
@@ -248,8 +251,11 @@ def draw_bodies(draw, bodies, frame, size, scale, oblique, tilt, cyaw, syaw):
     # (corner 2).
     nose = np.where(shaped, 2, 0)
     local = nanite_mesh.shell(corners, nose, body)
-    world = nanite_mesh.to_world(local, origin, heading, plane, ~shaped)
+    # The core comes from the compact shell; a moving free unit's shell then stretches around it.
     heart = nanite_mesh.to_world(nanite_mesh.core(local, body), origin, heading, plane, ~shaped)
+    amount = np.where(shaped, 0.0, nanite_mesh.stretch_amount(np.array([b[8] for b in bodies]), body))
+    local = nanite_mesh.elongate(local, amount, body)
+    world = nanite_mesh.to_world(local, origin, heading, plane, ~shaped)
     # View: the direction along which screen position is constant, pointing away from us.
     if oblique:
         away = np.array([syaw, cyaw, -tilt])
