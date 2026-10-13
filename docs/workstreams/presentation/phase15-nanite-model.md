@@ -148,7 +148,7 @@ few dozen pixels, so one changed pixel is a few percent.
   the same window, onto its dark windowed core; the three levels share outline, band and
   window. Frame→Shielded is now 4.6–5.7% at 10–32 px. Frame stays off the distance ladder:
   through Frame the ladder would fade twice (Silhouette→Frame 7.3% at 10 px, then
-  Frame→Shielded), against one 6.8% fade straight to Shielded, whose flat level costs 342
+  Frame→Shielded), against one 5.9% fade straight to Shielded, whose flat level costs 342
   triangles to Frame's 284. A renderer that wants the open look can use it without a large
   pop.
 
@@ -158,8 +158,12 @@ few dozen pixels, so one changed pixel is a few percent.
   because the higher levels' sunk rails and rounded hubs inset their visible outline. The
   window now matches the shielded window (0.40 of the face), graphite corner caps sit where
   hubs are (the edge strips split there, so no T-junctions), and the silhouette is drawn at
-  0.93 scale toward the shell centre. Silhouette→Shielded is now 5.6% at 8 px and 6.8% at
-  10 px (worst view 8%), from 8–9%.
+  0.93 scale toward the shell centre, with its window 0.43 of that inset face so the opening
+  is the same size as the higher levels' on the full shell. User review then found the rim
+  still wider than the others: an earlier parameter sweep had left the window at 0.26. With
+  the window corrected, silver walls instead of graphite (through the higher levels' window
+  you see light plates and crystal, not a dark well) keep the pixel difference down:
+  Silhouette→Shielded is 5.9% at 10 px, from 8–9% before M3.
 - *Surface steps are small*; Shielded→Articulated adds parts and differs by 6–9% at any size.
 
 **The ladder** (`naniteLodLadder`, `selectNaniteLod`): six rungs, each adding detail on at
@@ -170,7 +174,7 @@ fade:
 | Rung | Level | Starts at | Difference entering (mean) | Fade flag |
 | --- | --- | ---: | ---: | --- |
 | 0 | Silhouette, Flat | 0 px | | |
-| 1 | Shielded, Flat | 10 px | 6.8% | yes |
+| 1 | Shielded, Flat | 10 px | 5.9% | yes |
 | 2 | Shielded, Chamfer | 14 px | 2.8% | |
 | 3 | Shielded, Bevel | 40 px | 2.7% | |
 | 4 | Articulated, Bevel | 64 px | 7.6% | yes |

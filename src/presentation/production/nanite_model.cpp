@@ -187,8 +187,9 @@ Polyhedron bar(Vec from, Vec to, Vec up, float halfWidth, float halfDepth)
 }
 
 /** An opaque window set into a triangular face: graphite caps at the corners (where higher
- * levels put their hubs), a silver rim, graphite walls sloping into the body and, at the
- * bottom, an inverted luminous facet, so the heart reads with no transparency. `window` is
+ * levels put their hubs), a silver rim, silver walls sloping into the body (the plates and
+ * crystal seen through the higher levels' windows read light, not dark) and, at the bottom,
+ * an inverted luminous facet, so the heart reads with no transparency. `window` is
  * the opening's size as a fraction of the face; `cap` the corner caps' share of each edge.
  */
 void emitWindowedFace(Builder& builder, const std::array<Vec, 3>& face, Vec normal, float window, float depth,
@@ -218,8 +219,8 @@ void emitWindowedFace(Builder& builder, const std::array<Vec, 3>& face, Vec norm
             builder.flat(face[i], face[j], top[j], normal, rim);
             builder.flat(face[i], top[j], top[i], normal, rim);
         }
-        builder.flat(top[i], top[j], bottom[k], normal, NaniteMaterial::Graphite);
-        builder.flat(bottom[k], top[j], bottom[i], normal, NaniteMaterial::Graphite);
+        builder.flat(top[i], top[j], bottom[k], normal, NaniteMaterial::Silver);
+        builder.flat(bottom[k], top[j], bottom[i], normal, NaniteMaterial::Silver);
     }
     builder.flat(bottom[0], bottom[1], bottom[2], normal, NaniteMaterial::Heart);
 }
@@ -524,13 +525,14 @@ NaniteMesh buildNanite(NaniteDetail detail, const NanitePosture& posture, std::u
 
     if (structure == NaniteStructure::Silhouette)
     {
-        // One shell; each face carries an opaque window down to a luminous facet. It is drawn
+        // One shell; each face carries an opaque window down to a luminous facet, the window
+        // sized (0.43 of the inset face) to match the higher levels' window on the full shell. It is drawn
         // slightly inside the full tetrahedron: the higher levels' sunk rails and rounded hubs
         // inset their visible outline, and a full-size silhouette covers more pixels than they do.
         std::array<Vec, 4> inset{};
         for (int corner = 0; corner < 4; ++corner) inset[corner] = lerp(shellCentre, corners[corner], silhouetteInset);
         emitRounded(builder, tetrahedron(inset[0], inset[1], inset[2], inset[3]), 0.025F * scale, segments,
-            NaniteMaterial::Silver, 0.26F, 0.04F, hubFraction);
+            NaniteMaterial::Silver, 0.43F, 0.06F, hubFraction);
         return mesh;
     }
 
