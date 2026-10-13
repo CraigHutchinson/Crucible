@@ -1,0 +1,23 @@
+material {
+    name : CrucibleNanite,
+    shadingModel : lit,
+    instanced : true,
+    requires : [ uv0 ],
+    parameters : [
+        { type : sampler2d, name : cores },
+        { type : int, name : batchBase },
+        { type : float, name : glow }
+    ]
+}
+fragment {
+    void material(inout MaterialInputs material) {
+        prepareMaterial(material);
+        int index = materialParams.batchBase + int(getInstanceIndex());
+        float core = texelFetch(materialParams_cores, ivec2(index % 64, index / 64), 0).r;
+        bool inset = getUV0().x > 0.5;
+        material.baseColor = inset ? vec4(0.04, 0.58, 0.72, 1.0) : vec4(0.68, 0.76, 0.82, 1.0);
+        material.metallic = inset ? 0.25 : 0.88;
+        material.roughness = inset ? 0.20 : 0.26;
+        material.emissive = vec4(inset ? vec3(0.04, 1.1, 1.6) * core * materialParams.glow : vec3(0.0), 0.0);
+    }
+}

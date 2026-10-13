@@ -1,5 +1,25 @@
 # Active work log
 
+## Production renderer continuation, 2026-10-13
+
+Root preserved all interrupted source in checkpoint `d9dc500` and merged reviewed
+main `a988a70`, including PR33, diagnostics/performance integration, the S0j swarm
+prototype and newer nanite form studies. No worktree/artifact was reset or removed.
+The original twelve-second choreography remains a renderer receiving fixture;
+upright slower assembly and the proposed articulated body need their own native
+consumer/geometry receiving before replacing it.
+
+| Owner | Exclusive paths | Resources |
+|---|---|---|
+| Root | Shared application contracts/wrappers, manifests/pins/CI, qualification script and central docs | Serial combined builds/tests and GPU receiving, max3 compiler jobs |
+| graphics_integration | Production importer, renderer implementation/private validation/local manifest/tests | Source only; no builds or device use |
+| native_consumer | `src/game/game_main.cpp` and its local manifest | Source only; no builds or device use |
+
+Other recorded design/diagnostics sessions have released CPU. Historical worktrees
+and failed/partial evidence remain intact. Native capture, Apple/Linux production
+qualification, DX12, audio, participant feedback and Phase14 performance gates
+remain open.
+
 ## Single nanite design study, 2026-10-13
 
 Session `codex/nanite-design-study` owns `docs/concepts/nanite/**` and bounded
@@ -52,9 +72,9 @@ checkpoint `8bdf587`. No native visual or performance acceptance is claimed.
 
 | Owner | Claim | Current status / resources |
 |---|---|---|
-| Architect/root | Common contracts, application/progress/profile, production app/main, manifests/pins/CI and central docs | Final Release5/5 andDebug5/5 passed; CPU released toB; integration/publication/source-only, no GPU claim |
-| foundation_resume / A | Graphics in `.worktrees/phase15-performance`, branch `codex/production-performance`; owned scripts/renderer/tests/docs | Qualification0e8a28e received764-stepRelease/tool/link closure; CPU released; R0 source authoring against frozen136MiB external-staging envelope |
-| consumer_resume / B | Frontend/choreography in `.worktrees/phase15-frontend`, branch `codex/production-frontend` | Holds bounded correctness-only CPU max3jobs, imports exact matchedImGuiRelease/MD archive; no GPU/window/performance campaign |
+| Architect/root | Common contracts, application/progress/profile, root manifests/pins/CI and central docs on `codex/production-renderer` | Owns serial combined build/test and native GPU receiving; max3 compiler jobs, serialized material tools; PR33 exact-head CI pending |
+| foundation_resume / A | Primary `cmake/ProductionDependencies.cmake`, renderer-owned source/test/local manifest; preserved qualification worktree | Source-only importer and compile fixes; no CPU/device claim; original qualification and renderer handoffs integrated |
+| consumer_resume / B | Primary `src/game/game_main.cpp` and local manifest only; preserved frontend worktree | Source-only native consumer wiring; no CPU/device claim; original frontend/choreography handoff integrated, CPU released |
 
 Architect plus at most two workers. The clean `.worktrees/phase15-performance`
 branch is reassigned to graphics qualification; the performance audit is retained.

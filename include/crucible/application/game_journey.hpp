@@ -9,6 +9,7 @@
 #include "crucible/application/frontend_intent.hpp"
 #include "crucible/application/frontend_view.hpp"
 #include "crucible/application/profile_store.hpp"
+#include "crucible/contracts/StructuralState.hpp"
 #include "crucible/runtime/ClockDriver.hpp"
 #include "crucible/runtime/CommandIngress.hpp"
 
@@ -55,6 +56,20 @@ public:
      */
     [[nodiscard]] std::optional<runtime::CommandIngress::Admission> tryAdmitFieldEdit(
         const FieldEdit& edit);
+    /** Queues the existing relay fuse command only during active Secure Relay play.
+     * @return Admission receipt, or no receipt outside the active relay mission.
+     * @note Acceptance is not application; inspect the completed structural result.
+     */
+    [[nodiscard]] std::optional<runtime::CommandIngress::Admission> tryFuseRelay();
+    /** Queues shattering against the current completed relay generation.
+     * @return Admission receipt, or no receipt outside active Secure Relay play.
+     * @note Runtime applies the generation check at a completed boundary.
+     */
+    [[nodiscard]] std::optional<runtime::CommandIngress::Admission> tryShatterRelay();
+    /** Copies the most recent completed structural command result.
+     * @return No result without a retained session or completed structural command.
+     */
+    [[nodiscard]] std::optional<StructuralCommandResult> getLastStructuralResult() const noexcept;
     /** Borrows labels/cards and copies completed-boundary progress for UI drawing.
      * @param safeContent Logical content bounds supplied by the platform owner.
      * @return Synchronous view; string/card borrows expire on mutation/destruction.

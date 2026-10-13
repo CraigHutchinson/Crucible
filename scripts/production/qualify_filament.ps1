@@ -13,6 +13,8 @@ param(
     [ValidateRange(1, 3)]
     [int]$Jobs = 3,
     [string]$VsInstallationPath = 'C:/Program Files/Microsoft Visual Studio/18/Community',
+    [ValidatePattern('^14\.[0-9]+\.[0-9]+$')]
+    [string]$ExpectedToolset = '14.51.36231',
     [string]$ArtifactDirectory = 'build/phase15-qualification'
 )
 
@@ -76,8 +78,9 @@ function Enter-CompilerEnvironment {
         -VsInstallationPath $VsInstallationPath -Arch amd64 -HostArch amd64 `
         -SkipAutomaticLocation -NoLogo
     $compiler = (Get-Command cl.exe).Source
-    if ($compiler -notmatch '[\\/]14\.51\.36231[\\/]bin[\\/]Hostx64[\\/]x64[\\/]cl\.exe$') {
-        throw "Expected received toolset14.51.36231 x64, found $compiler"
+    $toolsetPattern = '[\\/]' + [Regex]::Escape($ExpectedToolset) + '[\\/]bin[\\/]Hostx64[\\/]x64[\\/]cl\.exe$'
+    if ($compiler -notmatch $toolsetPattern) {
+        throw "Expected explicit toolset $ExpectedToolset x64, found $compiler"
     }
     $env:CMAKE_BUILD_PARALLEL_LEVEL = "$Jobs"
 }

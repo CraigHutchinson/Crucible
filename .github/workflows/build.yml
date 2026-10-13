@@ -9,6 +9,42 @@ concurrency:
 permissions:
   contents: read
 jobs:
+  production:
+    runs-on: windows-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          lfs: true
+      - uses: ilammy/msvc-dev-cmd@v1
+      - name: Development prerequisites
+        run: python scripts/check_prerequisites.py --stage development --timeout 30 --budget 60
+      - name: Build the exact production dependency with this runner's compiler
+        shell: pwsh
+        run: |
+          $vs = & "${env:ProgramFiles(x86)}/Microsoft Visual Studio/Installer/vswhere.exe" -latest -products '*' -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property installationPath
+          $compiler = (Get-Command cl.exe).Source
+          if ($compiler -notmatch '[\\/]MSVC[\\/]([^\\/]+)[\\/]bin[\\/]Hostx64[\\/]x64[\\/]cl.exe$') { throw 'Expected x64 MSVC compiler' }
+          ./scripts/production/qualify_filament.ps1 -Stage all -Jobs 3 -VsInstallationPath $vs -ExpectedToolset $Matches[1]
+      - name: Build the actual production caller and materials
+        run: |
+          cmake --preset production-release
+          cmake --build --preset production-release
+      - name: Receive frontend, packet and derived transform contracts
+        run: python scripts/run_tests.py --preset production-release -L "production|application" --output-on-failure
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: production-build-receipts
+          retention-days: 90
+          path: |
+            build/production-release/Testing/Temporary
+            build/production-release/compile_commands.json
+            build/production-release/src/presentation/production/crucible/presentation/production/resources/*.filamat
+            build/phase15-qualification/release/CMakeCache.txt
+            build/phase15-qualification/logs
+            build/phase15-qualification/inventory.json
+            build/phase15-qualification/compiler_macros.i
   build:
     strategy:
       fail-fast: false

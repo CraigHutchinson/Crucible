@@ -2,6 +2,7 @@
 
 #include <array>
 #include <algorithm>
+#include <charconv>
 #include <iostream>
 #include <fstream>
 #include <iomanip>
@@ -19,6 +20,7 @@
 #include <crucible/presentation/ScenarioSnapshot.hpp>
 
 #include "crucible/application/game_journey.hpp"
+#include "crucible/presentation/production/cinematic_choreography.hpp"
 
 namespace {
 enum class MissionInput { none, sweeping_attractor };
@@ -285,6 +287,18 @@ void RunScenario(const char* export_path, std::optional<crucible::ResourceSettin
 
 int main(int argc, char** argv) {
     try {
+        if (argc == 3 && std::string_view{argv[1]} == "--cinematic") {
+            const std::string_view token{argv[2]};
+            unsigned milliseconds{};
+            const auto parsed = std::from_chars(token.data(), token.data() + token.size(), milliseconds);
+            if (parsed.ec != std::errc{} || parsed.ptr != token.data() + token.size() || milliseconds > 12000)
+                throw std::invalid_argument("Cinematic elapsed milliseconds must be an integer in 0..12000");
+            crucible::presentation::production::CinematicChoreography choreography;
+            const auto frame = choreography.evaluate(std::chrono::milliseconds{milliseconds}, 16.0F / 9.0F);
+            std::cout << "cinematic source frame: elapsed_ms=" << milliseconds
+                      << " instances=" << frame.poses_.size() << " (source packet; no rendering)\n";
+            return 0;
+        }
         if (argc == 5 && std::string_view{argv[1]} == "--journey" &&
             std::string_view{argv[2]} == "--route" && std::string_view{argv[3]} == "--profile") {
             runJourney(MissionInput::sweeping_attractor, argv[4]);

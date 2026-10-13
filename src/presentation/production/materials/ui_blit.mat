@@ -1,0 +1,23 @@
+// Adapted from Filament v1.77.3 libs/filagui/src/materials/uiblit.mat.
+// Copyright (C) 2018 The Android Open Source Project; Apache-2.0.
+material {
+    name : CrucibleUiBlit,
+    parameters : [ { type : sampler2d, name : albedo } ],
+    requires : [ uv0, color ],
+    shadingModel : unlit,
+    variantFilter : [ vsm ],
+    culling : none,
+    depthCulling : false,
+    blending : transparent,
+    featureLevel : 0
+}
+fragment {
+    void material(inout MaterialInputs material) {
+        prepareMaterial(material);
+        vec2 uv = getUV0();
+        uv.y = 1.0 - uv.y;
+        vec4 albedo = texture(materialParams_albedo, uv);
+        material.baseColor = getColor() * albedo;
+        material.baseColor.rgb *= material.baseColor.a;
+    }
+}

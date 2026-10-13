@@ -1,0 +1,16 @@
+material {
+    name : CrucibleIndustrialFloor,
+    shadingModel : lit,
+    requires : [ uv0 ]
+}
+fragment {
+    void material(inout MaterialInputs material) {
+        prepareMaterial(material);
+        vec2 uv = getUV0() * 48.0;
+        vec2 seam = min(fract(uv), 1.0 - fract(uv));
+        float panel = smoothstep(0.012, 0.025, min(seam.x, seam.y));
+        material.baseColor = vec4(mix(vec3(0.015, 0.025, 0.036), vec3(0.06, 0.085, 0.11), panel), 1.0);
+        material.metallic = 0.65;
+        material.roughness = 0.42;
+    }
+}
