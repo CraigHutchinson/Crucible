@@ -107,7 +107,12 @@ struct IntroSettings
 {
     std::size_t nanites = 1536;
     std::uint32_t seed = 0xC0C1B1E5u;
-    float tickSeconds = 1.0F / 60.0F;
+    float tickSeconds = 1.0F / 60.0F;   ///< Presentation (wall-clock) seconds per tick.
+    /** Choreography seconds per presentation second. Every beat, speed and timer is authored in
+     *  choreography seconds; each tick advances them by tickSeconds * pace, so 2/3 plays the whole
+     *  sequence at 66% speed (15 s of choreography over 22.5 s) without retuning anything. The
+     *  simulation steps are smaller, never larger, than the 60 Hz the behaviours were tuned at. */
+    float pace = 2.0F / 3.0F;
     float diameter = 1.0F;
     float cruiseSpeed = 30.0F;     ///< Lane speed, diameters per second.
     float wakeAt = 0.6F;           ///< First core pulse (shot01).
@@ -119,7 +124,8 @@ struct IntroSettings
     Build build = Build::Lying;
     float viewTilt = 0.4F;         ///< Upright builds' view: screen y = height + tilt * depth (oblique front camera).
     std::uint32_t claimCap = 96;   ///< Climb build: slots claimed but not yet locked, per letter.
-    std::uint32_t stuckTicks = 40; ///< Ticks without progress before a unit counts as stuck.
+    float stuckSeconds = 40.0F / 60.0F; ///< Choreography seconds without progress before a unit counts as stuck.
+    float pushSeconds = 0.5F;           ///< Choreography seconds a push contingency's repelling magnet stays on.
     float raiseDelay = 0.15F;      ///< Raise build: pause between a letter's last lock and its rise.
     float raiseSeconds = 0.9F;     ///< Raise build: duration of the hinge from flat to upright.
     /** Hybrid build: bit per letter (C R U C I B L E = bits 0..7) to raise; the rest climb.
@@ -201,8 +207,10 @@ public:
     /** Advances one fixed tick. Systems run in a declared order against a frozen gather. */
     void tick();
 
-    /** @return Elapsed sequence time in seconds. */
+    /** @return Elapsed choreography time in seconds (presentation time is this over pace). */
     [[nodiscard]] float time() const { return time_; }
+    /** @return Choreography seconds one tick advances: tickSeconds * pace. */
+    [[nodiscard]] float stepSeconds() const { return settings_.tickSeconds * settings_.pace; }
     /** @return The camera of the most recent tick. */
     [[nodiscard]] const Camera& camera() const { return camera_; }
     /** @return Diagnostics of the most recent tick. */
@@ -276,7 +284,9 @@ private:
     void worldOf(const Pose& pose, const Mind& mind, float& wx, float& wy, float& wz, float& plane) const;
     void viewOf(const Pose& pose, const Mind& mind, float& vx, float& vy) const;
     /** Upright: next locked slot to step onto, routing over the built surface toward a slot. */
-    [[nodiscard]] std::int64_t surfaceStep(const Pose& pose, std::size_t goal);
+    [[nodiscard]] std::int64_t surfaceStep(const Pose& pose, std::size_t goal, std::int64_t* after = nullptr);
+    /** Marks slots reachable from the ground without crossing a panel not yet upright. */
+    void updateClimbable();
     void goalApproach(const Mind& mind, float& gx, float& gy) const;
 
     // Systems.
@@ -351,6 +361,8 @@ private:
     };
     std::vector<Panel> panels_;
     std::vector<std::uint8_t> slotClimbs_;   // per tile: climbed (1) or assembled flat (0)
+    std::vector<std::uint8_t> slotClimbable_;   // per tile: reachable without crossing a panel not yet upright
+    std::size_t climbableEpoch_ = 0;            // standing panel tiles when slotClimbable_ was computed
     std::vector<std::int16_t> slotPanel_;    // per tile: panel index, -1 when climbed or lying
     std::vector<std::uint8_t> slotStanding_; // locked and, for panel tiles, upright: wall support
     std::vector<float> slotWallY_;           // every tile's standing position on the wall sheet

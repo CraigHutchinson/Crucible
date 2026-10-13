@@ -1,7 +1,7 @@
 # Nanite swarm intro spike
 
 Headless, deterministic prototype of the CRUCIBLE title sequence's swarm behaviour: building
-blocks S0 to S0f of the
+blocks S0 to S0g of the
 [nanite swarm design](../../docs/concepts/phase15-experience/nanite-swarm-design.md).
 It answers a narrow question: **can a few thousand view-owned nanites perform the
 director's beats with intelligent-looking behaviour near the camera, cheap non-penetrating
@@ -18,6 +18,12 @@ User direction, 2026-10-12:
   (the hybrid build).
 - Nanites morph their triangle a little so complex outlines come out smooth.
 - Each iteration is pushed and merged.
+- 2026-10-13: play the intro at about **66% speed** so the climbing reads (the default pace
+  is 2/3); render videos as MP4.
+
+**Times are choreography seconds** (the authored beats) unless marked "on screen". At the
+default `--pace 0.6667`, each tick shows 1/60 s but advances the choreography by 1/90 s, so a
+viewer sees everything 1.5× longer: the 15 s sequence plays over 22.5 s.
 
 It is not production rendering, audio, a gameplay system or a native performance budget.
 The images are concept2D/dev-test captures through stand-in cameras: top-down orthographic
@@ -28,11 +34,11 @@ upright builds.
 
 | `--build` | Stage | How the title forms | Title complete (1536 units) |
 |---|---|---|---|
-| `lying` (default) | S0 | Units assemble the title flat on the substrate, each with a planned slot. | 8.12 s |
-| `raise` | S0c | Each letter assembles flat behind its baseline. As soon as its last unit locks, the interlocked letter hinges up on its bottom row like a drawbridge, letters rising one after another. | 8.00 s flat, upright 9.05 s |
-| `climb` | S0b, S0d | Letters grow upright in place, bottom-up. No preset slots: units queue at their letter's base and claim slots first come, first served. They climb the built face with lift magnetism, and recover from getting stuck by waiting, pushing or reclaiming. Uses the 15 s sequence. | 11.38 s |
-| `hybrid` | S0e | Whole letters both ways. Letters whose build depth is above the median (the climb's critical path) assemble flat and swing up as drawbridges; the rest climb. Automatic choice here: C, R, C and E raise; U, I, B and L climb. `--raise-letters MASK` chooses by hand (bit 0 = first C). Uses the 15 s sequence. | 11.17 s; raised letters upright by 9.00 s |
-| `scaffold` | S0f | Per-part drawbridges, combined with climbing. Tall, straight, upright strokes standing on the baseline become drawbridge panels: the R's stem and leg, the I, and the B, L and E stems. They assemble flat and swing up first as scaffolds, and the swarm then climbs them to finish the arms and bowls. Deep letters without such a stroke (the two Cs) raise whole; the U climbs. Uses the 15 s sequence. | 10.75 s; all 8 panels upright by 8.60 s |
+| `lying` (default) | S0 | Units assemble the title flat on the substrate, each with a planned slot. | 7.98 s |
+| `raise` | S0c | Each letter assembles flat behind its baseline. As soon as its last unit locks, the interlocked letter hinges up on its bottom row like a drawbridge, letters rising one after another. | 7.94 s flat, upright 9.00 s |
+| `climb` | S0b, S0d | Letters grow upright in place, bottom-up. No preset slots: units queue at their letter's base and claim slots first come, first served. They climb the built face with lift magnetism, and recover from getting stuck by waiting, pushing or reclaiming. Uses the 15 s sequence. | 11.42 s |
+| `hybrid` | S0e | Whole letters both ways. Letters whose build depth is above the median (the climb's critical path) assemble flat and swing up as drawbridges; the rest climb. Automatic choice here: C, R, C and E raise; U, I, B and L climb. `--raise-letters MASK` chooses by hand (bit 0 = first C). Uses the 15 s sequence. | 10.66 s; raised letters upright by 8.98 s |
+| `scaffold` | S0f | Per-part drawbridges, combined with climbing. Tall, straight, upright strokes standing on the baseline become drawbridge panels: the R's stem and leg, the I, and the B, L and E stems. They assemble flat and swing up first as scaffolds, and the swarm then climbs them to finish the arms and bowls. Deep letters without such a stroke (the two Cs) raise whole; the U climbs. A climber starts up once a path from the ground reaches its slot without crossing a panel still lying down. Uses the 15 s sequence. | 11.23 s (16.85 s on screen); all 8 panels upright by 9.10 s |
 
 The climb build runs on two connected surfaces: the ground and the wall face. The wall face
 is stored as a second interaction surface, offset so the two never interact, and joined to
@@ -164,20 +170,26 @@ to 11.8 s (with the earlier 1,104 unmorphed tiles).
 cmake --preset release -DCRUCIBLE_BUILD_SWARM_SPIKE=ON
 cmake --build --preset release --target crucible_swarm_intro
 ctest --preset release -R swarm_intro      # 5 --verify cases + 5 diagnostics receivers
-./build/release/spikes/swarm_intro/crucible_swarm_intro --build climb --seconds 15 \
-    --events-jsonl events.jsonl --health-json health.json --frames frames --every 4
-python3 spikes/swarm_intro/render_swarm.py frames --sheet beats.svg --magnets magnets.svg --gif intro.gif
+./build/release/spikes/swarm_intro/crucible_swarm_intro --build scaffold \
+    --events-jsonl events.jsonl --health-json health.json --frames frames --every 1
+python3 spikes/swarm_intro/render_swarm.py frames --sheet beats.svg --magnets magnets.svg \
+    --times 6.0,7.0,7.8,8.6,9.6,11.3 --mp4 intro.mp4     # MP4 needs ffmpeg on PATH
 ```
 
 Options: `--build lying|raise|climb|hybrid|scaffold`, `--raise-letters MASK`, `--morph F` (0.35), `--rows`, `--count N` (1536), `--hero-cap N` (128),
-`--claim-cap N` (96), `--lod camera|hero|near|far`, `--seconds S`, `--metrics FILE`.
-Renderer: `--tiers`, `--magnets` (cyan lift, amber push, white seat), `--gif-mode`, and
-`--zoom cx,cy,half_width`.
+`--claim-cap N` (96), `--lod camera|hero|near|far`, `--pace P` (0.6667; 1 is the original
+speed), `--seconds S` (on screen; default 12 s of choreography, 15 s for the climbing
+builds), `--metrics FILE`.
+Renderer: `--tiers`, `--magnets` (cyan lift, amber push, white seat), `--gif`, `--gif-mode`,
+`--mp4` (H.264 at the capture's on-screen rate, 60 fps with `--every 1`; `--mp4-mode`,
+`--mp4-size 1280x720`, `--hold 2` seconds on the last frame) and `--zoom cx,cy,half_width`.
+Sheet `--times` are choreography seconds; frame labels also show the time on screen.
 
 ## Acceptance (`--verify`)
 
 The lying and raise timing gates come from the director brief and were written before
-tuning. Gates set or changed after a measurement are marked †.
+tuning. Gates set or changed after a measurement are marked †. Gate times are choreography
+seconds, so they scale with the pace.
 
 - **All builds:**
   - No lock without a locked support.
@@ -199,27 +211,32 @@ tuning. Gates set or changed after a measurement are marked †.
     tile's circumradius plus one unit diameter of a built tile.
   - Visible ground contacts at most 10%† per tick, and no visible pair closer than 0.3 diameter.
 
-## Evidence, 2026-10-12
+## Evidence, 2026-10-13 (pace 2/3)
 
 Host: shared 4-vCPU Intel Xeon 2.80 GHz cloud container, GCC 13.3, single thread. Costs are
-advisory host wall time with diagnostics excluded, not a device budget. 1,066 morphed tiles.
+advisory host wall time per presented tick (1/60 s on screen) with diagnostics excluded, not
+a device budget. 1,066 morphed tiles. Times are choreography seconds; on screen is 1.5×.
 
 | Run | Title complete | Upright | Worst contacts / min gap | Stuck → recovered | Tick p50 / p95 |
 |---|---|---|---|---|---|
-| Lying, camera LOD, 1536 | 8.12 s | – | 1.5% / 0.64 d | 3 → 3 | 0.30 / 4.03 ms |
-| Raise, camera LOD, 1536 | 8.00 s | 9.05 s | 1.0% / 0.56 d | 1 → 1 | 0.33 / 3.69 ms |
-| Climb, camera LOD, 1536 | 11.38 s | 11.38 s | 9.1% / 0.36 d | 52 → 52 | 0.72 / 4.11 ms |
-| Hybrid, camera LOD, 1536 | 11.17 s | 9.00 s (raised) | 4.3% / 0.57 d | 16 → 16 | 0.61 / 3.53 ms |
-| Scaffold, camera LOD, 1536 | 10.75 s | 8.60 s (panels) | 5.9% / 0.46 d | 34 → 34 | 0.75 / 3.58 ms |
-| Scaffold, 4096 | 11.58 s | 8.87 s | 9.0% / 0.41 d | 31 → 31 | 1.40 / 4.30 ms |
-| Scaffold, 16384 | 11.60 s | 8.73 s | 7.3% / 0.44 d | 68 → 68 | 4.56 / 7.90 ms |
+| Lying, camera LOD, 1536 | 7.98 s | – | 0.5% / 0.70 d | 1 → 1 | 0.13 / 2.29 ms |
+| Raise, camera LOD, 1536 | 7.94 s | 9.00 s | 0.3% / 0.70 d | 5 → 5 | 0.21 / 2.49 ms |
+| Climb, camera LOD, 1536 | 11.42 s | 11.42 s | 9.8% / 0.39 d | 55 → 55 | 0.65 / 2.92 ms |
+| Hybrid, camera LOD, 1536 | 10.66 s | 8.98 s (raised) | 1.6% / 0.66 d | 10 → 10 | 0.38 / 2.56 ms |
+| Scaffold, camera LOD, 1536 | 11.23 s | 9.10 s (panels) | 5.0% / 0.48 d | 26 → 26 | 0.58 / 3.03 ms |
+| Scaffold, 4096 | 11.54 s | 9.10 s | 6.0% / 0.44 d | 49 → 49 | 1.05 / 2.99 ms |
+| Scaffold, 16384 | 11.87 s | 9.24 s | 5.8% / 0.44 d | 72 → 72 | 3.26 / 6.12 ms |
 
-Off the built face: climb 71 of 37,323 climber-ticks (0.19%), hybrid 36 of 14,958 (0.24%),
-scaffold 93 of 22,586 (0.41%). Release, Debug and ASan/UBSan pass all ten CTest cases (five
-`--verify`, five diagnostics receivers). They produce the same state hashes with this
-compiler (15 s runs, 1536 units: lying `40f1f97d249b7f5c`, raise `1e100bf4b8a9d63f`, climb
-`3d9ae5e19269ee9f`, hybrid `df77a2ef1cd21365`, scaffold `4eee04e8cc8e3a09`).
-Cross-compiler or cross-platform bit equality is not claimed.
+Off the built face: climb 4 of 58,746 climber-ticks, hybrid 0 of 23,489, scaffold 0 of
+33,656 (at pace 1 before S0g: 0.19%, 0.24% and 0.41%). Release, Debug and ASan/UBSan pass all
+ten CTest cases (five `--verify`, five diagnostics receivers). They produce the same state
+hashes with this compiler (22.5 s on screen, 1536 units: lying `a9ce6a20505e116a`, raise
+`debfdadb0cae4473`, climb `b391041c5d545ed8`, hybrid `1348777887d153d7`, scaffold
+`bc314639f3ca2361`). Cross-compiler or cross-platform bit equality is not claimed.
+
+A slower pace costs nothing per presented tick: each tick advances less choreography, and
+p50 fell because the per-tick work shrinks with the smaller step. The whole sequence takes
+1.5× more ticks.
 
 ### Lying (S0)
 
@@ -252,13 +269,14 @@ the climbed letters finish; complete.
 
 ![Scaffold build: stems swing up, the swarm climbs them](evidence/scaffold.svg)
 
-At 6.0, 7.0, 7.8, 8.6, 9.6 and 10.8 s: stems assembled flat; the first stems and the Cs swing
+At 6.0, 7.0, 7.8, 8.6, 9.6 and 11.3 s: stems assembled flat; the first stems and the Cs swing
 up; climbers gather at the bases; arms and bowls grow from the standing stems; complete.
 
 ![Scaffold close-up: B, L and E](evidence/scaffold-closeup.svg)
 
-The B, L and E from 6.8 to 10.8 s: the L and E stems rise as drawbridges (foreshortened while
-rising), then climbers pour over them to build the E's arms and the B's bowls.
+The B, L and E at 7.0, 7.8, 8.6, 9.2, 10.0 and 11.3 s: the L and E stems rise as drawbridges
+(foreshortened while rising) while climbers wait at the E's base; then they pour over the
+standing stems to build the E's arms and the B's bowls.
 
 ### Morphing tiles
 
@@ -276,7 +294,7 @@ seamless.
 
 At 5.0, 6.5, 8.0, 9.5, 11.0 and 14.9 s: footings; letters growing bottom-up; climbers
 pouring over the face; readable; nearly complete; complete at 11.4 s with the hold and camera
-opening by 15 s.
+opening by 15 s (22.5 s on screen).
 
 ![Climb build: selective magnetism](evidence/climb-magnets.svg)
 
@@ -340,7 +358,7 @@ the finished letters as single faces.
     sub-tile edge piece.
 
 16. **Per-part drawbridges make scaffolds.** Raising the tall grounded stems first, then
-    climbing them, completes at 10.75 s. That is the fastest climbing build, with all eight
+    climbing them, completed at 10.75 s at pace 1 (11.23 s at pace 2/3; finding 18), with all eight
     panels upright by 8.6 s. Two rules made it work: raised tiles support climbers only once
     upright, at their standing positions (otherwise climbers steered to the flat tiles'
     ground coordinates and stalled); and arm tiles can be claimed while their stem is flat,
@@ -350,6 +368,28 @@ the finished letters as single faces.
     ground tile they can stand on brought scaffold off-surface time from 1.2% to 0.4%, and
     also sped up pure climbing (12.2 s to 11.4 s). The hybrid slowed from 10.3 s to 11.2 s
     under the same rule: its climbed letters now wait for real footholds.
+18. **Slowing down exposed latent faults, so slow by step, not by retuning.** The pace
+    shortens each simulation step and changes nothing else; every gate still held in
+    choreography seconds, but three faults surfaced:
+    - A climber carried waypoint momentum around a corner (across the R's base, then up its
+      stem) and overshot three units into the counter. Waypoints now brake into corners by
+      route look-ahead: the unit must be able to stop within the waypoint distance plus a
+      run-on that shrinks with the turn (none before the goal).
+    - Flat-locked panel tiles counted as "built", so scaffold climbers went up beside a stem
+      still lying down and hung off the face (1.2% of climber-ticks). Waiting on a single BFS
+      support chain fixed that, but delayed the R to 12.9 s because its chain ran through the
+      late leg. A slot is now climbable once any path from the ground reaches it without
+      crossing a panel that is not yet upright.
+    - A ribbon unit sent across the stage moored 0.26 s after the 10 s beat. Ribbon moorings
+      are now matched by x rank.
+
+    Off-surface time fell to almost nothing, and climbing got faster: climb 11.42 s, hybrid
+    10.66 s (contacts 4.3% to 1.6%), scaffold 11.23 s.
+19. **Decision LOD could follow activity, not only the view** (backlog, user suggestion).
+    Claims, docking, corners, contention and stuck episodes are where a decision shows; a
+    unit cruising an empty lane needs none even when large on screen. Activity tiers depend
+    only on simulation state, which would make decision LOD replay-safe for gameplay. See the
+    design document, section 4.
 
 ## Limits
 

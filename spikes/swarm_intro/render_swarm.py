@@ -8,12 +8,18 @@ camera. It shows choreography, spacing and LOD tiers; it is not production fidel
     python3 render_swarm.py frames --sheet beats.svg --tiers tiers.svg --gif intro.gif
 
 Sheets ending in .svg are written as vectors (the committed evidence); other extensions
-are rasterised with Pillow.
+are rasterised with Pillow. Sheet --times are choreography seconds; GIF and MP4 play at the
+presentation pace recorded in each capture (see IntroSettings::pace).
+
+    crucible_swarm_intro --build scaffold --frames frames --every 1
+    python3 render_swarm.py frames --mp4 intro.mp4          # needs ffmpeg on PATH
 """
 import argparse
 import math
 import pathlib
 import re
+import shutil
+import subprocess
 
 from PIL import Image, ImageDraw
 
@@ -26,7 +32,7 @@ TIER_COLOURS = {0: (255, 190, 60), 1: (80, 210, 255), 2: (150, 110, 255), 3: (90
 TIER_NAMES = {0: "hero", 1: "near", 2: "far", 3: "hidden"}
 MAGNET_COLOURS = {1: (60, 230, 255), 2: (255, 150, 40), 3: (250, 250, 250)}   # lift, push, seat
 HEADER = re.compile(r"# time=([\d.]+) cx=([-\d.]+) cy=([-\d.]+) half_width=([\d.]+) aspect=([\d.]+)"
-                    r"(?: view=(\w+) tilt=([\d.]+))?(?: tile=([\d.]+))?")
+                    r"(?: view=(\w+) tilt=([\d.]+))?(?: tile=([\d.]+))?(?: pace=([\d.]+))?")
 
 
 def load(path):
@@ -36,6 +42,7 @@ def load(path):
     view = groups[5] or "top"
     tilt = float(groups[6] or 0.4)
     tile = float(groups[7] or 0.0)
+    pace = float(groups[8] or 1.0)   # choreography seconds per presentation second
     rows = []
     for line in lines[2:]:
         fields = line.split(",")
@@ -45,7 +52,7 @@ def load(path):
         # Locked tiles carry their morphed corners (letter plane: x along, y up the letter).
         shape = tuple(float(v) for v in fields[9:15]) if len(fields) >= 15 else None
         rows.append((float(x), float(y), float(z), float(h), act, int(tier), float(since), plane, magnet, shape))
-    return {"time": t, "cx": cx, "cy": cy, "hw": hw, "aspect": aspect, "view": view, "tilt": tilt, "tile": tile, "rows": rows}
+    return {"time": t, "cx": cx, "cy": cy, "hw": hw, "aspect": aspect, "view": view, "tilt": tilt, "tile": tile, "pace": pace, "rows": rows}
 
 
 class Canvas:
@@ -173,7 +180,8 @@ def draw_frame(frame, size=(960, 540), mode="beauty"):
                 core = CYAN
             r = max(1.0, 0.11 * scale)
             draw.ellipse([px - r, py - r, px + r, py + r], core)
-    label = f"t={t:5.2f}s  half-width={frame['hw']:.1f}u"
+    shown = t / frame["pace"]
+    label = f"t={t:5.2f}s" + (f" ({shown:.2f} s shown)" if frame["pace"] != 1.0 else "") + f"  half-width={frame['hw']:.1f}u"
     if mode == "tiers":
         counts = {k: 0 for k in TIER_NAMES}
         for row in frame["rows"]:
@@ -205,6 +213,38 @@ def sheet(frames, times, mode, path):
     out.save(path)
 
 
+def presentation_step(frames):
+    """Wall-clock seconds between captures: the choreography step over the pace."""
+    if len(frames) < 2:
+        return 1.0 / 30.0
+    # Averaged over the whole capture: headers round each time to microseconds.
+    return (frames[-1]["time"] - frames[0]["time"]) / (len(frames) - 1) / frames[0]["pace"]
+
+
+def video(frames, path, mode, size, hold):
+    """Pipes rasterised frames to ffmpeg as raw RGB; the final frame is held for `hold` s."""
+    ffmpeg = shutil.which("ffmpeg")
+    if not ffmpeg:
+        raise SystemExit("--mp4 needs ffmpeg on PATH")
+    w, h = (int(v) for v in size.lower().split("x"))
+    if w % 2 or h % 2:
+        raise SystemExit("--mp4-size needs even dimensions for yuv420p")
+    fps = 1.0 / presentation_step(frames)
+    command = [ffmpeg, "-y", "-loglevel", "error", "-f", "rawvideo", "-pix_fmt", "rgb24", "-s", f"{w}x{h}",
+               "-r", f"{fps:.6f}", "-i", "-", "-c:v", "libx264", "-pix_fmt", "yuv420p", "-crf", "18",
+               "-preset", "medium", "-movflags", "+faststart", str(path)]
+    with subprocess.Popen(command, stdin=subprocess.PIPE) as encoder:
+        last = b""
+        for f in frames:
+            last = draw_frame(f, (w, h), mode).image().convert("RGB").tobytes()
+            encoder.stdin.write(last)
+        for _ in range(int(round(hold * fps))):
+            encoder.stdin.write(last)
+        encoder.stdin.close()
+        if encoder.wait() != 0:
+            raise SystemExit("ffmpeg failed")
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("frames", type=pathlib.Path)
@@ -212,6 +252,10 @@ def main():
     parser.add_argument("--tiers", type=pathlib.Path)
     parser.add_argument("--gif", type=pathlib.Path)
     parser.add_argument("--gif-mode", default="beauty", choices=["beauty", "tiers", "magnets"])
+    parser.add_argument("--mp4", type=pathlib.Path, help="H.264 video at the capture's presentation rate (needs ffmpeg)")
+    parser.add_argument("--mp4-mode", default="beauty", choices=["beauty", "tiers", "magnets"])
+    parser.add_argument("--mp4-size", default="1280x720", help="video frame size, WIDTHxHEIGHT (even numbers)")
+    parser.add_argument("--hold", type=float, default=2.0, help="seconds to hold the final frame in the video")
     parser.add_argument("--magnets", type=pathlib.Path, help="sheet coloured by magnet mode: cyan lift, amber push, white seat")
     parser.add_argument("--times", default="1.0,3.0,5.0,6.8,8.4,11.9")
     parser.add_argument("--zoom", help="override the camera for sheets: cx,cy,half_width (view units)")
@@ -232,8 +276,10 @@ def main():
         sheet(frames, times, "magnets", args.magnets)
     if args.gif:
         images = [draw_frame(f, (640, 360), args.gif_mode).image() for f in frames]
-        step_ms = int(round((frames[1]["time"] - frames[0]["time"]) * 1000)) if len(frames) > 1 else 33
+        step_ms = int(round(presentation_step(frames) * 1000))
         images[0].save(args.gif, save_all=True, append_images=images[1:], duration=step_ms, loop=0, optimize=True)
+    if args.mp4:
+        video(frames, args.mp4, args.mp4_mode, args.mp4_size, args.hold)
 
 
 if __name__ == "__main__":

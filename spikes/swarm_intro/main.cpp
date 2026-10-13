@@ -23,7 +23,7 @@ using namespace crucible::spike::swarm;
 struct Options
 {
     IntroSettings settings{};
-    float seconds = 12.0F;
+    float seconds = 0.0F;   // presentation seconds; 0 runs 12 s of choreography (15 s for climbing builds)
     std::string framesDir;
     int every = 4;
     std::string metricsPath;
@@ -123,7 +123,7 @@ RunSummary run(const Options& options, bool capture)
         if (metrics)
         {
             std::fprintf(metrics, "time,hero,near,far,hidden,migrations,visible_movers,visible_overlaps,visible_min_gap,"
-                                  "locked,moored,dock_clicks,hero_yields,us_gather,us_signal,us_behaviour,us_resolve,us_lod,us_metrics\n");
+                                  "locked,moored,dock_clicks,hero_yields,us_gather,us_signal,us_behaviour,us_resolve,us_lod,us_metrics,climbers,off_surface\n");
         }
     }
     if (capture && !options.framesDir.empty()) std::filesystem::create_directories(options.framesDir);
@@ -145,8 +145,8 @@ RunSummary run(const Options& options, bool capture)
         if (m.locked > 0 && summary.firstLock < 0.0F) summary.firstLock = m.time;
         if (m.locked == summary.slots && summary.allLocked < 0.0F) summary.allLocked = m.time;
         if (raiseTarget > 0 && m.raised == raiseTarget && summary.allRaised < 0.0F) summary.allRaised = m.time;
-        if (std::abs(m.time - 8.4F) < 0.5F * options.settings.tickSeconds) summary.lockedAt84 = lockedFraction;
-        if (std::abs(m.time - 10.0F) < 0.5F * options.settings.tickSeconds)
+        if (std::abs(m.time - 8.4F) < 0.5F * intro.stepSeconds()) summary.lockedAt84 = lockedFraction;
+        if (std::abs(m.time - 10.0F) < 0.5F * intro.stepSeconds())
         {
             summary.lockedAt10 = lockedFraction;
             summary.mooredAt10 = summary.ribbon ? static_cast<float>(m.moored) / static_cast<float>(summary.ribbon) : 1.0F;
@@ -185,10 +185,11 @@ RunSummary run(const Options& options, bool capture)
         if ((t + 1) % 60 == 0) summary.hash = summary.hash * 1099511628211ull ^ intro.stateHash();   // once per second
         if (metrics)
         {
-            std::fprintf(metrics, "%.4f,%u,%u,%u,%u,%u,%u,%u,%.4f,%u,%u,%u,%u,%.1f,%.1f,%.1f,%.1f,%.1f,%.1f\n", m.time,
+            std::fprintf(metrics, "%.4f,%u,%u,%u,%u,%u,%u,%u,%.4f,%u,%u,%u,%u,%.1f,%.1f,%.1f,%.1f,%.1f,%.1f,%u,%u\n", m.time,
                          m.tierCount[0], m.tierCount[1], m.tierCount[2], m.tierCount[3], m.migrations, m.visibleMovers,
                          m.visibleOverlaps, m.visibleMinGap, m.locked, m.moored, m.dockClicks, m.heroYields, m.systemMicros[0],
-                         m.systemMicros[1], m.systemMicros[2], m.systemMicros[3], m.systemMicros[4], m.systemMicros[5]);
+                         m.systemMicros[1], m.systemMicros[2], m.systemMicros[3], m.systemMicros[4], m.systemMicros[5],
+                         m.climbers, m.offSurface);
         }
         if (capture && !options.framesDir.empty() && (t + 1) % options.every == 0)
         {
@@ -198,9 +199,9 @@ RunSummary run(const Options& options, bool capture)
             if (std::FILE* f = std::fopen((options.framesDir + name).c_str(), "w"))
             {
                 const Camera& cam = intro.camera();
-                std::fprintf(f, "# time=%.4f cx=%.4f cy=%.4f half_width=%.4f aspect=%.6f view=%s tilt=%.3f tile=%.4f\n", m.time, cam.cx, cam.cy,
-                             cam.halfWidth, cam.aspect, options.settings.build != Build::Lying ? "oblique" : "top", options.settings.viewTilt,
-                             options.settings.wordmark.tile);
+                std::fprintf(f, "# time=%.6f cx=%.4f cy=%.4f half_width=%.4f aspect=%.6f view=%s tilt=%.3f tile=%.4f pace=%.6f\n", m.time, cam.cx,
+                             cam.cy, cam.halfWidth, cam.aspect, options.settings.build != Build::Lying ? "oblique" : "top",
+                             options.settings.viewTilt, options.settings.wordmark.tile, options.settings.pace);
                 std::fprintf(f, "x,y,z,heading,act,tier,act_since,plane,magnet,s0x,s0y,s1x,s1y,s2x,s2y\n");
                 for (const RenderRow& r : rows)
                 {
@@ -241,6 +242,9 @@ float percentile(std::vector<float> values, float p)
 void print(const std::string& label, const Options& options, const RunSummary& s)
 {
     const double ticks = static_cast<double>(s.tickMicros.size());
+    // Beats and gates are choreography seconds; the presentation block is what a viewer sees.
+    const double pace = options.settings.pace;
+    const auto present = [&](float t) { return t < 0.0F ? -1.0 : static_cast<double>(t) / pace; };
     std::printf("{\"run\":\"%s\",\"nanites\":%zu,\"slots\":%zu,\"ribbon\":%zu,\"hero_cap\":%zu,"
                 "\"first_lock_s\":%.3f,\"all_locked_s\":%.3f,\"all_raised_s\":%.3f,\"raised_letters\":%u,\"panels\":%u,\"locked_at_8_4\":%.4f,\"locked_at_10\":%.4f,\"moored_at_10\":%.4f,"
                 "\"worst_visible_overlaps\":%u,\"worst_overlap_ratio\":%.4f,\"worst_overlap_time_s\":%.3f,\"min_visible_gap\":%.3f,"
@@ -248,6 +252,7 @@ void print(const std::string& label, const Options& options, const RunSummary& s
                 "\"tick_us_p50\":%.1f,\"tick_us_p95\":%.1f,\"tick_us_max\":%.1f,"
                 "\"mean_us\":{\"gather\":%.1f,\"signal\":%.1f,\"behaviour\":%.1f,\"resolve\":%.1f,\"lod\":%.1f,\"metrics\":%.1f},"
                 "\"outline\":{\"corners\":%zu,\"rms_before\":%.3f,\"rms_after\":%.3f,\"max_morph\":%.3f,\"min_area_ratio\":%.3f},"
+                "\"pace\":%.4f,\"presentation\":{\"length_s\":%.3f,\"all_locked_s\":%.3f,\"all_raised_s\":%.3f},"
                 "\"state_hash\":\"%016llx\"}\n",
                 label.c_str(), options.settings.nanites, s.slots, s.ribbon, options.settings.heroCap, s.firstLock, s.allLocked, s.allRaised, static_cast<unsigned>(s.raisedMask), s.panels, s.lockedAt84,
                 s.lockedAt10, s.mooredAt10, s.worstOverlaps, s.worstOverlapRatio, s.worstOverlapTime, s.minVisibleGap, s.maxHeroes,
@@ -256,7 +261,8 @@ void print(const std::string& label, const Options& options, const RunSummary& s
                 percentile(s.tickMicros, 1.0F), s.systemMicros[0] / ticks, s.systemMicros[1] / ticks, s.systemMicros[2] / ticks,
                 s.systemMicros[3] / ticks, s.systemMicros[4] / ticks, s.systemMicros[5] / ticks,
                 s.wordmark.boundaryCorners, s.wordmark.outlineRmsBefore, s.wordmark.outlineRmsAfter, s.wordmark.maxMorph,
-                s.wordmark.minAreaRatio, static_cast<unsigned long long>(s.hash));
+                s.wordmark.minAreaRatio, pace, ticks * static_cast<double>(options.settings.tickSeconds), present(s.allLocked),
+                present(s.allRaised), static_cast<unsigned long long>(s.hash));
 }
 
 bool parse(int argc, char** argv, Options& o)
@@ -284,6 +290,7 @@ bool parse(int argc, char** argv, Options& o)
         else if (a == "--claim-cap") { const char* v = next(); if (!v) return false; o.settings.claimCap = static_cast<std::uint32_t>(std::atoi(v)); }
         else if (a == "--count") { const char* v = next(); if (!v) return false; o.settings.nanites = std::strtoul(v, nullptr, 10); }
         else if (a == "--hero-cap") { const char* v = next(); if (!v) return false; o.settings.heroCap = std::strtoul(v, nullptr, 10); }
+        else if (a == "--pace") { const char* v = next(); if (!v) return false; o.settings.pace = std::strtof(v, nullptr); }
         else if (a == "--seconds") { const char* v = next(); if (!v) return false; o.seconds = std::strtof(v, nullptr); }
         else if (a == "--frames") { const char* v = next(); if (!v) return false; o.framesDir = v; }
         else if (a == "--every") { const char* v = next(); if (!v) return false; o.every = std::max(1, std::atoi(v)); }
@@ -320,15 +327,20 @@ int main(int argc, char** argv)
     {
         std::fprintf(stderr,
                      "usage: crucible_swarm_intro [--verify] [--build lying|climb|raise|hybrid|scaffold] [--raise-letters MASK] [--rows] [--morph F] [--count N] [--hero-cap N] [--lod camera|hero|near|far]\n"
-                     "                            [--seconds S] [--frames DIR] [--every TICKS] [--metrics FILE]\n"
+                     "                            [--seconds S] [--pace P] [--frames DIR] [--every TICKS] [--metrics FILE]\n"
                      "                            [--events-jsonl FILE] [--health-json FILE] [--claim-cap N]\n");
         return 2;
     }
     try
     {
         const Build build = options.settings.build;
-        // The climb build uses the fifteen-second sequence (user direction).
-        if (options.verify && (build == Build::Climb || build == Build::Hybrid || build == Build::Scaffold)) options.seconds = std::max(options.seconds, 15.0F);
+        // Climbing builds use the fifteen-second sequence (user direction), in choreography
+        // seconds: at pace 2/3 a viewer sees 22.5 s.
+        const bool climbs = build == Build::Climb || build == Build::Hybrid || build == Build::Scaffold;
+        const float choreography = climbs ? 15.0F : 12.0F;
+        if (options.settings.pace <= 0.0F) return fail("pace is positive");
+        if (options.seconds <= 0.0F) options.seconds = choreography / options.settings.pace;
+        if (options.verify && climbs) options.seconds = std::max(options.seconds, choreography / options.settings.pace);
         const RunSummary main = run(options, true);
         print(label(options.settings), options, main);
         if (!options.verify) return 0;
