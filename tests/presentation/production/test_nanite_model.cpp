@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <array>
 #include <cmath>
 #include <cstdint>
@@ -8,6 +9,7 @@
 #include <stdexcept>
 #include <string>
 #include <tuple>
+#include <vector>
 
 #include "crucible/presentation/production/nanite_model.hpp"
 
@@ -50,12 +52,28 @@ void checkWellFormed(const NaniteMesh& mesh, const std::string& label)
         require(std::abs(dot(vertex.normal_, vertex.normal_) - 1.0F) < 1e-3F, label + ": normal not unit length");
         require(vertex.position_[1] > -1e-4F, label + ": below the ground plane");
     }
-    std::map<std::tuple<long, long, long>, int> ids;
+    // Weld by distance, not by rounding: two copies of one point that straddle a grid line
+    // must still meet. Look in the point's cell and its neighbours.
+    std::map<std::tuple<long, long, long>, std::vector<std::pair<Vec, int>>> cells;
+    int nextId = 0;
     const auto id = [&](std::uint32_t index)
     {
         const auto& p = mesh.vertices_.at(index).position_;
-        const auto key = std::tuple{std::lround(p[0] * 1e4), std::lround(p[1] * 1e4), std::lround(p[2] * 1e4)};
-        return ids.try_emplace(key, static_cast<int>(ids.size())).first->second;
+        const long x = std::lround(p[0] * 1e4), y = std::lround(p[1] * 1e4), z = std::lround(p[2] * 1e4);
+        for (long dx = -1; dx <= 1; ++dx)
+            for (long dy = -1; dy <= 1; ++dy)
+                for (long dz = -1; dz <= 1; ++dz)
+                {
+                    const auto found = cells.find({x + dx, y + dy, z + dz});
+                    if (found == cells.end()) continue;
+                    for (const auto& [point, known] : found->second)
+                    {
+                        const Vec d = sub(point, p);
+                        if (dot(d, d) < 1e-10F) return known;
+                    }
+                }
+        cells[{x, y, z}].push_back({p, nextId});
+        return nextId++;
     };
     std::map<std::pair<int, int>, int> balance;
     double volume = 0.0;
@@ -114,7 +132,7 @@ int main()
                 }
             }
         }
-        require(triangles({NaniteStructure::Silhouette, NaniteSurface::Flat}) <= 64,
+        require(triangles({NaniteStructure::Silhouette, NaniteSurface::Flat}) <= 96,
             "The lowest detail on both axes stays a few dozen triangles");
 
         // Every level at rest stays inside the shell tetrahedron, for any variant, so a
@@ -199,8 +217,8 @@ int main()
         };
         require(materials({NaniteStructure::Silhouette, NaniteSurface::Bevel}) == std::array{true, true, false, true},
             "Silhouette is a silver shell with opaque graphite windows onto a luminous facet");
-        require(materials({NaniteStructure::Frame, NaniteSurface::Flat}) == std::array{true, true, false, true},
-            "Frame has silver rails, graphite hubs and a luminous core");
+        require(materials({NaniteStructure::Frame, NaniteSurface::Flat}) == std::array{true, true, true, true},
+            "Frame has silver rails and bars, graphite hubs, and the housing and heart");
         require(materials({NaniteStructure::Shielded, NaniteSurface::Flat}) == std::array{true, true, true, true},
             "Shielded adds the housing around a separate heart");
 
@@ -264,6 +282,58 @@ int main()
             require(hero >= previous && swarm <= hero, std::string(preset.name_) + ": preset order");
             previous = hero;
         }
+
+        // The distance ladder: monotone on both axes, rising start sizes, presets on it.
+        const auto ladder = naniteLodLadder();
+        require(ladder.front().minPixels_ == 0.0F, "The lowest rung covers every size");
+        for (std::size_t rung = 1; rung < ladder.size(); ++rung)
+        {
+            const auto& below = ladder[rung - 1].detail_;
+            const auto& above = ladder[rung].detail_;
+            require(above.structure_ >= below.structure_ && above.surface_ >= below.surface_
+                && (above.structure_ > below.structure_ || above.surface_ > below.surface_), "Each rung adds detail");
+            require(ladder[rung].minPixels_ > ladder[rung - 1].minPixels_, "Rungs start at rising sizes");
+            require(triangles(above) > triangles(below), "Each rung costs more");
+        }
+        const auto onLadder = [&](NaniteDetail detail)
+        {
+            return std::ranges::any_of(ladder, [&](const NaniteLodStep& step)
+                { return step.detail_.structure_ == detail.structure_ && step.detail_.surface_ == detail.surface_; });
+        };
+        for (const auto& preset : presets)
+        {
+            require(onLadder(preset.hero_) && onLadder(preset.swarm_), std::string(preset.name_) + ": caps must be rungs");
+        }
+
+        // Selection: up at the rung's start, down only below the hysteresis band; no
+        // oscillation for a size jittering around a boundary; caps respected.
+        const NaniteDetail top{NaniteStructure::Articulated, NaniteSurface::Hero};
+        require(selectNaniteLod(0.0F, top, ladder.size()) == 0, "Tiny units use the silhouette");
+        require(selectNaniteLod(1000.0F, top, ladder.size()) == ladder.size() - 1, "Huge units use the top rung");
+        for (std::size_t rung = 1; rung < ladder.size(); ++rung)
+        {
+            const float start = ladder[rung].minPixels_;
+            require(selectNaniteLod(start, top, rung - 1) == rung, "Steps up at the rung's start");
+            require(selectNaniteLod(start * 0.95F, top, rung) == rung, "Holds inside the hysteresis band");
+            require(selectNaniteLod(start * (1.0F - naniteLodHysteresis) * 0.99F, top, rung) == rung - 1,
+                "Steps down below the band");
+            std::size_t shown = ladder.size(), changes = 0;
+            for (int frame = 0; frame < 200; ++frame)
+            {
+                const float jitter = start * (1.0F + 0.07F * std::sin(frame * 0.9F));
+                const auto next = selectNaniteLod(jitter, top, shown);
+                if (shown < ladder.size() && next != shown) ++changes;
+                shown = next;
+            }
+            require(changes <= 1, "A size jittering 7% around a boundary switches at most once");
+        }
+        const NaniteDetail mobile{NaniteStructure::Shielded, NaniteSurface::Flat};
+        require(ladder[selectNaniteLod(1000.0F, mobile, ladder.size())].detail_.surface_ == NaniteSurface::Flat,
+            "A cap cuts the ladder");
+        require(ladder[selectNaniteLod(1000.0F, mobile, ladder.size() - 1)].detail_.structure_ == NaniteStructure::Frame,
+            "A current rung above the cap falls to the cap");
+        require(selectNaniteLod(std::numeric_limits<float>::quiet_NaN(), top, ladder.size()) == 0,
+            "A nonfinite size uses the silhouette");
 
         std::cout << "triangles (vertices) by structure x surface\n";
         for (const auto structure : structures)

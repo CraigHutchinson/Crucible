@@ -34,6 +34,13 @@ Four PNGs were imported through Git LFS into `docs/concepts/nanite/assets/` in a
 follow-up (hashes verified against provenance.md); the docs embed them.
 
 
+## Nanite distance consistency (M3),2026-10-13
+
+Session branch `claude/crucible-nanite-lod-consistency` edits the M1/M2 paths only
+(generator and its public header, test, lab and its studies, evidence and the nanite model
+doc) plus pointer text in the Phase15 review. No renderer, simulation or pin change.
+Headless SwiftShader renders only; released.
+
 ## Nanite model inner detail and intricacy (M2),2026-10-13
 
 Session branch `claude/crucible-nanite-intricacy` edits the M1 paths only (generator, its

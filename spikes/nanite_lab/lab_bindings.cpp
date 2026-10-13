@@ -39,3 +39,21 @@ EMSCRIPTEN_KEEPALIVE int labPreset(int index, int field)
 }
 EMSCRIPTEN_KEEPALIVE const char* labPresetName(int index) { return naniteDevicePresets()[index].name_.data(); }
 }
+
+extern "C"
+{
+EMSCRIPTEN_KEEPALIVE int labLadderCount() { return static_cast<int>(naniteLodLadder().size()); }
+/// Ladder field: 0 structure, 1 surface, 2 cross-fade flag.
+EMSCRIPTEN_KEEPALIVE int labLadder(int rung, int field)
+{
+    const auto& step = naniteLodLadder()[rung];
+    return field == 0 ? static_cast<int>(step.detail_.structure_)
+        : field == 1 ? static_cast<int>(step.detail_.surface_) : static_cast<int>(step.crossFade_);
+}
+EMSCRIPTEN_KEEPALIVE float labLadderPixels(int rung) { return naniteLodLadder()[rung].minPixels_; }
+EMSCRIPTEN_KEEPALIVE int labSelect(float pixels, int capStructure, int capSurface, int current)
+{
+    return static_cast<int>(selectNaniteLod(pixels, {static_cast<NaniteStructure>(capStructure & 3),
+        static_cast<NaniteSurface>(capSurface & 3)}, static_cast<std::size_t>(current < 0 ? 1000 : current)));
+}
+}

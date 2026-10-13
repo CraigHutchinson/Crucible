@@ -51,8 +51,8 @@ constexpr float plateThickness = 0.04F;
 constexpr float plateGap = 0.035F;         // Articulated: gap between neighbouring plates, in edge lengths
 constexpr float plateLift = 0.07F;         // Shielded: shield lift at full open
 constexpr float plateHinge = 0.4F;         // Articulated: hinge angle at full open, radians
-constexpr float coreEdge = 0.42F;          // Frame: solid core
 constexpr float housingEdge = 0.6F;        // Shielded+: containment housing
+constexpr float silhouetteInset = 0.93F;  // Silhouette: outline scale toward the shell centre
 constexpr float heartRadius = 0.094F;      // inside the housing's inscribed sphere (0.122)
 
 /// Deterministic value in [0,1) for a unit variant and a per-feature salt.
@@ -185,27 +185,41 @@ Polyhedron bar(Vec from, Vec to, Vec up, float halfWidth, float halfDepth)
     return prism({from - side - lift, from + side - lift, from + side + lift, from - side + lift}, to - from);
 }
 
-/** An opaque window set into a triangular face: a silver rim, graphite walls sloping into
- * the body and, at the bottom, an inverted luminous facet, so the heart reads with no
- * transparency. `window` is the opening's size as a fraction of the face.
+/** An opaque window set into a triangular face: graphite caps at the corners (where higher
+ * levels put their hubs), a silver rim, silver walls sloping into the body (the plates and
+ * crystal seen through the higher levels' windows read light, not dark) and, at the bottom,
+ * an inverted luminous facet, so the heart reads with no transparency. `window` is
+ * the opening's size as a fraction of the face; `cap` the corner caps' share of each edge.
  */
 void emitWindowedFace(Builder& builder, const std::array<Vec, 3>& face, Vec normal, float window, float depth,
-    NaniteMaterial rim)
+    NaniteMaterial rim, float cap)
 {
     const Vec centroid = (face[0] + face[1] + face[2]) * (1.0F / 3.0F);
-    std::array<Vec, 3> top{}, bottom{};
+    std::array<Vec, 3> top{}, bottom{}, towardNext{}, towardPrevious{};
     for (int i = 0; i < 3; ++i)
     {
         top[i] = centroid + (face[i] - centroid) * window;
         bottom[i] = centroid + (centroid - face[i]) * (window * 0.45F) - normal * depth; // opposite top[i]
+        towardNext[i] = lerp(face[i], face[(i + 1) % 3], cap);
+        towardPrevious[i] = lerp(face[i], face[(i + 2) % 3], cap);
     }
     for (int i = 0; i < 3; ++i)
     {
         const int j = (i + 1) % 3, k = (i + 2) % 3;
-        builder.flat(face[i], face[j], top[j], normal, rim);
-        builder.flat(face[i], top[j], top[i], normal, rim);
-        builder.flat(top[i], top[j], bottom[k], normal, NaniteMaterial::Graphite);
-        builder.flat(bottom[k], top[j], bottom[i], normal, NaniteMaterial::Graphite);
+        if (cap > 0.0F)
+        {
+            builder.flat(face[i], towardNext[i], towardPrevious[i], normal, NaniteMaterial::Graphite);
+            builder.flat(towardPrevious[i], towardNext[i], top[i], normal, rim);
+            builder.flat(towardNext[i], towardPrevious[j], top[j], normal, rim);
+            builder.flat(towardNext[i], top[j], top[i], normal, rim);
+        }
+        else
+        {
+            builder.flat(face[i], face[j], top[j], normal, rim);
+            builder.flat(face[i], top[j], top[i], normal, rim);
+        }
+        builder.flat(top[i], top[j], bottom[k], normal, NaniteMaterial::Silver);
+        builder.flat(bottom[k], top[j], bottom[i], normal, NaniteMaterial::Silver);
     }
     builder.flat(bottom[0], bottom[1], bottom[2], normal, NaniteMaterial::Heart);
 }
@@ -217,7 +231,7 @@ void emitWindowedFace(Builder& builder, const std::array<Vec, 3>& face, Vec norm
  * window (emitWindowedFace) into every triangular face.
  */
 void emitRounded(Builder& builder, const Polyhedron& shape, float radius, int segments, NaniteMaterial material,
-    float window = 0.0F, float windowDepth = 0.0F)
+    float window = 0.0F, float windowDepth = 0.0F, float windowCap = 0.0F)
 {
     Vec centre{};
     for (const auto& vertex : shape.vertices_) centre = centre + vertex;
@@ -250,7 +264,7 @@ void emitRounded(Builder& builder, const Polyhedron& shape, float radius, int se
             if (window > 0.0F && loop.size() == 3)
             {
                 emitWindowedFace(builder, {shape.vertices_[loop[0]], shape.vertices_[loop[1]], shape.vertices_[loop[2]]},
-                    normals[face], window, windowDepth, material);
+                    normals[face], window, windowDepth, material, windowCap);
                 continue;
             }
             for (std::size_t index = 1; index + 1 < loop.size(); ++index)
@@ -290,19 +304,19 @@ void emitRounded(Builder& builder, const Polyhedron& shape, float radius, int se
     const bool smooth = segments > 1;
     const auto blend = [&](Vec a, Vec b, Vec c, float u, float v)
     { return normalize(a * (1.0F - u - v) + b * u + c * v); };
-    const auto patch = [&](Vec pa, Vec pb, Vec pc, Vec pd, Vec na, Vec nb, Vec nc, Vec nd)
+    const auto patch = [&](Vec pa, Vec pb, Vec pc, Vec pd, Vec na, Vec nb, Vec nc, Vec nd, NaniteMaterial patchMaterial)
     {
         // Quad a-b-c-d; outward is the mean of its sphere normals.
         const Vec outward = na + nb + nc + nd;
         if (smooth)
         {
-            builder.triangle(pa, pb, pc, na, nb, nc, outward, material);
-            builder.triangle(pa, pc, pd, na, nc, nd, outward, material);
+            builder.triangle(pa, pb, pc, na, nb, nc, outward, patchMaterial);
+            builder.triangle(pa, pc, pd, na, nc, nd, outward, patchMaterial);
         }
         else
         {
-            builder.flat(pa, pb, pc, outward, material);
-            builder.flat(pa, pc, pd, outward, material);
+            builder.flat(pa, pb, pc, outward, patchMaterial);
+            builder.flat(pa, pc, pd, outward, patchMaterial);
         }
     };
 
@@ -313,7 +327,7 @@ void emitRounded(Builder& builder, const Polyhedron& shape, float radius, int se
         if (window > 0.0F && loop.size() == 3)
         {
             emitWindowedFace(builder, {inner[loop[0]] + shift, inner[loop[1]] + shift, inner[loop[2]] + shift},
-                normals[face], window, windowDepth, material);
+                normals[face], window, windowDepth, material, windowCap);
             continue;
         }
         for (std::size_t index = 1; index + 1 < loop.size(); ++index)
@@ -339,16 +353,28 @@ void emitRounded(Builder& builder, const Polyhedron& shape, float radius, int se
                 const auto& test = shape.faces_[candidate];
                 if (std::ranges::find(test, a) != test.end() && std::ranges::find(test, b) != test.end()) other = candidate;
             }
-            for (int step = 0; step < segments; ++step)
+            // Windowed faces split their edges where the corner caps end; the strip follows,
+            // graphite beside the caps, so the edge has no T-junction.
+            const std::array<float, 4> spans{0.0F, windowCap, 1.0F - windowCap, 1.0F};
+            for (std::size_t span = 0; span < 3; ++span)
             {
-                const float t0 = static_cast<float>(step) / segments, t1 = static_cast<float>(step + 1) / segments;
-                const Vec n0 = normalize(lerp(normals[face], normals[other], t0));
-                const Vec n1 = normalize(lerp(normals[face], normals[other], t1));
-                patch(inner[a] + n0 * radius, inner[b] + n0 * radius, inner[b] + n1 * radius, inner[a] + n1 * radius,
-                    n0, n0, n1, n1);
+                if (windowCap <= 0.0F && span != 1) continue;
+                const float u0 = windowCap <= 0.0F ? 0.0F : spans[span], u1 = windowCap <= 0.0F ? 1.0F : spans[span + 1];
+                const Vec from = lerp(inner[a], inner[b], u0), to = lerp(inner[a], inner[b], u1);
+                const NaniteMaterial stripMaterial = span == 1 ? material : NaniteMaterial::Graphite;
+                for (int step = 0; step < segments; ++step)
+                {
+                    const float t0 = static_cast<float>(step) / segments, t1 = static_cast<float>(step + 1) / segments;
+                    const Vec n0 = normalize(lerp(normals[face], normals[other], t0));
+                    const Vec n1 = normalize(lerp(normals[face], normals[other], t1));
+                    patch(from + n0 * radius, to + n0 * radius, to + n1 * radius, from + n1 * radius, n0, n0, n1, n1,
+                        stripMaterial);
+                }
             }
         }
     }
+    // Corner patches belong to the corner caps on windowed faces.
+    const NaniteMaterial cornerMaterial = windowCap > 0.0F ? NaniteMaterial::Graphite : material;
     for (std::size_t vertex = 0; vertex < shape.vertices_.size(); ++vertex)
     {
         const Vec na = normals[incident[vertex][0]], nb = normals[incident[vertex][1]], nc = normals[incident[vertex][2]];
@@ -364,13 +390,13 @@ void emitRounded(Builder& builder, const Polyhedron& shape, float radius, int se
                 const auto [p0, n0] = point(i, j);
                 const auto [p1, n1] = point(i + 1, j);
                 const auto [p2, n2] = point(i, j + 1);
-                if (smooth) builder.triangle(p0, p1, p2, n0, n1, n2, n0 + n1 + n2, material);
-                else builder.flat(p0, p1, p2, n0 + n1 + n2, material);
+                if (smooth) builder.triangle(p0, p1, p2, n0, n1, n2, n0 + n1 + n2, cornerMaterial);
+                else builder.flat(p0, p1, p2, n0 + n1 + n2, cornerMaterial);
                 if (i + j + 1 < segments)
                 {
                     const auto [p3, n3] = point(i + 1, j + 1);
-                    if (smooth) builder.triangle(p1, p3, p2, n1, n3, n2, n1 + n3 + n2, material);
-                    else builder.flat(p1, p3, p2, n1 + n3 + n2, material);
+                    if (smooth) builder.triangle(p1, p3, p2, n1, n3, n2, n1 + n3 + n2, cornerMaterial);
+                    else builder.flat(p1, p3, p2, n1 + n3 + n2, cornerMaterial);
                 }
             }
         }
@@ -498,9 +524,14 @@ NaniteMesh buildNanite(NaniteDetail detail, const NanitePosture& posture, std::u
 
     if (structure == NaniteStructure::Silhouette)
     {
-        // One shell; each face carries an opaque window down to a luminous facet.
-        emitRounded(builder, tetrahedron(corners[0], corners[1], corners[2], corners[3]), 0.05F * scale, segments,
-            NaniteMaterial::Silver, 0.46F, 0.07F);
+        // One shell; each face carries an opaque window down to a luminous facet, the window
+        // sized (0.43 of the inset face) to match the higher levels' window on the full shell. It is drawn
+        // slightly inside the full tetrahedron: the higher levels' sunk rails and rounded hubs
+        // inset their visible outline, and a full-size silhouette covers more pixels than they do.
+        std::array<Vec, 4> inset{};
+        for (int corner = 0; corner < 4; ++corner) inset[corner] = lerp(shellCentre, corners[corner], silhouetteInset);
+        emitRounded(builder, tetrahedron(inset[0], inset[1], inset[2], inset[3]), 0.025F * scale, segments,
+            NaniteMaterial::Silver, 0.43F, 0.06F, hubFraction);
         return mesh;
     }
 
@@ -562,22 +593,14 @@ NaniteMesh buildNanite(NaniteDetail detail, const NanitePosture& posture, std::u
         }
     }
 
-    if (structure == NaniteStructure::Frame)
-    {
-        // One opaque core at the rigid centre: a dark housing whose faces open onto
-        // luminous facets, the frame-level stand-in for housing and heart.
-        const float s = coreEdge;
-        emitRounded(builder, tetrahedron(centre + (Vec{0.0F, -shellHeight * 0.25F, shellCircum}) * s,
-            centre + (Vec{-0.5F, -shellHeight * 0.25F, -shellIn}) * s, centre + (Vec{0.5F, -shellHeight * 0.25F, -shellIn}) * s,
-            centre + (Vec{0.0F, shellHeight * 0.75F, 0.0F}) * s), 0.012F * scale, std::min(segments, 1), NaniteMaterial::Graphite,
-            0.62F, 0.03F);
-        return mesh;
-    }
 
-    // Face shields: plates around a central window onto the housing, uneven in reach,
-    // thickness and tilt, with clipped corners. Articulated splits each into two hinged plates
-    // and stacks a smaller armour plate on one. Face 0 is the base: it carries the unit and
-    // never opens.
+    // Face plates around a central window, the same band the silhouette's rim covers, so
+    // neighbouring levels share their outline and window. Frame plates are plain, fixed
+    // bars. Shields (Shielded and up) are uneven in reach, thickness and tilt, with clipped
+    // corners; Articulated splits each into two hinged plates and stacks a smaller armour
+    // plate on one. Face 0 is the base: it carries the unit and never opens.
+    const bool irregular = structure >= NaniteStructure::Shielded;
+    const auto vary = [&](float low, float high, float plain) { return irregular ? random(low, high) : plain; };
     const float recessDepth = articulated ? 0.02F : plateRecess;
     for (int face = 0; face < 4; ++face)
     {
@@ -598,10 +621,10 @@ NaniteMesh buildNanite(NaniteDetail detail, const NanitePosture& posture, std::u
             const Vec toCentroid = (centroid - a) - edgeDirection * dot(centroid - a, edgeDirection);
             const float clearance = (recessDepth + 0.075F) / std::tan(dihedral) + 0.012F;
             const float rimMinimum = clearance / std::sqrt(dot(toCentroid, toCentroid));
-            const Vec outerA = lerp(a, centroid, std::max(plateRim + random(-0.02F, 0.02F), rimMinimum)) + recess;
-            const Vec outerB = lerp(b, centroid, std::max(plateRim + random(-0.02F, 0.02F), rimMinimum)) + recess;
-            const Vec innerA = lerp(a, centroid, plateWindow + random(-0.06F, 0.05F)) + recess;
-            const Vec innerB = lerp(b, centroid, plateWindow + random(-0.06F, 0.05F)) + recess;
+            const Vec outerA = lerp(a, centroid, std::max(plateRim + vary(-0.02F, 0.02F, 0.0F), rimMinimum)) + recess;
+            const Vec outerB = lerp(b, centroid, std::max(plateRim + vary(-0.02F, 0.02F, 0.0F), rimMinimum)) + recess;
+            const Vec innerA = lerp(a, centroid, plateWindow + vary(-0.06F, 0.05F, 0.0F)) + recess;
+            const Vec innerB = lerp(b, centroid, plateWindow + vary(-0.06F, 0.05F, 0.0F)) + recess;
             const float split = articulated ? random(0.38F, 0.62F) : 1.0F;
             const float gap = articulated ? 0.035F : 0.0F;
             const std::array<std::array<float, 2>, 2> pieces{{{gap, split - gap * 0.5F}, {split + gap * 0.5F, 1.0F - gap}}};
@@ -618,7 +641,7 @@ NaniteMesh buildNanite(NaniteDetail detail, const NanitePosture& posture, std::u
                 for (int corner = 0; corner < 4; ++corner)
                 {
                     const Vec here = quad[corner], previous = quad[(corner + 3) % 4], next = quad[(corner + 1) % 4];
-                    if (corner >= 2)
+                    if (corner >= 2 || !irregular)
                     {
                         outline.push_back(here);
                         continue;
@@ -631,16 +654,16 @@ NaniteMesh buildNanite(NaniteDetail detail, const NanitePosture& posture, std::u
                 }
                 // Pose: a slight inward tilt about the outer edge, then the opening.
                 const Vec hingeAxis = normalize(o1 - o0);
-                float tilt = random(0.0F, 0.09F);
+                float tilt = vary(0.0F, 0.09F, 0.0F);
                 if (dot(rotateAbout(i0, o0, hingeAxis, tilt) - i0, normal) > 0.0F) tilt = -tilt;
                 float hinge = articulated && face != 0 ? open * plateHinge : 0.0F;
                 if (dot(rotateAbout(i0, o0, hingeAxis, hinge) - i0, normal) < 0.0F) hinge = -hinge;
-                const Vec lift = face == 0 ? Vec{} : normal * (open * plateLift * (articulated ? 0.6F : 1.0F));
+                const Vec lift = face == 0 || !irregular ? Vec{} : normal * (open * plateLift * (articulated ? 0.6F : 1.0F));
                 const auto pose = [&](Vec point) { return rotateAbout(rotateAbout(point, o0, hingeAxis, tilt), o0, hingeAxis, hinge) + lift; };
-                const float thickness = random(0.032F, 0.052F);
+                const float thickness = vary(0.032F, 0.052F, 0.042F);
                 std::vector<Vec> posed;
                 for (const auto& point : outline) posed.push_back(pose(point));
-                const Vec plateNormal = normalize(cross(posed[2] - posed[0], posed[5] - posed[0]));
+                const Vec plateNormal = normalize(cross(posed[1] - posed[0], posed.back() - posed[0]));
                 const Vec outward = dot(plateNormal, normal) > 0.0F ? plateNormal : plateNormal * -1.0F;
                 emitRounded(builder, prism(posed, outward * -thickness), 0.012F * scale, segments, NaniteMaterial::Silver);
                 if (articulated && face != 0 && piece == stacked)
@@ -659,7 +682,10 @@ NaniteMesh buildNanite(NaniteDetail detail, const NanitePosture& posture, std::u
         }
     }
 
-    // Containment housing: rigid, the shell's orientation, its vertices toward the hubs.
+
+    // Containment housing: rigid, the shell's orientation, its vertices toward the hubs. Frame
+    // shares it with the shielded levels, so all three show the same interior through the
+    // same window (a dark core here read as a black hole against their light glass).
     std::array<Vec, 4> housing{};
     {
         const std::array<Vec, 4> unit{{{0.0F, -shellHeight * 0.25F, shellCircum}, {-0.5F, -shellHeight * 0.25F, -shellIn},
@@ -689,16 +715,54 @@ NaniteMesh buildNanite(NaniteDetail detail, const NanitePosture& posture, std::u
     return mesh;
 }
 
+std::span<const NaniteLodStep> naniteLodLadder() noexcept
+{
+    using S = NaniteStructure;
+    using P = NaniteSurface;
+    // Switch sizes from the lab's comparison of neighbouring rungs (mean colour difference
+    // over the unit, four views, 4x4 supersampled). A rung without a fade differs by at most
+    // 3% where it starts; the two fading steps add parts and differ by 5.6% and 7.6% where they start.
+    static constexpr std::array<NaniteLodStep, 7> ladder{{
+        {{S::Silhouette, P::Flat}, 0.0F, false},
+        {{S::Frame, P::Flat}, 10.0F, true},
+        {{S::Frame, P::Chamfer}, 14.0F, false},
+        {{S::Frame, P::Bevel}, 40.0F, false},
+        {{S::Shielded, P::Bevel}, 48.0F, false},
+        {{S::Articulated, P::Bevel}, 64.0F, true},
+        {{S::Articulated, P::Hero}, 160.0F, false},
+    }};
+    return ladder;
+}
+
+std::size_t selectNaniteLod(float pixels, NaniteDetail cap, std::size_t current) noexcept
+{
+    const auto ladder = naniteLodLadder();
+    if (!std::isfinite(pixels)) pixels = 0.0F;
+    std::size_t highest = 0; // the cap cuts the ladder at a prefix
+    while (highest + 1 < ladder.size() && ladder[highest + 1].detail_.structure_ <= cap.structure_
+        && ladder[highest + 1].detail_.surface_ <= cap.surface_)
+    {
+        ++highest;
+    }
+    std::size_t target = 0;
+    while (target < highest && pixels >= ladder[target + 1].minPixels_) ++target;
+    if (current >= ladder.size()) return target;
+    current = std::min(current, highest);
+    if (target >= current) return target;
+    while (current > target && pixels < ladder[current].minPixels_ * (1.0F - naniteLodHysteresis)) --current;
+    return current;
+}
+
 std::span<const NaniteDevicePreset> naniteDevicePresets() noexcept
 {
     using S = NaniteStructure;
     using P = NaniteSurface;
     static constexpr std::array<NaniteDevicePreset, 5> presets{{
-        {"Mobile (Android / WebGL)", {S::Shielded, P::Flat}, {S::Silhouette, P::Flat}},
-        {"Handheld console (Switch class)", {S::Shielded, P::Chamfer}, {S::Frame, P::Flat}},
-        {"High-end mobile (iOS A15+ class)", {S::Articulated, P::Chamfer}, {S::Frame, P::Flat}},
+        {"Mobile (Android / WebGL)", {S::Frame, P::Chamfer}, {S::Silhouette, P::Flat}},
+        {"Handheld console (Switch class)", {S::Frame, P::Bevel}, {S::Silhouette, P::Flat}},
+        {"High-end mobile (iOS A15+ class)", {S::Shielded, P::Bevel}, {S::Frame, P::Flat}},
         {"Desktop (PC / console)", {S::Articulated, P::Bevel}, {S::Frame, P::Chamfer}},
-        {"Desktop 4K hero", {S::Articulated, P::Hero}, {S::Shielded, P::Chamfer}},
+        {"Desktop 4K hero", {S::Articulated, P::Hero}, {S::Frame, P::Bevel}},
     }};
     return presets;
 }
