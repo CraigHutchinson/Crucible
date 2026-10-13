@@ -1,5 +1,19 @@
 # Active work log
 
+## Single nanite design study, 2026-10-13
+
+Session `codex/nanite-design-study` owns `docs/concepts/nanite/**` and bounded
+navigation/revision links in root README, game design, concept gallery, Phase15
+experience/director/swarm notes and faction groundwork. Base `0063735` contains
+merged PR43. User authorizes push and merge of this dedicated design package.
+Scope: inspected concept iterations, single-unit modelling handoff, internal
+reactor and faction presentation groundwork. No runtime, geometry, simulation,
+phase completion or performance change. No heavy CPU/GPU allocation.
+Publication uses the GitHub connector: local Git/LFS lacks write credentials.
+Four PNGs and prompts are preserved in the linked artwork bundle; image LFS import
+is explicitly pending. Published text includes no unresolved image pointers.
+
+
 ## Nanite swarm behaviour design and S0-S0j spikes,2026-10-12/13
 
 Session `claude/crucible-nanite-swarm-design-89vg5m` claims only new paths

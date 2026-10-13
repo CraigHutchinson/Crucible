@@ -1,5 +1,9 @@
 # Faction and multiplayer extensibility groundwork
 
+The [nanite reactor and faction study](../concepts/nanite/reactor-and-factions.md)
+adds visual groundwork: shared anatomy, four colour-plus-shape palette slots and
+separate life/action cues. It does not implement faction or multiplayer rules.
+
 2026-10-03. User-requested design note; no faction or multiplayer system is
 implemented by this decision. Current single-player nanite/Blight behavior, resource
 rules, commands, replay and visual palette remain the verified baseline.

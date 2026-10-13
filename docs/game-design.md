@@ -230,6 +230,12 @@ uses four color-plus-shape identities and variants of both organism kinds. The
 before selecting further gameplay. These material studies guide later fidelity;
 primitive readable interaction comes first.
 
+The [dedicated nanite design space](concepts/nanite/README.md) develops the
+single unit in detail: a volumetric articulated shell around a stable tetrahedral
+housing and a living crystal reactor. Its [faction groundwork](concepts/nanite/reactor-and-factions.md)
+separates faction colour/shape from life and action. This is the latest detailed
+unit proposal; implementation and docking remain separate gates.
+
 See the [visual concept gallery](concepts/README.md) for world, unit/material and
 screen renders. These images are generated design explorations. Their HUD values,
 terrain and visual effects are illustrative; they are not captures of the executable
