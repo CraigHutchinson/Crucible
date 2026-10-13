@@ -1,5 +1,9 @@
 # Crucible visual concepts
 
+Detailed unit design now lives in the [nanite design space](nanite/README.md):
+volumetric shell, articulation, living crystal reactor and multi-faction presentation.
+Its latest reactor revision refines the historical wedge/core studies below.
+
 Generated concept renders accompany the [game design](../game-design.md).
 They explore the proposed swarm/Blight/fusion identity and a readable RTS screen.
 They are not executable screenshots, final assets, a renderer selection or measured

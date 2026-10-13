@@ -1,5 +1,10 @@
 # Nanite swarm behaviour: intro first, gameplay next
 
+> Detailed form and reactor design now lives in the [nanite design space](../nanite/README.md).
+> PR43/S0j remains the implemented dart baseline. The new shell/housing/crystal
+> direction requires a single-unit rig and docking study before replacing it;
+> this document continues to own swarm behaviour and choreography.
+
 Proposal and prototype, 2026-10-12. Extends the [director's brief](director-brief.md) and
 [experience design](experience-design.md). The S0 to S0j prototypes are
 [spikes/swarm_intro](../../../spikes/swarm_intro/README.md).

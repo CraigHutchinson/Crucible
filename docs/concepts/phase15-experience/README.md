@@ -1,5 +1,9 @@
 # Crucible: experience direction and cinematic identity
 
+For detailed single-unit design, use the [nanite design space](../nanite/README.md):
+articulated volumetric shell, contained crystal reactor and faction alternatives.
+The original cinematic images below remain historical composition references.
+
 2026-10-09 · proposed design package · source baseline `f70ce7d6afda687f9adc81a86444a8a245d29937`.
 
 Crucible should feel like commanding a living engineered material. The opening

@@ -10,6 +10,10 @@ back into a smaller mobile swarm.
 *Generated resource study. Stock and infection are separate; mobile and reserve are
 forms of the same biomass. The lattice/shatter rule now has a primitive prototype; this illustration remains a visual target.*
 
+Design reference: [dedicated nanite study](docs/concepts/nanite/README.md) —
+single-unit 3D form, articulated shell, living crystal reactor and multi-faction
+presentation, with concept artwork and a modelling handoff.
+
 ## Playable now
 
 - **Play:** build/test `desktop-release`, then launch `crucible_desktop` (`.exe`
