@@ -349,11 +349,17 @@ private:
     void buildLanes(float bedTop);
     void lanePoint(const Lane& lane, float s, float& x, float& y, float& tx, float& ty) const;
     [[nodiscard]] Camera cameraAt(float t) const;
-    /** This tick's camera: the scripted path (cameraAt), blended during the close-up tour
-     *  with a follow camera that tracks where the title is being built (densest cluster of
-     *  docking, climbing and just-locked units, with hysteresis), or the head of the stream
-     *  before building starts. Deterministic: it reads the previous tick's state. */
+    /** This tick's camera, a camera operator in two parts (S0o). System 2, the operator,
+     *  plans a shot four times a presented second: the scripted path (cameraAt) outside the
+     *  close-up tour; inside it, the title section with the most building now and predicted
+     *  (units heading for slots there), held for a minimum time, framed to the activity's
+     *  spread, creeping in while held, widening on long moves (an arc through the title) and
+     *  orbiting as it travels. System 1, the rig, moves the camera every tick toward that shot
+     *  with critically damped springs under speed and acceleration limits, in presented time.
+     *  Deterministic: it reads the previous tick's state. */
     void updateCamera();
+    /** System 2 of updateCamera: the shot the operator wants now. */
+    void planShot(float presented);
     void buildConstruction();
     [[nodiscard]] bool supported(std::size_t slot, std::span<const std::uint8_t> locked) const;
     /** True when any letter is climbed (climb or hybrid build). */
@@ -492,8 +498,23 @@ private:
     /** The title in view coordinates (x, and screen height in the oblique view or y when
      *  lying), for the camera's close-up tour. */
     float titleMinX_ = 0.0F, titleMaxX_ = 0.0F, titleMidY_ = 0.0F;
-    float followX_ = 0.0F, followY_ = 0.0F;   ///< Follow camera centre, smoothed (view units).
-    int focusBin_ = -1;                       ///< Title section the follow camera holds on.
+    /** Camera rig state (System 1): position, log zoom and yaw with their velocities. */
+    struct CameraRig
+    {
+        float x = 0.0F, y = 0.0F, logW = 0.0F, yaw = 0.0F;
+        float vx = 0.0F, vy = 0.0F, vw = 0.0F, vyaw = 0.0F;
+        bool ready = false;
+    };
+    CameraRig rig_;
+    /** The operator's shot (System 2): where it wants the camera, and since when. */
+    struct Shot
+    {
+        float x = 0.0F, y = 0.0F, logW = 0.0F, yaw = 0.0F;
+        int section = -1;         ///< Title section held (-1: stream head or scripted).
+        float since = 0.0F;       ///< Presented seconds the section has been held.
+        float planned = -1.0F;    ///< Presented time of the last plan.
+    };
+    Shot shot_;
     std::vector<std::uint32_t> hop_;   // planner's BFS hop count from first_
 
     // Frozen gather (tick-start epoch), indexed by Identity::index.

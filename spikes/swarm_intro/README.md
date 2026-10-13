@@ -1,7 +1,7 @@
 # Nanite swarm intro spike
 
 Headless, deterministic prototype of the CRUCIBLE title sequence's swarm behaviour: building
-blocks S0 to S0n of the
+blocks S0 to S0o of the
 [nanite swarm design](../../docs/concepts/phase15-experience/nanite-swarm-design.md).
 It answers a narrow question: **can a few thousand view-owned nanites perform the
 director's beats with intelligent-looking behaviour near the camera, cheap non-penetrating
@@ -33,6 +33,9 @@ User direction, 2026-10-12:
   fidelity variable to meet a tick budget; heroes on an interleaved duty cycle (a System 1
   every tick, a System 2 at a lower cadence); presentation interpolated or extrapolated to
   the display rate (S0n).
+- 2026-10-13: the camera should feel like a fluid, journeying cinematic, with rotation and
+  fly-through; responsive or predictive rather than hard-coded, a semi-intelligent camera
+  operator; smoothing what exists is close enough for now (S0o).
 - 2026-10-13: consolidate the design: the [nanite design space](../../docs/concepts/nanite/README.md)
   owns the unit's form; the body here is a proxy of it (S0k).
 - 2026-10-13: moving nanites are elongated: the core never changes, the shell reshapes (S0k).
@@ -70,15 +73,26 @@ off screen skip the resolve pass. It never reads the clock, so runs stay replaya
 
 `--lod camera` (on-screen only) and `--lod activity` (activity only) remain as presets.
 
-**The camera** is a stand-in for the brief's lens path:
-1. A macro on the first unit to wake.
-2. From 2.2 s, a follow camera: the head of the stream until building starts, then the
-   busiest part of the title (docking, climbing and just-locked units, with hysteresis so it
-   holds a section until another is clearly busier). The close-up is about two letters
-   wide and, in the oblique view, turns from one side of the title to the other as it moves
-   along it (frame headers carry its yaw; the renderer follows it).
-3. Four seconds before the sequence ends, the pull-out to the whole title, the hold and the
-   opening toward the menu.
+**The camera is operated, not keyframed** (S0o), in two parts like the units' brains:
+- **The operator (System 2, four times a presented second) chooses the shot.** Outside the
+  close-up tour it takes the scripted path: the macro on the first unit to wake, then the
+  pull-out to the whole title, the hold and the opening toward the menu. Inside the tour it:
+  - starts on the head of the stream until building starts;
+  - scores sections of the title by building now (docking, climbing, just locked) and
+    building predicted (units heading for slots there, at half weight), so it looks where
+    construction is about to happen;
+  - discounts each by the travel to reach it (about two letters halves it) and prefers
+    moves that continue its sweep, so it journeys along the title instead of crossing it;
+  - holds a section at least 3 s (presented), moving on only to one clearly more worth the
+    trip;
+  - frames the activity's spread, creeps in while a shot holds (a push-in of up to a fifth),
+    widens on long moves and comes back in on arrival (an arc, the fly-through);
+  - orbits: the yaw sweeps with the camera's place along the title, plus a slow drift.
+- **The rig (System 1, every tick) moves the camera** toward the shot with critically damped
+  springs under limits: pan at most 0.6 frame widths a second in any direction, 1.2 per
+  second squared, zoom 0.9 log units and yaw 12 degrees a second, all in presented time so
+  the slow-motion close-up does not slow the camera. Frame headers carry its yaw; the
+  renderer follows it.
 
 It is not production rendering, audio, a gameplay system or a native performance budget.
 The images are concept2D/dev-test captures through stand-in cameras: top-down orthographic
@@ -324,6 +338,9 @@ seconds, so they scale with the pace.
   - **Dynamic levers and budget** (S0n): a blend run whose levers switch mid-run (camera-led
     from 4 s, then activity-led with System 2 every 3 ticks from 8 s), and a blend run held
     to a budget of 4,000 cost units, both converge with the visible contact gates.
+  - **Camera** (S0o): the main run's camera pans at most 0.9 frame widths a second, with
+    pan acceleration at most 2.5 per second squared, zoom at most 1.0 log units and yaw at
+    most 15 degrees a second, in presented time (the rig's own limits, with margin).
 - **Lying and raise:**
   - Title at least 99% locked by 8.4 s and 100% by 10.0 s.
   - Visible mover contacts (centres closer than 0.8 diameter) at most 3%† of visible movers
@@ -338,7 +355,7 @@ seconds, so they scale with the pace.
   - Visible ground contacts at most 3%† per tick, and no visible pair closer than 0.5
     diameter† (tightened from 10% and 0.3 when lane branching removed the exit crowding).
 
-## Evidence, 2026-10-13 (blend LOD, System 2 every 2 ticks, tour camera)
+## Evidence, 2026-10-13 (blend LOD, System 2 every 2 ticks, operated camera)
 
 Host: shared 4-vCPU Intel Xeon 2.80 GHz cloud container, GCC 13.3, single thread, serial
 runs. Costs are advisory host wall time per presented tick (1/60 s on screen) with
@@ -348,20 +365,20 @@ seconds; on screen the tour plays slower (12 s builds run 22.8 s on screen, 15 s
 
 | Run | Title complete | Upright | Worst contacts / min gap | Stuck → recovered | Tick p50 / p95 |
 |---|---|---|---|---|---|
-| Lying, 1536 | 7.71 s | – | 0% / 0.96 d | 0 → 0 | 0.41 / 1.09 ms |
-| Raise, 1536 | 7.78 s | 8.83 s | 0% / 0.94 d | 0 → 0 | 0.37 / 1.44 ms |
-| Climb, 1536 | 10.85 s | 10.85 s | 0% / 0.94 d | 36 → 36 | 0.64 / 3.42 ms |
-| Hybrid, 1536 | 9.00 s | 7.99 s (raised) | 0% / 0.83 d | 2 → 2 | 0.46 / 2.71 ms |
-| Scaffold, 1536 | 10.57 s | 7.93 s (panels) | 0% / 0.83 d | 25 → 25 | 0.79 / 2.65 ms |
-| Scaffold, 4096 | 10.70 s | 7.82 s | 1.33% / 0.80 d | 30 → 30 | 1.40 / 4.04 ms |
-| Scaffold, 16384 | 10.27 s | 8.02 s | 0% / 0.84 d | 30 → 30 | 3.48 / 7.44 ms |
+| Lying, 1536 | 7.71 s | – | 0% / 0.97 d | 0 → 0 | 0.35 / 1.26 ms |
+| Raise, 1536 | 7.72 s | 8.77 s | 0% / 0.97 d | 0 → 0 | 0.35 / 1.50 ms |
+| Climb, 1536 | 11.10 s | 11.10 s | 0% / 0.95 d | 23 → 23 | 0.64 / 5.13 ms |
+| Hybrid, 1536 | 9.02 s | 8.00 s (raised) | 0% / 0.98 d | 3 → 3 | 0.51 / 2.09 ms |
+| Scaffold, 1536 | 11.28 s | 8.12 s (panels) | 0% / 0.98 d | 25 → 25 | 0.69 / 2.73 ms |
+| Scaffold, 4096 | 10.12 s | 7.96 s | 0% / 0.98 d | 32 → 32 | 1.54 / 2.74 ms |
+| Scaffold, 16384 | 10.86 s | 8.11 s | 0% / 0.97 d | 36 → 36 | 3.98 / 6.42 ms |
 
-Off the built face: climb 5 of 78,919 climber-ticks, hybrid 0 of 31,894, scaffold 4 of
-43,638. Release and ASan/UBSan pass all fifteen CTest cases (seven `--verify`, each running
+Off the built face: climb 0 of 79,746 climber-ticks, hybrid 0 of 31,461, scaffold 0 of
+44,162. Release and ASan/UBSan pass all fifteen CTest cases (seven `--verify`, each running
 eleven configurations; six diagnostics receivers; the mesh and playback tests). State
-hashes with this compiler (1536 units, the default length): lying `3389b8c993dc4914`, raise
-`b9829cc0a68b7b77`, climb `2dea93508feb6830`, hybrid `0dbc85e37884e977`, scaffold
-`c085a4a21e500332`. Cross-compiler or cross-platform bit equality is not claimed.
+hashes with this compiler (1536 units, the default length): lying `ce9be283c3f02aef`, raise
+`764d359bb6d03335`, climb `dcee06a616d38734`, hybrid `595cd0b40453d22c`, scaffold
+`14b0484234c59b4e`. Cross-compiler or cross-platform bit equality is not claimed.
 
 Blend keeps on-screen collision fidelity (visible contacts back to 0% from activity LOD's
 1.2%) and spends heroes on contention: 3,000 to 5,600 deliberations per run against 16,000
@@ -373,31 +390,32 @@ two-layer rows use 3,072 units):
 | Build | blend | camera | activity | hero | near | far | hidden | spread |
 |---|---|---|---|---|---|---|---|---|
 | Lying | 7.71 | 7.71 | 7.81 | 8.44 | 7.78 | 7.80 | 7.71 | 0.73 s |
-| Raise (upright) | 8.83 | 8.83 | 8.85 | 9.87 | 8.85 | 8.88 | 8.74 | 1.13 s |
-| Climb | 10.85 | 10.38 | 10.97 | 12.34 | 10.67 | 10.68 | 10.50 | 1.96 s |
-| Hybrid | 9.00 | 9.13 | 9.66 | 10.70 | 9.16 | 8.96 | 8.79 | 1.91 s |
-| Scaffold | 10.57 | 10.39 | 10.36 | 11.73 | 10.40 | 10.27 | 10.23 | 1.49 s |
-| Climb, two layers | 10.99 | 10.93 | 11.63 | 13.63 | 10.96 | 11.07 | 10.80 | 2.83 s |
-| Scaffold, two layers | 10.83 | 10.76 | 11.53 | 13.10 | 10.78 | 10.94 | 10.73 | 2.38 s |
+| Raise (upright) | 8.77 | 8.73 | 8.85 | 9.87 | 8.85 | 8.88 | 8.74 | 1.14 s |
+| Climb | 11.10 | 10.60 | 10.97 | 12.34 | 10.67 | 10.68 | 10.50 | 1.84 s |
+| Hybrid | 9.02 | 9.61 | 9.66 | 10.70 | 9.16 | 8.96 | 8.79 | 1.91 s |
+| Scaffold | 11.28 | 10.23 | 10.36 | 11.73 | 10.40 | 10.27 | 10.23 | 1.49 s |
+| Climb, two layers | 10.82 | 10.95 | 11.63 | 13.63 | 10.96 | 11.07 | 10.80 | 2.83 s |
+| Scaffold, two layers | 10.80 | 10.81 | 11.53 | 13.10 | 10.78 | 10.94 | 10.73 | 2.38 s |
 
 The spread is title completion across the seven modes (raise: all panels upright). Hidden
 units overlap freely (contacts 43–108% of movers), which is allowed: they are never drawn.
-Levers switched mid-run: climb 11.43 s, scaffold 11.40 s (contacts 2.9%), two-layer climb
-12.43 s. Budget 4,000: climb 10.67 s, scaffold 10.27 s, two-layer climb 12.18 s, contacts 0%.
+Levers switched mid-run: climb 10.98 s, scaffold 10.84 s, two-layer climb 11.23 s. Budget
+4,000: climb 10.43 s, scaffold 10.37 s, two-layer climb 12.08 s. Blend and camera modes follow
+the camera, so the operated camera (S0o) moved their times; the other modes do not.
 
 Two depth layers (S0i, `--layers 2 --count 3072`, 2,146 tiles, each layer one body thick since S0j):
 
 | Run | Title complete | Upright | Worst contacts / min gap | Stuck → recovered | Tick p50 / p95 |
 |---|---|---|---|---|---|
-| Lying | 8.60 s | – | 0% / 0.89 d | 0 → 0 | 0.73 / 2.04 ms |
-| Raise | 8.62 s | 9.67 s | 0% / 0.85 d | 0 → 0 | 0.73 / 2.99 ms |
-| Climb | 10.99 s | 10.99 s | 0% / 0.82 d | 43 → 43 | 1.43 / 11.89 ms |
-| Hybrid | 9.92 s | 8.77 s (raised) | 0% / 0.85 d | 9 → 9 | 0.83 / 8.65 ms |
-| Scaffold | 10.83 s | 8.54 s (panels) | 0% / 0.84 d | 75 → 75 | 1.60 / 10.78 ms |
+| Lying | 8.60 s | – | 0% / 0.84 d | 0 → 0 | 0.62 / 2.87 ms |
+| Raise | 8.60 s | 9.66 s | 0% / 0.90 d | 0 → 0 | 0.81 / 3.15 ms |
+| Climb | 10.82 s | 10.82 s | 0% / 0.88 d | 55 → 55 | 1.49 / 13.22 ms |
+| Hybrid | 9.29 s | 8.74 s (raised) | 0% / 0.90 d | 14 → 14 | 0.67 / 8.63 ms |
+| Scaffold | 10.80 s | 8.43 s (panels) | 0% / 0.90 d | 37 → 37 | 1.72 / 13.93 ms |
 
-Off the built face: climb 51 of 124,279 climber-ticks, scaffold 23 of 75,288; no unsupported
-lock. State hashes: lying `0ea159c2056fbf21`, raise `7fe9cbd5d0ad1fc8`, climb
-`2e0266b5f69a9389`, hybrid `07a7043ce1e2358b`, scaffold `c387eab62bdff823`. Three layers
+Off the built face: climb 8 of 125,304 climber-ticks, scaffold 10 of 74,516; no unsupported
+lock. State hashes: lying `788705249ec91799`, raise `250e5e5fb80d737b`, climb
+`20ca85f003925d8e`, hybrid `2b6de2b387468a98`, scaffold `b71adf2c4af944aa`. Three layers
 (3,212 tiles, 4,608 units) locked 3,211 by 15 s when measured at S0i (finding 22); not
 re-measured since.
 
@@ -442,13 +460,16 @@ whole sequence takes more ticks.
 
 ![The close-up tour, scaffold build](evidence/tour.png)
 
-The scaffold build through its camera at 1.0, 2.6, 3.2, 4.0, 5.5, 6.5, 7.5, 8.5, 9.5, 10.5,
-12.5 and 15.5 s: the macro on the first unit to wake; the bed lifting off and the stream
-head; units arriving at the title; then close-ups that follow wherever letters are being
-built (the C and I, the R and U, the I and B, the U and second C, the B and L, the L and
-E), the view turning from one side of the title to the other; the pull-out to the whole
-title; the hold and opening.
-Frame labels give the time on screen: the close-up plays at half speed.
+The scaffold build through its operated camera (S0o) at 1.0, 2.2, 3.0, 3.8, 4.6, 5.5, 6.5,
+7.5, 8.5, 9.5, 10.5, 11.3, 12.5, 14.0 and 15.5 s: the macro on the first unit to wake,
+widening as the bed lifts off; the stream head arriving; the first C filling; then a
+journey left to right with the construction (the I and the L's foot being built, climbers
+pouring over the B, the B finishing, the L and the E), the view turning as it travels;
+the pull-out to the whole title; the hold and opening. Frame labels give the time on
+screen: the close-up plays at half speed. Camera motion over the run: pan at most 0.60
+frame widths a second (p95 0.57), pan acceleration at most 1.22 (p95 0.45), zoom at most
+0.58 log units and yaw 6.5 degrees a second; the S0n follow camera reached 1.75, 126,
+2.74 and 32, with seven jerks.
 
 ### Lying (S0)
 
@@ -706,6 +727,14 @@ the finished letters as single faces.
 27. **Interpolate between ticks, extrapolate only when late** (S0n). Rebuilding the frames
     between every 4th capture (a 15 Hz simulation shown at 60 Hz) puts interpolated units
     within 0.024 diameters at p95, extrapolated ones within 0.14; both fail at act changes.
+28. **A camera operator weighs the trip, not only the action** (S0o). Following the busiest
+    section with hysteresis gave close-ups but no journey: building runs on several letters
+    at once, so the busiest section flipped from one end of the title to the other every 2
+    to 3 s, and the camera spent its time crossing at full speed over finished letters (the
+    S0n camera panned up to 1.75 frame widths a second, with 126 fw/s² jerks). Discounting
+    each section by the travel to reach it, preferring the current sweep, holding a shot
+    3 s and moving on springs under speed and acceleration limits turned it into a
+    left-to-right journey with the construction (pan at most 0.6 fw/s, no jerks).
 
 ## Limits
 
