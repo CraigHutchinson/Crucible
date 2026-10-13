@@ -29,6 +29,8 @@ artifact host, which adds the document skeleton; `index.html` wraps it for local
   triangles per unit and the swarm's total at 4096 units.
 - **Posture**: stretch (shell elongates toward the nose; core rigid), open (shields lift and
   hinge; the base face stays down), heart spin; or play the travel/contact cycle.
+- **Variant**: the unit's irregularity seed (plate reach, cuts, tilt, split, stacking, rail
+  widths, heart facets); the swarm view gives each unit its own.
 - **Palette slot**: cyan, amber, violet, lime heart and housing tint.
 - **Render**: turntable, bloom, glass housing (transmission) or smoked, wireframe, underside camera.
 

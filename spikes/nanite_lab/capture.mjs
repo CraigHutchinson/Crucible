@@ -40,6 +40,8 @@ const shot = async (name, settings, time = 1, yaw = 0.5, clip = null) => {
 const stage = { x: 0, y: 0, width: 1280, height: 1000 };
 await shot("matrix.png", { view: "matrix", structure: 3, surface: 2, open: 0.35, spin: 0, turntable: false, bloom: true }, 1, 0, stage);
 await shot("unit-hero.png", { view: "unit", structure: 3, surface: 3, open: 0.6, spin: 0.6, turntable: true }, 1, 0.2, stage);
+await shot("unit-silhouette.png", { view: "unit", structure: 0, surface: 0, open: 0, spin: 0.6 }, 1, 0.2, stage);
+await shot("unit-silhouette-bevel.png", { view: "unit", structure: 0, surface: 2, open: 0, spin: 0.6 }, 1, 0.9, stage);
 await shot("unit-closed-bevel.png", { view: "unit", structure: 3, surface: 2, open: 0, spin: 0.6 }, 1, 0.2, stage);
 await shot("unit-stretched.png", { view: "unit", structure: 2, surface: 2, open: 0, stretch: 1 }, 1, 1.2, stage);
 await shot("underside.png", { view: "unit", structure: 3, surface: 2, open: 0, stretch: 0, underside: true }, 1, 0.4, stage);

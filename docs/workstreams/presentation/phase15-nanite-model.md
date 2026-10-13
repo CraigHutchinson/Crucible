@@ -1,10 +1,12 @@
-# Procedural nanite model: two detail axes (M1)
+# Procedural nanite model: two detail axes (M1, M2)
 
 2026-10-13. A procedural, articulable nanite for the Filament production renderer, with
 **structure** (which parts exist) and **surface** (how finely each part is shaped) as
 independent detail axes, so each hardware class can pick a point on both. The form follows
 the [nanite design space](../../concepts/nanite/README.md): a tetrahedral silver shell
-around a rigid containment housing with one heart crystal inside.
+around a rigid containment housing with one heart crystal inside. M2 (same day, after
+user review of M1) gives the low levels opaque inner detail and breaks up M1's regular,
+"safe" structure with seeded irregularity; see [M2](#m2-inner-detail-without-transparency-and-intricacy).
 
 ![Detail matrix: rows are structure levels, columns surface levels, triangle count under each](phase15-nanite-model/matrix.png)
 
@@ -16,7 +18,7 @@ cell. Headless SwiftShader render with three.js materials, not the Filament rend
 
 | Piece | Where | Consumer |
 | --- | --- | --- |
-| Generator `buildNanite(NaniteDetail, NanitePosture)` and device presets | `include/crucible/presentation/production/nanite_model.hpp`, `src/presentation/production/nanite_model.cpp` | Production renderer; web lab |
+| Generator `buildNanite(NaniteDetail, NanitePosture, variant)` and device presets | `include/crucible/presentation/production/nanite_model.hpp`, `src/presentation/production/nanite_model.cpp` | Production renderer; web lab |
 | Production mesh: replaces the PR48 wedge for every cinematic instance | `production_renderer.cpp` `makeNanite()`, `materials/nanite.mat` (roles in uv0.x) | `crucible_game` |
 | Contract test (closure, winding, axes, rigidity, clearance, determinism) | `tests/presentation/production/test_nanite_model.cpp` (`production_nanite_model`) | CI on every platform |
 | WebAssembly lab and headless capture | `spikes/nanite_lab/` | Review on any device; this evidence |
@@ -25,10 +27,10 @@ cell. Headless SwiftShader render with three.js materials, not the Filament rend
 
 | Structure | Parts | | Surface | Shaping |
 | --- | --- | --- | --- | --- |
-| Silhouette | One closed tetrahedron | | Flat | Sharp planar parts |
-| Frame | 6 silver edge rails, 4 graphite corner hubs, one solid luminous core | | Chamfer | One flat chamfer on every part edge |
-| Shielded | + 12 recessed shield plates (3 per face around a window), glass housing, separate heart crystal | | Bevel | Rounded edges and corners, smooth normals (3 steps) |
-| Articulated | Plates split and hinged; rails split with graphite joints; cradle struts; housing edges | | Hero | 6-step rounding, more crystal facets |
+| Silhouette | One closed tetrahedron, each face windowed down to a luminous facet | | Flat | Sharp planar parts |
+| Frame | 6 silver edge rails, 4 graphite corner hubs, a dark core windowed onto luminous facets | | Chamfer | One flat chamfer on every part edge |
+| Shielded | + 12 uneven, clipped, tilted shield plates (3 per face around a window), glass housing, separate heart crystal | | Bevel | Rounded edges and corners, smooth normals (3 steps) |
+| Articulated | 24 split, hinged plates with 9 stacked armour plates; rails split at an uneven joint with two collars each; cradle struts; housing edges | | Hero | 6-step rounding, more crystal facets |
 
 Every part is a convex polyhedron whose vertices join three faces (tetrahedra, prisms). One
 routine rounds any of them by a radius without changing its outer extent: faces are offset
@@ -41,13 +43,14 @@ Triangles per unit (vertices after welding), from the contract test:
 
 | Structure \ Surface | Flat | Chamfer | Bevel | Hero |
 | --- | ---: | ---: | ---: | ---: |
-| Silhouette | 4 (12) | 20 (48) | 76 (40) | 220 (112) |
-| Frame | 92 (204) | 364 (826) | 1,260 (690) | 3,564 (1,840) |
-| Shielded | 246 (474) | 902 (2,008) | 3,180 (1,696) | 8,948 (4,600) |
-| Articulated | 510 (1,050) | 1,870 (4,132) | 5,972 (3,140) | 15,196 (7,772) |
+| Silhouette | 52 (108) | 68 (144) | 124 (136) | 268 (208) |
+| Frame | 140 (300) | 412 (920) | 1,308 (789) | 3,612 (1,939) |
+| Shielded | 342 (666) | 1,190 (2,582) | 4,140 (2,180) | 11,636 (5,948) |
+| Articulated | 1,170 (2,238) | 4,114 (8,894) | 11,552 (6,879) | 27,688 (14,973) |
 
-The lowest point on both axes is exactly a (stretched) tetrahedron; the highest is a
-concept-grade hero unit. Every level fits 16-bit indices.
+The lowest point on both axes is a (stretched) tetrahedron of 52 triangles, its windows
+included; the highest is a concept-grade hero unit. Every level fits 16-bit indices, and
+every variant of a level has the same triangle count.
 
 ### Posture
 
@@ -74,13 +77,48 @@ are set from the triangle counts above, not from device profiling:
 
 | Class | Hero cap | Hero tris | Swarm cap | Swarm tris | 4096-unit swarm |
 | --- | --- | ---: | --- | ---: | ---: |
-| Mobile (Android / WebGL) | Shielded, Chamfer | 902 | Silhouette, Flat | 4 | 16K |
-| Handheld console (Switch class) | Shielded, Bevel | 3,180 | Frame, Flat | 92 | 0.38M |
-| High-end mobile (iOS A15+ class) | Articulated, Bevel | 5,972 | Frame, Flat | 92 | 0.38M |
-| Desktop (PC / console) | Articulated, Bevel | 5,972 | Frame, Chamfer | 364 | 1.49M |
-| Desktop 4K hero | Articulated, Hero | 15,196 | Shielded, Chamfer | 902 | 3.69M |
+| Mobile (Android / WebGL) | Shielded, Flat | 342 | Silhouette, Flat | 52 | 0.21M |
+| Handheld console (Switch class) | Shielded, Chamfer | 1,190 | Frame, Flat | 140 | 0.57M |
+| High-end mobile (iOS A15+ class) | Articulated, Chamfer | 4,114 | Frame, Flat | 140 | 0.57M |
+| Desktop (PC / console) | Articulated, Bevel | 11,552 | Frame, Chamfer | 412 | 1.69M |
+| Desktop 4K hero | Articulated, Hero | 27,688 | Shielded, Chamfer | 1,190 | 4.87M |
 
 ![A small swarm at the desktop class: three hero units in front, the rest at the swarm cap](phase15-nanite-model/swarm.png)
+
+## M2: inner detail without transparency, and intricacy
+
+User review of M1: the silhouette and other low levels lost all internal detail, and the
+structure read as "very safe", missing the natural, slightly jagged character of the concept
+renders.
+
+**Opaque inner detail.** Every face of the Silhouette level now carries a window: a silver
+rim, graphite walls sloping 0.07 into the body and, at the bottom, an inverted luminous
+facet (`emitWindowedFace`). The heart reads from any side with no transparency, at 52
+triangles for the flat level. The Frame level's solid cyan core becomes a dark housing whose
+faces open onto luminous facets the same way. Both are ordinary opaque triangles, so the
+Filament material and any mobile renderer draw them unchanged.
+
+| Silhouette, Flat (52 triangles) | Silhouette, Bevel (124) |
+| --- | --- |
+| ![Silhouette level: an opaque window on each face down to a glowing facet](phase15-nanite-model/unit-silhouette.png) | ![Bevelled silhouette with windows](phase15-nanite-model/unit-silhouette-bevel.png) |
+
+**Intricacy.** A `variant` seed drives per-feature irregularity, drawn in a fixed order so a
+variant always builds the same unit:
+
+- Shield plates reach unevenly toward the window at each end (a jagged window outline),
+  vary in rim, thickness (0.032–0.052) and inward tilt (up to 5°), and have their outer
+  corners clipped by uneven cuts (faceted, still convex).
+- Articulated plates split in two at an uneven point; the longer piece carries a smaller
+  stacked armour plate, kept under the face plane.
+- Rails vary in width; Articulated rails split at an uneven joint and carry two graphite
+  collars.
+- The heart crystal's facets vary more strongly and per variant.
+
+Two geometric guards keep the silhouette exact: a plate starts far enough from its edge for
+that edge's dihedral angle (on a stretched nose the sharp dihedral otherwise lets a thick
+plate pass through the neighbouring face), and rounding is limited to half a part's shortest
+edge so clipped corners stay closed. The lab's swarm gives each unit its own variant; the
+production renderer uses variant 0 for every instance until per-instance meshes exist.
 
 ## Platform for iterating: web first for form, Filament for acceptance
 
@@ -104,13 +142,13 @@ Recommendation: keep **one C++ generator** and iterate its form and detail level
 
 ## Production consumer
 
-`makeNanite()` builds the desktop class's hero level (Articulated, Bevel: 5,972 triangles)
+`makeNanite()` builds the desktop class's hero level (Articulated, Bevel: 11,552 triangles)
 once at startup and every cinematic instance draws it, replacing the PR48 wedge. The
 material reads the generator's role from uv0.x: silver, graphite, and the heart, whose
 emission keeps the per-instance `cores` intensity and `glow`. Housing panes are left out of
 the production mesh: the lit opaque material would hide the heart, and transparency is not
-yet received natively. With 1,251 wordmark instances that is about 7.5M triangles before
-shadows. Not yet done natively: per-instance detail selection (all instances share one
+yet received natively. With 1,251 wordmark instances that is about 14.5M triangles before
+shadows, which makes per-instance detail (next, 2) the first native performance step. Not yet done natively: per-instance detail selection (all instances share one
 level), the glass housing, and a capture. Hosted CI compiles the renderer and the material
 (`production` job); this session could not run it.
 
@@ -118,13 +156,15 @@ level), the glass housing, and a capture. Hosted CI compiles the renderer and th
 
 - `production_nanite_model` (all 16 levels x 4 postures): finite unit normals; every part
   closed and wound outward (position-welded directed edges pair up; positive volume); no
-  normal opposes its triangle; nothing below the ground; Silhouette/Flat is 4 triangles;
-  each axis adds triangles whatever the other holds; materials by level; core, housing and
-  heart rigid under stretch and open; heart clearance for any turn; housing inside the shell;
-  deterministic bytes; nonfinite postures build the rest pose; presets ordered.
-- Release preset: 69/69 CTest cases pass; `swarm_intro_layers2_climb` failed once while the
-  lab video rendered in parallel and passed when rerun alone (it does not link the model).
-  ASan/UBSan: see the PR.
+  normal opposes its triangle; nothing below the ground; every level at rest, compact or
+  stretched, stays inside the silhouette tetrahedron for three variants (2 mm tolerance);
+  variants differ but keep their triangle count; Silhouette/Flat stays a few dozen
+  triangles; each axis adds triangles whatever the other holds; materials by level; core,
+  housing and heart rigid under stretch and open; heart clearance for any turn; housing
+  inside the shell; deterministic bytes; nonfinite postures build the rest pose; presets
+  ordered by hero cost.
+- The model test passes in Release, Debug and ASan/UBSan locally; CI runs every platform,
+  the sanitizer job and the Windows production build of the renderer and material.
 - Lab stills and video: `capture.mjs`, headless Chromium with SwiftShader.
 
 ## Next
@@ -142,7 +182,8 @@ level), the glass housing, and a capture. Hosted CI compiles the renderer and th
 
 ## Evidence files
 
-All in [phase15-nanite-model/](phase15-nanite-model/): `matrix.png`, `unit-hero.png`,
+All in [phase15-nanite-model/](phase15-nanite-model/), regenerated at M2: `matrix.png`,
+`unit-hero.png`, `unit-silhouette.png`, `unit-silhouette-bevel.png`,
 `unit-closed-bevel.png`, `underside.png`, `unit-stretched.png`, `swarm.png`, `lab-panel.png`
 (the lab with its controls), `turntable.mp4`, and `triangles.json` (the triangle table and
 presets as the lab read them from the WebAssembly build). Rendered by

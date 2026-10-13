@@ -14,7 +14,7 @@ namespace crucible::presentation::production
  */
 enum class NaniteStructure : std::uint8_t
 {
-    Silhouette, ///< One closed tetrahedral shell: a swarm-distance silhouette.
+    Silhouette, ///< One closed tetrahedral shell, each face windowed down to a luminous facet (opaque).
     Frame,      ///< Silver edge rails and graphite corner hubs around one solid luminous core.
     Shielded,   ///< Adds recessed face shields, a glass containment housing and a separate heart crystal.
     Articulated ///< Splits shields and rails into hinged plates and jointed fingers; adds cradle struts and contact pads.
@@ -73,10 +73,12 @@ struct NaniteMesh
 /** Builds one nanite procedurally for a detail level and posture.
  * @param detail Structure and surface levels; each axis is independent.
  * @param posture Articulation; out-of-range values are clamped.
+ * @param variant Seed for the unit's irregularity (plate reach, cuts, tilt, rail widths,
+ *        heart facets); every variant keeps the same parts, silhouette and triangle count.
  * @return Closed parts, each consistently wound outward; identical inputs give identical bytes.
  * @throws std::bad_alloc Mesh storage cannot be allocated.
  */
-[[nodiscard]] NaniteMesh buildNanite(NaniteDetail detail, const NanitePosture& posture = {});
+[[nodiscard]] NaniteMesh buildNanite(NaniteDetail detail, const NanitePosture& posture = {}, std::uint32_t variant = 0);
 
 /// Proposed detail caps per hardware class: the most detail any unit on that class may use.
 struct NaniteDevicePreset
