@@ -34,6 +34,16 @@ Four PNGs were imported through Git LFS into `docs/concepts/nanite/assets/` in a
 follow-up (hashes verified against provenance.md); the docs embed them.
 
 
+## Procedural nanite model with two detail axes (M1),2026-10-13
+
+Session branch `claude/crucible-nanite-model-lod` adds new paths
+`include/crucible/presentation/production/nanite_model.hpp`,
+`src/presentation/production/nanite_model.cpp`, its test, `spikes/nanite_lab/` and
+`docs/workstreams/presentation/phase15-nanite-model*`, and edits the production renderer's
+mesh (`makeNanite()` replaces `makeWedge()`), `materials/nanite.mat`, the production
+CMake/header-check lists and pointer text in the Phase15 plan/review and nanite concept
+README. No simulation, pins or native captures. Headless SwiftShader renders only; released.
+
 ## Nanite swarm behaviour design and S0-S0o spikes,2026-10-12/13
 
 Session `claude/crucible-nanite-swarm-design-89vg5m` claims only new paths

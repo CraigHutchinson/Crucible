@@ -44,6 +44,7 @@
 
 #include "crucible/presentation/production/detail/frame_validation.hpp"
 #include "crucible/presentation/production/detail/native_transforms.hpp"
+#include "crucible/presentation/production/nanite_model.hpp"
 #include "crucible/presentation/production/production_renderer.hpp"
 #include "crucible/presentation/production/resources/crucible_materials.h"
 
@@ -90,7 +91,7 @@ struct MeshVertex
     float2 uv_{};
 };
 
-/// Startup-only authored bevel/floor geometry, retained for asynchronous upload.
+/// Startup-only nanite and floor geometry, retained for asynchronous upload.
 struct Mesh
 {
     std::vector<MeshVertex> vertices_;
@@ -129,30 +130,37 @@ struct Mesh
     }
 };
 
-Mesh makeWedge()
+/** The procedural nanite at the desktop hero detail; its material role rides in uv0.x.
+ * Housing panes are left out: this lit opaque material would hide the heart, and the
+ * transparent housing has not been received in the native renderer yet.
+ */
+Mesh makeNanite()
 {
+    const auto detail = naniteDevicePresets()[3].hero_; // desktop class
+    const auto source = buildNanite(detail);
+    if (source.vertices_.size() > std::numeric_limits<std::uint16_t>::max())
+    {
+        throw std::length_error("Nanite detail exceeds the 16-bit index range");
+    }
     Mesh mesh;
-    constexpr std::array<float2, 5> footprint{{{-0.5F, -0.5F}, {0.5F, -0.5F},
-        {0.42F, 0.18F}, {0, 0.5F}, {-0.42F, 0.18F}}};
-    const auto ring = [&](std::size_t index, float height, float scale)
+    mesh.vertices_.reserve(source.vertices_.size());
+    for (const auto& vertex : source.vertices_)
     {
-        const auto point = footprint[index % footprint.size()] * scale;
-        return float3{point.x, height, point.y};
-    };
-    for (std::size_t edge = 0; edge < footprint.size(); ++edge)
+        const float3 normal{vertex.normal_[0], vertex.normal_[1], vertex.normal_[2]};
+        const float3 reference = std::abs(normal.y) < 0.9F ? float3{0, 1, 0} : float3{1, 0, 0};
+        const float3 tangent = normalize(cross(reference, normal));
+        mesh.vertices_.push_back({{vertex.position_[0], vertex.position_[1], vertex.position_[2]},
+            mat3f::packTangentFrame(mat3f{tangent, cross(normal, tangent), normal}),
+            {static_cast<float>(vertex.material_), 0}});
+    }
+    mesh.indices_.reserve(source.indices_.size());
+    for (std::size_t index = 0; index < source.indices_.size(); index += 3)
     {
-        const auto a = ring(edge, 0.02F, 1), b = ring(edge + 1, 0.02F, 1);
-        const auto c = ring(edge + 1, 0.15F, 1), d = ring(edge, 0.15F, 1);
-        const auto e = ring(edge, 0.22F, 0.82F), f = ring(edge + 1, 0.22F, 0.82F);
-        mesh.triangle(a, c, b);
-        mesh.triangle(a, d, c);
-        mesh.triangle(d, f, c);
-        mesh.triangle(d, e, f);
-        mesh.triangle(float3{0, 0.22F, 0}, f, e);
-        // A separate raised cyan inset preserves a visible silver perimeter.
-        mesh.triangle(float3{0, 0.224F, 0}, ring(edge + 1, 0.224F, 0.34F),
-            ring(edge, 0.224F, 0.34F), {1, 0});
-        mesh.triangle(float3{0, 0.02F, 0}, a, b);
+        if (source.vertices_[source.indices_[index]].material_ == NaniteMaterial::Housing) continue;
+        for (std::size_t corner = 0; corner < 3; ++corner)
+        {
+            mesh.indices_.push_back(static_cast<std::uint16_t>(source.indices_[index + corner]));
+        }
     }
     return mesh;
 }
@@ -231,7 +239,7 @@ struct ProductionRenderer::State
     MaterialInstance* floorInstance_{}; // owning; destroyed through Engine.
     std::array<MaterialInstance*, maxCommands> uiInstances_{}; // owning entries; destroyed through Engine.
     utils::Entity cameraEntity_{}, uiCameraEntity_{}, uiEntity_{}, floorEntity_{}, keyEntity_{}, rimEntity_{};
-    Mesh wedge_{makeWedge()}, floor_{makeFloor()};
+    Mesh nanite_{makeNanite()}, floor_{makeFloor()};
     std::vector<Batch> batches_{};
     std::array<std::unique_ptr<UploadSlot>, 3> slots_{};
     std::array<UiTexture, 4> textures_{};
@@ -348,7 +356,7 @@ struct ProductionRenderer::State
             engine_->destroy(slot->vertices_);
             engine_->destroy(slot->indices_);
         }
-        for (auto* mesh : {&wedge_, &floor_})
+        for (auto* mesh : {&nanite_, &floor_})
         {
             engine_->destroy(mesh->vertexBuffer_);
             engine_->destroy(mesh->indexBuffer_);
@@ -472,7 +480,7 @@ struct ProductionRenderer::State
         {
             throw std::runtime_error("Production per-instance core atlas could not be created");
         }
-        wedge_.upload(*engine_);
+        nanite_.upload(*engine_);
         floor_.upload(*engine_);
         floorInstance_ = floorMaterial_->createInstance();
         floorEntity_ = entities.create();
@@ -749,7 +757,7 @@ struct ProductionRenderer::State
                 if (count)
                 {
                     if (RenderableManager::Builder(1).boundingBox({{0, 0, 0}, {540, 540, 540}}).culling(false)
-                        .geometry(0, RenderableManager::PrimitiveType::TRIANGLES, wedge_.vertexBuffer_, wedge_.indexBuffer_)
+                        .geometry(0, RenderableManager::PrimitiveType::TRIANGLES, nanite_.vertexBuffer_, nanite_.indexBuffer_)
                         .material(0, batch.material_).instances(count, batch.instances_).castShadows(true).receiveShadows(true)
                         .build(*engine_, batch.entity_) != RenderableManager::Builder::Success)
                         throw std::runtime_error("Production instance renderable failed");

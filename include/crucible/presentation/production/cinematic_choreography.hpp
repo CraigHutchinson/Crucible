@@ -8,7 +8,7 @@
 
 namespace crucible::presentation::production
 {
-/** Choreographs authored silver-wedge lettering without advancing gameplay.
+/** Choreographs authored nanite lettering without advancing gameplay.
  * @note One coordinator owns this producer. Returned scene borrows must be
  * consumed before its next evaluation or destruction.
  */

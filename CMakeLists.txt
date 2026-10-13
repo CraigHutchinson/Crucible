@@ -86,7 +86,7 @@ if(CRUCIBLE_BUILD_GAME)
         application/frontend.hpp application/frontend_view.hpp application/frontend_intent.hpp
         application/game_journey.hpp application/profile_store.hpp application/progress_profile.hpp
         presentation/production/cinematic_frame.hpp presentation/production/cinematic_choreography.hpp
-        presentation/production/production_renderer.hpp)
+        presentation/production/production_renderer.hpp presentation/production/nanite_model.hpp)
         string(REPLACE "/" "_" unit "${header}")
         set(source "${CMAKE_CURRENT_BINARY_DIR}/header_checks/${unit}.cpp")
         file(WRITE "${source}" "#include \"crucible/${header}\"\n")
@@ -113,6 +113,10 @@ if(BUILD_TESTING)
     target_link_libraries(crucible_cinematic_choreography_tests PRIVATE Crucible::CinematicChoreography)
     add_test(NAME production_cinematic_choreography COMMAND crucible_cinematic_choreography_tests)
     set_tests_properties(production_cinematic_choreography PROPERTIES LABELS "presentation;production;contract")
+    add_executable(crucible_nanite_model_tests tests/presentation/production/test_nanite_model.cpp)
+    target_link_libraries(crucible_nanite_model_tests PRIVATE crucible_options Crucible::NaniteModel)
+    add_test(NAME production_nanite_model COMMAND crucible_nanite_model_tests)
+    set_tests_properties(production_nanite_model PROPERTIES LABELS "presentation;production;contract")
     add_test(NAME production_cinematic_cli COMMAND crucible --cinematic 9000)
     set_tests_properties(production_cinematic_cli PROPERTIES LABELS "presentation;production;contract"
         PASS_REGULAR_EXPRESSION "cinematic source frame: elapsed_ms=9000 instances=1251")
