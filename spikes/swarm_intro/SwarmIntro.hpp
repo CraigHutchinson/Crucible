@@ -115,6 +115,9 @@ struct IntroSettings
      *  sequence at 66% speed (15 s of choreography over 22.5 s) without retuning anything. The
      *  simulation steps are smaller, never larger, than the 60 Hz the behaviours were tuned at. */
     float pace = 2.0F / 3.0F;
+    /** Pace while the camera tours the construction close up (cameraAt): slower, so a viewer
+     *  can follow units seating. Eased in and out; equal to `pace` keeps a constant pace. */
+    float closePace = 0.5F;
     float diameter = 1.0F;
     float cruiseSpeed = 30.0F;     ///< Lane speed, diameters per second.
     float wakeAt = 0.6F;           ///< First core pulse (shot01).
@@ -148,6 +151,7 @@ struct Camera
     float pixelsWide = 1920.0F;
     [[nodiscard]] float halfHeight() const { return halfWidth / aspect; }
     [[nodiscard]] float pixelsPerUnit() const { return pixelsWide / (2.0F * halfWidth); }
+    float yaw = 0.0F;   ///< Oblique view: degrees of turn about the vertical (presentation only; the LOD ignores it).
 };
 
 /** One tick's diagnostics; costs are host wall time and advisory only. */
@@ -212,10 +216,18 @@ public:
     /** Advances one fixed tick. Systems run in a declared order against a frozen gather. */
     void tick();
 
-    /** @return Elapsed choreography time in seconds (presentation time is this over pace). */
+    /** @return Elapsed choreography time in seconds (presentation time: presentAt). */
     [[nodiscard]] float time() const { return time_; }
-    /** @return Choreography seconds one tick advances: tickSeconds * pace. */
-    [[nodiscard]] float stepSeconds() const { return settings_.tickSeconds * settings_.pace; }
+    /** @return Choreography seconds the next tick advances: tickSeconds * paceAt(time). */
+    [[nodiscard]] float stepSeconds() const { return settings_.tickSeconds * paceAt(time_); }
+    /** @return Choreography seconds per presentation second at choreography time t: `pace`,
+     *  easing to `closePace` while the camera tours the construction close up. */
+    [[nodiscard]] float paceAt(float t) const;
+    /** @return Presentation (on-screen) seconds at which choreography time t is shown. */
+    [[nodiscard]] float presentAt(float t) const;
+    /** @return Choreography length: the build's sequence (12 s, or 15 s when climbing) and the
+     *  closing pull-out to the whole title. */
+    [[nodiscard]] float sequenceSeconds() const;
     /** @return The camera of the most recent tick. */
     [[nodiscard]] const Camera& camera() const { return camera_; }
     /** @return Diagnostics of the most recent tick. */
@@ -270,6 +282,11 @@ private:
     void buildLanes(float bedTop);
     void lanePoint(const Lane& lane, float s, float& x, float& y, float& tx, float& ty) const;
     [[nodiscard]] Camera cameraAt(float t) const;
+    /** This tick's camera: the scripted path (cameraAt), blended during the close-up tour
+     *  with a follow camera that tracks where the title is being built (densest cluster of
+     *  docking, climbing and just-locked units, with hysteresis), or the head of the stream
+     *  before building starts. Deterministic: it reads the previous tick's state. */
+    void updateCamera();
     void buildConstruction();
     [[nodiscard]] bool supported(std::size_t slot, std::span<const std::uint8_t> locked) const;
     /** True when any letter is climbed (climb or hybrid build). */
@@ -394,6 +411,11 @@ private:
     std::vector<float> routeCost_;
     std::vector<std::pair<float, std::uint32_t>> routeHeap_;
     float firstX_ = 0.0F, firstY_ = 0.0F;
+    /** The title in view coordinates (x, and screen height in the oblique view or y when
+     *  lying), for the camera's close-up tour. */
+    float titleMinX_ = 0.0F, titleMaxX_ = 0.0F, titleMidY_ = 0.0F;
+    float followX_ = 0.0F, followY_ = 0.0F;   ///< Follow camera centre, smoothed (view units).
+    int focusBin_ = -1;                       ///< Title section the follow camera holds on.
     std::vector<std::uint32_t> hop_;   // planner's BFS hop count from first_
 
     // Frozen gather (tick-start epoch), indexed by Identity::index.

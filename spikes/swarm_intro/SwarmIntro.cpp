@@ -134,6 +134,18 @@ SwarmIntro::SwarmIntro(IntroSettings settings)
     planAssignment(bed);
     firstX_ = bed[first_].x;
     firstY_ = bed[first_].y;
+    titleMinX_ = std::numeric_limits<float>::max();
+    titleMaxX_ = std::numeric_limits<float>::lowest();
+    float lowY = std::numeric_limits<float>::max(), highY = std::numeric_limits<float>::lowest();
+    for (const Slot& slot : slots_)
+    {
+        titleMinX_ = std::min(titleMinX_, slot.x);
+        titleMaxX_ = std::max(titleMaxX_, slot.x);
+        lowY = std::min(lowY, slot.y);
+        highY = std::max(highY, slot.y);
+    }
+    // Upright, a letter stands on the wall line, its height on screen plus the tilted depth.
+    titleMidY_ = oblique() ? 0.5F * settings_.wordmark.capHeight + settings_.viewTilt * wallY_ : 0.5F * (lowY + highY);
     camera_ = cameraAt(0.0F);
 }
 
@@ -636,39 +648,71 @@ void SwarmIntro::planAssignment(std::span<const Pose> bed)
 
 // ---- Camera -----------------------------------------------------------------------------
 
+namespace
+{
+// The close-up tour (cameraAt): it starts following the stream at kTourFrom and pans across
+// the title until kTourEnd before the build's sequence ends; the closing pull-out then
+// frames the whole title and holds for kOpenSeconds past the sequence.
+constexpr float kTourFrom = 2.2F;
+constexpr float kTourEnd = 4.0F;
+constexpr float kOpenSeconds = 1.5F;
+constexpr float kPaceEase = 0.6F;   // choreography seconds easing into and out of closePace
+} // namespace
+
+float SwarmIntro::sequenceSeconds() const
+{
+    return (climbing() ? 15.0F : 12.0F) + kOpenSeconds;
+}
+
+float SwarmIntro::paceAt(float t) const
+{
+    const float tourTo = sequenceSeconds() - kOpenSeconds - kTourEnd;
+    const float in = std::clamp((t - kTourFrom) / kPaceEase, 0.0F, 1.0F);
+    const float out = std::clamp((tourTo - t) / kPaceEase, 0.0F, 1.0F);
+    return smooth(settings_.pace, settings_.closePace, std::min(in, out));
+}
+
+float SwarmIntro::presentAt(float t) const
+{
+    // Integrated in fine fixed steps; deterministic, for reports and frame headers only.
+    constexpr float h = 1.0F / 1200.0F;
+    double shown = 0.0;
+    float s = 0.0F;
+    for (; s + h <= t; s += h) shown += static_cast<double>(h) / static_cast<double>(paceAt(s + 0.5F * h));
+    shown += static_cast<double>(t - s) / static_cast<double>(paceAt(s));
+    return static_cast<float>(shown);
+}
+
 Camera SwarmIntro::cameraAt(float t) const
 {
-    // Orthographic stand-in for the brief's lens path: macro, pullback, rise, hold, open.
+    // Orthographic stand-in for the brief's lens path. A macro on the first unit to wake,
+    // then a close-up tour: follow the stream to the title's left end, dolly along the
+    // letters as they build while the oblique view turns from one side to the other, then
+    // pull out to the whole title, hold, and open toward the menu.
     const float fx = firstX_;
     const float fy = oblique() ? settings_.viewTilt * firstY_ : firstY_;
+    const float span = titleMaxX_ - titleMinX_;
+    const float left = titleMinX_ + 0.10F * span;
+    const float right = titleMaxX_ - 0.10F * span;
+    const float closeW = 0.13F * span;   // about two letters across
+    const float sequence = sequenceSeconds() - kOpenSeconds;
+    const float tourTo = sequence - kTourEnd;
     struct Key
     {
-        float t, x, y, w;
+        float t, x, y, w, yaw;
     };
-    // Upright builds: an oblique front view that rises to frame the standing title.
-    const std::array<Key, 7> uprightKeys{ { { 0.0F, fx, fy, 3.0F },
-                                            { 1.8F, fx, fy + 0.4F, 4.0F },
-                                            { 4.2F, 0.0F, fy + 6.0F, 50.0F },
-                                            { 6.8F, 0.0F, 4.0F, 82.0F },
-                                            { 8.4F, 0.0F, 6.0F, 80.0F },
-                                            { 10.0F, 0.0F, 6.0F, 79.0F },
-                                            { 12.0F, 0.0F, -4.0F, 96.0F } } };
-    const std::array<Key, 7> lyingKeys{ { { 0.0F, fx, fy, 3.0F },
-                                          { 1.8F, fx, fy + 0.5F, 4.0F },
-                                          { 4.2F, 0.0F, fy + 10.0F, 50.0F },
-                                          { 6.8F, 0.0F, -6.0F, 82.0F },
-                                          { 8.4F, 0.0F, -3.0F, 80.0F },
-                                          { 10.0F, 0.0F, -4.0F, 79.0F },
-                                          { 12.0F, 0.0F, -20.0F, 96.0F } } };
-    // Climb build: the user-approved fifteen-second sequence holds the build longer.
-    const std::array<Key, 7> climbKeys{ { { 0.0F, fx, fy, 3.0F },
-                                          { 1.8F, fx, fy + 0.4F, 4.0F },
-                                          { 4.2F, 0.0F, fy + 6.0F, 50.0F },
-                                          { 7.0F, 0.0F, 4.0F, 82.0F },
-                                          { 12.5F, 0.0F, 6.0F, 80.0F },
-                                          { 13.5F, 0.0F, 6.0F, 79.0F },
-                                          { 15.0F, 0.0F, -4.0F, 96.0F } } };
-    const std::array<Key, 7>& keys = climbing() ? climbKeys : (oblique() ? uprightKeys : lyingKeys);
+    const float wideY = oblique() ? 6.0F : -3.0F;
+    const float openY = oblique() ? -4.0F : -20.0F;
+    const float turn = oblique() ? 28.0F : 0.0F;   // degrees; the top view does not turn
+    const std::array<Key, 9> keys{ { { 0.0F, fx, fy, 3.0F, 0.0F },
+                                     { 1.8F, fx, fy + 0.4F, 4.0F, 0.0F },
+                                     { kTourFrom, fx, fy + 1.0F, 12.0F, 0.4F * turn },   // widen on the bed; the follow camera takes over
+                                     { kTourFrom + 1.4F, left, titleMidY_, closeW, turn },
+                                     { tourTo, right, titleMidY_, closeW, -turn },
+                                     { tourTo + 1.8F, 0.0F, wideY, 80.0F, -0.3F * turn },
+                                     { sequence, 0.0F, wideY, 79.0F, 0.0F },
+                                     { sequence + 0.75F * kOpenSeconds, 0.0F, openY, 96.0F, 0.0F },
+                                     { sequence + kOpenSeconds, 0.0F, openY, 96.0F, 0.0F } } };
     Camera cam;
     std::size_t k = 0;
     while (k + 2 < keys.size() && t > keys[k + 1].t) ++k;
@@ -679,7 +723,98 @@ Camera SwarmIntro::cameraAt(float t) const
     cam.cy = smooth(a.y, b.y, f);
     // Zoom interpolates in log space so the pullback reads as a steady dolly.
     cam.halfWidth = std::exp(smooth(std::log(a.w), std::log(b.w), f));
+    cam.yaw = smooth(a.yaw, b.yaw, f);
     return cam;
+}
+
+void SwarmIntro::updateCamera()
+{
+    const Camera scripted = cameraAt(time_);
+    const float tourTo = sequenceSeconds() - kOpenSeconds - kTourEnd;
+    const float blend = smooth(0.0F, 1.0F, std::min((time_ - kTourFrom) / 0.8F, (tourTo - time_) / 1.0F));
+    if (blend <= 0.0F)
+    {
+        camera_ = scripted;
+        followX_ = scripted.cx;
+        followY_ = scripted.cy;
+        return;
+    }
+    const float span = titleMaxX_ - titleMinX_;
+    const float left = titleMinX_ + 0.10F * span;
+    const float right = titleMaxX_ - 0.10F * span;
+    const float closeW = 0.13F * span;
+    // Where is the title being built? Count docking, climbing and just-locked units per title
+    // section; the camera holds its section until another is clearly busier.
+    constexpr int kBins = 16;
+    std::array<std::uint32_t, kBins> count{};
+    std::array<float, kBins> sumX{}, sumY{};
+    float headY = std::numeric_limits<float>::lowest();
+    world_.each<Identity, Pose, Motion, Mind>([&](Identity&, Pose& pose, Motion&, Mind& mind) {
+        if (mind.ribbon || mind.goal < 0) return;
+        const bool building = mind.act == Act::Dock || mind.act == Act::Climb || (mind.act == Act::Locked && time_ - mind.actSince < 0.6F);
+        if (!building) return;
+        float vx, vy;
+        viewOf(pose, mind, vx, vy);
+        const int bin = std::clamp(static_cast<int>((vx - titleMinX_) / span * kBins), 0, kBins - 1);
+        ++count[static_cast<std::size_t>(bin)];
+        sumX[static_cast<std::size_t>(bin)] += vx;
+        sumY[static_cast<std::size_t>(bin)] += vy;
+    });
+    // A section is two bins wide (about the close-up's width).
+    auto busy = [&](int b) { return count[static_cast<std::size_t>(b)] + (b + 1 < kBins ? count[static_cast<std::size_t>(b + 1)] : 0U); };
+    int best = 0;
+    for (int b = 1; b < kBins; ++b)
+        if (busy(b) > busy(best)) best = b;
+    if (focusBin_ < 0 || busy(best) * 2 > busy(focusBin_) * 3 + 8) focusBin_ = best;
+    float targetX = followX_, targetY = followY_;
+    const std::uint32_t n = busy(focusBin_);
+    if (n >= 6)
+    {
+        const auto b = static_cast<std::size_t>(focusBin_);
+        const float sx = sumX[b] + (b + 1 < kBins ? sumX[b + 1] : 0.0F);
+        const float sy = sumY[b] + (b + 1 < kBins ? sumY[b + 1] : 0.0F);
+        targetX = sx / static_cast<float>(n);
+        targetY = 0.5F * (sy / static_cast<float>(n) + titleMidY_);   // keep the letter in frame
+    }
+    else
+    {
+        // Nothing building yet: frame the head of the stream as it approaches the title.
+        float sx = 0.0F, sy = 0.0F;
+        std::uint32_t m = 0;
+        world_.each<Identity, Pose, Motion, Mind>([&](Identity&, Pose& pose, Motion&, Mind& mind) {
+            if (restAct(mind.act) || mind.ribbon) return;
+            float vx, vy;
+            viewOf(pose, mind, vx, vy);
+            headY = std::max(headY, vy);
+        });
+        world_.each<Identity, Pose, Motion, Mind>([&](Identity&, Pose& pose, Motion&, Mind& mind) {
+            if (restAct(mind.act) || mind.ribbon) return;
+            float vx, vy;
+            viewOf(pose, mind, vx, vy);
+            if (vy < headY - 0.5F * closeW) return;
+            sx += vx;
+            sy += vy;
+            ++m;
+        });
+        if (m > 0)
+        {
+            targetX = sx / static_cast<float>(m);
+            targetY = sy / static_cast<float>(m) - 0.25F * closeW;   // the head toward the top, the stream behind
+        }
+    }
+    targetX = std::clamp(targetX, left, right);
+    // Critically smooth pursuit (time constant 0.6 choreography seconds).
+    const float follow = 1.0F - std::exp(-stepSeconds() / 0.6F);
+    followX_ += (targetX - followX_) * follow;
+    followY_ += (targetY - followY_) * follow;
+    // Orbit: the view turns with the camera's place along the title, from one side to the other.
+    const float turn = oblique() ? 28.0F : 0.0F;
+    const float along = std::clamp((followX_ - left) / std::max(1e-3F, right - left), 0.0F, 1.0F);
+    camera_ = scripted;
+    camera_.cx = scripted.cx + (followX_ - scripted.cx) * blend;
+    camera_.cy = scripted.cy + (followY_ - scripted.cy) * blend;
+    camera_.halfWidth = std::exp(std::log(scripted.halfWidth) + (std::log(closeW) - std::log(scripted.halfWidth)) * blend);
+    camera_.yaw = scripted.yaw + (turn * (1.0F - 2.0F * along) - scripted.yaw) * blend;
 }
 
 bool SwarmIntro::inView(float x, float y, float margin) const
@@ -780,8 +915,8 @@ void SwarmIntro::forNeighbours(float x, float y, float radius, F&& f) const
 void SwarmIntro::tick()
 {
     metrics_ = TickMetrics{};
-    time_ = static_cast<float>(tickIndex_ + 1) * stepSeconds();
-    camera_ = cameraAt(time_);
+    time_ += stepSeconds();   // pace eases slower while the camera tours close up
+    updateCamera();
 
     auto start = Clock::now();
     gather();
@@ -1928,7 +2063,13 @@ void SwarmIntro::lodSystem()
             viewOf(pose, mind, vx, vy);
             if (!inView(vx, vy, margin))
             {
-                want = Tier::Hidden;
+                // Activity floor: units building the title (seeking, queueing, climbing,
+                // docking) keep at least the far tier off screen. Hidden-tier motion has no
+                // separation, and a close-up camera leaving part of the title unseen let
+                // hidden climbers and the seekers below them stall until it pulled out (SW-F30).
+                const bool building = !mind.ribbon && (mind.act == Act::Seek || mind.act == Act::Queue ||
+                                                       mind.act == Act::Climb || mind.act == Act::Dock);
+                want = building ? Tier::Far : Tier::Hidden;
                 break;
             }
             const float rx = (vx - cam.cx) / cam.halfWidth;

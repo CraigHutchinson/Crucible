@@ -9,7 +9,9 @@ camera. It shows choreography, spacing and LOD tiers; it is not production fidel
 
 Sheets ending in .png (the committed evidence, stored through Git LFS) are rasterised with a
 256-colour palette to stay small; .svg writes vectors; other extensions are plain rasters. Sheet --times are choreography seconds; GIF and MP4 play at the
-presentation pace recorded in each capture (see IntroSettings::pace).
+presentation rate recorded in each capture's `shown` time (the pace eases slower during the
+camera's close-up tour; see IntroSettings::closePace). Oblique views turn with the camera
+path's yaw unless --yaw overrides it (--zoom sheets default to 0).
 
     crucible_swarm_intro --build scaffold --frames frames --every 1
     python3 render_swarm.py frames --mp4 intro.mp4          # needs ffmpeg on PATH
@@ -36,7 +38,8 @@ TIER_COLOURS = {0: (255, 190, 60), 1: (80, 210, 255), 2: (150, 110, 255), 3: (90
 TIER_NAMES = {0: "hero", 1: "near", 2: "far", 3: "hidden"}
 MAGNET_COLOURS = {1: (60, 230, 255), 2: (255, 150, 40), 3: (250, 250, 250)}   # lift, push, seat
 HEADER = re.compile(r"# time=([\d.]+) cx=([-\d.]+) cy=([-\d.]+) half_width=([\d.]+) aspect=([\d.]+)"
-                    r"(?: view=(\w+) tilt=([\d.]+))?(?: tile=([\d.]+))?(?: pace=([\d.]+))?(?: body=([-\d.,]+))?")
+                    r"(?: view=(\w+) tilt=([\d.]+))?(?: tile=([\d.]+))?(?: pace=([\d.]+))?(?: body=([-\d.,]+))?"
+                    r"(?: shown=([\d.]+))?(?: yaw=([-\d.]+))?")
 MESH_SCALE = 6.0    # pixels per unit at which units are drawn as 3D bodies (below: silhouettes)
 PART_SCALE = 14.0   # ... at which shells split into hubs, rails and recessed shields, seams outlined
 GRAPHITE = (62, 66, 74)
@@ -53,6 +56,8 @@ def load(path):
     tile = float(groups[7] or 0.0)
     pace = float(groups[8] or 1.0)   # choreography seconds per presentation second
     body = nanite_mesh.parse_body(groups[9])
+    shown = float(groups[10]) if groups[10] else t / pace   # presentation seconds (pace varies since the tour)
+    camera_yaw = float(groups[11] or 0.0)                   # the camera path's turn, degrees
     rows = []
     columns = lines[1].split(",")
     first_corner = columns.index("s0x") if "s0x" in columns else len(columns)
@@ -68,7 +73,8 @@ def load(path):
         # Locked tiles carry their morphed corners (letter plane: x along, y up the letter).
         shape = tuple(float(v) for v in fields[first_corner:first_corner + 6]) if len(fields) >= first_corner + 6 else None
         rows.append((float(x), float(y), float(z), float(h), act, int(tier), float(since), plane, magnet, shape, layer, speed))
-    return {"time": t, "cx": cx, "cy": cy, "hw": hw, "aspect": aspect, "view": view, "tilt": tilt, "tile": tile, "pace": pace, "body": body, "rows": rows}
+    return {"time": t, "cx": cx, "cy": cy, "hw": hw, "aspect": aspect, "view": view, "tilt": tilt, "tile": tile, "pace": pace, "body": body, "rows": rows,
+            "shown": shown, "yaw": camera_yaw}
 
 
 class Canvas:
@@ -126,7 +132,7 @@ class Canvas:
         return "\n".join(parts)
 
 
-def draw_frame(frame, size=(960, 540), mode="beauty", yaw=0.0):
+def draw_frame(frame, size=(960, 540), mode="beauty", yaw=None):
     w, h = size
     draw = Canvas(size)
     scale = w / (2.0 * frame["hw"])
@@ -136,6 +142,8 @@ def draw_frame(frame, size=(960, 540), mode="beauty", yaw=0.0):
     oblique = frame["view"] == "oblique"
     tilt = frame["tilt"]
 
+    if yaw is None:
+        yaw = frame["yaw"] if oblique else 0.0   # the camera path's turn unless overridden
     cyaw, syaw = math.cos(math.radians(yaw)), math.sin(math.radians(yaw))
 
     def turned(x, y):
@@ -220,8 +228,8 @@ def draw_frame(frame, size=(960, 540), mode="beauty", yaw=0.0):
         draw.polygon(points, fill)
     if bodies:
         draw_bodies(draw, bodies, frame, size, scale, oblique, tilt, cyaw, syaw)
-    shown = t / frame["pace"]
-    label = f"t={t:5.2f}s" + (f" ({shown:.2f} s shown)" if frame["pace"] != 1.0 else "") + f"  half-width={frame['hw']:.1f}u"
+    shown = frame["shown"]
+    label = f"t={t:5.2f}s" + (f" ({shown:.2f} s shown)" if abs(shown - t) > 1e-3 else "") + f"  half-width={frame['hw']:.1f}u"
     if mode == "tiers":
         counts = {k: 0 for k in TIER_NAMES}
         for row in frame["rows"]:
@@ -317,7 +325,7 @@ def nearest(frames, time):
     return min(frames, key=lambda f: abs(f["time"] - time))
 
 
-def sheet(frames, times, mode, path, yaw=0.0):
+def sheet(frames, times, mode, path, yaw=None):
     """Three-column contact sheet; an .svg path writes vectors, anything else a raster."""
     tiles = [draw_frame(nearest(frames, t), (640, 360), mode, yaw) for t in times]
     columns = 3
@@ -342,14 +350,15 @@ def sheet(frames, times, mode, path, yaw=0.0):
 
 
 def presentation_step(frames):
-    """Wall-clock seconds between captures: the choreography step over the pace."""
+    """Wall-clock seconds between captures (constant: captures are every N ticks, while the
+    choreography step varies with the pace)."""
     if len(frames) < 2:
         return 1.0 / 30.0
     # Averaged over the whole capture: headers round each time to microseconds.
-    return (frames[-1]["time"] - frames[0]["time"]) / (len(frames) - 1) / frames[0]["pace"]
+    return (frames[-1]["shown"] - frames[0]["shown"]) / (len(frames) - 1)
 
 
-def video(frames, path, mode, size, hold, yaw=0.0):
+def video(frames, path, mode, size, hold, yaw=None):
     """Pipes rasterised frames to ffmpeg as raw RGB; the final frame is held for `hold` s."""
     ffmpeg = shutil.which("ffmpeg")
     if not ffmpeg:
@@ -386,7 +395,8 @@ def main():
     parser.add_argument("--hold", type=float, default=2.0, help="seconds to hold the final frame in the video")
     parser.add_argument("--magnets", type=pathlib.Path, help="sheet coloured by magnet mode: cyan lift, amber push, white seat")
     parser.add_argument("--times", default="1.0,3.0,5.0,6.8,8.4,11.9")
-    parser.add_argument("--yaw", type=float, default=0.0, help="oblique view: degrees of yaw about the vertical, to show depth layers")
+    parser.add_argument("--yaw", type=float, default=None,
+                        help="oblique view: degrees of yaw about the vertical (default: the camera path's, or 0 with --zoom)")
     parser.add_argument("--zoom", help="override the camera for sheets: cx,cy,half_width (view units)")
     args = parser.parse_args()
     frames = [load(p) for p in sorted(args.frames.glob("frame_*.csv"))]
@@ -397,6 +407,8 @@ def main():
         cx, cy, hw = (float(v) for v in args.zoom.split(","))
         for f in frames:
             f["cx"], f["cy"], f["hw"] = cx, cy, hw
+        if args.yaw is None:
+            args.yaw = 0.0
     if args.sheet:
         sheet(frames, times, "beauty", args.sheet, args.yaw)
     if args.tiers:

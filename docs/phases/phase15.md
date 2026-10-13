@@ -100,8 +100,9 @@ with headless prototypes in [spikes/swarm_intro](../../spikes/swarm_intro/README
 final title stands upright (user direction). Climbing in place without a preset order
 (first-come claims, stuck contingencies, selective magnetism) is the core intent; a scaffold
 build that swings grounded stems up as drawbridge panels and then climbs them is recommended
-for the 15s sequence, with raise as the 12s fallback. The sequence plays at 2/3 pace (22.5s on
-screen) so the climbing reads. Tiles interlock and morph for smooth outlines, and can stack in staggered depth layers (3D tessellation); each nanite renders as a low-poly tetrahedral proxy (shell, recessed shields, one core) of the [nanite design space](../concepts/nanite/README.md), which owns its form.
+for the 15s sequence, with raise as the 12s fallback. The sequence plays at 2/3 pace, slowing
+to 1/2 while a cinematic camera follows the construction close up before pulling out to the
+whole logo (28.8s on screen), so the climbing reads. Tiles interlock and morph for smooth outlines, and can stack in staggered depth layers (3D tessellation); each nanite renders as a low-poly tetrahedral proxy (shell, recessed shields, one core) of the [nanite design space](../concepts/nanite/README.md), which owns its form.
 The spike records Sub0Log JSONL events checked by an independent receiver.
 Its S1-S5 stages are proposals for P15-E0/R0 review, not dispatched work. Its gameplay
 stages keep camera-independent authority, with a view-owned embellishment layer.
