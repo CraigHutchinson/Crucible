@@ -30,7 +30,7 @@ cell. Headless SwiftShader render with three.js materials, not the Filament rend
 | Structure | Parts | | Surface | Shaping |
 | --- | --- | --- | --- | --- |
 | Silhouette | One closed tetrahedron, each face windowed down to a luminous facet, with graphite corner caps | | Flat | Sharp planar parts |
-| Frame | 6 silver edge rails, 4 graphite corner hubs, 12 plain face bars (the shields' band) around open windows onto a dark core with luminous facets | | Chamfer | One flat chamfer on every part edge |
+| Frame | 6 silver edge rails, 4 graphite corner hubs, 12 plain face bars (the shields' band) around open windows onto the glass housing and heart | | Chamfer | One flat chamfer on every part edge |
 | Shielded | + 12 uneven, clipped, tilted shield plates (3 per face around a window), glass housing, separate heart crystal | | Bevel | Rounded edges and corners, smooth normals (3 steps) |
 | Articulated | 24 split, hinged plates with 9 stacked armour plates; rails split at an uneven joint with two collars each; cradle struts; housing edges | | Hero | 6-step rounding, more crystal facets |
 
@@ -46,7 +46,7 @@ Triangles per unit (vertices after welding), from the contract test:
 | Structure \ Surface | Flat | Chamfer | Bevel | Hero |
 | --- | ---: | ---: | ---: | ---: |
 | Silhouette | 76 (156) | 116 (240) | 220 (232) | 436 (376) |
-| Frame | 284 (540) | 940 (2,072) | 3,180 (1,750) | 8,940 (4,635) |
+| Frame | 246 (474) | 902 (2,004) | 3,180 (1,700) | 8,948 (4,609) |
 | Shielded | 342 (666) | 1,190 (2,582) | 4,140 (2,180) | 11,636 (5,948) |
 | Articulated | 1,170 (2,238) | 4,114 (8,894) | 11,552 (6,879) | 27,688 (14,973) |
 
@@ -79,11 +79,11 @@ are set from the triangle counts above, not from device profiling:
 
 | Class | Hero cap | Hero tris | Swarm cap | Swarm tris | 4096-unit swarm |
 | --- | --- | ---: | --- | ---: | ---: |
-| Mobile (Android / WebGL) | Shielded, Flat | 342 | Silhouette, Flat | 76 | 0.31M |
-| Handheld console (Switch class) | Shielded, Chamfer | 1,190 | Silhouette, Flat | 76 | 0.31M |
-| High-end mobile (iOS A15+ class) | Shielded, Bevel | 4,140 | Shielded, Flat | 342 | 1.40M |
-| Desktop (PC / console) | Articulated, Bevel | 11,552 | Shielded, Chamfer | 1,190 | 4.87M |
-| Desktop 4K hero | Articulated, Hero | 27,688 | Shielded, Bevel | 4,140 | 16.96M |
+| Mobile (Android / WebGL) | Frame, Chamfer | 902 | Silhouette, Flat | 76 | 0.31M |
+| Handheld console (Switch class) | Frame, Bevel | 3,180 | Silhouette, Flat | 76 | 0.31M |
+| High-end mobile (iOS A15+ class) | Shielded, Bevel | 4,140 | Frame, Flat | 246 | 1.01M |
+| Desktop (PC / console) | Articulated, Bevel | 11,552 | Frame, Chamfer | 902 | 3.69M |
+| Desktop 4K hero | Articulated, Hero | 27,688 | Frame, Bevel | 3,180 | 13.0M |
 
 Every cap is a rung of the [distance ladder](#m3-distance-consistency), so a unit's detail is
 the ladder's choice for its size, cut at the cap. The swarm column is the cap for the bulk of
@@ -100,11 +100,10 @@ renders.
 **Opaque inner detail.** Every face of the Silhouette level now carries a window: a silver
 rim, walls sloping into the body (graphite in M2, silver since M3) and, at the bottom, an inverted luminous facet
 (`emitWindowedFace`). The heart reads from any side with no transparency. (M3 then matched
-the window to the shielded level's and added corner caps: 76 triangles.) The Frame level's solid cyan core becomes a dark housing whose
-faces open onto luminous facets the same way. Both are ordinary opaque triangles, so the
+the window to the shielded level's and added corner caps: 76 triangles.) The Frame level's solid cyan core became a dark housing whose faces opened onto luminous facets (M3 replaced it with the shielded levels' housing and heart). Both were ordinary opaque triangles, so the
 Filament material and any mobile renderer draw them unchanged.
 
-| Silhouette, Flat (52 triangles) | Silhouette, Bevel (124) |
+| Silhouette, Flat (76 triangles) | Silhouette, Bevel (220) |
 | --- | --- |
 | ![Silhouette level: an opaque window on each face down to a glowing facet](phase15-nanite-model/unit-silhouette.png) | ![Bevelled silhouette with windows](phase15-nanite-model/unit-silhouette-bevel.png) |
 
@@ -145,12 +144,10 @@ few dozen pixels, so one changed pixel is a few percent.
 - *Frame was thin and see-through* (narrow rails around a core) while the silhouette's rim
   was a wide solid band: different shapes at the same scale (user review). Frame now has
   plain face bars over exactly the band the shields and the silhouette's rim cover, around
-  the same window, onto its dark windowed core; the three levels share outline, band and
-  window. Frame→Shielded is now 4.6–5.7% at 10–32 px. Frame stays off the distance ladder:
-  through Frame the ladder would fade twice (Silhouette→Frame 7.3% at 10 px, then
-  Frame→Shielded), against one 5.9% fade straight to Shielded, whose flat level costs 342
-  triangles to Frame's 284. A renderer that wants the open look can use it without a large
-  pop.
+  the same window. A second review found its window black: its own dark core showed where
+  the other levels show light glass and crystal. Frame now shares the housing and heart, so
+  Frame→Shielded is 1.1–2% at 10–32 px and Silhouette→Frame 5.6% at 10 px, and the
+  cheaper Frame levels carry the middle of the ladder.
 
   ![Silhouette, Frame, Shielded (Flat and Bevel) and Articulated at 16 and 96 px: one outline, band and window](phase15-nanite-model/shape-strip.png)
 - *The silhouette popped* against the shielded level by 8–15% at 6–16 px. Its window was
@@ -163,10 +160,10 @@ few dozen pixels, so one changed pixel is a few percent.
   still wider than the others: an earlier parameter sweep had left the window at 0.26. With
   the window corrected, silver walls instead of graphite (through the higher levels' window
   you see light plates and crystal, not a dark well) keep the pixel difference down:
-  Silhouette→Shielded is 5.9% at 10 px, from 8–9% before M3.
+  Silhouette→Shielded is 5.9% at 10 px (from 8–9% before M3) and Silhouette→Frame 5.6%.
 - *Surface steps are small*; Shielded→Articulated adds parts and differs by 6–9% at any size.
 
-**The ladder** (`naniteLodLadder`, `selectNaniteLod`): six rungs, each adding detail on at
+**The ladder** (`naniteLodLadder`, `selectNaniteLod`): seven rungs, each adding detail on at
 least one axis and never removing any, so a hardware cap cuts it at a prefix. A rung starts
 where its neighbour's difference is at most 3%, except the two steps that add parts, which
 fade:
@@ -174,11 +171,14 @@ fade:
 | Rung | Level | Starts at | Difference entering (mean) | Fade flag |
 | --- | --- | ---: | ---: | --- |
 | 0 | Silhouette, Flat | 0 px | | |
-| 1 | Shielded, Flat | 10 px | 5.9% | yes |
-| 2 | Shielded, Chamfer | 14 px | 2.8% | |
-| 3 | Shielded, Bevel | 40 px | 2.7% | |
-| 4 | Articulated, Bevel | 64 px | 7.6% | yes |
-| 5 | Articulated, Hero | 160 px | 0.5% | |
+| 1 | Frame, Flat | 10 px | 5.6% | yes |
+| 2 | Frame, Chamfer | 14 px | 3.0% | |
+| 3 | Frame, Bevel | 40 px | 2.8% | |
+| 4 | Shielded, Bevel | 48 px | 2.4% | |
+| 5 | Articulated, Bevel | 64 px | 7.6% | yes |
+| 6 | Articulated, Hero | 160 px | 0.5% | |
+
+The Shielded rung splits Frame→Articulated (8.0% in one step at 64 px) into 2.4% and 7.6%.
 
 A unit steps up as soon as its size reaches a rung and steps down only 15% below the rung's
 start, so a size jittering around a boundary does not flicker (tested: at most one switch in
@@ -186,9 +186,9 @@ start, so a size jittering around a boundary does not flicker (tested: at most o
 (alpha-hashed) materials and lets a switch wait until a running fade finishes; the flag says
 which switches a renderer must fade if it can only afford some.
 
-![Every rung at each switch size (10, 14, 40, 64 px), real pixels enlarged](phase15-nanite-model/ladder-strip.png)
+![Every rung at each switch size (10, 14, 40, 48, 64 px), real pixels enlarged](phase15-nanite-model/ladder-strip.png)
 
-*Rows: the six rungs at 10, 14, 40 and 64 px (the switch sizes), real pixels enlarged.*
+*Rows: the seven rungs at 10, 14, 40, 48 and 64 px (the switch sizes), real pixels enlarged.*
 
 ![Dolly chart: size against the ladder; per-frame switch jump for hard cut and cross-fade against the unit's own motion](phase15-nanite-model/dolly-chart.png)
 
@@ -284,7 +284,7 @@ video is from M2; the Articulated levels it shows did not change): `matrix.png`,
 `unit-closed-bevel.png`, `underside.png`, `unit-stretched.png`, `swarm.png`, `lab-panel.png`
 (the lab with its controls), `turntable.mp4`, `triangles.json` (the triangle table and
 presets as the lab read them from the WebAssembly build), and for M3 `ladder-strip.png`,
-`pop-study.json` (every neighbouring pair on the grid, 6–128 px), `pop-study-silhouette.json` (Silhouette to Shielded, the ladder's first step), `dolly.json`, `dolly-chart.png`,
+`pop-study.json` (every neighbouring pair on the grid, 6–128 px), `pop-study-silhouette.json` (Silhouette to Frame and to Shielded), `dolly.json`, `dolly-chart.png`,
 `dolly.mp4` and `shape-strip.png`. Rendered by
 `spikes/nanite_lab/capture.mjs` from this commit's generator with Emscripten 6.0.12, three.js
 0.170.0 and headless Chromium (SwiftShader).
