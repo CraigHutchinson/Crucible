@@ -1,6 +1,7 @@
 #pragma once
 
 #include <array>
+#include <cstddef>
 #include <cstdint>
 #include <span>
 #include <string_view>
@@ -80,6 +81,36 @@ struct NaniteMesh
  */
 [[nodiscard]] NaniteMesh buildNanite(NaniteDetail detail, const NanitePosture& posture = {}, std::uint32_t variant = 0);
 
+/// Radius of the sphere, about the compact unit's centre, used to measure projected size.
+inline constexpr float naniteBoundingRadius = 0.62F;
+/// Fraction below a rung's start size that a unit must shrink before it steps down again.
+inline constexpr float naniteLodHysteresis = 0.15F;
+
+/// One rung of the distance ladder.
+struct NaniteLodStep
+{
+    NaniteDetail detail_;
+    float minPixels_{};  ///< Projected bounding-sphere diameter, in pixels, at which this rung starts.
+    bool crossFade_{};   ///< Entering this rung changes the image visibly (measured): blend the switch.
+};
+
+/** The distance ladder, lowest rung first. Every rung adds detail on at least one axis and
+ * never removes any, so a cap cuts the ladder at a prefix. Switch sizes come from the lab's
+ * pixel comparison of neighbouring rungs (docs/workstreams/presentation/phase15-nanite-model.md);
+ * Frame is left off because its see-through frame cannot match the solid levels at any size.
+ * @return Static storage, valid for the program's lifetime.
+ */
+[[nodiscard]] std::span<const NaniteLodStep> naniteLodLadder() noexcept;
+
+/** Chooses a unit's rung from its projected size, with hysteresis against flicker.
+ * @param pixels Projected diameter of the bounding sphere (naniteBoundingRadius), in pixels.
+ * @param cap Most detail allowed, per axis (a hardware class's hero or swarm cap).
+ * @param current Rung shown last frame, or any value past the ladder for a new unit.
+ * @return Rung index: steps up as soon as the size reaches a rung, steps down only once the
+ *         size falls naniteLodHysteresis below the current rung's start.
+ */
+[[nodiscard]] std::size_t selectNaniteLod(float pixels, NaniteDetail cap, std::size_t current) noexcept;
+
 /// Proposed detail caps per hardware class: the most detail any unit on that class may use.
 struct NaniteDevicePreset
 {
@@ -88,7 +119,8 @@ struct NaniteDevicePreset
     NaniteDetail swarm_; ///< Cap for the bulk of a dense swarm.
 };
 
-/** Proposed caps, lowest class first; tuned against measured triangle counts, not device profiling.
+/** Proposed caps, lowest class first, each on the distance ladder; tuned against measured
+ * triangle counts, not device profiling.
  * @return Static storage, valid for the program's lifetime.
  */
 [[nodiscard]] std::span<const NaniteDevicePreset> naniteDevicePresets() noexcept;

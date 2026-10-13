@@ -23,7 +23,9 @@ artifact host, which adds the document skeleton; `index.html` wraps it for local
 ## Controls
 
 - **View**: one unit (turntable), the 4 x 4 detail matrix (rows structure, columns surface,
-  triangle count under each), or a small swarm at a hardware-class preset.
+  triangle count under each), a small swarm at a hardware-class preset, or **Distance**: one
+  unit whose detail the C++ ladder (`selectNaniteLod`) picks from its on-screen size, capped
+  by the hardware class, with an auto dolly and an optional 0.25 s dithered cross-fade.
 - **Structure** and **Surface**: the two independent axes (`NaniteStructure`, `NaniteSurface`).
 - **Hardware class**: sets both axes to that class's hero cap; the table lists hero and swarm
   triangles per unit and the swarm's total at 4096 units.
@@ -44,3 +46,19 @@ node spikes/nanite_lab/capture.mjs build/nanite_lab <scratch>/node_modules/three
 The script serves the lab locally, maps the jsDelivr three.js URLs to the local package,
 renders with SwiftShader and writes the review stills, `triangles.json` and, with
 `--video`, an 8 s turntable through the travel/contact cycle (`turntable.mp4`).
+
+## Distance consistency studies
+
+```bash
+node spikes/nanite_lab/lod_study.mjs build/nanite_lab <three> <out>          # pop-study.json
+node spikes/nanite_lab/lod_dolly.mjs build/nanite_lab <three> <out> --video  # dolly.json, dolly.mp4
+python3 spikes/nanite_lab/plot_lod.py <out>/dolly.json <out>/dolly-chart.png
+```
+
+`lod_study.mjs` renders every pair of neighbouring levels at projected sizes from 6 to 128 px
+(4x4 supersampled, four views, bloom off) and records the mean colour difference and
+coverage overlap; `PAIRS` and `SIZES` narrow it, `GLASS=0` uses the smoked housing.
+`lod_dolly.mjs` sweeps one unit from 6 to 150 px and back over 10 s while it turns, and
+records per frame the error against always-highest detail and the jump a switch causes,
+for a hard cut and for the cross-fade; its video shows reference | hard cut | cross-fade
+at real pixels, enlarged 2x.

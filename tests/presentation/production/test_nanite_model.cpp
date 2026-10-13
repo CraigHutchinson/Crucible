@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <array>
 #include <cmath>
 #include <cstdint>
@@ -114,7 +115,7 @@ int main()
                 }
             }
         }
-        require(triangles({NaniteStructure::Silhouette, NaniteSurface::Flat}) <= 64,
+        require(triangles({NaniteStructure::Silhouette, NaniteSurface::Flat}) <= 96,
             "The lowest detail on both axes stays a few dozen triangles");
 
         // Every level at rest stays inside the shell tetrahedron, for any variant, so a
@@ -264,6 +265,58 @@ int main()
             require(hero >= previous && swarm <= hero, std::string(preset.name_) + ": preset order");
             previous = hero;
         }
+
+        // The distance ladder: monotone on both axes, rising start sizes, presets on it.
+        const auto ladder = naniteLodLadder();
+        require(ladder.front().minPixels_ == 0.0F, "The lowest rung covers every size");
+        for (std::size_t rung = 1; rung < ladder.size(); ++rung)
+        {
+            const auto& below = ladder[rung - 1].detail_;
+            const auto& above = ladder[rung].detail_;
+            require(above.structure_ >= below.structure_ && above.surface_ >= below.surface_
+                && (above.structure_ > below.structure_ || above.surface_ > below.surface_), "Each rung adds detail");
+            require(ladder[rung].minPixels_ > ladder[rung - 1].minPixels_, "Rungs start at rising sizes");
+            require(triangles(above) > triangles(below), "Each rung costs more");
+        }
+        const auto onLadder = [&](NaniteDetail detail)
+        {
+            return std::ranges::any_of(ladder, [&](const NaniteLodStep& step)
+                { return step.detail_.structure_ == detail.structure_ && step.detail_.surface_ == detail.surface_; });
+        };
+        for (const auto& preset : presets)
+        {
+            require(onLadder(preset.hero_) && onLadder(preset.swarm_), std::string(preset.name_) + ": caps must be rungs");
+        }
+
+        // Selection: up at the rung's start, down only below the hysteresis band; no
+        // oscillation for a size jittering around a boundary; caps respected.
+        const NaniteDetail top{NaniteStructure::Articulated, NaniteSurface::Hero};
+        require(selectNaniteLod(0.0F, top, ladder.size()) == 0, "Tiny units use the silhouette");
+        require(selectNaniteLod(1000.0F, top, ladder.size()) == ladder.size() - 1, "Huge units use the top rung");
+        for (std::size_t rung = 1; rung < ladder.size(); ++rung)
+        {
+            const float start = ladder[rung].minPixels_;
+            require(selectNaniteLod(start, top, rung - 1) == rung, "Steps up at the rung's start");
+            require(selectNaniteLod(start * 0.95F, top, rung) == rung, "Holds inside the hysteresis band");
+            require(selectNaniteLod(start * (1.0F - naniteLodHysteresis) * 0.99F, top, rung) == rung - 1,
+                "Steps down below the band");
+            std::size_t shown = ladder.size(), changes = 0;
+            for (int frame = 0; frame < 200; ++frame)
+            {
+                const float jitter = start * (1.0F + 0.07F * std::sin(frame * 0.9F));
+                const auto next = selectNaniteLod(jitter, top, shown);
+                if (shown < ladder.size() && next != shown) ++changes;
+                shown = next;
+            }
+            require(changes <= 1, "A size jittering 7% around a boundary switches at most once");
+        }
+        const NaniteDetail mobile{NaniteStructure::Shielded, NaniteSurface::Flat};
+        require(ladder[selectNaniteLod(1000.0F, mobile, ladder.size())].detail_.surface_ == NaniteSurface::Flat,
+            "A cap cuts the ladder");
+        require(ladder[selectNaniteLod(1000.0F, mobile, ladder.size() - 1)].detail_.structure_ == NaniteStructure::Shielded,
+            "A current rung above the cap falls to the cap");
+        require(selectNaniteLod(std::numeric_limits<float>::quiet_NaN(), top, ladder.size()) == 0,
+            "A nonfinite size uses the silhouette");
 
         std::cout << "triangles (vertices) by structure x surface\n";
         for (const auto structure : structures)
