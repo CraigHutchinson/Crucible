@@ -8,6 +8,8 @@ concept2D/dev-test; no production SDL-rendering fallback is selected. Read the
 [phase plan](../../phases/phase15.md) and
 [rendering decision](../../decisions/phase15-production-rendering.md) before edits.
 Implementation awaits the reviewed contract checkpoint and exclusive dispatch.
+The production nanite mesh is procedural with independent structure and surface detail
+axes: see [phase15 nanite model](phase15-nanite-model.md) and its WebAssembly lab.
 
 Phase14 proposed assignment: workerB owns ScenarioSnapshot capacities, scalable
 world/overlay/HUD drawing, view-only density quality and phase14 frame capture.
