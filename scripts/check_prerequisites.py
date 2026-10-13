@@ -378,6 +378,30 @@ def check_prerequisites(build_dir: Path | None = None, tests: list[dict] | None 
     return receipt
 
 
+# What each check establishes, for the human summary (the receipt keeps the short names).
+CHECK_PURPOSE = {
+    "python": "Python 3.10 or newer",
+    "configured_cache": "configured CMakeCache.txt",
+    "selected_inventory": "selected CTest inventory",
+    "cmake": "CMake 3.25 or newer",
+    "ninja": "Ninja",
+    "git": "Git",
+    "compiler": "configured C++ compiler",
+    "cxx23_expected": "C++23 compile-and-link canary using std::expected",
+    "runtime_canary": "canary run: standard library load and thread start",
+    "sanitizer_environment": "leak checking left enabled",
+    "sanitizer_canary": "ASan/UBSan canary build and run",
+    "hardware_selection": "a selected GPU receiver test",
+    "shader_compiler": "glslangValidator",
+    "display": "display for the SDL receiver",
+    "vulkan": "Vulkan device inventory",
+    "hardware_gpu": "physical GPU in the Vulkan inventory",
+    "spirv": "SPIR-V shader files",
+}
+# Status words for people: "unknown" means the check could not decide, not that a capability is missing.
+STATUS_WORDS = {"pass": "passed", "fail": "failed", "unknown": "undecided"}
+
+
 def blocking_checks(receipt: dict) -> list[dict]:
     """Required checks that did not pass: the reasons a receipt is not ok."""
     return [item for item in receipt.get("checks", [])
@@ -392,7 +416,9 @@ def _first_lines(text: str, limit: int = 400) -> str:
 def explain(item: dict) -> str:
     """One check as a sentence: status, why, how long against its limit, and what it ran."""
     status = item.get("status", "unknown")
-    parts = [f"{item.get('name', '?')}: {status}"]
+    name = item.get("name", "?")
+    purpose = CHECK_PURPOSE.get(name)
+    parts = [f"{name}" + (f" ({purpose})" if purpose else "") + f": {STATUS_WORDS.get(status, status)} [{status}]"]
     detail = _first_lines(item.get("detail", ""))
     if detail:
         parts.append(detail)
@@ -409,7 +435,7 @@ def explain(item: dict) -> str:
         rendered = " ".join(str(arg) for arg in command)
         parts.append("command: " + (rendered if len(rendered) <= 200 else rendered[:197] + "..."))
     if timed_out:
-        parts.append("the probe did not finish, so the capability is undecided rather than shown missing: "
+        parts.append("the probe was stopped before it finished, so nothing shows the capability missing: "
                      "often a slow or busy runner (a compiler's first start); re-run, or raise --timeout/--budget to confirm")
     elif status == "unknown":
         parts.append("the capability could not be decided")
@@ -449,7 +475,7 @@ def github_annotations(receipt: dict, environ: dict | None = None) -> list[str]:
     if environ.get("GITHUB_ACTIONS") != "true" or receipt.get("ok"):
         return []
     items = blocking_checks(receipt) or [{"name": "receipt", "status": "fail", "detail": receipt.get("error", "no checks recorded")}]
-    return [f"::error title={_escape('Prerequisite ' + str(item.get('name', '?')) + ' ' + str(item.get('status', 'unknown')), property_value=True)}::"
+    return [f"::error title={_escape('Prerequisite ' + str(item.get('name', '?')) + ' ' + STATUS_WORDS.get(item.get('status', 'unknown'), str(item.get('status'))), property_value=True)}::"
             + _escape(explain(item)) for item in items]
 
 

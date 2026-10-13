@@ -70,7 +70,8 @@ an existing cached compiler and flags. The development canary exercises C++23
 capabilities block; the checker never installs tools or disables leak detection.
 The JSON receipt goes to stdout; stderr carries a summary naming each blocking check,
 its status and reason, its time against its limit, the command it ran and a next step
-(a timeout means undecided, not missing: re-run, or raise `--timeout`/`--budget`). On
+(status `unknown` reads "undecided": the check could not decide, for example a timed-out
+canary, which does not show the capability missing; re-run, or raise `--timeout`/`--budget`). On
 GitHub Actions each blocking check is also an error annotation, and the job summary
 gets a table of every check. The test runner prints the same summary.
 

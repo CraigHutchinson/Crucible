@@ -548,7 +548,7 @@ class ReportTests(unittest.TestCase):
     def test_summary_names_the_blocking_check_its_reason_and_limit(self):
         text = prerequisites.summarize(self.TIMED_OUT)
         self.assertIn("1 required check(s) did not pass", text)
-        self.assertIn("cxx23_expected: unknown", text)
+        self.assertIn("cxx23_expected (C++23 compile-and-link canary using std::expected): undecided [unknown]", text)
         self.assertIn("compiler_canary timed out after 30s", text)
         self.assertIn("ran 30.4s of a 30s limit", text)
         self.assertIn("command: cl /nologo /std:c++latest", text)
@@ -573,7 +573,7 @@ class ReportTests(unittest.TestCase):
             lines = stream.getvalue().splitlines()
             annotations = [line for line in lines if line.startswith("::error ")]
             self.assertEqual(1, len(annotations))
-            self.assertTrue(annotations[0].startswith("::error title=Prerequisite cxx23_expected unknown::"))
+            self.assertTrue(annotations[0].startswith("::error title=Prerequisite cxx23_expected undecided::"))
             markdown = summary.read_text()
         self.assertIn("### Prerequisites blocked", markdown)
         self.assertIn("| cxx23_expected | unknown | yes | 30.4s / 30s |", markdown)
@@ -581,7 +581,7 @@ class ReportTests(unittest.TestCase):
     def test_annotation_escapes_workflow_command_characters(self):
         receipt = {"ok": False, "checks": [{"name": "a,b:c", "status": "fail", "detail": "50%\nnext"}]}
         line = prerequisites.github_annotations(receipt, {"GITHUB_ACTIONS": "true"})[0]
-        self.assertIn("title=Prerequisite a%2Cb%3Ac fail::", line)
+        self.assertIn("title=Prerequisite a%2Cb%3Ac failed::", line)
         self.assertNotIn("\n", line)
         self.assertIn("50%25", line)
 
@@ -592,7 +592,7 @@ class ReportTests(unittest.TestCase):
                 redirect_stdout(io.StringIO()) as output, redirect_stderr(io.StringIO()) as error:
             self.assertEqual(1, prerequisites.main())
         self.assertEqual(self.TIMED_OUT, json.loads(output.getvalue()))
-        self.assertIn("cxx23_expected: unknown", error.getvalue())
+        self.assertIn("cxx23_expected (C++23 compile-and-link canary using std::expected): undecided", error.getvalue())
 
     def test_recorded_probe_keeps_its_timeout(self):
         def probe(name, command, *, timeout, env):
