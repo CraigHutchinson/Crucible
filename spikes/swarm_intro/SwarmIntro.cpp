@@ -18,6 +18,7 @@ constexpr int kResolvePasses = 8;
 constexpr float kLiftBoost = 1.6F;
 constexpr float kClimbBrake = 100.0F;  // climber deceleration assumed for cornering, of the 140 the motion allows
 constexpr float kCornerRunOn = 4.0F;   // run-on past a waypoint allowed on a straight continuation
+constexpr float kBranchLength = 26.0F;  // lane tail over which units branch off toward their own destinations
 constexpr float kHeapDepth = 4.0F;   // climb build: depth in front of the wall where seekers heap and flow   // climb speed multiplier while drawn up by the built face
 
 /** splitmix32-style hash: deterministic personality without a shared RNG stream. */
@@ -923,18 +924,19 @@ SwarmIntro::Desire SwarmIntro::desire(const Identity& id, Pose& pose, Mind& mind
             }
         }
         mind.laneS = bestS;
-        // Branch toward the slot once the lane's end is near (shot03).
-        if (mind.laneS >= end - 3.0F)
+        // Branch toward the slot over the lane's tail (shot03): each unit leaves for where it is
+        // going while still at full lane width, so the stream fans out sorted by destination.
+        // A funnel narrowing to one exit point (the S0 rule) packed three letters' worth of
+        // units together; it caused nearly all ground contacts.
+        if (mind.laneS >= end - kBranchLength)
         {
             mind.act = Act::Seek;
             mind.actSince = time_;
             return desire(id, pose, mind);
         }
         lanePoint(lane, mind.laneS + kLookahead, lx, ly, tx, ty);
-        // Lane width tapers at the exit so the stream funnels into its letter group.
-        const float taper = std::clamp((end - mind.laneS) / 12.0F, 0.35F, 1.0F);
-        const float aimX = lx - ty * mind.laneOffset * taper;
-        const float aimY = ly + tx * mind.laneOffset * taper;
+        const float aimX = lx - ty * mind.laneOffset;
+        const float aimY = ly + tx * mind.laneOffset;
         const float dx = aimX - pose.x, dy = aimY - pose.y;
         const float dist = std::max(std::hypot(dx, dy), 1e-4F);
         d.vx = dx / dist * cruise;
@@ -1709,13 +1711,17 @@ void SwarmIntro::contingencySystem()
         float value = 0.0F;
         const bool tracked = progressOf(pose, mind, value);
         const auto act = static_cast<std::uint8_t>(mind.act);
-        if (!tracked || act != mind.progressAct)
+        // A new act or a new goal (a negotiation swap can hand over a farther slot) starts a new
+        // progress baseline: measured against the old goal, a unit moving at full speed toward
+        // its new one looked stalled (the S0h lane branching made swaps common).
+        if (!tracked || act != mind.progressAct || mind.goal != mind.progressGoal)
         {
             if (mind.stuckSince != 0 && diagnostics_) diagnostics_->recovered(tickIndex_, i, act, tickIndex_ - mind.stuckSince);
             if (mind.stuckSince != 0) { ++metrics_.recovered; ++recoveredTotal_; }
             mind.stuckSince = 0;
             mind.stall = 0;
             mind.progressAct = act;
+            mind.progressGoal = mind.goal;
             mind.best = tracked ? value : 0.0F;
             return;
         }

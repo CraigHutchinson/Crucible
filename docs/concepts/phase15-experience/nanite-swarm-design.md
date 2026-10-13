@@ -1,7 +1,7 @@
 # Nanite swarm behaviour: intro first, gameplay next
 
 Proposal and prototype, 2026-10-12. Extends the [director's brief](director-brief.md) and
-[experience design](experience-design.md). The S0 to S0g prototypes are
+[experience design](experience-design.md). The S0 to S0h prototypes are
 [spikes/swarm_intro](../../../spikes/swarm_intro/README.md).
 
 User direction, the same day:
@@ -134,7 +134,7 @@ stateDiagram-v2
     Waking --> Lane: reaction elapsed, title goal
     Waking --> Moor: reaction elapsed, ribbon goal, t ≥ ribbonAt
     Waking --> Reserve: no goal
-    Lane --> Seek: lane end reached
+    Lane --> Seek: lane tail reached (last 26 units: branch toward own destination)
     Seek --> Dock: within capture radius (lying, raise)
     Seek --> Queue: at its letter's base without a slot (climb)
     Queue --> Seek: claims a tile, first come first served (climb)
@@ -198,8 +198,8 @@ on a face, and whether this fits the twelve-second timeline. S0b and S0c test tw
 | Order | None preset (S0d): units queue at their letter's base and claim the lowest supportable tile nearest them, first come, first served. | Planned slots, as in S0. |
 | Support | A tile is fillable only from the ground or a locked lower neighbour. Locks never happen unsupported (verified). | The letter is one rigid interlocked body during the rise, pivoting on the ground row. |
 | Surfaces | Two connected 2D surfaces: ground and wall face, joined at the base. Climbers route over built units (shortest path, strokes linked through the ground), drawn up by lift magnetism, and flow over each other in layers. | One surface (ground); the rise is a pose transform of locked units. |
-| Title complete (1536 units) | 11.42 s (S0b with a preset order: 13.45 s) | 7.94 s flat; every letter upright by 9.00 s |
-| Cost (host p50 / p95 per presented tick) | 0.65 / 2.92 ms | 0.21 / 2.49 ms |
+| Title complete (1536 units) | 11.01 s (S0b with a preset order: 13.45 s) | 7.73 s flat; every letter upright by 8.79 s |
+| Cost (host p50 / p95 per presented tick) | 0.41 / 2.55 ms | 0.22 / 2.14 ms |
 | Reads as | The swarm literally builds the word, letter tops last. Strong "engineered material" story. | A flat assembly that stands up in a rolling wave, letter by letter. Dramatic; keeps the twelve-second timing. |
 
 ### Hybrid: climbing with drawbridges (S0e)
@@ -212,12 +212,13 @@ slots, and the two modes never trade slots.
 
 | Upright build (1536 units, 1,066 morphed tiles) | Title complete | Worst ground contacts | Tick p50 |
 |---|---|---|---|
-| Climb (S0d) | 11.42 s | 9.8% | 0.65 ms |
-| Hybrid (S0e) | 10.66 s; raised letters upright by 8.98 s | 1.6% | 0.38 ms |
-| Scaffold (S0f) | 11.23 s; stem panels upright by 9.10 s | 5.0% | 0.58 ms |
-| Raise (S0c) | upright by 9.00 s | 0.3% | 0.21 ms |
+| Climb (S0d) | 11.01 s | 0% | 0.41 ms |
+| Hybrid (S0e) | 9.17 s; raised letters upright by 8.14 s | 0% | 0.14 ms |
+| Scaffold (S0f) | 10.21 s; stem panels upright by 8.04 s | 0% | 0.48 ms |
+| Raise (S0c) | upright by 8.79 s | 0% | 0.22 ms |
 
-Choreography seconds at pace 2/3 (S0g); multiply by 1.5 for time on screen.
+Choreography seconds at pace 2/3 (S0g) with lane branching (S0h); multiply by 1.5 for time
+on screen.
 
 ### Scaffold: per-part drawbridges during the climb (S0f)
 
@@ -234,7 +235,8 @@ ground reaches its slot without crossing a panel that is still flat or rising (S
 that rule, climbers went up beside a lying stem and hung off the face until it rose.
 
 **Recommendation, revised: the scaffold build for the director's review.** It completes at
-11.23 s (16.85 s on screen at pace 2/3), with every climber on the built face. It keeps
+10.21 s (15.3 s on screen at pace 2/3), with climbers on the built face and no visible
+contacts. It keeps
 climbing as the core, since the swarm still climbs every arm, bowl and the U. And it turns the drawbridge into a structural beat: stems swing up as
 scaffolds the swarm then climbs. The hybrid (whole letters) and pure climb remain variants;
 raise is the twelve-second fallback.
@@ -315,15 +317,16 @@ about 9,100 records per climb run, with no drops in a 4 MiB segment.
 The [spike README](../../../spikes/swarm_intro/README.md) has commands, gates, the evidence
 table and images for every build. With camera LOD, 1536 units and pace 2/3 (choreography
 seconds; on screen is 1.5× longer):
-- **Lying:** complete at 7.98 s (brief: 8.4 s), the ribbon by 10 s. Visible contacts peak at
-  0.5% and no pair comes closer than 0.70 diameter.
-- **Raise:** upright by 9.00 s.
-- **Climb:** complete at 11.42 s. Ground contacts reach 9.8% at the lane exits; climbers are
-  off the built face for 4 of 58,746 climber-ticks.
-- **Hybrid:** complete at 10.66 s, contacts 1.6%.
-- **Scaffold:** complete at 11.23 s, stem panels upright by 9.10 s, no climber off the face.
+- **Lying:** complete at 7.66 s (brief: 8.4 s), the ribbon by 10 s.
+- **Raise:** upright by 8.79 s.
+- **Climb:** complete at 11.01 s, no climber off the built face.
+- **Hybrid:** complete at 9.17 s.
+- **Scaffold:** complete at 10.21 s, stem panels upright by 8.04 s; 3 of 33,327 climber-ticks
+  off the face.
+- **Every build:** no visible contacts (centres closer than 0.8 diameter) and no pair closer
+  than 0.8 diameter, since lane branching (SW-F21).
 
-Ticks run 0.13–0.65 ms p50 per presented tick on a shared cloud host. 16,384 units still
+Ticks run 0.11–0.48 ms p50 per presented tick on a shared cloud host. 16,384 units still
 meet every deadline. Release, Debug and ASan/UBSan pass all ten CTest cases with identical
 state hashes.
 
@@ -349,13 +352,15 @@ state hashes.
 | SW-F10 | First-come claiming, momentum through waypoints, clinging beside unsupported tiles and a flowing heap at the base complete the climb at 11.8 s. | Recommended intro build for the 15 s sequence. |
 | SW-F11 | Stuck detection with wait, push and reclaim resolves every episode in these runs. Whole-lane car-following was rejected: lanes from rest jammed and the lying build slowed from 8 s to 15 s. | Contingency is local and episodic; queueing belongs at the base, not in the lanes. |
 | SW-F12 | Tessellation gives a solid face and a shallower build; equilateral tiles leave a stepped outline. | Addressed by morphing (SW-F16). |
-| SW-F13 | The climb build's lane exits crowd: up to 9% ground contacts at 1536 units, about 12% at scale. | Lane design (per-letter lanes or a wider landing zone) in S2, not more tuning. |
+| SW-F13 | The climb build's lane exits crowd: up to 9% ground contacts at 1536 units, about 12% at scale. | Resolved by lane branching (SW-F21). |
 | SW-F14 | Sub0Log JSONL diagnostics found the climb bottleneck and verify event integrity per build. | Keep event schemas with each behaviour stage; use `supported` latency as the climb's tuning metric. |
 | SW-F15 | Raising the deepest letters while the rest climb halves the ground crowding (4.3% against 9.1%) and finishes slightly sooner (11.2 s against 11.4 s). | A variant; per-part drawbridges (SW-F17) go further. |
 | SW-F17 | Per-part drawbridges (scaffold) completed the climb at 10.75 s (pace 1; 11.23 s at pace 2/3 with every climber on the face, SW-F20). Raised tiles must support only when upright, at standing positions; flat stems may already be claimed against. | Recommended intro build; stroke selection is authored data in S2. |
 | SW-F18 | Climbers stepping onto the wall over a gap between strokes hung off the face; entering beside a standable ground tile fixed it and sped pure climbing to 11.4 s. | Entry points are part of the climbing vocabulary. |
 | SW-F19 | Slowing to pace 2/3 by finer steps, not retuning, kept every gate but exposed latent faults: a climber carried waypoint momentum around a corner and overshot three units into the R's counter; a ribbon unit sent across the stage moored late. | Waypoints brake into corners by look-ahead (stop within the waypoint distance plus a run-on that shrinks with the turn); ribbon moorings are matched by x rank. Climbing got faster too: climb 11.42 s, hybrid 10.66 s. |
 | SW-F20 | Counting flat-locked panel tiles as "built" let climbers start up beside a stem still lying down; they hung off the face (1.2% of climber-ticks). Waiting on one BFS support chain instead fixed that, but delayed the R to 12.9 s, because its chain ran through the late leg. | A slot is climbable once any path from the ground reaches it without crossing a panel not yet upright (one BFS per panel change). Scaffold: no climber off the face, complete at 11.23 s. |
+| SW-F21 | 93% of contacts were between lane units and fresh seekers at the exit of the C-R-U lane, where the S0 funnel narrowed the stream to a third of its width before it split three ways. Leaving the lane over its last 26 units, each unit heading straight for its own destination, splays every lane into a fan sorted by destination. | Contacts 0% in every build (climb was 9.8%), minimum gap 0.8 d or more; all builds faster (scaffold 10.21 s, hybrid 9.17 s). Branch length swept 8–40: 26 is the shortest with no contacts and keeps the lanes readable (shot02). Climbing gates tightened to 3% and 0.5 d. |
+| SW-F22 | With branching, negotiation swaps became common and the lying build logged 161 stuck episodes from units running at full speed: progress was measured against the goal held before the swap. | The progress baseline resets on a goal change as well as an act change. Stuck detection must follow the decision it measures. |
 | SW-F16 | Corner morphing of up to 0.35 side halves the outline error with every tile keeping half its area; larger limits add little. Fill and trim of spikes were prerequisites. | Default morph 0.35; faint steps on some stems are the place for a sub-tile edge piece; a gradual morph while seating belongs to S1. |
 
 ## 8. Iteration plan: building blocks with review gates
@@ -372,9 +377,10 @@ post-journey gameplay proposals.
 | **S0d** done | Climb without a preset order: first-come claims, stuck contingencies, selective magnetism, tessellated solid tiles, Sub0Log JSONL diagnostics with an independent receiver; 15 s sequence | This review | Climbing confirmed as the core intent (user) |
 | **S0e** done | Hybrid build (per-letter drawbridge or climb) and morphing tiles for smooth outlines | PR #38 | Merged with S0–S0d |
 | **S0f** done | Scaffold build: per-part drawbridge panels (grounded stems) climbed to finish arms and bowls; standing support; entry beside standable ground tiles | PR #39 | Merged |
-| **S0g** done | Pace 2/3 (the sequence at 66% speed, 22.5 s on screen); corner braking by route look-ahead; climbable-path gate for scaffold panels; ribbon rank matching; `render_swarm.py --mp4` | This review | Director reviews the slower sequence as video |
+| **S0g** done | Pace 2/3 (the sequence at 66% speed, 22.5 s on screen); corner braking by route look-ahead; climbable-path gate for scaffold panels; ribbon rank matching; `render_swarm.py --mp4` | PR #40 | Merged |
+| **S0h** done | Lane branching: units leave the lane over its tail for their own destinations (SW-F21); progress baseline per goal (SW-F22); tighter contact gates | This review | Director reviews the slower sequence as video |
 | **S1** | Production renderer consumes a per-tick instance packet (world pose, plane tilt, lift, act, core intensity, render LOD) from the chosen build; perspective lens path from the brief | P15-R0 Filament scene | Native capture against hero and storyboard concepts; wedges grounded; upright title readable with bloom off and in grayscale |
-| **S2** | Choreography authoring: which strokes are panels, as authored data (SW-F17); per-letter lanes or a wider landing zone (SW-F13); sub-tile edge pieces where stems stay stepped (SW-F16); lanes and stroke order as data; the raise beat if raise is chosen (what visibly lifts the letter: a wave of units pushing under the hinge, rise order and easing); optional hero-letter climbing finish; climb arcs; traveling cyan accent; idle micro-behaviour for locked heroes (breathing core, settle wobble); skip jumps to an authored settled snapshot; reduced motion selects the still | P15-E0 frontend | Director pass (brief section 8); skip and reduced-motion receiving; temporal review of motion, not stills |
+| **S2** | Choreography authoring: which strokes are panels, as authored data (SW-F17); sub-tile edge pieces where stems stay stepped (SW-F16); lanes and stroke order as data; the raise beat if raise is chosen (what visibly lifts the letter: a wave of units pushing under the hinge, rise order and easing); optional hero-letter climbing finish; climb arcs; traveling cyan accent; idle micro-behaviour for locked heroes (breathing core, settle wobble); skip jumps to an authored settled snapshot; reduced motion selects the still | P15-E0 frontend | Director pass (brief section 8); skip and reduced-motion receiving; temporal review of motion, not stills |
 | **S3** | Performance and decision LOD: activity-driven and blended tiers against camera tiers (section 4 backlog); event-driven wave; Sub0Pipeline row ranges for behaviour and resolve; hero candidate cap per frame; optional GPU compute route for far and hidden tiers | Named device | p95 and p99 inside the brief's proposed 16.67/20 ms with rendering included; measured, never inferred from S0 |
 | **S4** | Upstream feedback: tier tag migration cost and partition churn in Sub0ECS; frozen gather and grid as a reusable pattern only if a second consumer appears | Sub0ECS | Measured reproduction; no speculative API |
 | **S5** | Menu backdrop: the ribbon idles cheaply behind the menu, never as a live mission | P15-J0 menu | Zero gameplay ticks; stops under reduced motion |
@@ -460,8 +466,8 @@ where distant units enter the frame. It must not cost title readability.
 4. Is the "superposition haze" presentation for distant units welcome in the intro, or
    reserved for the Quantum gameplay layer?
 5. Which section 10 mechanic should be the first post-journey gameplay spike?
-6. Upright build: scaffold (recommended, 11.2 s), hybrid (10.7 s), pure climb (11.4 s) or
-   raise (9.0 s, the twelve-second fallback)? Which strokes should be panels? (Choreography
+6. Upright build: scaffold (recommended, 10.2 s), hybrid (9.2 s), pure climb (11.0 s) or
+   raise (8.8 s, the twelve-second fallback)? Which strokes should be panels? (Choreography
    seconds; 1.5× on screen at pace 2/3.)
 9. Is 2/3 the right pace, and should it be uniform? Slowing only the climb (the stream-in
    could stay brisk) is a time warp of the choreography clock, cheap to author.

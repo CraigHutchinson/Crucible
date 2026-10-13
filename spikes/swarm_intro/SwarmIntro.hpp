@@ -78,6 +78,7 @@ struct Mind
     std::uint32_t stall = 0;     ///< Ticks without progress toward the current aim.
     std::uint32_t stuckSince = 0;   ///< Tick a stuck episode began, 0 when not stuck.
     std::uint8_t progressAct = 0;   ///< Act the progress measure belongs to.
+    std::int32_t progressGoal = -1; ///< Goal the progress baseline was measured against; a swap resets it.
     float best = 0.0F;           ///< Best progress value seen in that act.
 };
 
