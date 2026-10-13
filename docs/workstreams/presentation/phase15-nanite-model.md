@@ -1,4 +1,4 @@
-# Procedural nanite model: two detail axes (M1, M2)
+# Procedural nanite model: two detail axes (M1–M3)
 
 2026-10-13. A procedural, articulable nanite for the Filament production renderer, with
 **structure** (which parts exist) and **surface** (how finely each part is shaped) as
@@ -7,6 +7,8 @@ the [nanite design space](../../concepts/nanite/README.md): a tetrahedral silver
 around a rigid containment housing with one heart crystal inside. M2 (same day, after
 user review of M1) gives the low levels opaque inner detail and breaks up M1's regular,
 "safe" structure with seeded irregularity; see [M2](#m2-inner-detail-without-transparency-and-intricacy).
+M3 measures whether switching levels with distance pops, and adds a measured distance
+ladder with hysteresis and a cross-fade; see [M3](#m3-distance-consistency).
 
 ![Detail matrix: rows are structure levels, columns surface levels, triangle count under each](phase15-nanite-model/matrix.png)
 
@@ -27,7 +29,7 @@ cell. Headless SwiftShader render with three.js materials, not the Filament rend
 
 | Structure | Parts | | Surface | Shaping |
 | --- | --- | --- | --- | --- |
-| Silhouette | One closed tetrahedron, each face windowed down to a luminous facet | | Flat | Sharp planar parts |
+| Silhouette | One closed tetrahedron, each face windowed down to a luminous facet, with graphite corner caps | | Flat | Sharp planar parts |
 | Frame | 6 silver edge rails, 4 graphite corner hubs, a dark core windowed onto luminous facets | | Chamfer | One flat chamfer on every part edge |
 | Shielded | + 12 uneven, clipped, tilted shield plates (3 per face around a window), glass housing, separate heart crystal | | Bevel | Rounded edges and corners, smooth normals (3 steps) |
 | Articulated | 24 split, hinged plates with 9 stacked armour plates; rails split at an uneven joint with two collars each; cradle struts; housing edges | | Hero | 6-step rounding, more crystal facets |
@@ -43,13 +45,13 @@ Triangles per unit (vertices after welding), from the contract test:
 
 | Structure \ Surface | Flat | Chamfer | Bevel | Hero |
 | --- | ---: | ---: | ---: | ---: |
-| Silhouette | 52 (108) | 68 (144) | 124 (136) | 268 (208) |
+| Silhouette | 76 (156) | 116 (240) | 220 (232) | 436 (376) |
 | Frame | 140 (300) | 412 (920) | 1,308 (789) | 3,612 (1,939) |
 | Shielded | 342 (666) | 1,190 (2,582) | 4,140 (2,180) | 11,636 (5,948) |
 | Articulated | 1,170 (2,238) | 4,114 (8,894) | 11,552 (6,879) | 27,688 (14,973) |
 
-The lowest point on both axes is a (stretched) tetrahedron of 52 triangles, its windows
-included; the highest is a concept-grade hero unit. Every level fits 16-bit indices, and
+The lowest point on both axes is a (stretched) tetrahedron of 76 triangles, its windows
+and corner caps included; the highest is a concept-grade hero unit. Every level fits 16-bit indices, and
 every variant of a level has the same triangle count.
 
 ### Posture
@@ -77,11 +79,15 @@ are set from the triangle counts above, not from device profiling:
 
 | Class | Hero cap | Hero tris | Swarm cap | Swarm tris | 4096-unit swarm |
 | --- | --- | ---: | --- | ---: | ---: |
-| Mobile (Android / WebGL) | Shielded, Flat | 342 | Silhouette, Flat | 52 | 0.21M |
-| Handheld console (Switch class) | Shielded, Chamfer | 1,190 | Frame, Flat | 140 | 0.57M |
-| High-end mobile (iOS A15+ class) | Articulated, Chamfer | 4,114 | Frame, Flat | 140 | 0.57M |
-| Desktop (PC / console) | Articulated, Bevel | 11,552 | Frame, Chamfer | 412 | 1.69M |
-| Desktop 4K hero | Articulated, Hero | 27,688 | Shielded, Chamfer | 1,190 | 4.87M |
+| Mobile (Android / WebGL) | Shielded, Flat | 342 | Silhouette, Flat | 76 | 0.31M |
+| Handheld console (Switch class) | Shielded, Chamfer | 1,190 | Silhouette, Flat | 76 | 0.31M |
+| High-end mobile (iOS A15+ class) | Shielded, Bevel | 4,140 | Shielded, Flat | 342 | 1.40M |
+| Desktop (PC / console) | Articulated, Bevel | 11,552 | Shielded, Chamfer | 1,190 | 4.87M |
+| Desktop 4K hero | Articulated, Hero | 27,688 | Shielded, Bevel | 4,140 | 16.96M |
+
+Every cap is a rung of the [distance ladder](#m3-distance-consistency), so a unit's detail is
+the ladder's choice for its size, cut at the cap. The swarm column is the cap for the bulk of
+a dense swarm; with the ladder most of those units are far smaller than its first switch.
 
 ![A small swarm at the desktop class: three hero units in front, the rest at the swarm cap](phase15-nanite-model/swarm.png)
 
@@ -92,9 +98,9 @@ structure read as "very safe", missing the natural, slightly jagged character of
 renders.
 
 **Opaque inner detail.** Every face of the Silhouette level now carries a window: a silver
-rim, graphite walls sloping 0.07 into the body and, at the bottom, an inverted luminous
-facet (`emitWindowedFace`). The heart reads from any side with no transparency, at 52
-triangles for the flat level. The Frame level's solid cyan core becomes a dark housing whose
+rim, graphite walls sloping into the body and, at the bottom, an inverted luminous facet
+(`emitWindowedFace`). The heart reads from any side with no transparency. (M3 then matched
+the window to the shielded level's and added corner caps: 76 triangles.) The Frame level's solid cyan core becomes a dark housing whose
 faces open onto luminous facets the same way. Both are ordinary opaque triangles, so the
 Filament material and any mobile renderer draw them unchanged.
 

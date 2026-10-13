@@ -53,6 +53,7 @@ constexpr float plateLift = 0.07F;         // Shielded: shield lift at full open
 constexpr float plateHinge = 0.4F;         // Articulated: hinge angle at full open, radians
 constexpr float coreEdge = 0.42F;          // Frame: solid core
 constexpr float housingEdge = 0.6F;        // Shielded+: containment housing
+constexpr float silhouetteInset = 0.93F;  // Silhouette: outline scale toward the shell centre
 constexpr float heartRadius = 0.094F;      // inside the housing's inscribed sphere (0.122)
 
 /// Deterministic value in [0,1) for a unit variant and a per-feature salt.
@@ -523,9 +524,13 @@ NaniteMesh buildNanite(NaniteDetail detail, const NanitePosture& posture, std::u
 
     if (structure == NaniteStructure::Silhouette)
     {
-        // One shell; each face carries an opaque window down to a luminous facet.
-        emitRounded(builder, tetrahedron(corners[0], corners[1], corners[2], corners[3]), 0.025F * scale, segments,
-            NaniteMaterial::Silver, 0.40F, 0.07F, hubFraction);
+        // One shell; each face carries an opaque window down to a luminous facet. It is drawn
+        // slightly inside the full tetrahedron: the higher levels' sunk rails and rounded hubs
+        // inset their visible outline, and a full-size silhouette covers more pixels than they do.
+        std::array<Vec, 4> inset{};
+        for (int corner = 0; corner < 4; ++corner) inset[corner] = lerp(shellCentre, corners[corner], silhouetteInset);
+        emitRounded(builder, tetrahedron(inset[0], inset[1], inset[2], inset[3]), 0.025F * scale, segments,
+            NaniteMaterial::Silver, 0.26F, 0.04F, hubFraction);
         return mesh;
     }
 

@@ -787,6 +787,20 @@ window.lab = {
     still(time, yaw = 0) { turn = yaw; resize(); renderAt(time, 0); },
     stats: () => lastStats && { triangles: lastStats.triangles, vertices: lastStats.vertices, ms: lastStats.ms },
     popStudy, studyStrip, dollyStudy, ladder,
+    // Mean colour and coverage of each level at a size, over four views (diagnostics).
+    levelColours(levels, size) {
+        const views = [[0.3, 0.45], [1.9, 0.45], [3.5, 0.45], [5.1, 0.2]];
+        const result = levels.map(([s, p]) => {
+            let r = 0, g = 0, b = 0, a = 0;
+            for (const [yaw, elevation] of views) {
+                const { image } = renderAtSize(s, p, size, yaw, elevation);
+                for (let o = 0; o < image.length; o += 4) { if (image[o + 3] < 0.5) continue; r += image[o]; g += image[o + 1]; b += image[o + 2]; ++a; }
+            }
+            return `S${s}P${p} rgb ${(r / a).toFixed(3)} ${(g / a).toFixed(3)} ${(b / a).toFixed(3)} covered ${(a / views.length).toFixed(0)}`;
+        });
+        framedFor = ""; dirty = true; resize();
+        return result.join("\n");
+    },
 };
 if (!new URLSearchParams(location.search).has("capture")) requestAnimationFrame(frame);
 </script>
