@@ -18,3 +18,11 @@ add_test(NAME application_journey_profile_cli COMMAND crucible --journey --route
     --profile ${CMAKE_CURRENT_BINARY_DIR}/journey-progress.txt)
 set_tests_properties(application_journey_profile_cli PROPERTIES LABELS "application;integration;mission;profile"
     TIMEOUT 180 PASS_REGULAR_EXPRESSION "outcome=WON tick=.*persistent_progress=received")
+
+if(CRUCIBLE_BUILD_GAME)
+    add_executable(crucible_frontend_tests test_frontend.cpp)
+    target_link_libraries(crucible_frontend_tests PRIVATE Crucible::Frontend)
+    add_test(NAME production_frontend COMMAND crucible_frontend_tests
+        "${PROJECT_SOURCE_DIR}/assets/production/fonts")
+    set_tests_properties(production_frontend PROPERTIES LABELS "application;presentation;production;contract")
+endif()

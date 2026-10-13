@@ -259,6 +259,25 @@ std::optional<runtime::CommandIngress::Admission> GameJourney::tryAdmitFieldEdit
     return session_->TryAdmitFieldEdit(edit);
 }
 
+std::optional<runtime::CommandIngress::Admission> GameJourney::tryFuseRelay()
+{
+    if (screen_ != FrontendScreen::playing || quitRequested_ || selectedMission_ != MissionId::secureRelay)
+        return std::nullopt;
+    return session_->TryFuseRelay();
+}
+
+std::optional<runtime::CommandIngress::Admission> GameJourney::tryShatterRelay()
+{
+    if (screen_ != FrontendScreen::playing || quitRequested_ || selectedMission_ != MissionId::secureRelay)
+        return std::nullopt;
+    return session_->TryShatterRelay();
+}
+
+std::optional<StructuralCommandResult> GameJourney::getLastStructuralResult() const noexcept
+{
+    return session_ ? session_->GetLastStructuralResult() : std::nullopt;
+}
+
 FrontendView GameJourney::getFrontendView(SafeContentRect safeContent) const noexcept
 {
     FrontendView view;

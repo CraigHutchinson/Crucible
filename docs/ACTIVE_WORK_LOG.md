@@ -23,9 +23,9 @@ checkpoint `8bdf587`. No native visual or performance acceptance is claimed.
 
 | Owner | Claim | Current status / resources |
 |---|---|---|
-| Architect/root | Common contracts, application/progress/profile, production app/main, manifests/pins/CI and central docs | Final Release5/5 andDebug5/5 passed; CPU released toB; integration/publication/source-only, no GPU claim |
-| foundation_resume / A | Graphics in `.worktrees/phase15-performance`, branch `codex/production-performance`; owned scripts/renderer/tests/docs | Qualification0e8a28e received764-stepRelease/tool/link closure; CPU released; R0 source authoring against frozen136MiB external-staging envelope |
-| consumer_resume / B | Frontend/choreography in `.worktrees/phase15-frontend`, branch `codex/production-frontend` | Holds bounded correctness-only CPU max3jobs, imports exact matchedImGuiRelease/MD archive; no GPU/window/performance campaign |
+| Architect/root | Common contracts, application/progress/profile, root manifests/pins/CI and central docs on `codex/production-renderer` | Owns serial combined build/test and native GPU receiving; max3 compiler jobs, serialized material tools; PR33 exact-head CI pending |
+| foundation_resume / A | Primary `cmake/ProductionDependencies.cmake`, renderer-owned source/test/local manifest; preserved qualification worktree | Source-only importer and compile fixes; no CPU/device claim; original qualification and renderer handoffs integrated |
+| consumer_resume / B | Primary `src/game/game_main.cpp` and local manifest only; preserved frontend worktree | Source-only native consumer wiring; no CPU/device claim; original frontend/choreography handoff integrated, CPU released |
 
 Architect plus at most two workers. The clean `.worktrees/phase15-performance`
 branch is reassigned to graphics qualification; the performance audit is retained.

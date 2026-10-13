@@ -43,6 +43,8 @@ void checkNavigationAndClock()
     navigate(journey, NavigationAction::newRun);
     navigate(journey, NavigationAction::beginMission);
     require(journey.getAttemptId() == 1 && journey.getSnapshot(), "First attempt was not constructed");
+    require(!journey.tryFuseRelay() && !journey.tryShatterRelay() && !journey.getLastStructuralResult(),
+        "Reclamation exposed relay commands");
     const auto fractional = journey.tryPump(8ms);
     require(fractional && fractional->advanced_ticks == 0, "Fractional clock unexpectedly advanced");
     navigate(journey, NavigationAction::pause);
@@ -111,7 +113,20 @@ void checkRealMissionProgression()
     navigate(journey, NavigationAction::beginMission);
     require(journey.getAttemptId() == 2 && journey.getFrontendView().progress_->completed_tick == 0,
         "A new session reused the application attempt identity or old progress");
+    const auto fuse = journey.tryFuseRelay();
+    require(fuse && fuse->status == runtime::CommandIngress::AdmissionStatus::accepted,
+        "Active relay fuse was not admitted");
+    require(journey.tryPump(16'666'667ns).has_value() &&
+        journey.getLastStructuralResult() == StructuralCommandResult::insufficient_mass,
+        "Accepted fuse did not receive the actual domain refusal");
+    const auto shatter = journey.tryShatterRelay();
+    require(shatter && shatter->status == runtime::CommandIngress::AdmissionStatus::accepted,
+        "Active relay shatter was not admitted");
+    require(journey.tryPump(16'666'667ns).has_value() &&
+        journey.getLastStructuralResult() == StructuralCommandResult::empty,
+        "Shatter did not receive the completed empty result");
     navigate(journey, NavigationAction::pause);
+    require(!journey.tryFuseRelay() && !journey.tryShatterRelay(), "Paused relay accepted mutation");
     navigate(journey, NavigationAction::retryMission);
     require(journey.getAttemptId() == 3, "Retry did not establish an independent attempt");
     navigate(journey, NavigationAction::pause);
