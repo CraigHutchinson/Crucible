@@ -49,7 +49,7 @@ DesktopApp::DesktopApp(StartupSettings settings)
       camera_(settings.scenario.grid, {24, 96, 1232, 520}),
       painter_(settings.scenario.population, requireCells(settings), settings.viewPolicy),
       toolRadius_(settings.toolRadius), toolMagnitude_(settings.toolMagnitude),
-      structural_(settings.scenario.structural.has_value()) {
+      structural_(settings.scenario.structural.has_value()), diagnosticsJson_(settings.diagnosticsJson) {
     if (settings.diagnostics == runtime::InspectorSession::Diagnostics::bounded && !session_.GetDiagnostics())
         SDL_Log("Bounded diagnostics unavailable; continuing without outcome logging");
     if (structural_) message_ = "Gather 64 at relay, F fuse, X shatter; quota plus 120 held ticks wins";
@@ -97,7 +97,7 @@ DesktopApp::~DesktopApp() {
 #if CRUCIBLE_ENABLE_DIAGNOSTICS
     if (const auto* diagnostics = session_.GetDiagnostics()) {
         try {
-            if (!diagnostics->WriteDecoded(std::cout)) SDL_Log("Diagnostic decode/output failed");
+            if (!(diagnosticsJson_ ? diagnostics->writeJson(std::cout, std::cerr) : diagnostics->WriteDecoded(std::cout))) SDL_Log("Diagnostic decode/output failed");
         } catch (const std::exception& error) { SDL_Log("Diagnostic export: %s", error.what()); }
     }
 #endif

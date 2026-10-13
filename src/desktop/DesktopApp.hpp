@@ -29,6 +29,7 @@ public:
         ScenarioSettings scenario{}; ///< Authoritative population/geometry/capacity.
         std::optional<ReclamationMissionSettings> mission{ReclamationMissionSettings{}}; ///< Session quota policy.
         runtime::InspectorSession::Diagnostics diagnostics{runtime::InspectorSession::Diagnostics::disabled}; ///< Optional outcome sink.
+        bool diagnosticsJson{}; ///< JSONL stdout and structured stderr health at quiescent shutdown.
         WindowMode windowMode{WindowMode::windowed}; ///< Reversible initial display policy.
         float toolRadius{8.0F}; ///< Radial radius and FLOW corridor half-width in world units.
         float toolMagnitude{4.0F}; ///< Shared live/script force magnitude.
@@ -138,6 +139,7 @@ private:
     std::optional<runtime::CommandIngress::Admission> admission_;
     std::optional<runtime::CommandIngress::Admission> structural_admission_;
     const bool structural_;
+    const bool diagnosticsJson_;
     presentation::ScreenPoint last_pointer_{};
     bool dragging_{}, suspended_{}, restore_running_{}, background_{}, minimized_{};
     std::string_view message_{"Recover biomass before the deadline - click world to steer"};

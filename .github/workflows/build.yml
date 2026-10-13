@@ -74,6 +74,14 @@ jobs:
       - run: cmake --preset ${{ env.BUILD_PRESET }} -DCRUCIBLE_BUILD_RENDER_SPIKE=ON -DCRUCIBLE_BUILD_RULE_SPIKE=ON -DCRUCIBLE_ENABLE_DIAGNOSTICS=ON
       - run: cmake --build --preset ${{ env.BUILD_PRESET }} --parallel 4
       - run: python scripts/run_tests.py --preset ${{ env.BUILD_PRESET }}
+      - name: Headless production benchmark receiving
+        if: matrix.os == 'ubuntu-24.04' && matrix.preset == 'release'
+        run: |
+          cmake --preset desktop-release -DCRUCIBLE_BUILD_BENCHMARKS=ON
+          cmake --build build/desktop-release --target crucible_runtime_backbone_bench --parallel 4
+          build/desktop-release/benchmarks/crucible_runtime_backbone_bench --arm integrated --scale 2048 --workers 2 --warmup 2 --ticks 6
+          build/desktop-release/benchmarks/crucible_runtime_backbone_bench --arm direct --scale 2048 --workers 1 --warmup 2 --ticks 6
+          build/desktop-release/benchmarks/crucible_runtime_backbone_bench --arm integrated --scale 2048 --workers 2 --warmup 2 --ticks 6 --profile-stages
       - name: Native X11 window event smoke
         if: runner.os == 'Linux'
         env:
@@ -109,7 +117,7 @@ jobs:
         with:
           lfs: true
       - run: python scripts/check_prerequisites.py --stage development
-      - run: cmake --preset release -DCRUCIBLE_BUILD_RULE_SPIKE=ON
+      - run: cmake --preset release -DCRUCIBLE_BUILD_RULE_SPIKE=ON -DCRUCIBLE_BUILD_SWARM_SPIKE=ON
       - run: cmake --build --preset release --parallel 4
       - run: python scripts/run_tests.py --preset release
       - name: SDL stays out of the ordinary dependency graph

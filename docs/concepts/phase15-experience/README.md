@@ -1,5 +1,9 @@
 # Crucible: experience direction and cinematic identity
 
+For detailed single-unit design, use the [nanite design space](../nanite/README.md):
+articulated volumetric shell, contained crystal reactor and faction alternatives.
+The original cinematic images below remain historical composition references.
+
 2026-10-09 · proposed design package · source baseline `f70ce7d6afda687f9adc81a86444a8a245d29937`.
 
 Crucible should feel like commanding a living engineered material. The opening
@@ -64,6 +68,9 @@ the production art specification below takes precedence over that generated deta
 
 - [Director's brief](director-brief.md): twelve-second sequence, camera, PBR,
   light, audio, skip/reduced-motion policies and bounded fidelity tiers.
+- [Nanite swarm behaviour](nanite-swarm-design.md): intro wave, lanes, docking,
+  decision LOD, upright assembly (raise or climb) and prior art; headless prototypes,
+  iteration plan, and future swarm/self-assembly and Quantum mechanics catalogue.
 - [Experience design](experience-design.md): full player journey, missions,
   progression/skills, candidate Quantum mechanics, accessibility and save rules.
 - [Receiving plan](receiving-plan.md): proposed next sprint, named consumers,

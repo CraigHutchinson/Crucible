@@ -36,6 +36,12 @@ endif()
 if(CRUCIBLE_BUILD_DESKTOP)
     add_executable(crucible_desktop_event_test desktop.cpp)
     target_link_libraries(crucible_desktop_event_test PRIVATE crucible_desktop_adapter)
+    if(CRUCIBLE_ENABLE_DIAGNOSTICS)
+        add_test(NAME desktop_diagnostics_json COMMAND ${Python3_EXECUTABLE}
+            ${CMAKE_CURRENT_SOURCE_DIR}/receive_desktop_diagnostics.py $<TARGET_FILE:crucible_desktop_event_test>)
+        set_tests_properties(desktop_diagnostics_json PROPERTIES LABELS "integration;desktop;log"
+            TIMEOUT 30 REQUIRED_FILES "$<TARGET_FILE:crucible_desktop_event_test>")
+    endif()
     add_test(NAME desktop_events COMMAND crucible_desktop_event_test)
     set_tests_properties(desktop_events PROPERTIES LABELS "integration;desktop")
     add_executable(crucible_scale_desktop_test test_scale_desktop.cpp)

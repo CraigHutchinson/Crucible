@@ -57,6 +57,12 @@ target_link_libraries(crucible_backbone_parity_tests PRIVATE Crucible::Runtime C
 add_test(NAME runtime_backbone_parity COMMAND crucible_backbone_parity_tests)
 set_tests_properties(runtime_backbone_parity PROPERTIES LABELS "runtime;pub;pipeline" TIMEOUT 180)
 if(CRUCIBLE_ENABLE_DIAGNOSTICS)
+    add_executable(crucible_diagnostics_json_fixture diagnostics_json_fixture.cpp)
+    target_link_libraries(crucible_diagnostics_json_fixture PRIVATE Crucible::Runtime)
+    add_test(NAME runtime_diagnostics_json COMMAND ${Python3_EXECUTABLE}
+        ${CMAKE_CURRENT_SOURCE_DIR}/receive_diagnostics.py $<TARGET_FILE:crucible_diagnostics_json_fixture>)
+    set_tests_properties(runtime_diagnostics_json PROPERTIES LABELS "runtime;log;lifetime"
+        TIMEOUT 90 REQUIRED_FILES "$<TARGET_FILE:crucible_diagnostics_json_fixture>")
     add_executable(crucible_runtime_diagnostics_tests RuntimeDiagnostics.cpp)
     target_link_libraries(crucible_runtime_diagnostics_tests PRIVATE Crucible::Runtime Sub0Log::Sub0Log)
     add_test(NAME runtime_diagnostics COMMAND crucible_runtime_diagnostics_tests)
@@ -72,6 +78,7 @@ target_link_libraries(crucible_tick_observations_test PRIVATE Crucible::Runtime 
 add_test(NAME runtime_tick_observations COMMAND crucible_tick_observations_test)
 set_tests_properties(runtime_tick_observations PROPERTIES LABELS "runtime;pipeline;scale")
 add_executable(crucible_parallel_simulation_test test_parallel_simulation.cpp)
-target_link_libraries(crucible_parallel_simulation_test PRIVATE Crucible::Runtime Crucible::Presentation)
+target_link_libraries(crucible_parallel_simulation_test PRIVATE Crucible::Runtime Crucible::Presentation
+    Crucible::Spatial Crucible::Fields Crucible::Swarm)
 add_test(NAME runtime_parallel_simulation COMMAND crucible_parallel_simulation_test)
 set_tests_properties(runtime_parallel_simulation PROPERTIES LABELS "runtime;pipeline;scale;structural" TIMEOUT 180)

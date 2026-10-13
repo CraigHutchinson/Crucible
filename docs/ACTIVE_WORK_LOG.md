@@ -1,5 +1,28 @@
 # Active work log
 
+## Single nanite design study, 2026-10-13
+
+Session `codex/nanite-design-study` owns `docs/concepts/nanite/**` and bounded
+navigation/revision links in root README, game design, concept gallery, Phase15
+experience/director/swarm notes and faction groundwork. Base `0063735` contains
+merged PR43. User authorizes push and merge of this dedicated design package.
+Scope: inspected concept iterations, single-unit modelling handoff, internal
+reactor and faction presentation groundwork. No runtime, geometry, simulation,
+phase completion or performance change. No heavy CPU/GPU allocation.
+Publication uses the GitHub connector: local Git/LFS lacks write credentials.
+Four PNGs were imported through Git LFS into `docs/concepts/nanite/assets/` in a
+follow-up (hashes verified against provenance.md); the docs embed them.
+
+
+## Nanite swarm behaviour design and S0-S0j spikes,2026-10-12/13
+
+Session `claude/crucible-nanite-swarm-design-89vg5m` claims only new paths
+`spikes/swarm_intro/` and `docs/concepts/phase15-experience/nanite-swarm-design.md`,
+plus pointer edits to the Phase15 plan/review, concept README and the opt-in
+`CRUCIBLE_BUILD_SWARM_SPIKE` option (which also fetches the pinned Sub0Log). No
+frontend/renderer worktree paths, pins or
+native measurements are touched. Single-thread headless runs only; released.
+
 ## Phase15 production renderer reprioritisation,2026-10-09
 
 User approved the first production playable and concept-art fidelity, then
@@ -611,3 +634,71 @@ in [PR24](https://github.com/CraigHutchinson/Crucible/pull/24). Actual integrate
 reclamation SVG/provenance visually inspected; phase review owns findings/follow-ups.
 Shell HTTPS push lacks credentials; connected GitHub app publishes the identical
 reviewed tree. No binary LFS workflow or permission escalation required.
+
+
+## Sub0 integration campaign, 2026-10-09
+
+Integration owns an isolated `codex/sub0-integration-campaign` checkout from
+`9f1716410cd223ad65237ded1779a7c3b4f39d54`: this log,
+`docs/optimization/README.md` and `docs/optimization/sub0-integration.md` only.
+User confirms all libraries may be updated as one coordinated batch. The sibling
+ECS branch owns profiler failure receiving and the detailed architecture/backlog
+review. No shared runtime/pin edit, heavy CPU run or concurrent worker dispatch.
+PR33's mission work is preserved. Source review and documentation are complete;
+actual profiling, adapter implementation and combined receiving remain pending
+as recorded in the campaign. No speedup or new API is claimed.
+
+
+## Production gather/commit optimization, 2026-10-10
+
+Root owns branch `perf/production-gather-commit` from
+`118ce62a75c8e6f1c325cc915cbc539c558a4c11`, all serial configure/build/profile/
+measurement CPU, capture tooling, shared manifests and documentation. A detached
+`../Crucible-control` worktree preserves that baseline. No other worktrees removed.
+
+- `production_mapping`: `src/simulation.cpp` and focused simulation receiving tests;
+  proposal first, implementation after production attribution.
+- `production_bench`: `benchmarks/runtime_backbone.cpp`, opt-in headless scale/stage
+  receiving through the existing actual InspectorSession, no replacement simulation.
+- Root: independently review both changes, paired capture and publication.
+
+Scope: complete production headless boundary, fixed identity and mobile subsets,
+unchanged numerical/resource rules and dependency pins. Native frame/pacing/GPU
+acceptance stays open. Skills recovered from CraigHutchinson/Agentic-CPP; Sub0
+profile with no overlay. See `docs/optimization/production-gather-commit.md`.
+
+Receiving completed 2026-10-12: independent source and raw-receipt review accepts
+A+B for scoped headless median pump/mission improvement. Five-round comparisons
+cover all four arms at 2048 and 100K, control/combined at 150K, and complete
+reference/structural missions. Published control and sort-only branches preserve
+reproduction; Sub0ECS PR24 owns raw receipts and the collector. Root retains all
+worktrees and failed/interrupted captures. Exact final-head CI and merges close
+publication; native acceptance remains separate. No new pins or public API.
+
+## Sub0Log issue14 receiving, 2026-10-11
+
+Root/integrator owns branch `feat/structured-diagnostics` from118ce62:
+RuntimeDiagnostics header/source and runtime tests, desktop shutdown/CLI wiring,
+Sub0Log pin, README and a runtime receiving record. Consolidate Runtime, Telemetry
+and integration under this one owner; retain domain event policy locally, reuse
+upstream JSON formatting, defer live hooks and unrelated Phase15 work. Upstream
+PR18 and separately received full-pin promotion are prerequisites. Reserve serial
+Debug/Release builds here; normal sanitizer canary must pass before local sanitizer
+execution. No concurrent workers. No visual change: actual JSON parser receipts
+are the useful evidence. Existing Phase13–15 native/participant gates stay open.
+The same integration claim includes tests/integration/desktop.cpp and its CMake
+registration/JSON receiver to exercise the actual desktop shutdown consumer.
+
+Checkpoint15ab9b1 received all10 hosted jobs and local Debug/Release53/53.
+Final receiving adds actual desktop shutdown parsing and full Sub0Log revision
+f5daae93010d255a112abc602e1ceb1be0d9fb7c; merge waits for upstream inclusion
+and final exact-head CI. Local normal LSan remains unavailable under ptrace.
+
+## JSON export optimization, 2026-10-12
+
+Root/integrator owns `perf/json-export-pin` from70b557b, dependency pin and
+optimization receiving record. Upstream scope is Sub0Log json.hpp, existing
+format benchmark, focused tests and evidence on `perf/json-append` from2bd85d5.
+Serial CPU/build reservation; no workers. Measure cold formatting first, preserve
+schema/owned output and quiescent lifetime contracts, receive actual merged
+upstream revision through runtime and desktop JSON consumers before promotion.

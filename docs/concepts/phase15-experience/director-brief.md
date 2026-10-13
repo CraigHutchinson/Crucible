@@ -1,5 +1,10 @@
 # Director's brief: a collective becomes CRUCIBLE
 
+> **Single-unit revision, 2026-10-13:** use the [nanite design space](../nanite/README.md)
+> for the new volumetric shell and contained living-crystal study. The wedge/core
+> language below records the original brief; choreography remains in force while
+> the new body, docking and reactor animation await separate model receiving.
+
 Proposal, 2026-10-09. Target twelve seconds, acceptable authored range ten to fifteen
 seconds. The visual ambition is a cinematic production title, not a generic cloud
 of points writing text. A single recognizable silver machine becomes coordinated

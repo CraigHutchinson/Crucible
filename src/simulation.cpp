@@ -51,6 +51,7 @@ struct Simulation::ScenarioState {
         : options(validateExecution(options, count)), extent(RequireExtent(options.grid)), grid(options.grid, count),
           fields(options.field_capacity), blight(options.grid), samples(count),
           tick_input(options.steering || options.resources ? count : 0), next_state(options.steering ? count : 0),
+          outputRowById_(options.steering ? count : 0),
           queryScratch(options.steering ? count : 0),
           partitionScratch(options.steering ? count * (options.rowExecution.partitions - 1) : 0),
           activities(options.structural ? count : 0, SampleActivity::mobile) {
@@ -88,6 +89,7 @@ struct Simulation::ScenarioState {
     blight::Grid blight;
     std::vector<spatial::SpatialSample> samples;
     std::vector<SampleState> tick_input, next_state;
+    std::vector<std::size_t> outputRowById_; ///< Tick-local compact rows indexed by immutable ID minus one.
     std::vector<SampleId> queryScratch; ///< Coordinator-owned complete-result scratch for the immutable row seam.
     std::vector<SampleId> partitionScratch; ///< Remaining disjoint complete-result buffers, fixed at startup.
     std::span<const SampleState> epochInput{};
@@ -166,9 +168,16 @@ void Simulation::tick() {
             });
             auto input = std::span{state.tick_input}.first(index);
             auto output = std::span{state.next_state}.first(index);
-            std::ranges::sort(input, {}, &SampleState::id);
-            for (std::size_t i = 0; i < index; ++i)
+            if (!std::ranges::is_sorted(input, {}, &SampleState::id))
+                std::ranges::sort(input, {}, &SampleState::id);
+            for (std::size_t i = 0; i < index; ++i) {
+                const auto id = state.tick_input[i].id.value;
+                if (id == 0 || id > state.outputRowById_.size() ||
+                    (i != 0 && state.tick_input[i - 1].id.value >= id))
+                    throw std::logic_error("Scenario gather violated fixed identity population");
+                state.outputRowById_[static_cast<std::size_t>(id - 1)] = i;
                 state.samples[i] = {state.tick_input[i].id, state.tick_input[i].position};
+            }
             statistics.inputRows = index;
             finishPhase(statistics.gather);
             if (!state.grid.TryRebuild(std::span{state.samples}.first(index)))
@@ -198,11 +207,15 @@ void Simulation::tick() {
             statistics.queryRows = index;
             statistics.queryScratchCapacity = state.queryScratch.size() + state.partitionScratch.size();
             finishPhase(statistics.propose);
+            for (std::size_t i = 0; i < index; ++i)
+                if (output[i].id != input[i].id)
+                    throw std::logic_error("Scenario row proposal changed identity before commit");
             state.world.each<Position, Velocity, SampleId>([&](Position& position, Velocity& velocity, const SampleId& id) {
                 if (state.Activity(id) != SampleActivity::mobile) return;
-                const auto sample = std::ranges::lower_bound(output, id, {}, &SampleState::id);
-                position = sample->position;
-                velocity = sample->velocity;
+                // Every mobile ID was mapped in this epoch; workers cannot change membership.
+                const auto& sample = output[state.outputRowById_[static_cast<std::size_t>(id.value - 1)]];
+                position = sample.position;
+                velocity = sample.velocity;
             });
             finishPhase(statistics.commit);
         } else {
@@ -387,7 +400,9 @@ std::optional<ScenarioStateInfo> Simulation::TryCopyState(StateCopyDestination d
         destination.samples[index++] = {id, position, velocity, state.Activity(id)};
     });
     // Population and identities are private and fixed after construction.
-    std::ranges::sort(destination.samples.first(count), {}, &SampleState::id);
+    const auto samples = destination.samples.first(count);
+    if (!std::ranges::is_sorted(samples, {}, &SampleState::id))
+        std::ranges::sort(samples, {}, &SampleState::id);
     static_cast<void>(state.fields.TryCopyEdits(destination.fields));
     for (std::size_t row = 0; row < state.options.grid.rows; ++row)
         for (std::size_t column = 0; column < state.options.grid.columns; ++column)
