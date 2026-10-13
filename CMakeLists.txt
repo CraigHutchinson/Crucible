@@ -81,6 +81,20 @@ if(CRUCIBLE_BUILD_DESKTOP)
 endif()
 if(CRUCIBLE_BUILD_GAME)
     add_subdirectory(src/game)
+    set(production_header_sources)
+    foreach(header IN ITEMS
+        application/frontend.hpp application/frontend_view.hpp application/frontend_intent.hpp
+        application/game_journey.hpp application/profile_store.hpp application/progress_profile.hpp
+        presentation/production/cinematic_frame.hpp presentation/production/cinematic_choreography.hpp
+        presentation/production/production_renderer.hpp)
+        string(REPLACE "/" "_" unit "${header}")
+        set(source "${CMAKE_CURRENT_BINARY_DIR}/header_checks/${unit}.cpp")
+        file(WRITE "${source}" "#include \"crucible/${header}\"\n")
+        list(APPEND production_header_sources "${source}")
+    endforeach()
+    add_library(crucible_production_header_checks OBJECT ${production_header_sources})
+    target_link_libraries(crucible_production_header_checks PRIVATE
+        crucible_options Crucible::Frontend Crucible::ProductionRenderer Crucible::Application)
 endif()
 if(BUILD_TESTING)
     find_package(Python3 3.10 REQUIRED COMPONENTS Interpreter)

@@ -1,6 +1,11 @@
 # Phase15 sprint review: first production playable
 
 Status: in progress,2026-10-09. Accountable reviewer: architect/root.
+Continuation,2026-10-13: preserved source and received main through PR46. PR33
+merged as3f4c4565378a8881641506f3e7e39fbdff465c34 after all10 exact-head jobs
+passed in run37963145591. Native R0 now compiles and receives seven actual Vulkan
+readbacks; [commands, captures and visual findings](../workstreams/presentation/phase15-native-evidence/README.md).
+The updated PR47 intro is reviewed separately; R0 is not final visual acceptance.
 Baseline: `13642fe79c848a8509f2935d7357ad107e309c81`, PR31 merge.
 Planning checkpoint: PR32 merged as9f1716410cd223ad65237ded1779a7c3b4f39d54 after
 all10 exact-head jobs passed on8bdf587 in run37955070682.

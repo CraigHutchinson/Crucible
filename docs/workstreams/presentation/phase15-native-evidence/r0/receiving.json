@@ -1,0 +1,203 @@
+{
+  "schema": 1,
+  "source": "55f009750d1996db133e9a46efdf3ee434fafb00",
+  "tracked_worktree_diff_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "inputs": [
+    {
+      "path": "build\\production-release\\src\\game\\crucible_game.exe",
+      "sha256": "23411c4fcc7d92cb6e5b3baee00509bfdf9d6e4c0998d55b426910dc5ae7e9c3"
+    },
+    {
+      "path": "build\\production-release\\src\\presentation\\production\\crucible\\presentation\\production\\resources\\floor.filamat",
+      "sha256": "021ad0dfb1ea0ef0ee1ec85dfc099a3c400bcef6901f28fc01b401bb0260e3b3"
+    },
+    {
+      "path": "build\\production-release\\src\\presentation\\production\\crucible\\presentation\\production\\resources\\nanite.filamat",
+      "sha256": "ba859fc8aa1ffd3704ae57d411f39a96b837640852340b6cedcf86b59bd09770"
+    },
+    {
+      "path": "build\\production-release\\src\\presentation\\production\\crucible\\presentation\\production\\resources\\ui_blit.filamat",
+      "sha256": "659c825307fd3071a5bffc8c8a8d1bf7f3cf0a85828c1f90c53d822d0b3bcdc7"
+    },
+    {
+      "path": "build\\production-release\\src\\game\\assets\\production\\fonts\\rajdhani\\Rajdhani-SemiBold.ttf",
+      "sha256": "94bbd25a18ca665999feb05a537de9fd2b860dcfb78bbe9ca00270825bf235da"
+    },
+    {
+      "path": "build\\production-release\\src\\game\\assets\\production\\fonts\\source-sans\\SourceSans3-Regular.ttf",
+      "sha256": "4644c81b86ec9caaa76b634889968ed3c4f4f52f054855933acc7c2b21e53b0f"
+    }
+  ],
+  "scanout_verified": false,
+  "performance_measurement": false,
+  "cases": [
+    {
+      "name": "macro",
+      "command": [
+        "D:\\Craig\\GitHub\\Crucible\\build\\production-release\\src\\game\\crucible_game.exe",
+        "--capture",
+        "D:\\Craig\\GitHub\\Crucible\\build\\production-release\\receiving-r0\\macro.png",
+        "--capture-ms",
+        "500"
+      ],
+      "exit_code": 0,
+      "png_sha256": "051ed291e315a85c5afd1a015055a1388d57ec37c32746457b7170ab66d9562f",
+      "log_sha256": "1d155327932057034545bdd7f568209f58f1d2a0dca364e66539e573bd821f4a",
+      "receipt": {
+        "source_pin": "d852e34cd5629a6f3851d613dcd17aa0ffd025a2",
+        "frame": 4,
+        "surface_generation": 1,
+        "width": 1280,
+        "height": 864,
+        "cinematic_ms": 500,
+        "sequence": "foundation-12s-wordmark",
+        "completed_tick": null,
+        "scanout_verified": false
+      }
+    },
+    {
+      "name": "assembly",
+      "command": [
+        "D:\\Craig\\GitHub\\Crucible\\build\\production-release\\src\\game\\crucible_game.exe",
+        "--capture",
+        "D:\\Craig\\GitHub\\Crucible\\build\\production-release\\receiving-r0\\assembly.png",
+        "--capture-ms",
+        "6000"
+      ],
+      "exit_code": 0,
+      "png_sha256": "95eaf03cf93b8afdaf4b05602a63ce59e8286325900989bf0ab56e7f4b02ec81",
+      "log_sha256": "0035a0bb7bc9ed990433b5e34c78cf72b57f8ab1714b03532b0d9ff180bb2f08",
+      "receipt": {
+        "source_pin": "d852e34cd5629a6f3851d613dcd17aa0ffd025a2",
+        "frame": 4,
+        "surface_generation": 1,
+        "width": 1280,
+        "height": 864,
+        "cinematic_ms": 6000,
+        "sequence": "foundation-12s-wordmark",
+        "completed_tick": null,
+        "scanout_verified": false
+      }
+    },
+    {
+      "name": "hero",
+      "command": [
+        "D:\\Craig\\GitHub\\Crucible\\build\\production-release\\src\\game\\crucible_game.exe",
+        "--capture",
+        "D:\\Craig\\GitHub\\Crucible\\build\\production-release\\receiving-r0\\hero.png",
+        "--capture-ms",
+        "9000"
+      ],
+      "exit_code": 0,
+      "png_sha256": "1924051a4d13585e4b226fa44b3a9abf3d6422271c28bd2175da3257daf45723",
+      "log_sha256": "d134f6ee8b6a805e5c938b6b3d6895f6a9cb6e832f34aa6466ecf2b85ec958cc",
+      "receipt": {
+        "source_pin": "d852e34cd5629a6f3851d613dcd17aa0ffd025a2",
+        "frame": 4,
+        "surface_generation": 1,
+        "width": 1280,
+        "height": 864,
+        "cinematic_ms": 9000,
+        "sequence": "foundation-12s-wordmark",
+        "completed_tick": null,
+        "scanout_verified": false
+      }
+    },
+    {
+      "name": "menu",
+      "command": [
+        "D:\\Craig\\GitHub\\Crucible\\build\\production-release\\src\\game\\crucible_game.exe",
+        "--capture",
+        "D:\\Craig\\GitHub\\Crucible\\build\\production-release\\receiving-r0\\menu.png",
+        "--menu"
+      ],
+      "exit_code": 0,
+      "png_sha256": "85404abefe3c03d7da8df90d05856b684f1ab68036c1ac355b0f496403c019ec",
+      "log_sha256": "4f6851e7971ca500da1e05a950fb1caa975786d79ac7c91e050de58d0eab8584",
+      "receipt": {
+        "source_pin": "d852e34cd5629a6f3851d613dcd17aa0ffd025a2",
+        "frame": 4,
+        "surface_generation": 1,
+        "width": 1280,
+        "height": 864,
+        "cinematic_ms": 12000,
+        "sequence": "foundation-12s-wordmark",
+        "completed_tick": null,
+        "scanout_verified": false
+      }
+    },
+    {
+      "name": "options",
+      "command": [
+        "D:\\Craig\\GitHub\\Crucible\\build\\production-release\\src\\game\\crucible_game.exe",
+        "--capture",
+        "D:\\Craig\\GitHub\\Crucible\\build\\production-release\\receiving-r0\\options.png",
+        "--screen",
+        "options"
+      ],
+      "exit_code": 0,
+      "png_sha256": "e0fd5315f7d72eeea642926a038570c7d17e5a626db7ebd28a74afa8e90046ed",
+      "log_sha256": "cd3048f52c2f6c89ffb3bf3039be74499d1173dc534b71b8e7403c3c4cab6b01",
+      "receipt": {
+        "source_pin": "d852e34cd5629a6f3851d613dcd17aa0ffd025a2",
+        "frame": 4,
+        "surface_generation": 1,
+        "width": 1280,
+        "height": 864,
+        "cinematic_ms": 12000,
+        "sequence": "foundation-12s-wordmark",
+        "completed_tick": null,
+        "scanout_verified": false
+      }
+    },
+    {
+      "name": "missions",
+      "command": [
+        "D:\\Craig\\GitHub\\Crucible\\build\\production-release\\src\\game\\crucible_game.exe",
+        "--capture",
+        "D:\\Craig\\GitHub\\Crucible\\build\\production-release\\receiving-r0\\missions.png",
+        "--screen",
+        "missions"
+      ],
+      "exit_code": 0,
+      "png_sha256": "f4b0411ff0ba9dc021af36e28681e5a52544e1f0bf5c2f877f208bfb75fa4fa2",
+      "log_sha256": "e8cc770815fc333d9ea0a4d92180906f5ef5c4e45bb7fcae663b905c948458b0",
+      "receipt": {
+        "source_pin": "d852e34cd5629a6f3851d613dcd17aa0ffd025a2",
+        "frame": 4,
+        "surface_generation": 1,
+        "width": 1280,
+        "height": 864,
+        "cinematic_ms": 12000,
+        "sequence": "foundation-12s-wordmark",
+        "completed_tick": null,
+        "scanout_verified": false
+      }
+    },
+    {
+      "name": "world",
+      "command": [
+        "D:\\Craig\\GitHub\\Crucible\\build\\production-release\\src\\game\\crucible_game.exe",
+        "--capture",
+        "D:\\Craig\\GitHub\\Crucible\\build\\production-release\\receiving-r0\\world.png",
+        "--route",
+        "--capture-frame",
+        "64"
+      ],
+      "exit_code": 0,
+      "png_sha256": "f08f49e541f64cd88323606aa6136868c29429fa998fcd6e2886216c5e2c14a2",
+      "log_sha256": "89c727d218865809be22adc8d0b1457e7b1634e7d108dce9c714d3af1c278fa2",
+      "receipt": {
+        "source_pin": "d852e34cd5629a6f3851d613dcd17aa0ffd025a2",
+        "frame": 64,
+        "surface_generation": 1,
+        "width": 1280,
+        "height": 864,
+        "cinematic_ms": 12000,
+        "sequence": "committed-mission-world",
+        "completed_tick": 247,
+        "scanout_verified": false
+      }
+    }
+  ]
+}

@@ -16,6 +16,13 @@ presentation, with concept artwork and a modelling handoff.
 
 ## Playable now
 
+The separate **production migration receiver** now builds as `crucible_game` on
+qualified Windows Vulkan. It receives a real themed menu/options/mission journey
+and committed mission snapshots; see [build, controls and actual captures](docs/workstreams/presentation/phase15-native-evidence/README.md).
+Its original intro fixture is below final visual fidelity; the newer swarm/body
+prototype is the next integration source. Existing `crucible_desktop` remains the
+concept2D/dev-test platform.
+
 - **Play:** build/test `desktop-release`, then launch `crucible_desktop` (`.exe`
   on Windows); add `--structural` for the secure-relay mission. See commands below.
 - **Scale:** `--scale 100000` or `--scale 150000` selects an evolving large world
