@@ -42,6 +42,12 @@ User direction, the same day:
   quality gate; decision LOD should be activity-based, with the camera changing only
   presentation fidelity. Later: off-screen units must reach any goal within a reasonable
   equality to the high-LOD logic (section 4, S0m).
+- 2026-10-13: LOD has several drivers: camera proximity and focus for the actor fidelity of
+  motion and collision, activity for complex interaction versus plain swarming; the levers
+  dynamic and adjustable; camera fidelity variable to meet a tick budget; heroes on an
+  interleaved duty cycle, a System 1 of cheap functions every tick and a System 2 of
+  decisions at a lower cadence; presentation interpolated or extrapolated to the display
+  rate (section 4, S0n).
 
 Sections 4 to 6 cover these. Times in this document are **choreography seconds**: the
 authored beats. At the default pace of 2/3 a viewer sees each 1.5× longer, and the close-up
@@ -101,10 +107,11 @@ Other citations are from the author's knowledge. Verify them before any external
    or sidesteps visibly, trades places with a neighbour, and docks with a deliberate
    rotate-then-slide. Every unit runs the same rules. LOD decides how much of that mind is
    evaluated per tick, not who the unit is.
-2. **Spend the decision budget where the activity is** (S0m; the camera until then).
-   Decision LOD is separate from render LOD: what a unit is doing decides how much it thinks,
-   and the camera decides only how it is drawn. A hero unit makes full per-unit choices; a
-   far unit follows a field. Hidden units move without interactions.
+2. **Spend the decision budget where the activity is and where the viewer looks** (S0n;
+   the camera only until S0m, activity only in S0m). Two drivers: activity for interaction
+   complexity, camera focus for the actor fidelity of motion and collision on screen, weighed
+   by adjustable levers inside a budget. Render LOD is separate. A hero unit makes full
+   per-unit choices; a far unit follows a field. Hidden units move without interactions.
 3. **Every tier guarantees something.** Visible movers never pass through one another.
    Hidden units may, and must be resolved before they can be seen. Every tier reaches the
    same final arrangement.
@@ -252,15 +259,19 @@ thresholds to be re-evaluated with the final silhouette.
 
 | Tier | Who | Behaviour | Guarantee | Cost driver |
 |---|---|---|---|---|
-| Hero | At most `heroCap` (128) building units, the most contended first: stuck, pushing, docking, climbing, queueing, seeking; longest in its act first | Sampled velocity obstacles against senior neighbours; anticipation; climb; nuanced turns; docking ritual | No visible pass-through; intent readable | Candidates × neighbours |
-| Near | Other building units (seek, queue, climb, dock) | Desired velocity plus separation; climb | No visible pass-through (with resolve) | Neighbour query |
-| Far | Cruising and mooring units (lane, ribbon) | Density-gradient push, O(1) | Resolve keeps contacts glancing | One cell lookup |
-| Hidden | None by activity; `--lod camera`: outside the view plus a margin, except building units (SW-F30) | Goal motion with the shared motion model, no interactions | Same goal (gated in isolation, SW-F31); resolved on entry | None |
+| Hero | Score ≥ `heroMin` (0.55), the best `heroCap` (128) | System 2: sampled velocity obstacles against senior neighbours, every `heroPeriod` (2) ticks; System 1 every tick: the last decision held relative to the current desire, reactive separation; anticipation; climb; docking ritual | No visible pass-through; intent readable | Deliberations × neighbours |
+| Near | Score ≥ `nearMin` (0.30) | Desired velocity plus separation; climb | No visible pass-through (with resolve) | Neighbour query |
+| Far | Anything else on screen or building | Density-gradient push, O(1) | Resolve keeps contacts glancing | One cell lookup |
+| Hidden | Off screen and calm (lane, ribbon) | Goal motion with the shared motion model, no interactions | Same goal (gated in isolation, SW-F31); resolved on entry | None |
 
-That is the default activity mode (S0m). `--lod camera` keeps the earlier rule: hero
-candidates nearest the screen centre at ≥10 px per unit, near in the inner 80% of the frame
-at ≥6 px, far elsewhere in view, hidden outside it. Render LOD (mesh detail, core glow,
-shadow) is chosen independently from pixels per unit in both modes.
+The score (S0n, the default blend mode) is `(viewWeight × view + activityWeight × activity)
+/ (viewWeight + activityWeight)`, with weights 0.5 and 1. View is the camera driver: 0 off
+screen, up to 1 at the frame centre at 10 or more pixels per unit. Activity is the
+interaction driver: stuck 1.0, pushing 0.95, docking 0.85, climbing 0.75, queueing 0.65,
+seeking 0.55, lane and ribbon 0.15. A seeker under the camera is a hero; a cruising unit
+under the camera is near (collision fidelity); a stuck unit off screen is still a hero.
+`--lod camera` and `--lod activity` remain as presets. Render LOD (mesh detail, core glow,
+shadow) is chosen independently from pixels per unit.
 
 **Activity-driven decision LOD** (user suggestion, 2026-10-13; adopted as the default in
 S0m). Tiers followed the camera until S0m, but on-screen size is only a proxy for "a
@@ -286,7 +297,29 @@ every build passes its gates with it, and the hero cap is always spent on conten
 second consequence above holds: visible cruising units now take the far tier's field
 response at any range; the tour video is where to judge whether that reads.
 
-**Isolation gate (S0m, user direction).** Every discrete tier must converge on its own: the
+**Levers, two brains and a budget (S0n, user direction).** The weights, thresholds, hero
+cap, System 2 cadence and budget live in `LodLevers` and change between ticks
+(`SwarmIntro::setLevers`): a game can lean on the camera in a cinematic and on activity in a
+fight, or slow System 2 when the frame is tight.
+- **System 1 and System 2.** A hero deliberates every `heroPeriod` ticks, staggered by
+  identity. Between deliberations System 1 holds the decision as a turn and speed scale
+  relative to the current desire, so it tracks a moving goal, and separates reactively
+  every tick. Cheap tiers hold calm units' goal steering the same way (`routePeriod`).
+- **Budget.** A deterministic controller predicts each tick's cost from the tier
+  populations (per-tier costs in thousands of instructions, measured with callgrind) and
+  lowers a fidelity factor while over budget: a smaller hero cap and a higher near
+  threshold; below half fidelity also a slower route cadence and no resolve for far units
+  off screen. Over budget fidelity falls 0.05 a tick; well under it recovers 0.01 a tick. It
+  never reads the clock, so a run under a budget replays exactly; mapping cost units to a
+  device's time budget is a calibration per device.
+- **Presentation.** The renderer interpolates between ticks (or extrapolates from the last
+  one) to the display rate, so the simulation rate and the frame rate are independent
+  (SW-F34).
+
+What it bought and where it stops is SW-F32 to SW-F34: the cost was mostly shared work, now
+fixed; resolve is the largest remaining cost and sets a floor no tier lever can pass.
+
+**Isolation gate (S0m, user direction). Every discrete tier must converge on its own: the
 whole swarm runs at hero, then near, far and hidden, and also under the other LOD mode
 (`--verify`). Each run must lock (and raise) the whole title by the end of the build's
 sequence (12 s, or 15 s when climbing), with every lock supported and no unit left stuck;
@@ -327,8 +360,8 @@ on a face, and whether this fits the twelve-second timeline. S0b and S0c test tw
 | Order | None preset (S0d): units queue at their letter's base and claim the lowest supportable tile nearest them, first come, first served. | Planned slots, as in S0. |
 | Support | A tile is fillable only from the ground or a locked lower neighbour. Locks never happen unsupported (verified). | The letter is one rigid interlocked body during the rise, pivoting on the ground row. |
 | Surfaces | Two connected 2D surfaces: ground and wall face, joined at the base. Climbers route over built units (shortest path, strokes linked through the ground), drawn up by lift magnetism, and flow over each other in layers. | One surface (ground); the rise is a pose transform of locked units. |
-| Title complete (1536 units) | 10.59 s (S0b with a preset order: 13.45 s) | 7.80 s flat; every letter upright by 8.85 s |
-| Cost (host p50 / p95 per presented tick) | 0.79 / 3.96 ms | 0.36 / 3.52 ms |
+| Title complete (1536 units) | 10.85 s (S0b with a preset order: 13.45 s) | 7.78 s flat; every letter upright by 8.83 s |
+| Cost (host p50 / p95 per presented tick) | 0.64 / 3.42 ms | 0.37 / 1.44 ms |
 | Reads as | The swarm literally builds the word, letter tops last. Strong "engineered material" story. | A flat assembly that stands up in a rolling wave, letter by letter. Dramatic; keeps the twelve-second timing. |
 
 ### Hybrid: climbing with drawbridges (S0e)
@@ -341,13 +374,13 @@ slots, and the two modes never trade slots.
 
 | Upright build (1536 units, 1,066 morphed tiles) | Title complete | Worst ground contacts | Tick p50 |
 |---|---|---|---|
-| Climb (S0d) | 10.59 s | 0% | 0.79 ms |
-| Hybrid (S0e) | 10.12 s; raised letters upright by 8.07 s | 0% | 0.29 ms |
-| Scaffold (S0f) | 10.43 s; stem panels upright by 8.10 s | 1.2% | 0.59 ms |
-| Raise (S0c) | upright by 8.85 s | 0% | 0.36 ms |
+| Climb (S0d) | 10.85 s | 0% | 0.64 ms |
+| Hybrid (S0e) | 9.00 s; raised letters upright by 7.99 s | 0% | 0.46 ms |
+| Scaffold (S0f) | 10.57 s; stem panels upright by 7.93 s | 0% | 0.79 ms |
+| Raise (S0c) | upright by 8.83 s | 0% | 0.37 ms |
 
-Choreography seconds with lane branching (S0h) and activity LOD (S0m); on screen the S0l
-tour plays at half speed.
+Choreography seconds with lane branching (S0h) and blend LOD (S0n); on screen the S0l tour
+plays at half speed.
 
 ### Scaffold: per-part drawbridges during the climb (S0f)
 
@@ -364,8 +397,8 @@ ground reaches its slot without crossing a panel that is still flat or rising (S
 that rule, climbers went up beside a lying stem and hung off the face until it rose.
 
 **Recommendation, revised: the scaffold build for the director's review.** It completes at
-10.43 s (19.6 s on screen with the S0l tour), with climbers on the built face and visible
-contacts at most 1.2% of movers. It keeps
+10.57 s (19.9 s on screen with the S0l tour), with climbers on the built face and no
+visible contacts. It keeps
 climbing as the core, since the swarm still climbs every arm, bowl and the U. And it turns the drawbridge into a structural beat: stems swing up as
 scaffolds the swarm then climbs. The hybrid (whole letters) and pure climb remain variants;
 raise is the twelve-second fallback.
@@ -531,22 +564,23 @@ about 9,100 records per climb run, with no drops in a 4 MiB segment.
 ## 7. Prototype results
 
 The [spike README](../../../spikes/swarm_intro/README.md) has commands, gates, the evidence
-table and images for every build. With activity LOD (S0m), the S0l tour camera and 1536
+table and images for every build. With blend LOD (S0n), the S0l tour camera and 1536
 units (choreography seconds; on screen the tour plays at half speed, the rest at 2/3):
-- **Lying:** complete at 7.82 s (brief: 8.4 s), the ribbon by 10 s.
-- **Raise:** upright by 8.85 s.
-- **Climb:** complete at 10.59 s; 3 of 79,331 climber-ticks off the built face.
-- **Hybrid:** complete at 9.27 s under camera LOD, 10.12 s under activity LOD.
-- **Scaffold:** complete at 10.43 s, stem panels upright by 8.10 s; no climber off the face.
+- **Lying:** complete at 7.71 s (brief: 8.4 s), the ribbon by 10 s.
+- **Raise:** upright by 8.83 s.
+- **Climb:** complete at 10.85 s; 5 of 78,919 climber-ticks off the built face.
+- **Hybrid:** complete at 9.00 s.
+- **Scaffold:** complete at 10.57 s, stem panels upright by 7.93 s; 4 of 43,638 climber-ticks
+  off the face.
 - **Isolation:** every discrete tier converges in every build; the spread across tiers is
-  0.9 to 2.1 s (3.5 s on the two-layer climb), hero the slowest (SW-F31).
-- **Every build:** visible contacts (centres closer than 0.8 diameter) at most 1.2% of
-  visible movers (scaffold; 0% elsewhere) and no pair closer than 0.8 diameter. Lane
-  branching took them to 0% (SW-F21); activity LOD gives visible cruising units the far
-  tier, and the scaffold's lanes show some again.
+  0.7 to 2.0 s (2.8 s on the two-layer climb), hero the slowest (SW-F31). Switched levers
+  and a budget converge too (S0n).
+- **Every build:** no visible contacts (centres closer than 0.8 diameter) at 1536 units and
+  no pair closer than 0.8 diameter; 1.3% at 4,096 units on the scaffold. Lane branching took
+  them to 0% (SW-F21); blend LOD keeps cruising units under the camera in the near tier.
 
-Ticks run 0.29–0.79 ms p50 per presented tick on a shared cloud host. 16,384 units still
-meet every deadline. Release and ASan/UBSan pass all fourteen CTest cases, and identical runs
+Ticks run 0.37–0.79 ms p50 per presented tick on a shared cloud host. 16,384 units still
+meet every deadline. Release and ASan/UBSan pass all fifteen CTest cases, and identical runs
 give identical state hashes.
 
 ![Hybrid build: drawbridge letters and climbed letters](../../../spikes/swarm_intro/evidence/hybrid.png)
@@ -584,6 +618,9 @@ give identical state hashes.
 | SW-F24 | Doubling the tiles crowded the stage: wider lanes alone fixed lying and raise; climbing letters' waiting crowds needed to heap (flow over each other) like the wall-base heap. Panels deadlocked once when a front panel wedge waited on a climbed wedge behind it. | Capacity rules scale with the layer count; face backing for flat assembly counts only the same flat body. |
 | SW-F25 | Three layers leave one enclosed front-layer pocket unfilled. | A no-enclosed-holes build order (TERMES) before more than two layers. |
 | SW-F26 | A 3D body with vertical walls on the tile footprint keeps the tessellation gap-free in 3D with no change to the build: neighbours share wall quads, the roof facets form the seams. The concept dart (spine, faceted roof, core in the spine) works on any triangular footprint, so free darts and locked tiles share one construction. The existing stacking step (0.55 d) is the spine height. | S0j; one body specification (`NaniteBody.hpp`) feeds the simulation and the renderer, tested for parity. The dart form was superseded by the design space (SW-F28). |
+| SW-F34 | Rebuilding the frames between every 4th capture (a 15 Hz simulation shown at 60 Hz) puts interpolated ground movers within 0.024 d at p95 (mean 0.009 d), extrapolated within 0.14 d (mean 0.035 d); every 8th, 0.078 and 0.30 d. The worst cases (0.8 to 1.5 d) are act changes, which neither method predicts. | Interpolate by default: one tick of latency for exactness. Extrapolate only for a late tick, and blend back. S1's renderer can run the simulation below the display rate. |
+| SW-F33 | System 2 every 2 ticks halves deliberations at no cost to completion or contacts; every 3 or 4 still converges, contacts on the scaffold rise to 2.1% and 2.7%. Blending camera focus (0.5) with activity (1) restores on-screen collision fidelity (contacts 0%, activity LOD had 1.2%) and fixes activity LOD's slow two-layer climb (12.25 to 10.99 s), with 3,000 to 5,600 deliberations a run against activity's 16,000 to 24,000. Hero isolation with System 2 every 2 ticks overran the two-layer climb (15.26 s): a whole swarm of plan-holders is slower than a capped few. | Blend is the default, System 2 every 2 ticks. The isolation gate runs heroes at full cadence; the duty cycle is gated by the main and switched-lever runs. |
+| SW-F32 | Wall-time calibration put every tier near 1.6 µs per unit, so tiers barely changed cost. Callgrind showed the shared work: every lane unit searched its whole projection window each tick (13% of a tick) and every unit queried neighbours for pushers that almost never existed (5%). Stopping the search at its first rise and skipping the query when nobody pushes cut a scaffold tick by 17% (3.85 to 3.19 billion instructions over 10 s) with identical behaviour. Per mover-tick, a hero deliberation is then about 7,800 instructions and holding a plan 2,250; resolve (about 4,100 per visible mover) is 46% of a tick. A budget of 4,000 cost units bottoms out near 5,300 at the wave's peak. | Profile in instructions, not wall time, on a shared host. Tier levers act on behaviour; the next lever is resolve (fewer passes off focus) or parallel rows (S3). |
 | SW-F31 | Isolation, every discrete tier for the whole swarm: hero, near and far converged everywhere, but hidden never finished the climb or scaffold (two slots, 1,064 of 1,066). Hidden units set velocity directly to their desire, overshot a waypoint each tick and turned back forever (two seekers oscillated at 16 d/s from 3.8 s). Full deliberation is the slowest tier in every build (lying 8.65 s, climb 12.15 s, scaffold 12.33 s; two-layer climb 14.34 s) | Hidden shares the other tiers' motion model (acceleration limit, turn rate) and converges within 0.3 s of near. `--verify` now gates convergence of every tier in isolation and reports the spread; equivalence is the later gate. Decision LOD defaults to activity (S0m). |
 | SW-F30 | The close-up tour leaves most of the title off screen, and camera LOD hid the units building it. Hidden-tier motion has no separation: on the climb, five climbers on the R and six seekers bunched at its base stalled from 9.5 s until the pull-out made them visible, and the title finished at 13.45 s (gate 12.5 s). Camera LOD also concentrates hero and near tiers under the close-up, so the camera path itself moves timings (climb 9.4 to 13.4 s across camera variants before the fix). | An activity floor: building units (seek, queue, climb, dock) keep at least the far tier off screen. Every gate passes again near the wide-camera times (climb 10.79 s, scaffold 10.42 s, hybrid 9.27 s). The camera is a behaviour input under camera LOD, one more reason for activity-driven tiers (section 4 backlog). |
 | SW-F29 | Unit speeds are bimodal: about 10 d/s approaching and climbing, about 28 d/s in the lanes. Stretching only the nose keeps the compact shell (and so the core) inside the moving one; drawing the rear edge back at the same width would not. | Full stretch at 24 d/s: lanes read as streams of long bodies, climbers part-stretched, docked units compact. Shell motion stays view-owned; the swarm only publishes speed. |
@@ -612,9 +649,10 @@ post-journey gameplay proposals.
 | **S0k** done | Design consolidation: the design space owns the form; the renderer's body becomes a tetrahedral proxy (shell, hubs, rails, recessed shields with windows, one regular core inside), its shell elongating with speed around the unchanged core; simulation unchanged | This review | Director compares the proxy with the core-corrected form study (macro and title close-up) |
 | **S0l** done | Cinematic camera: macro, then a follow camera over the busiest building with yaw around the title, pull-out, hold, opening (+1.5 s); pace eases to 1/2 during the close-up (28.8 s on screen for 15 s builds); activity floor for camera LOD (SW-F30) | This review | Director reviews the tour video (scaffold) for readability of construction and pacing |
 | **S0m** done | Decision LOD by activity (default; camera drives only presentation); isolation gate for every discrete tier; hidden tier shares the motion model and converges (SW-F31); spread reported | This review | Equivalence tolerance per tier (later); whether visible cruising units read well at the far tier |
+| **S0n** done | Blend LOD (camera focus and activity, dynamic levers) as the default; hero System 1 and System 2 (deliberation every 2 ticks); calm-unit route cadence; deterministic decision budget; two profiled fixes (−17% instructions per tick); renderer interpolation and extrapolation (`--fps`, `--reconstruct`); switched-lever and budget gates | This review | The director judges the default; per-device budget calibration; resolve LOD (S3) |
 | **S1** | Production renderer consumes a per-tick instance packet (world pose, plane tilt, lift, act, core intensity, render LOD) from the chosen build; perspective lens path from the brief | P15-R0 Filament scene | Native capture against hero and storyboard concepts; bodies grounded; upright title readable with bloom off and in grayscale |
 | **S2** | Choreography authoring: which strokes are panels, as authored data (SW-F17); sub-tile edge pieces where stems stay stepped (SW-F16); lanes and stroke order as data; the raise beat if raise is chosen (what visibly lifts the letter: a wave of units pushing under the hinge, rise order and easing); optional hero-letter climbing finish; climb arcs; traveling cyan accent; idle micro-behaviour for locked heroes (breathing core, settle wobble); skip jumps to an authored settled snapshot; reduced motion selects the still | P15-E0 frontend | Director pass (brief section 8); skip and reduced-motion receiving; temporal review of motion, not stills |
-| **S3** | Performance and decision LOD: activity tiers (S0m) tuned against blended ones; the equivalence gate (section 4 backlog); event-driven wave; Sub0Pipeline row ranges for behaviour and resolve; hero candidate cap per frame; optional GPU compute route for far and hidden tiers | Named device | p95 and p99 inside the brief's proposed 16.67/20 ms with rendering included; measured, never inferred from S0 |
+| **S3** | Performance and decision LOD: the blend levers (S0n) tuned per device and calibrated to time; resolve passes as a fidelity lever; the equivalence gate (section 4 backlog); event-driven wave; Sub0Pipeline row ranges for behaviour and resolve; hero candidate cap per frame; optional GPU compute route for far and hidden tiers | Named device | p95 and p99 inside the brief's proposed 16.67/20 ms with rendering included; measured, never inferred from S0 |
 | **S4** | Upstream feedback: tier tag migration cost and partition churn in Sub0ECS; frozen gather and grid as a reusable pattern only if a second consumer appears | Sub0ECS | Measured reproduction; no speculative API |
 | **O1** | Arbitrary-shape clumping: every unit in range is drawn by pseudo-magnetic binding into whatever aggregate forms, and settles stable (section 5, organic construction) | Headless spike | Deterministic settle; no interpenetration; stability held for a set time; per-tick cost bounded by a spatial grid |
 | **O2** | Shape-directed clumping: a target (cube, sphere, arbitrary mesh) with a skin or volume fill; coverage replaces slot counts | Headless spike | Coverage, gaps and overfill against a predefined tiling of the same target |
@@ -709,8 +747,9 @@ where distant units enter the frame. It must not cost title readability.
    seconds; 1.5× on screen at pace 2/3.)
 9. Is 2/3 the right pace, and should it be uniform? Slowing only the climb (the stream-in
    could stay brisk) is a time warp of the choreography clock, cheap to author.
-10. Decision LOD follows activity since S0m. What tolerance should the equivalence gate
-    allow between tiers, per goal (section 4 backlog)?
+10. Decision LOD blends camera focus and activity since S0n. What tolerance should the
+    equivalence gate allow between tiers, per goal (section 4 backlog), and what time budget
+    does each target device set (cost units per microsecond)?
 11. Organic construction (section 5): skin or volume fill for the title, and which poles a
     shell offers (vertices, edges, faces), once the single-unit rig defines its contacts?
 11. Should the title have depth (S0i)? Two layers read as a solid slab from an angle and

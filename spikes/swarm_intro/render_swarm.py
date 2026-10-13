@@ -27,6 +27,7 @@ import numpy as np
 from PIL import Image, ImageDraw
 
 import nanite_mesh
+import playback
 
 BACKGROUND = (14, 16, 20)
 SILVER = (196, 202, 210)
@@ -398,6 +399,10 @@ def main():
     parser.add_argument("--yaw", type=float, default=None,
                         help="oblique view: degrees of yaw about the vertical (default: the camera path's, or 0 with --zoom)")
     parser.add_argument("--zoom", help="override the camera for sheets: cx,cy,half_width (view units)")
+    parser.add_argument("--fps", type=float, help="GIF/MP4 at this presentation frame rate, frames between captures interpolated")
+    parser.add_argument("--extrapolate", action="store_true", help="with --fps: dead-reckon from the latest capture instead")
+    parser.add_argument("--reconstruct", type=int, metavar="STRIDE",
+                        help="print the position error of rebuilding the frames between every STRIDE-th capture")
     args = parser.parse_args()
     frames = [load(p) for p in sorted(args.frames.glob("frame_*.csv"))]
     if not frames:
@@ -415,6 +420,11 @@ def main():
         sheet(frames, times, "tiers", args.tiers, args.yaw)
     if args.magnets:
         sheet(frames, times, "magnets", args.magnets, args.yaw)
+    if args.reconstruct:
+        for mode, (mean, p95, worst) in playback.reconstruction_error(frames, args.reconstruct).items():
+            print(f"{mode}: stride {args.reconstruct}, error mean {mean:.3f} d, p95 {p95:.3f} d, max {worst:.3f} d")
+    if args.fps:
+        frames = playback.resample(frames, args.fps, args.extrapolate)
     if args.gif:
         images = [draw_frame(f, (640, 360), args.gif_mode, args.yaw).image() for f in frames]
         step_ms = int(round(presentation_step(frames) * 1000))

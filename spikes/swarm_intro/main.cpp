@@ -30,6 +30,7 @@ struct Options
     std::string eventsPath;   // Sub0Log JSONL messages
     std::string healthPath;   // one swarm_health object
     bool verify = false;
+    bool switchLevers = false;   // verify: change the levers mid-run (camera-led, then activity-led)
 };
 
 struct RunSummary
@@ -50,6 +51,9 @@ struct RunSummary
     std::uint32_t maxHeroes = 0;
     std::uint32_t maxMigrations = 0;
     std::uint64_t yields = 0;
+    std::uint64_t deliberations = 0;   // hero System 2 deliberations
+    std::vector<float> predictedCost;  // per tick, cost units
+    float minFidelity = 1.0F;
     std::uint64_t claims = 0;
     std::uint64_t stuck = 0;
     std::uint64_t recovered = 0;
@@ -83,6 +87,7 @@ std::string label(const IntroSettings& s)
     {
     case LodMode::Camera: lod = "camera"; break;
     case LodMode::Activity: lod = "activity"; break;
+    case LodMode::Blend: lod = "blend"; break;
     case LodMode::AllHero: lod = "uniform-hero"; break;
     case LodMode::AllNear: lod = "uniform-near"; break;
     case LodMode::AllFar: lod = "uniform-far"; break;
@@ -147,6 +152,24 @@ RunSummary run(const Options& options, bool capture)
     int windowStart = 0;
     for (int t = 0; t < ticks; ++t)
     {
+        if (options.switchLevers)
+        {
+            // Levers are dynamic: hand fidelity to the camera for the middle of the build, then
+            // to activity, and the run must still converge.
+            LodLevers levers = options.settings.levers;
+            if (intro.time() >= 4.0F && intro.time() < 8.0F)
+            {
+                levers.viewWeight = 1.0F;
+                levers.activityWeight = 0.2F;
+            }
+            else if (intro.time() >= 8.0F)
+            {
+                levers.viewWeight = 0.1F;
+                levers.activityWeight = 1.0F;
+                levers.heroPeriod = 3;
+            }
+            intro.setLevers(levers);
+        }
         intro.tick();
         const TickMetrics& m = intro.metrics();
         float total = 0.0F;
@@ -177,6 +200,9 @@ RunSummary run(const Options& options, bool capture)
         summary.maxHeroes = std::max(summary.maxHeroes, m.tierCount[0]);
         if (t > 0) summary.maxMigrations = std::max(summary.maxMigrations, m.migrations);   // tick0 seeds every tier
         summary.yields += m.heroYields;
+        summary.deliberations += m.deliberations;
+        summary.predictedCost.push_back(m.predictedCost);
+        summary.minFidelity = std::min(summary.minFidelity, m.fidelity);
         summary.claims += m.claims;
         summary.stuck += m.stuck;
         summary.recovered += m.recovered;
@@ -275,8 +301,9 @@ void print(const std::string& label, const Options& options, const RunSummary& s
                 "\"mean_us\":{\"gather\":%.1f,\"signal\":%.1f,\"behaviour\":%.1f,\"resolve\":%.1f,\"lod\":%.1f,\"metrics\":%.1f},"
                 "\"outline\":{\"corners\":%zu,\"rms_before\":%.3f,\"rms_after\":%.3f,\"max_morph\":%.3f,\"min_area_ratio\":%.3f},"
                 "\"pace\":%.4f,\"close_pace\":%.4f,\"presentation\":{\"length_s\":%.3f,\"all_locked_s\":%.3f,\"all_raised_s\":%.3f},"
+                "\"deliberations\":%llu,\"cost_p50\":%.1f,\"cost_p95\":%.1f,\"cost_max\":%.1f,\"min_fidelity\":%.2f,"
                 "\"state_hash\":\"%016llx\"}\n",
-                label.c_str(), options.settings.nanites, s.slots, s.ribbon, options.settings.heroCap, s.firstLock, s.allLocked, s.allRaised, static_cast<unsigned>(s.raisedMask), s.panels, s.lockedAt84,
+                label.c_str(), options.settings.nanites, s.slots, s.ribbon, options.settings.levers.heroCap, s.firstLock, s.allLocked, s.allRaised, static_cast<unsigned>(s.raisedMask), s.panels, s.lockedAt84,
                 s.lockedAt10, s.mooredAt10, s.worstOverlaps, s.worstOverlapRatio, s.worstOverlapTime, s.minVisibleGap, s.maxHeroes,
                 s.maxMigrations, static_cast<unsigned long long>(s.yields), static_cast<unsigned long long>(s.swaps), static_cast<unsigned long long>(s.claims), static_cast<unsigned long long>(s.stuck), static_cast<unsigned long long>(s.recovered), static_cast<unsigned long long>(s.pushes), static_cast<unsigned long long>(s.reclaims), s.maxStuckNow, s.stuckAtEnd, static_cast<unsigned long long>(s.climberTicks), s.diagnosticsOk ? "true" : "false", s.lockedAtEnd, static_cast<unsigned long long>(s.unsupported), static_cast<unsigned long long>(s.offSurface), static_cast<unsigned long long>(s.clicks),
                 s.peakClicksPer100ms, percentile(s.tickMicros, 0.5F), percentile(s.tickMicros, 0.95F),
@@ -284,7 +311,9 @@ void print(const std::string& label, const Options& options, const RunSummary& s
                 s.systemMicros[3] / ticks, s.systemMicros[4] / ticks, s.systemMicros[5] / ticks,
                 s.wordmark.boundaryCorners, s.wordmark.outlineRmsBefore, s.wordmark.outlineRmsAfter, s.wordmark.maxMorph,
                 s.wordmark.minAreaRatio, pace, static_cast<double>(options.settings.closePace), static_cast<double>(s.shownLength),
-                static_cast<double>(s.shownLocked), static_cast<double>(s.shownRaised), static_cast<unsigned long long>(s.hash));
+                static_cast<double>(s.shownLocked), static_cast<double>(s.shownRaised),
+                static_cast<unsigned long long>(s.deliberations), percentile(s.predictedCost, 0.5F), percentile(s.predictedCost, 0.95F),
+                percentile(s.predictedCost, 1.0F), static_cast<double>(s.minFidelity), static_cast<unsigned long long>(s.hash));
 }
 
 bool parse(int argc, char** argv, Options& o)
@@ -311,7 +340,14 @@ bool parse(int argc, char** argv, Options& o)
         else if (a == "--morph") { const char* v = next(); if (!v) return false; o.settings.wordmark.morph = std::strtof(v, nullptr); }
         else if (a == "--claim-cap") { const char* v = next(); if (!v) return false; o.settings.claimCap = static_cast<std::uint32_t>(std::atoi(v)); }
         else if (a == "--count") { const char* v = next(); if (!v) return false; o.settings.nanites = std::strtoul(v, nullptr, 10); }
-        else if (a == "--hero-cap") { const char* v = next(); if (!v) return false; o.settings.heroCap = std::strtoul(v, nullptr, 10); }
+        else if (a == "--hero-cap") { const char* v = next(); if (!v) return false; o.settings.levers.heroCap = std::strtoul(v, nullptr, 10); }
+        else if (a == "--view-weight") { const char* v = next(); if (!v) return false; o.settings.levers.viewWeight = std::strtof(v, nullptr); }
+        else if (a == "--activity-weight") { const char* v = next(); if (!v) return false; o.settings.levers.activityWeight = std::strtof(v, nullptr); }
+        else if (a == "--hero-min") { const char* v = next(); if (!v) return false; o.settings.levers.heroMin = std::strtof(v, nullptr); }
+        else if (a == "--near-min") { const char* v = next(); if (!v) return false; o.settings.levers.nearMin = std::strtof(v, nullptr); }
+        else if (a == "--hero-period") { const char* v = next(); if (!v) return false; o.settings.levers.heroPeriod = static_cast<std::uint32_t>(std::strtoul(v, nullptr, 10)); }
+        else if (a == "--route-period") { const char* v = next(); if (!v) return false; o.settings.levers.routePeriod = static_cast<std::uint32_t>(std::strtoul(v, nullptr, 10)); }
+        else if (a == "--budget") { const char* v = next(); if (!v) return false; o.settings.levers.budget = std::strtof(v, nullptr); }
         else if (a == "--layers") { const char* v = next(); if (!v) return false; o.settings.wordmark.layers = std::max(1, std::atoi(v)); }
         else if (a == "--pace") { const char* v = next(); if (!v) return false; o.settings.pace = std::strtof(v, nullptr); }
         else if (a == "--close-pace") { const char* v = next(); if (!v) return false; o.settings.closePace = std::strtof(v, nullptr); }
@@ -332,6 +368,7 @@ bool parse(int argc, char** argv, Options& o)
             else if (m == "far") o.settings.lod = LodMode::AllFar;
             else if (m == "hidden") o.settings.lod = LodMode::AllHidden;
             else if (m == "activity") o.settings.lod = LodMode::Activity;
+            else if (m == "blend") o.settings.lod = LodMode::Blend;
             else return false;
         }
         else return false;
@@ -352,7 +389,7 @@ int main(int argc, char** argv)
     if (!parse(argc, argv, options))
     {
         std::fprintf(stderr,
-                     "usage: crucible_swarm_intro [--verify] [--build lying|climb|raise|hybrid|scaffold] [--raise-letters MASK] [--rows] [--morph F] [--layers N] [--count N] [--hero-cap N] [--lod camera|activity|hero|near|far|hidden]\n"
+                     "usage: crucible_swarm_intro [--verify] [--build lying|climb|raise|hybrid|scaffold] [--raise-letters MASK] [--rows] [--morph F] [--layers N] [--count N] [--hero-cap N] [--lod blend|camera|activity|hero|near|far|hidden] [--view-weight W] [--activity-weight W] [--hero-min S] [--near-min S] [--hero-period N] [--route-period N] [--budget C]\n"
                      "                            [--seconds S] [--pace P] [--close-pace P] [--frames DIR] [--every TICKS] [--metrics FILE]\n"
                      "                            [--events-jsonl FILE] [--health-json FILE] [--claim-cap N]\n");
         return 2;
@@ -378,7 +415,7 @@ int main(int argc, char** argv)
             if (main.wordmark.minAreaRatio < 0.499F) return fail("no morphed tile below half its area");
             if (main.wordmark.outlineRmsAfter > 0.6F * main.wordmark.outlineRmsBefore) return fail("morphing cuts outline error by 40% or more");
         }
-        if (main.maxHeroes > options.settings.heroCap) return fail("hero tier respects its cap");
+        if (main.maxHeroes > options.settings.levers.heroCap) return fail("hero tier respects its cap");
         if (main.mooredAt10 < 1.0F) return fail("ribbon fully moored by 10.0s");
         switch (build)
         {
@@ -417,12 +454,15 @@ int main(int argc, char** argv)
         // slowest (SW-F31).
         const bool climbs = build == Build::Climb || build == Build::Hybrid || build == Build::Scaffold;
         const float deadline = climbs ? 15.0F : 12.0F;
-        const LodMode other = options.settings.lod == LodMode::Camera ? LodMode::Activity : LodMode::Camera;
         float fastest = main.allLocked, slowest = main.allLocked;
-        for (const LodMode mode : { other, LodMode::AllHero, LodMode::AllNear, LodMode::AllFar, LodMode::AllHidden })
+        for (const LodMode mode : { LodMode::Blend, LodMode::Camera, LodMode::Activity, LodMode::AllHero, LodMode::AllNear, LodMode::AllFar, LodMode::AllHidden })
         {
+            if (mode == options.settings.lod) continue;   // the main run
             Options tier = options;
             tier.settings.lod = mode;
+            // A tier's own logic in full: the hero isolation deliberates every tick. The System 2
+            // duty cycle is gated by the main run (period 2) and the switched-levers run (3).
+            if (mode == LodMode::AllHero) tier.settings.levers.heroPeriod = 1;
             const RunSummary r = run(tier, false);
             print(label(tier.settings), tier, r);
             if (r.allLocked < 0.0F || r.allLocked > deadline) return fail("every LOD tier in isolation completes the title within the sequence");
@@ -435,6 +475,25 @@ int main(int argc, char** argv)
             slowest = std::max(slowest, r.allLocked);
         }
         std::printf("{\"isolation\":{\"fastest_s\":%.3f,\"slowest_s\":%.3f,\"spread_s\":%.3f}}\n", fastest, slowest, slowest - fastest);
+
+        // The levers are dynamic (S0n): switched mid-run (camera-led from 4 s, activity-led
+        // with a slower System 2 from 8 s), and under a decision budget that drives fidelity
+        // to its floor, the run must still converge with the main run's gates on contacts.
+        Options levered = options;
+        levered.settings.lod = LodMode::Blend;
+        levered.switchLevers = true;
+        Options budgeted = options;
+        budgeted.settings.lod = LodMode::Blend;
+        budgeted.settings.levers.budget = 4000.0F;
+        for (const Options& variant : { levered, budgeted })
+        {
+            const RunSummary r = run(variant, false);
+            print(label(variant.settings) + (variant.switchLevers ? "+switched" : "+budget"), variant, r);
+            if (r.allLocked < 0.0F || r.allLocked > deadline) return fail("a run with switched levers or a budget completes the title within the sequence");
+            if (r.panels > 0 && (r.allRaised < 0.0F || r.allRaised > deadline)) return fail("a run with switched levers or a budget raises every panel within the sequence");
+            if (r.unsupported != 0 || r.stuckAtEnd != 0) return fail("a run with switched levers or a budget locks only on supports and resolves every stuck episode");
+            if (r.worstOverlapRatio > 0.03F || r.minVisibleGap < 0.5F) return fail("a run with switched levers or a budget keeps visible contacts at most 3% and gaps at least 0.5d");
+        }
         std::printf("{\"verify\":\"PASS\"}\n");
         return 0;
     }
