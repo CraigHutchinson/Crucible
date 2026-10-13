@@ -21,18 +21,26 @@ import re
 import shutil
 import subprocess
 
+import numpy as np
 from PIL import Image, ImageDraw
+
+import nanite_mesh
 
 BACKGROUND = (14, 16, 20)
 SILVER = (196, 202, 210)
 SILVER_DIM = (120, 126, 134)
 CYAN = (60, 230, 255)
 CYAN_DIM = (30, 90, 110)
+CORE_SETTLED = (40, 160, 185)
 TIER_COLOURS = {0: (255, 190, 60), 1: (80, 210, 255), 2: (150, 110, 255), 3: (90, 90, 90)}
 TIER_NAMES = {0: "hero", 1: "near", 2: "far", 3: "hidden"}
 MAGNET_COLOURS = {1: (60, 230, 255), 2: (255, 150, 40), 3: (250, 250, 250)}   # lift, push, seat
 HEADER = re.compile(r"# time=([\d.]+) cx=([-\d.]+) cy=([-\d.]+) half_width=([\d.]+) aspect=([\d.]+)"
-                    r"(?: view=(\w+) tilt=([\d.]+))?(?: tile=([\d.]+))?(?: pace=([\d.]+))?")
+                    r"(?: view=(\w+) tilt=([\d.]+))?(?: tile=([\d.]+))?(?: pace=([\d.]+))?(?: body=([-\d.,]+))?")
+MESH_SCALE = 6.0    # pixels per unit at which units are drawn as 3D bodies (below: silhouettes)
+SEAM_SCALE = 14.0   # ... at which seams are outlined (below, they would turn letters to texture)
+RING_SCALE = 10.0   # ... at which the core's dark recess ring is drawn
+LIGHT = np.array([-0.55, -0.45, 0.70]) / np.linalg.norm([-0.55, -0.45, 0.70])   # cool grazing key
 
 
 def load(path):
@@ -43,6 +51,7 @@ def load(path):
     tilt = float(groups[6] or 0.4)
     tile = float(groups[7] or 0.0)
     pace = float(groups[8] or 1.0)   # choreography seconds per presentation second
+    body = nanite_mesh.parse_body(groups[9])
     rows = []
     columns = lines[1].split(",")
     first_corner = columns.index("s0x") if "s0x" in columns else len(columns)
@@ -56,7 +65,7 @@ def load(path):
         # Locked tiles carry their morphed corners (letter plane: x along, y up the letter).
         shape = tuple(float(v) for v in fields[first_corner:first_corner + 6]) if len(fields) >= first_corner + 6 else None
         rows.append((float(x), float(y), float(z), float(h), act, int(tier), float(since), plane, magnet, shape, layer))
-    return {"time": t, "cx": cx, "cy": cy, "hw": hw, "aspect": aspect, "view": view, "tilt": tilt, "tile": tile, "pace": pace, "rows": rows}
+    return {"time": t, "cx": cx, "cy": cy, "hw": hw, "aspect": aspect, "view": view, "tilt": tilt, "tile": tile, "pace": pace, "body": body, "rows": rows}
 
 
 class Canvas:
@@ -147,6 +156,7 @@ def draw_frame(frame, size=(960, 540), mode="beauty", yaw=0.0):
     else:
         order = sorted(frame["rows"], key=lambda r: (r[4] not in rest, r[2]))
     deepest = max((r[10] for r in frame["rows"]), default=0)
+    bodies = []   # close enough for 3D bodies: drawn together, depth-sorted face by face
     for x, y, z, heading, act, tier, since, plane, magnet, shape, layer in order:
         px, py = project(x, y, z)
         if px < -20 or px > w + 20 or py < -20 or py > h + 20:
@@ -179,6 +189,18 @@ def draw_frame(frame, size=(960, 540), mode="beauty", yaw=0.0):
         if scale < 3.0:
             draw.point((px, py), fill)
             continue
+        # Core: wake pulse decays to a steady glow; dormant cores are dark.
+        if act == "dormant":
+            core = CYAN_DIM
+        elif act == "reserve":
+            core = CYAN_DIM if t - since > 1.0 else CYAN
+        elif act in ("locked", "moored"):
+            core = CORE_SETTLED   # settled: a steady glow, subordinate to the silver (brief)
+        else:
+            core = CYAN
+        if scale >= MESH_SCALE:
+            bodies.append((x, y, z, heading, plane, shape, fill, core if mode == "beauty" else None))
+            continue
         if shape is not None:
             # Morphed tile: corners in the letter's plane, mapped through the plane tilt.
             inset = 0.97
@@ -190,18 +212,9 @@ def draw_frame(frame, size=(960, 540), mode="beauty", yaw=0.0):
             points = [corner(radius * math.cos(a), radius * math.sin(a)) for a in (0.0, third, -third)]
         else:
             points = [corner(0.55, 0.0), corner(-0.38, 0.36), corner(-0.38, -0.36)]
-        edge = tuple(int(v * 0.72) for v in fill) if shape is not None and mode == "beauty" and scale >= 6.0 else None
-        draw.polygon(points, fill, edge)
-        if mode == "beauty" and scale >= 6.0:
-            # Core: wake pulse decays to a steady glow; dormant cores are dark.
-            if act == "dormant":
-                core = CYAN_DIM
-            elif act == "reserve":
-                core = CYAN_DIM if t - since > 1.0 else CYAN
-            else:
-                core = CYAN
-            r = max(1.0, 0.11 * scale)
-            draw.ellipse([px - r, py - r, px + r, py + r], core)
+        draw.polygon(points, fill)
+    if bodies:
+        draw_bodies(draw, bodies, frame, size, scale, oblique, tilt, cyaw, syaw)
     shown = t / frame["pace"]
     label = f"t={t:5.2f}s" + (f" ({shown:.2f} s shown)" if frame["pace"] != 1.0 else "") + f"  half-width={frame['hw']:.1f}u"
     if mode == "tiers":
@@ -211,6 +224,72 @@ def draw_frame(frame, size=(960, 540), mode="beauty", yaw=0.0):
         label += "  " + "  ".join(f"{TIER_NAMES[k]}={counts[k]}" for k in TIER_NAMES)
     draw.text((8, 6), label, (230, 230, 230))
     return draw
+
+
+def draw_bodies(draw, bodies, frame, size, scale, oblique, tilt, cyaw, syaw):
+    """3D nanite bodies (nanite_mesh): lit faces, back faces culled, all faces of all bodies
+    painted far to near, seams outlined, recessed cores on the top faces."""
+    w, h = size
+    cx, cy = frame["cx"], frame["cy"]
+    body = frame["body"]
+    side = frame["tile"] if frame["tile"] > 0.0 else math.sqrt(3.0)
+    n = len(bodies)
+    origin = np.array([[b[0], b[1], b[2]] for b in bodies])
+    heading = np.array([b[3] for b in bodies])
+    plane = np.array([b[4] for b in bodies])
+    shaped = np.array([b[5] is not None for b in bodies])
+    free = nanite_mesh.equilateral(side)
+    corners = np.empty((n, 3, 2))
+    for k, b in enumerate(bodies):
+        corners[k] = np.array(b[5]).reshape(3, 2) if b[5] is not None else free
+    # Free units point with corner 0 (their heading); a title tile with its apex (corner 2).
+    nose = np.where(shaped, 2, 0)
+    local = nanite_mesh.build(corners, nose, body)
+    world = nanite_mesh.to_world(local, origin, heading, plane, ~shaped)
+    disc, halo = nanite_mesh.core(local, nose, body)
+    disc = nanite_mesh.to_world(disc, origin, heading, plane, ~shaped)
+    halo = nanite_mesh.to_world(halo, origin, heading, plane, ~shaped)
+    # View: the direction along which screen position is constant, pointing away from us.
+    if oblique:
+        away = np.array([syaw, cyaw, -tilt])
+    else:
+        away = np.array([0.0, 0.35, -1.0])
+    away /= np.linalg.norm(away)
+    toward = -away
+
+    def screen(p):
+        x, y, z = p[..., 0], p[..., 1], p[..., 2]
+        if oblique:
+            ax = cx + (x - cx) * cyaw - y * syaw
+            depth = (x - cx) * syaw + y * cyaw
+            vx, vy = ax, z + tilt * depth
+        else:
+            vx, vy = x, y + 0.35 * z
+        return np.stack([w * 0.5 + (vx - cx) * scale, h * 0.5 - (vy - cy) * scale], axis=-1)
+
+    pts = screen(world)
+    disc_pts, halo_pts = screen(disc), screen(halo)
+    nrm = nanite_mesh.normals(world)
+    facing = nrm @ toward
+    polys = []
+    for k in range(n):
+        base, core = bodies[k][6], bodies[k][7]
+        for f, face in enumerate(nanite_mesh.FACES):
+            if facing[k, f] <= 1e-4:
+                continue
+            centre = world[k, list(face)].mean(axis=0)
+            colour = nanite_mesh.shade(base, nrm[k, f], LIGHT, toward)
+            role = nanite_mesh.ROLE[f]
+            seam = tuple(int(v * 0.5) for v in colour) if role != "wall" and scale >= SEAM_SCALE else None
+            polys.append((float(centre @ away), [tuple(p) for p in pts[k, list(face)]], colour, seam))
+            if role == "top" and core is not None:
+                if scale >= RING_SCALE:
+                    ring = tuple(int(v * 0.30) for v in base)
+                    polys.append((float(centre @ away) - 1e-3, [tuple(p) for p in halo_pts[k]], ring, None))
+                polys.append((float(centre @ away) - 2e-3, [tuple(p) for p in disc_pts[k]], core, None))
+    polys.sort(key=lambda item: -item[0])
+    for _, points, colour, seam in polys:
+        draw.polygon(points, colour, seam)
 
 
 def nearest(frames, time):

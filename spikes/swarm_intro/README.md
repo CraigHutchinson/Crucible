@@ -1,7 +1,7 @@
 # Nanite swarm intro spike
 
 Headless, deterministic prototype of the CRUCIBLE title sequence's swarm behaviour: building
-blocks S0 to S0i of the
+blocks S0 to S0j of the
 [nanite swarm design](../../docs/concepts/phase15-experience/nanite-swarm-design.md).
 It answers a narrow question: **can a few thousand view-owned nanites perform the
 director's beats with intelligent-looking behaviour near the camera, cheap non-penetrating
@@ -21,6 +21,7 @@ User direction, 2026-10-12:
 - 2026-10-13: play the intro at about **66% speed** so the climbing reads (the default pace
   is 2/3); render videos as MP4.
 - 2026-10-13: consider **3D tessellation** (S0i, `--layers`).
+- 2026-10-13: the nanite becomes a **3D shape like the original concepts** (S0j).
 
 **Times are choreography seconds** (the authored beats) unless marked "on screen". At the
 default `--pace 0.6667`, each tick shows 1/60 s but advances the choreography by 1/90 s, so a
@@ -46,9 +47,32 @@ is stored as a second interaction surface, offset so the two never interact, and
 the ground along the wall's base. That is the "surface" interpretation of upright
 assembly.
 
+## The 3D nanite body (S0j)
+
+Each nanite is a low, asymmetric, beveled wedge with a recessed cyan core, as the
+director brief describes the concept unit. `NaniteBody.hpp` specifies it once:
+- the **footprint** is the tile (inscribed circle one diameter; a locked unit's is its
+  morphed tile), and the **walls** rise vertically from it, so neighbours share wall
+  quads and a tessellated letter stays gap-free in 3D;
+- a **chamfer** runs from the walls' shoulder inward to the top face, twice as wide at the
+  nose, and the **top** slopes from the rear (0.55 d) to the nose (0.30 d): a wedge that
+  reads its heading;
+- the **core** is a recessed hexagon on the top face toward the rear; a locked unit's core
+  settles to a steady glow, subordinate to the silver.
+
+The simulation takes its stacking heights from the body (the rest-layer lift and the depth
+layer are one body height), and frame captures carry the dimensions in their header. The
+renderer (`nanite_mesh.py`) builds every body's mesh in one batched pass, lights it with a
+cool grazing key and a controlled highlight, culls back faces and paints faces far to near.
+Detail is levelled by on-screen size: meshes from 6 px per unit, seams from 14 px and core
+recess rings from 10 px; silhouettes below 6 px and points below 3 px.
+`test_nanite_mesh.py` checks the mesh invariants (footprint and vertical walls, shared
+walls between neighbours, outward faces, the wedge, the core on the top face) and that its
+defaults match `NaniteBody.hpp`.
+
 ## 3D tessellation (S0i)
 
-`--layers N` gives the title depth: N layers of the same tiling, each `layerDepth` (one
+`--layers N` gives the title depth: N layers of the same tiling, each one body height (0.55
 diameter) in front of the last, with every odd layer on a lattice shifted half a tile side.
 Each wedge then overlaps two or three wedges of the layer behind, a staggered bond like
 brickwork. Overlapping wedges of adjacent layers are linked in the build graph (face
@@ -185,7 +209,7 @@ to 11.8 s (with the earlier 1,104 unmorphed tiles).
 ```sh
 cmake --preset release -DCRUCIBLE_BUILD_SWARM_SPIKE=ON
 cmake --build --preset release --target crucible_swarm_intro
-ctest --preset release -R swarm_intro      # 7 --verify cases + 6 diagnostics receivers (2 with --layers 2)
+ctest --preset release -R swarm_intro      # 7 --verify cases, 6 diagnostics receivers, the mesh test
 ./build/release/spikes/swarm_intro/crucible_swarm_intro --build scaffold \
     --events-jsonl events.jsonl --health-json health.json --frames frames --every 1
 python3 spikes/swarm_intro/render_swarm.py frames --sheet beats.svg --magnets magnets.svg \
@@ -253,19 +277,21 @@ screen, 1536 units: lying `3c951c0d05bdb744`, raise `1efad3ea9ba609a3`, climb
 `e920c8aee60c63c8`, hybrid `efa270be5513e8b4`, scaffold `b75543d06ac47437`). Cross-compiler
 or cross-platform bit equality is not claimed.
 
-Two depth layers (S0i, `--layers 2 --count 3072`, 2,146 tiles):
+Two depth layers (S0i, `--layers 2 --count 3072`, 2,146 tiles, each layer one body thick since S0j):
 
 | Run | Title complete | Upright | Worst contacts / min gap | Stuck → recovered | Tick p50 / p95 |
 |---|---|---|---|---|---|
-| Lying | 8.42 s | – | 0.06% / 0.76 d | 0 → 0 | 0.15 / 3.13 ms |
-| Raise | 8.49 s | 9.54 s | 0.24% / 0.71 d | 1 → 1 | 0.23 / 5.94 ms |
-| Climb | 10.88 s | 10.88 s | 0.18% / 0.74 d | 35 → 35 | 0.65 / 9.48 ms |
-| Hybrid | 10.00 s | 8.73 s (raised) | 0.20% / 0.73 d | 10 → 10 | 0.28 / 6.19 ms |
-| Scaffold | 10.63 s | 8.58 s (panels) | 0.32% / 0.77 d | 97 → 97 | 1.13 / 7.63 ms |
+| Lying | 8.42 s | – | 0.06% / 0.76 d | 0 → 0 | 0.25 / 4.05 ms |
+| Raise | 8.49 s | 9.54 s | 0.24% / 0.71 d | 0 → 0 | 0.24 / 4.78 ms |
+| Climb | 10.78 s | 10.78 s | 0.15% / 0.74 d | 39 → 39 | 0.99 / 9.92 ms |
+| Hybrid | 9.31 s | 8.72 s (raised) | 0.12% / 0.73 d | 4 → 4 | 0.35 / 7.53 ms |
+| Scaffold | 10.68 s | 8.59 s (panels) | 0.32% / 0.77 d | 89 → 89 | 1.29 / 7.99 ms |
 
-Off the built face: climb 46 of 93,342 climber-ticks, scaffold 112 of 59,739; no
-unsupported lock. State hashes: lying `be4fd2c08b663418`, raise `7428bbb6181136e1`, climb
-`a30621b1ea7cbc40`, hybrid `4cbff8369e5b08a8`, scaffold `b42d1698c2d1343e`. Three layers
+Off the built face: climb 9 of 93,629 climber-ticks, scaffold 67 of 58,826; no unsupported
+lock. State hashes: lying `be4fd2c08b663418`, raise `67f835e157394ef3`, climb
+`21e0f4488e5a2775`, hybrid `428b8478e9a667c0`, scaffold `f82eb4dfdb76c099`. Making a layer one
+body thick (0.55 d instead of 1.0) moved the front layer on screen, which shifts camera LOD
+tiers and so the run, slightly. Three layers
 (3,212 tiles, 4,608 units) lock 3,211 by 15 s (finding 22).
 
 A slower pace costs nothing per presented tick: each tick advances less choreography, and
@@ -312,6 +338,21 @@ up; climbers gather at the bases; arms and bowls grow from the standing stems; c
 The B, L and E at 6.6, 7.2, 7.8, 8.4, 9.2 and 10.5 s: the L and E stems rise as drawbridges
 (foreshortened while rising) while climbers wait at the E's base; then they pour over the
 standing stems to build the E's arms and the B's bowls.
+
+### The 3D nanite body (S0j)
+
+![3D nanite bodies: the wake, macro to pullback](evidence/body-macro.svg)
+
+Shot01 to shot02 at 0.6, 1.0, 1.4, 2.0, 3.0 and 4.0 s: the bed of dormant wedges (dark
+cores), the first core lit, the answer wave lighting neighbours, units lifting off the bed
+and the stream forming. Bevels, the sloped tops and the recessed cores read at macro range;
+by 4.0 s the camera is far enough that units are small bodies with bright cores.
+
+![3D nanite bodies in the title: B and L at 35 degrees of yaw](evidence/body-title.svg)
+
+The B and L at 8.6, 9.6 and 11.0 s, yawed 35°: the finished letters are faceted plates of
+wedges with flush walls and chamfer seams; the L stem stands as a raised panel; climbers
+still flowing over the B are lit brighter; settled cores glow steadily.
 
 ### 3D tessellation (S0i)
 
@@ -469,18 +510,19 @@ the finished letters as single faces.
 
     Three layers leave one enclosed front-layer pocket unfilled at 15 s: TERMES-style
     construction avoids this with a no-enclosed-holes build order, the follow-up before
-    deeper titles. Cost: scaffold p50 1.1 ms per presented tick against 0.5 ms with one
+    deeper titles. Cost: scaffold p50 1.1–1.3 ms per presented tick against 0.5 ms with one
     layer, mostly surface routing over the larger letter graphs.
 
 ## Limits
 
 Orthographic top-down and oblique 2D stand-in cameras; no perspective, depth of field,
-materials, bloom or real wedge mesh. One fixed seed. Glyphs are a prototype stroke font with
+shadows, PBR materials or bloom. The wedge mesh is flat-shaded with one key light and
+painter's ordering per face (no depth buffer), which can misorder intersecting faces of
+units passing through each other (hidden-tier units, by design). One fixed seed. Glyphs are a prototype stroke font with
 square caps, not the licensed wordmark asset. A unit snaps to its morphed shape when it
 locks; a gradual morph while seating is a renderer detail for S1. The raise hinge is a rigid pose transform:
 nothing yet shows what lifts the letter. Climbers and heaped seekers stack in layers; only
-other ground movers are held apart. Depth layers (S0i) are rendered as shaded flat tiles in
-a yawed oblique view, not as extruded prisms; units on the wall still move in the face's
+other ground movers are held apart. Depth layers (S0i) show best in a yawed oblique view; units on the wall still move in the face's
 plane, and a layer's depth is placement, not a third motion axis. At most two layers
 complete; overhangs and climbing onto the back face are not modelled.
 

@@ -1,7 +1,7 @@
 # Nanite swarm behaviour: intro first, gameplay next
 
 Proposal and prototype, 2026-10-12. Extends the [director's brief](director-brief.md) and
-[experience design](experience-design.md). The S0 to S0i prototypes are
+[experience design](experience-design.md). The S0 to S0j prototypes are
 [spikes/swarm_intro](../../../spikes/swarm_intro/README.md).
 
 User direction, the same day:
@@ -20,6 +20,8 @@ User direction, the same day:
   the room the sequence length allows.
 - 2026-10-13, backlog: decision LOD need not be only view-driven; it could follow activity.
 - 2026-10-13: consider 3D tessellation (section 5, S0i).
+- 2026-10-13: the nanite moves from a flat triangle to a 3D shape like the original
+  concepts (section 4, S0j).
 
 Sections 4 to 6 cover these. Times in this document are **choreography seconds**: the
 authored beats. At the default pace of 2/3 a viewer sees each 1.5× longer, so the 15 s
@@ -150,6 +152,35 @@ The rest layer is Dormant, Dock, Locked, Moored and Reserve. Movers glide over i
 cosmetic climb height `z`, which the renderer lifts and shades. In the climb build,
 climbers also flow over each other in layers rather than colliding (section 5).
 
+### The nanite's 3D body (S0j)
+
+The director brief defines the unit: "an engineered low asymmetrical triangular body, with
+distinct beveled planes, a recessed protected cyan core and dark mechanical seams", the
+same construction for letter bodies and foreground units. S0j gives the prototype that
+body, specified once (`NaniteBody.hpp`) and consumed twice: the simulation takes its
+stacking heights from it, the renderer builds its mesh from it (frame captures carry the
+dimensions, and a test holds the Python defaults to the C++ ones).
+
+| Part | Construction | Why |
+|---|---|---|
+| Footprint | The tile: a triangle whose inscribed circle is one diameter, morphed on locked tiles | The tessellation, the support graph and the morph are unchanged |
+| Walls | Vertical, from the footprint to a shoulder | Any tiling of footprints stays flush in 3D: neighbours share wall quads, so a solid letter has no gaps |
+| Chamfer | From the shoulder inward to an inset top face; the nose chamfer is twice the rear ones | The brief's beveled planes; the seams between bodies are the chamfers' V-grooves |
+| Top | Slopes from the rear (0.55 d) to the nose (0.30 d) | The wedge: an asymmetric silhouette that reads its heading even when small |
+| Core | A recessed hexagon on the top face, toward the rear where the body is thickest | Protected core; locked cores settle to a steady glow, subordinate to the silver |
+
+The body height (0.55 diameter) was already the prototype's stacking step: a climber over
+the rest layer rose 0.55, a stacked climber 1.1. Those now come from the body, so a
+single-layer run is bit-identical. A depth layer (S0i) is one body thick: 0.55 instead of
+the placeholder 1.0, which moves the front layer and so changes two-layer state hashes.
+
+Rendering follows the brief's tactical LOD: at 6 pixels per unit and up, bodies are meshes
+(lit faces, back faces culled, faces painted far to near); seams are outlined from 14 px
+and the core's recess ring from 10 px, because closer to the title distance they turn the
+letters into texture; below 6 px units are silhouettes, below 3 px points. This is still a
+2D stand-in: one key light and flat shading with a controlled highlight, no shadows, no
+real-time materials. S1 takes the same body into the production renderer.
+
 ### Decision tiers
 
 | Tier | Who | Behaviour | Guarantee | Cost driver |
@@ -268,13 +299,13 @@ layer count so a single layer is unchanged (bit-identical state hashes):
   each other, as the seekers at the wall's base already do. Without the heap, the U's 300
   climbers packed into contact (6–8% of visible movers).
 
-| Two layers, 2,146 tiles, 3,072 units | Title complete | Upright | Contacts |
+| Two layers, 2,146 tiles, 3,072 units (layers one body thick, S0j) | Title complete | Upright | Contacts |
 |---|---|---|---|
 | Lying | 8.42 s | – | 0.06% |
 | Raise | 8.49 s flat | 9.54 s | 0.24% |
-| Climb | 10.88 s | – | 0.18% |
-| Hybrid | 10.00 s | 8.73 s | 0.20% |
-| Scaffold | 10.63 s | 8.58 s (panels) | 0.32% |
+| Climb | 10.78 s | – | 0.15% |
+| Hybrid | 9.31 s | 8.72 s | 0.12% |
+| Scaffold | 10.68 s | 8.59 s (panels) | 0.32% |
 
 Every gate holds at two layers, including no unsupported lock, climbers on the built face,
 and the 12.5 s completion. Three layers (3,212 tiles) reach 3,211 by 15 s: the last tile is
@@ -393,9 +424,11 @@ state hashes.
 | SW-F20 | Counting flat-locked panel tiles as "built" let climbers start up beside a stem still lying down; they hung off the face (1.2% of climber-ticks). Waiting on one BFS support chain instead fixed that, but delayed the R to 12.9 s, because its chain ran through the late leg. | A slot is climbable once any path from the ground reaches it without crossing a panel not yet upright (one BFS per panel change). Scaffold: no climber off the face, complete at 11.23 s. |
 | SW-F21 | 93% of contacts were between lane units and fresh seekers at the exit of the C-R-U lane, where the S0 funnel narrowed the stream to a third of its width before it split three ways. Leaving the lane over its last 26 units, each unit heading straight for its own destination, splays every lane into a fan sorted by destination. | Contacts 0% in every build (climb was 9.8%), minimum gap 0.8 d or more; all builds faster (scaffold 10.21 s, hybrid 9.17 s). Branch length swept 8–40: 26 is the shortest with no contacts and keeps the lanes readable (shot02). Climbing gates tightened to 3% and 0.5 d. |
 | SW-F22 | With branching, negotiation swaps became common and the lying build logged 161 stuck episodes from units running at full speed: progress was measured against the goal held before the swap. | The progress baseline resets on a goal change as well as an act change. Stuck detection must follow the decision it measures. |
-| SW-F23 | Staggered layers of the same tiling give 3D interlocking with the existing support rule: face links between overlapping wedges of adjacent layers carry depth through the bond. Two layers (2,146 tiles, 3,072 units) pass every gate; scaffold completes at 10.63 s. | S0i; `--layers 2`. The intro can carry depth if the director wants a title with thickness; the cost is units (twice the tiles) and per-tick time (scaffold p50 1.1 ms against 0.5 ms). |
+| SW-F23 | Staggered layers of the same tiling give 3D interlocking with the existing support rule: face links between overlapping wedges of adjacent layers carry depth through the bond. Two layers (2,146 tiles, 3,072 units) pass every gate; scaffold completes at 10.68 s. | S0i; `--layers 2`. The intro can carry depth if the director wants a title with thickness; the cost is units (twice the tiles) and per-tick time (scaffold p50 1.1–1.3 ms against 0.5 ms). |
 | SW-F24 | Doubling the tiles crowded the stage: wider lanes alone fixed lying and raise; climbing letters' waiting crowds needed to heap (flow over each other) like the wall-base heap. Panels deadlocked once when a front panel wedge waited on a climbed wedge behind it. | Capacity rules scale with the layer count; face backing for flat assembly counts only the same flat body. |
 | SW-F25 | Three layers leave one enclosed front-layer pocket unfilled. | A no-enclosed-holes build order (TERMES) before more than two layers. |
+| SW-F26 | A 3D body with vertical walls on the tile footprint keeps the tessellation gap-free in 3D with no change to the build: neighbours share wall quads, the chamfers form the seams. The existing stacking step (0.55 d) is the body height. | S0j; one body specification (`NaniteBody.hpp`) feeds the simulation and the renderer, tested for parity. S1 consumes it. |
+| SW-F27 | Full seams and recess rings at title distance (8 px per unit) turned the letters to texture. | LOD the details, not just the mesh: silhouette and core first, seams only close up (brief: tactical LODs preserve silhouette and core location). |
 | SW-F16 | Corner morphing of up to 0.35 side halves the outline error with every tile keeping half its area; larger limits add little. Fill and trim of spikes were prerequisites. | Default morph 0.35; faint steps on some stems are the place for a sub-tile edge piece; a gradual morph while seating belongs to S1. |
 
 ## 8. Iteration plan: building blocks with review gates
@@ -414,7 +447,8 @@ post-journey gameplay proposals.
 | **S0f** done | Scaffold build: per-part drawbridge panels (grounded stems) climbed to finish arms and bowls; standing support; entry beside standable ground tiles | PR #39 | Merged |
 | **S0g** done | Pace 2/3 (the sequence at 66% speed, 22.5 s on screen); corner braking by route look-ahead; climbable-path gate for scaffold panels; ribbon rank matching; `render_swarm.py --mp4` | PR #40 | Merged |
 | **S0h** done | Lane branching: units leave the lane over its tail for their own destinations (SW-F21); progress baseline per goal (SW-F22); tighter contact gates | PR #41 | Merged |
-| **S0i** done | 3D tessellation: staggered depth layers, face links, face backing for flat assembly, capacity scaled by layers; renderer yaw, layer shading and tile edges | This review | Director reviews the slower sequence, and whether the title has depth (one or two layers) |
+| **S0i** done | 3D tessellation: staggered depth layers, face links, face backing for flat assembly, capacity scaled by layers; renderer yaw, layer shading and tile edges | PR #42 | Director reviews whether the title has depth (one or two layers) |
+| **S0j** done | 3D nanite body: one specification for simulation and renderer; beveled wedge with recessed core; mesh renderer with lighting, culling and detail LOD; mesh invariant tests | This review | Director reviews the body against the concepts (macro shot01 and title close-up) |
 | **S1** | Production renderer consumes a per-tick instance packet (world pose, plane tilt, lift, act, core intensity, render LOD) from the chosen build; perspective lens path from the brief | P15-R0 Filament scene | Native capture against hero and storyboard concepts; wedges grounded; upright title readable with bloom off and in grayscale |
 | **S2** | Choreography authoring: which strokes are panels, as authored data (SW-F17); sub-tile edge pieces where stems stay stepped (SW-F16); lanes and stroke order as data; the raise beat if raise is chosen (what visibly lifts the letter: a wave of units pushing under the hinge, rise order and easing); optional hero-letter climbing finish; climb arcs; traveling cyan accent; idle micro-behaviour for locked heroes (breathing core, settle wobble); skip jumps to an authored settled snapshot; reduced motion selects the still | P15-E0 frontend | Director pass (brief section 8); skip and reduced-motion receiving; temporal review of motion, not stills |
 | **S3** | Performance and decision LOD: activity-driven and blended tiers against camera tiers (section 4 backlog); event-driven wave; Sub0Pipeline row ranges for behaviour and resolve; hero candidate cap per frame; optional GPU compute route for far and hidden tiers | Named device | p95 and p99 inside the brief's proposed 16.67/20 ms with rendering included; measured, never inferred from S0 |
