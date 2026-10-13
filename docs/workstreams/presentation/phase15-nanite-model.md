@@ -151,6 +151,8 @@ few dozen pixels, so one changed pixel is a few percent.
   Frame→Shielded), against one 6.8% fade straight to Shielded, whose flat level costs 342
   triangles to Frame's 284. A renderer that wants the open look can use it without a large
   pop.
+
+  ![Silhouette, Frame, Shielded (Flat and Bevel) and Articulated at 16 and 96 px: one outline, band and window](phase15-nanite-model/shape-strip.png)
 - *The silhouette popped* against the shielded level by 8–15% at 6–16 px. Its window was
   larger and darker, it lacked the dark corner hubs, and it covered about 15% more pixels,
   because the higher levels' sunk rails and rounded hubs inset their visible outline. The
@@ -278,7 +280,7 @@ video is from M2; the Articulated levels it shows did not change): `matrix.png`,
 `unit-closed-bevel.png`, `underside.png`, `unit-stretched.png`, `swarm.png`, `lab-panel.png`
 (the lab with its controls), `turntable.mp4`, `triangles.json` (the triangle table and
 presets as the lab read them from the WebAssembly build), and for M3 `ladder-strip.png`,
-`pop-study.json` (every neighbouring pair on the grid, 6–128 px), `pop-study-silhouette.json` (Silhouette to Shielded, the ladder's first step), `dolly.json`, `dolly-chart.png` and
-`dolly.mp4`. Rendered by
+`pop-study.json` (every neighbouring pair on the grid, 6–128 px), `pop-study-silhouette.json` (Silhouette to Shielded, the ladder's first step), `dolly.json`, `dolly-chart.png`,
+`dolly.mp4` and `shape-strip.png`. Rendered by
 `spikes/nanite_lab/capture.mjs` from this commit's generator with Emscripten 6.0.12, three.js
 0.170.0 and headless Chromium (SwiftShader).
