@@ -23,6 +23,11 @@ struct Slot
      *  least 45% of the cap height, and standing on the baseline. */
     std::int16_t segment = -1;
     bool scaffold = false;
+    /** Depth layer (3D tessellation): 0 is the back face, each further layer stands one
+     *  layerDepth in front of the last. Odd layers sit on a lattice shifted half a tile side
+     *  along the title, so every wedge overlaps two or three wedges of the layer behind:
+     *  a staggered bond, like brickwork, rather than a stack of loose sheets. */
+    std::uint8_t layer = 0;
 };
 
 /** What morphing did to the outline; zero-initialised when tessellation is off. */
@@ -50,6 +55,10 @@ struct WordmarkSettings
     /** Morph limit as a fraction of the tile side: outline corners move at most this far
      *  toward the true stroke outline. Zero keeps every tile equilateral. */
     float morph = 0.35F;
+    /** Tessellated only: wedge layers through the letter's depth (1 = a single face). */
+    int layers = 1;
+    /** Depth of one wedge layer, in nanite diameters. */
+    float layerDepth = 1.0F;
 };
 
 /** The CRUCIBLE title as a deterministic slot list, centred on the origin.

@@ -1,7 +1,7 @@
 # Nanite swarm behaviour: intro first, gameplay next
 
 Proposal and prototype, 2026-10-12. Extends the [director's brief](director-brief.md) and
-[experience design](experience-design.md). The S0 to S0h prototypes are
+[experience design](experience-design.md). The S0 to S0i prototypes are
 [spikes/swarm_intro](../../../spikes/swarm_intro/README.md).
 
 User direction, the same day:
@@ -19,6 +19,7 @@ User direction, the same day:
 - 2026-10-13: the intro felt rushed; play it at about 66% speed so the climbing reads, using
   the room the sequence length allows.
 - 2026-10-13, backlog: decision LOD need not be only view-driven; it could follow activity.
+- 2026-10-13: consider 3D tessellation (section 5, S0i).
 
 Sections 4 to 6 cover these. Times in this document are **choreography seconds**: the
 authored beats. At the default pace of 2/3 a viewer sees each 1.5× longer, so the 15 s
@@ -241,15 +242,46 @@ climbing as the core, since the swarm still climbs every arm, bowl and the U. An
 scaffolds the swarm then climbs. The hybrid (whole letters) and pure climb remain variants;
 raise is the twelve-second fallback.
 
-### Toward three-axis interlocking
+### Three-axis interlocking: 3D tessellation (S0i)
 
 S0b is the "surface" interpretation: units move on surfaces and interlock within a plane.
-Full three-axis interlocking adds a depth axis: units attach on any face of a lattice cell.
-That allows overhangs, letter depth (a title with thickness), and climbing round edges onto
-the back face. It needs a 3D occupancy grid, face-based support (any locked face neighbour
-with a path to ground), routing over a 3D surface graph, and a renderer that shows depth.
-It belongs with gameplay structures (G-stages), where bridges and walls need it anyway. It
-should not be built into the intro first.
+S0i adds the depth axis with the smallest change that keeps every rule: **layers of the
+same tiling, staggered.** A nanite is a wedge, a triangular prism, so stacking the triangle
+tiling in depth tiles space (the triangular prism honeycomb). Stacked straight, layers
+would be loose sheets. Every odd layer therefore sits on a lattice shifted half a side
+along the title, so each wedge overlaps two or three wedges of the layer behind: a
+staggered bond, like brickwork, interlocking front to back.
+
+The build graph gains **face links** between overlapping wedges of adjacent layers. The
+support rule is unchanged: a tile needs the ground or a locked neighbour of lower build
+depth. Depth now counts through face links, so a front-layer tile can be held by the face
+of the layer behind it as well as from below. Climbers route over the face links as over
+any other link. Flat assembly (raised panels and letters) seats a front wedge only on a
+locked wedge of the layer behind in the same flat body. A panel's edge wedge with none of
+its own panel behind it overhangs, carried by the rigid panel; waiting on a climbed tile
+there deadlocked a panel's rise.
+
+Twice the tiles through the same stage needed two capacity rules, each scaling with the
+layer count so a single layer is unchanged (bit-identical state hashes):
+- lane width, since flow is density × width × speed;
+- each letter's waiting band, where a two-layer letter's climbers now heap and flow over
+  each other, as the seekers at the wall's base already do. Without the heap, the U's 300
+  climbers packed into contact (6–8% of visible movers).
+
+| Two layers, 2,146 tiles, 3,072 units | Title complete | Upright | Contacts |
+|---|---|---|---|
+| Lying | 8.42 s | – | 0.06% |
+| Raise | 8.49 s flat | 9.54 s | 0.24% |
+| Climb | 10.88 s | – | 0.18% |
+| Hybrid | 10.00 s | 8.73 s | 0.20% |
+| Scaffold | 10.63 s | 8.58 s (panels) | 0.32% |
+
+Every gate holds at two layers, including no unsupported lock, climbers on the built face,
+and the 12.5 s completion. Three layers (3,212 tiles) reach 3,211 by 15 s: the last tile is
+an enclosed pocket on the front layer whose climber cannot get in. TERMES-style
+construction avoids exactly this with a no-enclosed-holes rule in the build order, the
+follow-up before more than two layers. Overhangs and climbing round edges onto the back
+face remain with the gameplay structures (G-stages).
 
 ## 6. Cooperation, magnetism and diagnostics (S0d)
 
@@ -361,6 +393,9 @@ state hashes.
 | SW-F20 | Counting flat-locked panel tiles as "built" let climbers start up beside a stem still lying down; they hung off the face (1.2% of climber-ticks). Waiting on one BFS support chain instead fixed that, but delayed the R to 12.9 s, because its chain ran through the late leg. | A slot is climbable once any path from the ground reaches it without crossing a panel not yet upright (one BFS per panel change). Scaffold: no climber off the face, complete at 11.23 s. |
 | SW-F21 | 93% of contacts were between lane units and fresh seekers at the exit of the C-R-U lane, where the S0 funnel narrowed the stream to a third of its width before it split three ways. Leaving the lane over its last 26 units, each unit heading straight for its own destination, splays every lane into a fan sorted by destination. | Contacts 0% in every build (climb was 9.8%), minimum gap 0.8 d or more; all builds faster (scaffold 10.21 s, hybrid 9.17 s). Branch length swept 8–40: 26 is the shortest with no contacts and keeps the lanes readable (shot02). Climbing gates tightened to 3% and 0.5 d. |
 | SW-F22 | With branching, negotiation swaps became common and the lying build logged 161 stuck episodes from units running at full speed: progress was measured against the goal held before the swap. | The progress baseline resets on a goal change as well as an act change. Stuck detection must follow the decision it measures. |
+| SW-F23 | Staggered layers of the same tiling give 3D interlocking with the existing support rule: face links between overlapping wedges of adjacent layers carry depth through the bond. Two layers (2,146 tiles, 3,072 units) pass every gate; scaffold completes at 10.63 s. | S0i; `--layers 2`. The intro can carry depth if the director wants a title with thickness; the cost is units (twice the tiles) and per-tick time (scaffold p50 1.1 ms against 0.5 ms). |
+| SW-F24 | Doubling the tiles crowded the stage: wider lanes alone fixed lying and raise; climbing letters' waiting crowds needed to heap (flow over each other) like the wall-base heap. Panels deadlocked once when a front panel wedge waited on a climbed wedge behind it. | Capacity rules scale with the layer count; face backing for flat assembly counts only the same flat body. |
+| SW-F25 | Three layers leave one enclosed front-layer pocket unfilled. | A no-enclosed-holes build order (TERMES) before more than two layers. |
 | SW-F16 | Corner morphing of up to 0.35 side halves the outline error with every tile keeping half its area; larger limits add little. Fill and trim of spikes were prerequisites. | Default morph 0.35; faint steps on some stems are the place for a sub-tile edge piece; a gradual morph while seating belongs to S1. |
 
 ## 8. Iteration plan: building blocks with review gates
@@ -378,7 +413,8 @@ post-journey gameplay proposals.
 | **S0e** done | Hybrid build (per-letter drawbridge or climb) and morphing tiles for smooth outlines | PR #38 | Merged with S0–S0d |
 | **S0f** done | Scaffold build: per-part drawbridge panels (grounded stems) climbed to finish arms and bowls; standing support; entry beside standable ground tiles | PR #39 | Merged |
 | **S0g** done | Pace 2/3 (the sequence at 66% speed, 22.5 s on screen); corner braking by route look-ahead; climbable-path gate for scaffold panels; ribbon rank matching; `render_swarm.py --mp4` | PR #40 | Merged |
-| **S0h** done | Lane branching: units leave the lane over its tail for their own destinations (SW-F21); progress baseline per goal (SW-F22); tighter contact gates | This review | Director reviews the slower sequence as video |
+| **S0h** done | Lane branching: units leave the lane over its tail for their own destinations (SW-F21); progress baseline per goal (SW-F22); tighter contact gates | PR #41 | Merged |
+| **S0i** done | 3D tessellation: staggered depth layers, face links, face backing for flat assembly, capacity scaled by layers; renderer yaw, layer shading and tile edges | This review | Director reviews the slower sequence, and whether the title has depth (one or two layers) |
 | **S1** | Production renderer consumes a per-tick instance packet (world pose, plane tilt, lift, act, core intensity, render LOD) from the chosen build; perspective lens path from the brief | P15-R0 Filament scene | Native capture against hero and storyboard concepts; wedges grounded; upright title readable with bloom off and in grayscale |
 | **S2** | Choreography authoring: which strokes are panels, as authored data (SW-F17); sub-tile edge pieces where stems stay stepped (SW-F16); lanes and stroke order as data; the raise beat if raise is chosen (what visibly lifts the letter: a wave of units pushing under the hinge, rise order and easing); optional hero-letter climbing finish; climb arcs; traveling cyan accent; idle micro-behaviour for locked heroes (breathing core, settle wobble); skip jumps to an authored settled snapshot; reduced motion selects the still | P15-E0 frontend | Director pass (brief section 8); skip and reduced-motion receiving; temporal review of motion, not stills |
 | **S3** | Performance and decision LOD: activity-driven and blended tiers against camera tiers (section 4 backlog); event-driven wave; Sub0Pipeline row ranges for behaviour and resolve; hero candidate cap per frame; optional GPU compute route for far and hidden tiers | Named device | p95 and p99 inside the brief's proposed 16.67/20 ms with rendering included; measured, never inferred from S0 |
@@ -472,6 +508,8 @@ where distant units enter the frame. It must not cost title readability.
 9. Is 2/3 the right pace, and should it be uniform? Slowing only the climb (the stream-in
    could stay brisk) is a time warp of the choreography clock, cheap to author.
 10. Should decision LOD follow activity as well as the view (section 4 backlog)?
+11. Should the title have depth (S0i)? Two layers read as a solid slab from an angle and
+    cost twice the units; a frontal camera barely shows them.
 7. Does the raise beat replace the brief's camera rise toward a frontal baseline, or play
    under it?
 8. Should the claim, stuck and magnet rules carry into gameplay as the authoritative

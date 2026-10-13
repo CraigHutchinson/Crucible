@@ -1,6 +1,6 @@
 # Active work log
 
-## Nanite swarm behaviour design and S0-S0h spikes,2026-10-12/13
+## Nanite swarm behaviour design and S0-S0i spikes,2026-10-12/13
 
 Session `claude/crucible-nanite-swarm-design-89vg5m` claims only new paths
 `spikes/swarm_intro/` and `docs/concepts/phase15-experience/nanite-swarm-design.md`,
