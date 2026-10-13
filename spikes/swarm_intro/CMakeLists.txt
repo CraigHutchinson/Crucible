@@ -17,6 +17,10 @@ if(BUILD_TESTING)
             COMMAND Python3::Interpreter ${CMAKE_CURRENT_SOURCE_DIR}/verify_diagnostics.py $<TARGET_FILE:crucible_swarm_intro> --build ${build})
         set_tests_properties(swarm_intro_diagnostics_${build} PROPERTIES LABELS "presentation;spike;diagnostics" TIMEOUT 300)
     endforeach()
+    # 3D nanite body: mesh invariants (flush footprint, outward faces, wedge, core on top) and
+    # parity with NaniteBody.hpp. Skipped (77) where numpy is not installed.
+    add_test(NAME swarm_intro_nanite_mesh COMMAND Python3::Interpreter ${CMAKE_CURRENT_SOURCE_DIR}/test_nanite_mesh.py)
+    set_tests_properties(swarm_intro_nanite_mesh PROPERTIES LABELS "presentation;spike" SKIP_RETURN_CODE 77 TIMEOUT 60)
     add_test(NAME swarm_intro_diagnostics_layers2_scaffold
         COMMAND Python3::Interpreter ${CMAKE_CURRENT_SOURCE_DIR}/verify_diagnostics.py $<TARGET_FILE:crucible_swarm_intro> --build scaffold --layers 2 --count 3072)
     set_tests_properties(swarm_intro_diagnostics_layers2_scaffold PROPERTIES LABELS "presentation;spike;diagnostics" TIMEOUT 600)

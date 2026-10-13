@@ -375,7 +375,7 @@ void SwarmIntro::worldOf(const Pose& pose, const Mind& mind, float& wx, float& w
     // back face, along the face normal (up when flat, toward the camera when upright).
     const bool titled = !mind.ribbon && mind.goal >= 0 &&
                         (mind.act == Act::Locked || mind.act == Act::Dock || mind.act == Act::Climb);
-    const float layer = titled ? static_cast<float>(slots_[static_cast<std::size_t>(mind.goal)].layer) * settings_.wordmark.layerDepth : 0.0F;
+    const float layer = titled ? static_cast<float>(slots_[static_cast<std::size_t>(mind.goal)].layer) * settings_.body.height : 0.0F;
     if (onWall(mind))
     {
         // Wall sheet: height is the sheet coordinate; lift is a stand-off in front of the face.
@@ -1512,7 +1512,7 @@ void SwarmIntro::behaviourSystems()
             pushAway(id.index, pose, vx, vy);
         }
         integrate(pose, motion, vx, vy, want, 20.0F);
-        pose.z = flows(pose, mind) ? 0.55F : 0.0F;
+        pose.z = flows(pose, mind) ? settings_.body.height : 0.0F;
         advanceAct(id.index, pose, mind);
     });
 
@@ -1526,15 +1526,15 @@ void SwarmIntro::behaviourSystems()
         pose.y += motion.vy * dt;
         if (want.hasFace) pose.heading = want.faceHeading;
         else if (std::hypot(motion.vx, motion.vy) > 0.5F) pose.heading = std::atan2(motion.vy, motion.vx);
-        pose.z = flows(pose, mind) ? 0.55F : 0.0F;
+        pose.z = flows(pose, mind) ? settings_.body.height : 0.0F;
         advanceAct(id.index, pose, mind);
     });
 }
 
 float SwarmIntro::liftOf(const Identity& id, const Pose& pose, const Mind& mind) const
 {
-    // Lift off the sheet: over the rest layer one layer up; a climber over a lower-identity
-    // climber one more layer (a deterministic stacking order).
+    // Lift off the sheet: over the rest layer one body height up; a climber over a
+    // lower-identity climber one more (a deterministic stacking order).
     const float d = settings_.diameter;
     bool over = false;
     bool stacked = false;
@@ -1543,7 +1543,8 @@ float SwarmIntro::liftOf(const Identity& id, const Pose& pose, const Mind& mind)
         over = over || restAct(other);
         stacked = stacked || (flows(pose, mind) && j < id.index && gLayer_[j]);
     });
-    return stacked ? 1.1F : (over || flows(pose, mind) ? 0.55F : 0.0F);
+    const float layer = settings_.body.height;
+    return stacked ? 2.0F * layer : (over || flows(pose, mind) ? layer : 0.0F);
 }
 
 void SwarmIntro::negotiationSystem()

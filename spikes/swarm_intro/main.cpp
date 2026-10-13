@@ -199,9 +199,12 @@ RunSummary run(const Options& options, bool capture)
             if (std::FILE* f = std::fopen((options.framesDir + name).c_str(), "w"))
             {
                 const Camera& cam = intro.camera();
-                std::fprintf(f, "# time=%.6f cx=%.4f cy=%.4f half_width=%.4f aspect=%.6f view=%s tilt=%.3f tile=%.4f pace=%.6f\n", m.time, cam.cx,
+                const NaniteBody& body = options.settings.body;
+                std::fprintf(f, "# time=%.6f cx=%.4f cy=%.4f half_width=%.4f aspect=%.6f view=%s tilt=%.3f tile=%.4f pace=%.6f "
+                                "body=%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,%.4f\n", m.time, cam.cx,
                              cam.cy, cam.halfWidth, cam.aspect, options.settings.build != Build::Lying ? "oblique" : "top",
-                             options.settings.viewTilt, options.settings.wordmark.tile, options.settings.pace);
+                             options.settings.viewTilt, options.settings.wordmark.tile, options.settings.pace, body.height, body.noseHeight,
+                             body.shoulder, body.spineFront, body.spineRear, body.dartLength, body.dartWidth, body.coreLength);
                 std::fprintf(f, "x,y,z,heading,act,tier,act_since,plane,magnet,layer,s0x,s0y,s1x,s1y,s2x,s2y\n");
                 for (const RenderRow& r : rows)
                 {

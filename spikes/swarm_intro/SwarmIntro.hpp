@@ -9,6 +9,7 @@
 
 #include <sub0ecs/sub0ecs.hpp>
 
+#include "NaniteBody.hpp"
 #include "SwarmDiagnostics.hpp"
 #include "Wordmark.hpp"
 
@@ -134,6 +135,7 @@ struct IntroSettings
      *  since depth is the climb's critical path. */
     std::uint8_t hybridRaise = 0;
     WordmarkSettings wordmark{};
+    NaniteBody body{};             ///< 3D body: stacking heights here, the mesh in the renderer.
 };
 
 /** Scripted camera: orthographic top-down stand-in for the director's lens path. */
