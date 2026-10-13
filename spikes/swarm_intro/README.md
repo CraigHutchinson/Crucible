@@ -1,7 +1,7 @@
 # Nanite swarm intro spike
 
 Headless, deterministic prototype of the CRUCIBLE title sequence's swarm behaviour: building
-blocks S0 to S0j of the
+blocks S0 to S0k of the
 [nanite swarm design](../../docs/concepts/phase15-experience/nanite-swarm-design.md).
 It answers a narrow question: **can a few thousand view-owned nanites perform the
 director's beats with intelligent-looking behaviour near the camera, cheap non-penetrating
@@ -22,6 +22,8 @@ User direction, 2026-10-12:
   is 2/3); render videos as MP4.
 - 2026-10-13: consider **3D tessellation** (S0i, `--layers`).
 - 2026-10-13: the nanite becomes a **3D shape like the original concepts** (S0j).
+- 2026-10-13: consolidate the design: the [nanite design space](../../docs/concepts/nanite/README.md)
+  owns the unit's form; the body here is a proxy of it (S0k).
 
 **Times are choreography seconds** (the authored beats) unless marked "on screen". At the
 default `--pace 0.6667`, each tick shows 1/60 s but advances the choreography by 1/90 s, so a
@@ -47,30 +49,38 @@ is stored as a second interaction surface, offset so the two never interact, and
 the ground along the wall's base. That is the "surface" interpretation of upright
 assembly.
 
-## The 3D nanite body (S0j)
+## The nanite body (S0j, S0k)
 
-Each nanite is the concepts' slender arrowhead dart (`docs/concepts/units-v1.png`): a raised
-spine from the rear to the nose, faceted plates falling away from it, a steep rear facet
-and a cyan core set into the spine. `NaniteBody.hpp` specifies it once:
-- a **free unit's footprint** is a dart (1.9 × 0.9 diameters); a **locked unit's** is its
-  morphed tile, nose at the apex, so the nanites change shape as they seat;
-- **walls** rise vertically from the footprint to a low shoulder, so neighbours share wall
-  quads and a tessellated letter stays gap-free in 3D;
-- the **spine** runs from just behind the nose (0.22 d high) to just inside the rear edge
-  (0.55 d), and five **roof facets** join it to the shoulders: the beveled planes, and in a
-  letter the hero's faceted surface;
-- the **core** is a cyan diamond in the spine near the rear; a locked unit's core settles to
-  a steady glow, subordinate to the silver.
+What a nanite looks like is owned by the [nanite design space](../../docs/concepts/nanite/README.md):
+a compact silver tetrahedral shell around one rigid tetrahedral core. This spike renders a
+low-poly **proxy** of that direction; it is not the approved rig. `NaniteBody.hpp` holds the
+values the simulation and the renderer share:
+- **height** (0.55 d) is one stacking layer: the rest-layer lift for climbers and the depth
+  of a tessellation layer. The shell's apex stands at this height;
+- a **free unit's footprint** is an equilateral triangle (`span`, 1.1 d); a **locked unit's**
+  is its morphed tile, so neighbouring shells share base edges and a letter stays gap-free
+  (a disclosed docking envelope, not a claim that the articulated unit tessellates);
+- the apex **leans** toward the nose so the heading reads;
+- the **core** is one regular tetrahedron, base down under the apex, its edge 0.40 of the
+  shell's base edge, clamped to stay 0.04 d inside every face.
 
-The simulation takes its stacking heights from the body (the rest-layer lift and the depth
-layer are one spine height), and frame captures carry the dimensions in their header. The
-renderer (`nanite_mesh.py`) builds every body's mesh in one batched pass, lights it with a
-cool grazing key and a controlled highlight, culls back faces and paints faces far to near.
-Detail is levelled by on-screen size: meshes from 6 px per unit, seams from 14 px and core
-recess rings from 10 px; silhouettes below 6 px and points below 3 px.
-`test_nanite_mesh.py` checks the mesh invariants (footprint and vertical walls, shared
-walls between neighbours, outward faces, the spine, the core on the roof, the dart) and
-that its defaults match `NaniteBody.hpp`.
+The renderer (`nanite_mesh.py`) splits each shell face into graphite vertex hubs, silver
+edge rails and shield segments recessed around a window, view-owned decoration. All four
+windows open onto the same core; a locked unit's core settles to a steady glow, subordinate
+to the silver. It builds every body in one batched pass, lights it with a cool grazing key
+and a controlled highlight, culls back faces and paints bodies far to near: the shell's
+inside, then the core, then the shell's front. Detail is levelled by on-screen size: meshes
+with open windows from 6 px per unit, hubs, rails, recessed shields and seams from 14 px;
+silhouettes below 6 px and points below 3 px. Not attempted: articulated fingers, opening
+shields, the oblique three-point rest, the underside, the reactor housing and crystal, and a
+gradual morph as a free unit seats.
+
+S0j's first body was the original concepts' arrowhead dart; the design space's review of
+PR #43 superseded it. Swapping the proxy in changed no simulation state: every state hash
+is identical. `test_nanite_mesh.py` checks the proxy's invariants (base is the tile, shared
+base edges between neighbours, apex one layer up and leaned toward the nose, outward faces,
+one regular core inside the shell with clearance, parts covering each face around one
+window, shields recessed) and that its defaults match `NaniteBody.hpp`.
 
 Evidence images are PNG sheets stored through Git LFS (256-colour palette, tens of
 kilobytes each), not SVG: mesh frames made vector sheets of up to 2 MB.
@@ -344,21 +354,22 @@ The B, L and E at 6.6, 7.2, 7.8, 8.4, 9.2 and 10.5 s: the L and E stems rise as 
 (foreshortened while rising) while climbers wait at the E's base; then they pour over the
 standing stems to build the E's arms and the B's bowls.
 
-### The 3D nanite body (S0j)
+### The nanite body (S0k)
 
-![3D nanite bodies: the wake, macro to pullback](evidence/body-macro.png)
+![Nanite bodies: the wake, macro to pullback](evidence/body-macro.png)
 
-Shot01 to shot02 at 0.6, 1.4, 2.0, 2.4, 3.0 and 4.0 s: the bed of dormant darts (dark
-cores), the first core lit, the answer wave lighting neighbours, darts lifting off the bed
-and the stream forming. The spines, faceted roofs and cores read at macro range; heading
-away from the camera a dart shows its steep rear facet and core; by 4.0 s units are small
-bodies with bright cores.
+Shot01 to shot02 at 0.6, 1.4, 2.0, 2.4, 3.0 and 4.0 s: the bed of dormant shells (dark
+cores), the first core lit, the answer wave lighting neighbours, units lifting off the bed
+and the stream forming. At macro range each shell shows its hubs, rails and recessed
+shields, with the one core seen through the windows; by 4.0 s units are small bodies with
+bright windows.
 
-![3D nanite bodies in the title: B and L at 35 degrees of yaw](evidence/body-title.png)
+![Nanite bodies in the title: B and L at 35 degrees of yaw](evidence/body-title.png)
 
-The B and L at 8.6, 9.6 and 11.0 s, yawed 35°: the finished letters are faceted plates of
-ridged tiles with flush walls and facet seams, like the hero concept; the L stem stands as a raised panel; climbers
-still flowing over the B are lit brighter; settled cores glow steadily.
+The B and L at 8.6, 9.6 and 11.0 s, yawed 35°: the finished letters are fields of faceted
+pyramids (docked shells on their tiles) with cyan glimpses, like the hero concept; the L stem
+stands as a raised panel; climbers still flowing over the B are lit brighter; settled cores
+glow steadily.
 
 ### 3D tessellation (S0i)
 
@@ -522,9 +533,9 @@ the finished letters as single faces.
 ## Limits
 
 Orthographic top-down and oblique 2D stand-in cameras; no perspective, depth of field,
-shadows, PBR materials or bloom. The wedge mesh is flat-shaded with one key light and
-painter's ordering per face (no depth buffer), which can misorder intersecting faces of
-units passing through each other (hidden-tier units, by design). One fixed seed. Glyphs are a prototype stroke font with
+shadows, PBR materials or bloom. The body mesh is a proxy of the design space's form,
+flat-shaded with one key light and painter's ordering per body (no depth buffer), which can
+misorder units that overlap or pass through each other (hidden-tier units, by design). One fixed seed. Glyphs are a prototype stroke font with
 square caps, not the licensed wordmark asset. A unit snaps to its morphed shape when it
 locks; a gradual morph while seating is a renderer detail for S1. The raise hinge is a rigid pose transform:
 nothing yet shows what lifts the letter. Climbers and heaped seekers stack in layers; only

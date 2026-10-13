@@ -1,12 +1,13 @@
 # Nanite swarm behaviour: intro first, gameplay next
 
-> Detailed form and reactor design now lives in the [nanite design space](../nanite/README.md).
-> PR43/S0j remains the implemented dart baseline. The new shell/housing/crystal
-> direction requires a single-unit rig and docking study before replacing it;
-> this document continues to own swarm behaviour and choreography.
+> The [nanite design space](../nanite/README.md) owns what a nanite looks like: form,
+> materials, articulation and the reactor core. This document owns swarm behaviour and
+> choreography. Since S0k the prototype renders a low-poly tetrahedral proxy of that
+> direction (section 4); the single-unit rig and docking study still come before any
+> production body.
 
 Proposal and prototype, 2026-10-12. Extends the [director's brief](director-brief.md) and
-[experience design](experience-design.md). The S0 to S0j prototypes are
+[experience design](experience-design.md). The S0 to S0k prototypes are
 [spikes/swarm_intro](../../../spikes/swarm_intro/README.md).
 
 User direction, the same day:
@@ -27,6 +28,8 @@ User direction, the same day:
 - 2026-10-13: consider 3D tessellation (section 5, S0i).
 - 2026-10-13: the nanite moves from a flat triangle to a 3D shape like the original
   concepts (section 4, S0j).
+- 2026-10-13: consolidate the design updates: the nanite design space (PR #44) owns the
+  unit's form, and the prototype's body follows it as a proxy (section 4, S0k).
 
 Sections 4 to 6 cover these. Times in this document are **choreography seconds**: the
 authored beats. At the default pace of 2/3 a viewer sees each 1.5× longer, so the 15 s
@@ -157,38 +160,54 @@ The rest layer is Dormant, Dock, Locked, Moored and Reserve. Movers glide over i
 cosmetic climb height `z`, which the renderer lifts and shades. In the climb build,
 climbers also flow over each other in layers rather than colliding (section 5).
 
-### The nanite's 3D body (S0j)
+### The nanite's body in the prototype (S0j, S0k)
 
-The concepts define the unit's shape: in `docs/concepts/units-v1.png` and the phase 15 hero,
-a nanite is a slender arrowhead dart, with a raised spine from the rear to the nose, faceted
-plates falling away from it, a steep rear facet and a cyan core set into the body. The
-director brief adds "an engineered low asymmetrical triangular body, with distinct beveled
-planes, a recessed protected cyan core and dark mechanical seams", the same construction
-for letter bodies and foreground units. S0j gives the prototype that body, specified once
-(`NaniteBody.hpp`) and consumed twice: the simulation takes its stacking heights from it,
-the renderer builds its mesh from it (frame captures carry the dimensions, and a test holds
-the Python defaults to the C++ ones).
+The unit's form is specified in the [nanite design space](../nanite/README.md), not here: a
+compact silver tetrahedral shell (vertex hubs, edge rails, recessed face shields) around one
+rigid tetrahedral core, with a stable housing and a living crystal inside it in the latest
+[reactor study](../nanite/reactor-and-factions.md). The prototype renders a low-poly
+**proxy** of that direction. This section records only what the swarm consumes and how the
+proxy maps onto the build.
 
-| Part | Construction | Why |
+| Concern | Prototype contract | Owner |
 |---|---|---|
-| Footprint | A free unit: a dart 1.9 × 0.9 diameters, nose forward. A locked unit: its (morphed) title tile, nose at the apex | Darts as in the concepts; tiles keep the tessellation, support graph and morph unchanged (the nanites morph as they seat) |
-| Walls | Vertical, from the footprint to a low shoulder | Any tiling of footprints stays flush in 3D: neighbours share wall quads, so a solid letter has no gaps |
-| Spine | From just behind the nose (0.22 d high) to just inside the rear edge (0.55 d) | The concept's raised keel; the low nose and high rear make the wedge read its heading |
-| Roof | Five facets from the shoulder ring to the spine, the rear one steep | The beveled planes; in a letter they give the hero's faceted, pyramidal surface; the seams are the facets' V-grooves |
-| Core | A cyan diamond set into the spine near the rear, on the two rear-side facets | Protected core; locked cores settle to a steady glow, subordinate to the silver |
+| Stacking height | One layer is 0.55 d: the rest-layer lift for climbers flowing over each other and the depth of a tessellation layer (S0i). The proxy's apex stands at this height, so the S0k swap left every state hash unchanged | `NaniteBody::height`, consumed by the simulation |
+| Docking envelope | A locked unit's footprint is its morphed title tile (S0e); the shell's base is that tile, so neighbours share base edges and the letter's footprint stays gap-free | This document (build) |
+| Visual form | Proxy only: the shell, its parts and the core are view-owned decoration in `nanite_mesh.py`; they do not claim the articulated unit tessellates or climbs | [Nanite design space](../nanite/README.md) |
 
-The spine height (0.55 diameter) was already the prototype's stacking step: a climber over
-the rest layer rose 0.55, a stacked climber 1.1. Those now come from the body, so a
-single-layer run is bit-identical. A depth layer (S0i) is one body thick: 0.55 instead of
-the placeholder 1.0, which moves the front layer and so changes two-layer state hashes.
+S0j first gave the prototype a body from the original concepts, a slender arrowhead dart
+with a raised spine and a core set into the roof. The design space's review of PR #43
+([single-unit study](../nanite/single-unit-study.md)) found it read as a roof on a tile with
+a core painted onto two facets, and set the tetrahedral direction. S0k replaces the dart in
+the renderer with a proxy of that direction:
 
-Rendering follows the brief's tactical LOD: at 6 pixels per unit and up, bodies are meshes
-(lit faces, back faces culled, faces painted far to near); seams are outlined from 14 px
-and the core's recess ring from 10 px, because closer to the title distance they turn the
-letters into texture; below 6 px units are silhouettes, below 3 px points. This is still a
-2D stand-in: one key light and flat shading with a controlled highlight, no shadows, no
-real-time materials, and a free dart snaps to its tile footprint when it locks (a gradual
-morph is S1). S1 takes the same body into the production renderer.
+- **Shell:** a tetrahedron whose base is the unit's footprint (an equilateral triangle
+  1.1 d on a side when free, its tile when locked) and whose apex stands one stacking layer
+  high, leaned toward the nose so the low oblique body reads its heading.
+- **Parts:** each face splits into three graphite hubs, three silver edge rails and three
+  shield segments recessed below the face plane around a window. All four windows open onto
+  the same core; through them the shell's dark inside frames it.
+- **Core:** exactly one regular tetrahedron, base down, under the apex and clear of the
+  surface. Its edge is 0.40 of the shell's mean base edge, clamped to keep 0.04 d from every
+  shell face (a squat docked shell on a large tile bounds it). Faces are flat cyan, each one
+  tone, restrained; a locked core settles to a steady glow, subordinate to the silver.
+
+Seen from above, a free unit is a triangle with its apex inside it, the silhouette the
+design space's core study asks for. A docked letter reads as a field of faceted pyramids
+with cyan glimpses, like the hero concept.
+
+The proxy does not attempt the parts that need a rig: articulated edge fingers, shield
+opening, the three-point oblique rest, the underside inspection view, or the housing and
+inner crystal of the reactor study. A free unit still snaps to its tile footprint when it
+locks; a gradual morph is S1. Rendering stays a 2D stand-in: one key light, flat shading
+with a controlled highlight, back faces culled, bodies painted far to near, no shadows or
+real-time materials.
+
+Detail follows on-screen size, after the brief's tactical LOD (silhouette and core location
+first, SW-F27). From 6 pixels per unit, bodies are meshes with open windows. From 14 px,
+shells split into hubs, rails and recessed shields with seams. Below 6 px units are
+silhouettes (the shell's base), below 3 px points. The design space asks for these
+thresholds to be re-evaluated with the final silhouette.
 
 ### Decision tiers
 
@@ -436,7 +455,8 @@ state hashes.
 | SW-F23 | Staggered layers of the same tiling give 3D interlocking with the existing support rule: face links between overlapping wedges of adjacent layers carry depth through the bond. Two layers (2,146 tiles, 3,072 units) pass every gate; scaffold completes at 10.68 s. | S0i; `--layers 2`. The intro can carry depth if the director wants a title with thickness; the cost is units (twice the tiles) and per-tick time (scaffold p50 1.1–1.3 ms against 0.5 ms). |
 | SW-F24 | Doubling the tiles crowded the stage: wider lanes alone fixed lying and raise; climbing letters' waiting crowds needed to heap (flow over each other) like the wall-base heap. Panels deadlocked once when a front panel wedge waited on a climbed wedge behind it. | Capacity rules scale with the layer count; face backing for flat assembly counts only the same flat body. |
 | SW-F25 | Three layers leave one enclosed front-layer pocket unfilled. | A no-enclosed-holes build order (TERMES) before more than two layers. |
-| SW-F26 | A 3D body with vertical walls on the tile footprint keeps the tessellation gap-free in 3D with no change to the build: neighbours share wall quads, the roof facets form the seams. The concept dart (spine, faceted roof, core in the spine) works on any triangular footprint, so free darts and locked tiles share one construction. The existing stacking step (0.55 d) is the spine height. | S0j; one body specification (`NaniteBody.hpp`) feeds the simulation and the renderer, tested for parity. S1 consumes it. |
+| SW-F26 | A 3D body with vertical walls on the tile footprint keeps the tessellation gap-free in 3D with no change to the build: neighbours share wall quads, the roof facets form the seams. The concept dart (spine, faceted roof, core in the spine) works on any triangular footprint, so free darts and locked tiles share one construction. The existing stacking step (0.55 d) is the spine height. | S0j; one body specification (`NaniteBody.hpp`) feeds the simulation and the renderer, tested for parity. The dart form was superseded by the design space (SW-F28). |
+| SW-F28 | A tetrahedral proxy of the design space's form fits the build unchanged: the shell's base on the tile keeps the letter's footprint gap-free, and an apex one stacking layer high left every state hash identical. A regular core sized from the base edge poked through the squat shell on large tiles (up to 0.06 d) and is clamped to clear every face. | S0k; the form lives in one place (the design space), the swarm keeps the height and the docking envelope. The rig, the underside and the reactor housing need the single-unit study, not the swarm renderer. |
 | SW-F27 | Full seams and recess rings at title distance (8 px per unit) turned the letters to texture. | LOD the details, not just the mesh: silhouette and core first, seams only close up (brief: tactical LODs preserve silhouette and core location). |
 | SW-F16 | Corner morphing of up to 0.35 side halves the outline error with every tile keeping half its area; larger limits add little. Fill and trim of spikes were prerequisites. | Default morph 0.35; faint steps on some stems are the place for a sub-tile edge piece; a gradual morph while seating belongs to S1. |
 
@@ -457,8 +477,9 @@ post-journey gameplay proposals.
 | **S0g** done | Pace 2/3 (the sequence at 66% speed, 22.5 s on screen); corner braking by route look-ahead; climbable-path gate for scaffold panels; ribbon rank matching; `render_swarm.py --mp4` | PR #40 | Merged |
 | **S0h** done | Lane branching: units leave the lane over its tail for their own destinations (SW-F21); progress baseline per goal (SW-F22); tighter contact gates | PR #41 | Merged |
 | **S0i** done | 3D tessellation: staggered depth layers, face links, face backing for flat assembly, capacity scaled by layers; renderer yaw, layer shading and tile edges | PR #42 | Director reviews whether the title has depth (one or two layers) |
-| **S0j** done | 3D nanite body: one specification for simulation and renderer; beveled wedge with recessed core; mesh renderer with lighting, culling and detail LOD; mesh invariant tests | This review | Director reviews the body against the concepts (macro shot01 and title close-up) |
-| **S1** | Production renderer consumes a per-tick instance packet (world pose, plane tilt, lift, act, core intensity, render LOD) from the chosen build; perspective lens path from the brief | P15-R0 Filament scene | Native capture against hero and storyboard concepts; wedges grounded; upright title readable with bloom off and in grayscale |
+| **S0j** done | 3D nanite body: one specification for simulation and renderer; beveled wedge with recessed core; mesh renderer with lighting, culling and detail LOD; mesh invariant tests | PR #43 | Merged; the form was reviewed in the design space (PR #44) and superseded |
+| **S0k** done | Design consolidation: the design space owns the form; the renderer's body becomes a tetrahedral proxy (shell, hubs, rails, recessed shields with windows, one regular core inside); simulation unchanged | This review | Director compares the proxy with the core-corrected form study (macro and title close-up) |
+| **S1** | Production renderer consumes a per-tick instance packet (world pose, plane tilt, lift, act, core intensity, render LOD) from the chosen build; perspective lens path from the brief | P15-R0 Filament scene | Native capture against hero and storyboard concepts; bodies grounded; upright title readable with bloom off and in grayscale |
 | **S2** | Choreography authoring: which strokes are panels, as authored data (SW-F17); sub-tile edge pieces where stems stay stepped (SW-F16); lanes and stroke order as data; the raise beat if raise is chosen (what visibly lifts the letter: a wave of units pushing under the hinge, rise order and easing); optional hero-letter climbing finish; climb arcs; traveling cyan accent; idle micro-behaviour for locked heroes (breathing core, settle wobble); skip jumps to an authored settled snapshot; reduced motion selects the still | P15-E0 frontend | Director pass (brief section 8); skip and reduced-motion receiving; temporal review of motion, not stills |
 | **S3** | Performance and decision LOD: activity-driven and blended tiers against camera tiers (section 4 backlog); event-driven wave; Sub0Pipeline row ranges for behaviour and resolve; hero candidate cap per frame; optional GPU compute route for far and hidden tiers | Named device | p95 and p99 inside the brief's proposed 16.67/20 ms with rendering included; measured, never inferred from S0 |
 | **S4** | Upstream feedback: tier tag migration cost and partition churn in Sub0ECS; frozen gather and grid as a reusable pattern only if a second consumer appears | Sub0ECS | Measured reproduction; no speculative API |

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Render crucible_swarm_intro frame captures into review images.
 
-Concept2D/dev-test evidence only: flat top-down wedges through the scripted orthographic
+Concept2D/dev-test evidence only: low-poly nanite bodies (nanite_mesh) through the scripted orthographic
 camera. It shows choreography, spacing and LOD tiers; it is not production fidelity.
 
     crucible_swarm_intro --frames frames --every 2
@@ -38,8 +38,9 @@ MAGNET_COLOURS = {1: (60, 230, 255), 2: (255, 150, 40), 3: (250, 250, 250)}   # 
 HEADER = re.compile(r"# time=([\d.]+) cx=([-\d.]+) cy=([-\d.]+) half_width=([\d.]+) aspect=([\d.]+)"
                     r"(?: view=(\w+) tilt=([\d.]+))?(?: tile=([\d.]+))?(?: pace=([\d.]+))?(?: body=([-\d.,]+))?")
 MESH_SCALE = 6.0    # pixels per unit at which units are drawn as 3D bodies (below: silhouettes)
-SEAM_SCALE = 14.0   # ... at which seams are outlined (below, they would turn letters to texture)
-RING_SCALE = 10.0   # ... at which the core's dark recess ring is drawn
+PART_SCALE = 14.0   # ... at which shells split into hubs, rails and recessed shields, seams outlined
+GRAPHITE = (62, 66, 74)
+INTERIOR = (22, 24, 29)   # the shell's inside, seen through its windows
 LIGHT = np.array([-0.55, -0.45, 0.70]) / np.linalg.norm([-0.55, -0.45, 0.70])   # cool grazing key
 
 
@@ -156,6 +157,7 @@ def draw_frame(frame, size=(960, 540), mode="beauty", yaw=0.0):
     else:
         order = sorted(frame["rows"], key=lambda r: (r[4] not in rest, r[2]))
     deepest = max((r[10] for r in frame["rows"]), default=0)
+    free = nanite_mesh.footprint(frame["body"])   # a free unit's silhouette: its shell's base
     bodies = []   # close enough for 3D bodies: drawn together, depth-sorted face by face
     for x, y, z, heading, act, tier, since, plane, magnet, shape, layer in order:
         px, py = project(x, y, z)
@@ -166,7 +168,7 @@ def draw_frame(frame, size=(960, 540), mode="beauty", yaw=0.0):
         cp, sp = math.cos(plane), math.sin(plane)
 
         def corner(forward, side):
-            # A wedge lies in its plane: the ground (x, y), a wall face (x, z), or a letter
+            # A silhouette lies in its plane: the ground (x, y), a wall face (x, z), or a letter
             # part-way through its rise.
             ax = c * forward - s * side
             ay = s * forward + c * side
@@ -211,7 +213,7 @@ def draw_frame(frame, size=(960, 540), mode="beauty", yaw=0.0):
             third = 2.0 * math.pi / 3.0
             points = [corner(radius * math.cos(a), radius * math.sin(a)) for a in (0.0, third, -third)]
         else:
-            points = [corner(0.55, 0.0), corner(-0.38, 0.36), corner(-0.38, -0.36)]
+            points = [corner(a, b) for a, b in free]
         draw.polygon(points, fill)
     if bodies:
         draw_bodies(draw, bodies, frame, size, scale, oblique, tilt, cyaw, syaw)
@@ -227,8 +229,9 @@ def draw_frame(frame, size=(960, 540), mode="beauty", yaw=0.0):
 
 
 def draw_bodies(draw, bodies, frame, size, scale, oblique, tilt, cyaw, syaw):
-    """3D nanite bodies (nanite_mesh): lit faces, back faces culled, all faces of all bodies
-    painted far to near, seams outlined, recessed cores on the top faces."""
+    """3D nanite bodies (nanite_mesh): per body, the shell's inside through its windows, the
+    core's lit faces, then the shell's front faces; bodies painted far to near. From
+    PART_SCALE pixels per unit, shells split into hubs, rails and recessed shields."""
     w, h = size
     cx, cy = frame["cx"], frame["cy"]
     body = frame["body"]
@@ -237,18 +240,16 @@ def draw_bodies(draw, bodies, frame, size, scale, oblique, tilt, cyaw, syaw):
     heading = np.array([b[3] for b in bodies])
     plane = np.array([b[4] for b in bodies])
     shaped = np.array([b[5] is not None for b in bodies])
-    free = nanite_mesh.dart(body)
+    free = nanite_mesh.footprint(body)
     corners = np.empty((n, 3, 2))
     for k, b in enumerate(bodies):
         corners[k] = np.array(b[5]).reshape(3, 2) if b[5] is not None else free
-    # Free units are darts pointing along their heading (corner 0); a locked unit takes its
-    # tile's footprint with the nose at the tile's apex (corner 2).
+    # A free unit's nose is along its heading (corner 0); a locked unit's is its tile's apex
+    # (corner 2).
     nose = np.where(shaped, 2, 0)
-    local = nanite_mesh.build(corners, nose, body)
+    local = nanite_mesh.shell(corners, nose, body)
     world = nanite_mesh.to_world(local, origin, heading, plane, ~shaped)
-    disc, halo = nanite_mesh.core(local, body)
-    disc = nanite_mesh.to_world(disc, origin, heading, plane, ~shaped)
-    halo = nanite_mesh.to_world(halo, origin, heading, plane, ~shaped)
+    heart = nanite_mesh.to_world(nanite_mesh.core(local, body), origin, heading, plane, ~shaped)
     # View: the direction along which screen position is constant, pointing away from us.
     if oblique:
         away = np.array([syaw, cyaw, -tilt])
@@ -267,33 +268,43 @@ def draw_bodies(draw, bodies, frame, size, scale, oblique, tilt, cyaw, syaw):
             vx, vy = x, y + 0.35 * z
         return np.stack([w * 0.5 + (vx - cx) * scale, h * 0.5 - (vy - cy) * scale], axis=-1)
 
-    pts = screen(world)
-    disc_pts, halo_pts = screen(disc), screen(halo)
+    detail = scale >= PART_SCALE
     nrm = nanite_mesh.normals(world)
     facing = nrm @ toward
+    core_nrm = nanite_mesh.normals(heart, nanite_mesh.CORE_FACES)
+    core_facing = core_nrm @ toward
+    shell_pts, core_pts = screen(world), screen(heart)
+    parts = [nanite_mesh.face_parts(world, f, detail) for f in range(len(nanite_mesh.SHELL_FACES))]
+    parts_pts = [[(role, screen(quad)) for role, quad in face] for face in parts]
+    depth = world.mean(axis=1) @ away
     polys = []
     for k in range(n):
         base, core = bodies[k][6], bodies[k][7]
-        for f, face in enumerate(nanite_mesh.FACES):
+        layers = []
+        # The inside of the far faces: what a window shows around the core.
+        for f, face in enumerate(nanite_mesh.SHELL_FACES):
+            if facing[k, f] <= 1e-4:
+                layers.append(([tuple(p) for p in shell_pts[k, list(face)]], INTERIOR, None))
+        if core is not None:
+            for f, face in enumerate(nanite_mesh.CORE_FACES):
+                if core_facing[k, f] > 1e-4:
+                    layers.append(([tuple(p) for p in core_pts[k, list(face)]], nanite_mesh.shade_core(core, core_nrm[k, f], LIGHT), None))
+        for f in range(len(nanite_mesh.SHELL_FACES)):
             if facing[k, f] <= 1e-4:
                 continue
-            centre = world[k, list(face)].mean(axis=0)
-            colour = nanite_mesh.shade(base, nrm[k, f], LIGHT, toward)
-            role = nanite_mesh.ROLE[f]
-            seam = tuple(int(v * 0.5) for v in colour) if role != "wall" and scale >= SEAM_SCALE else None
-            polys.append((float(centre @ away), [tuple(p) for p in pts[k, list(face)]], colour, seam))
-        # The core spans the two rear-side facets either side of the spine: drawn just in
-        # front of them whenever either faces the camera.
-        holders = [f for f in nanite_mesh.CORE_FACES if facing[k, f] > 1e-4]
-        if core is not None and holders:
-            depth = min(float(world[k, list(nanite_mesh.FACES[f])].mean(axis=0) @ away) for f in holders)
-            if scale >= RING_SCALE:
-                ring = tuple(int(v * 0.30) for v in base)
-                polys.append((depth - 1e-3, [tuple(p) for p in halo_pts[k]], ring, None))
-            polys.append((depth - 2e-3, [tuple(p) for p in disc_pts[k]], core, None))
+            tones = {"shield": nanite_mesh.shade(tuple(int(v * 0.86) for v in base), nrm[k, f], LIGHT, toward),
+                     "rail": nanite_mesh.shade(base, nrm[k, f], LIGHT, toward),
+                     "hub": nanite_mesh.shade(GRAPHITE, nrm[k, f], LIGHT, toward)}
+            # Shields first, rails and hubs over them: the recess reads at the rails' edge.
+            for role, pts in sorted(parts_pts[f], key=lambda item: item[0] != "shield"):
+                colour = tones[role]
+                seam = tuple(int(v * 0.62) for v in colour) if detail else None
+                layers.append(([tuple(p) for p in pts[k]], colour, seam))
+        polys.append((float(depth[k]), layers))
     polys.sort(key=lambda item: -item[0])
-    for _, points, colour, seam in polys:
-        draw.polygon(points, colour, seam)
+    for _, layers in polys:
+        for points, colour, seam in layers:
+            draw.polygon(points, colour, seam)
 
 
 def nearest(frames, time):

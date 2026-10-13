@@ -88,7 +88,9 @@ Acceptance: one core in every view; recognisable volume below the midline; no br
 
 ## Intro integration handoff
 
-Keep single-unit approval separate from replacing the PR43 body. The current prototype can continue to demonstrate choreography.
+Keep single-unit approval separate from replacing the prototype's body. The prototype can continue to demonstrate choreography.
+
+Status, S0k (2026-10-13): the swarm renderer replaced PR43's dart with a disclosed low-poly proxy of this direction: a tetrahedral shell on the unit's footprint (a locked unit's base is its title tile), hubs, rails and recessed shields around windows, and one regular core clamped inside. Stacking height (0.55 d) and the docking envelope are unchanged, so no simulation state changed. It does not prove the rig, the underside, the three-point rest or articulated docking; those remain the steps below. See the [swarm design, section 4](../phase15-experience/nanite-swarm-design.md#the-nanites-body-in-the-prototype-s0j-s0k).
 
 A tetrahedral core with articulated armour does not automatically fill the existing arbitrary morphed triangular title cells. Do not assume it can tessellate gap-free. Prototype a compact docking envelope using rigid core placement plus bounded shell adjustment; measure remaining voids and intersections before committing to the existing title thickness. Preserve open letter counters and title readability. Any silhouette proxy used at distance must be disclosed and shown to transition without obvious popping.
 
