@@ -6,9 +6,11 @@ Start here for nanite form, materials, articulation and close-up identity. These
 are generated design references and modelling requirements, not implemented
 meshes or evidence of a working rig. PR43's dart remains the runtime baseline.
 
-Artwork: [download the four-study bundle](https://chatgpt.com/api/library/files/libfile_2ff8ecf595c48191a40b1f8f52fd5a74/download).
-Access requires the owning ChatGPT account. Git LFS import is pending; see
-[publication status](provenance.md#publication-validation).
+![Reactor and faction study: open-shell nanite with tetrahedral housing and inner crystal; cyan, amber, violet and lime instances](assets/reactor-factions-01.png)
+
+*Current direction: [reactor and faction study](reactor-and-factions.md). Shell and form:
+[core-corrected form study 02](assets/form-study-02-core-corrected.png). All four studies,
+with exact prompts and hashes: [provenance](provenance.md).*
 
 ## Current direction
 

@@ -5,9 +5,11 @@
 
 ## Recommended direction
 
-Artwork: [download the four-study bundle](https://chatgpt.com/api/library/files/libfile_2ff8ecf595c48191a40b1f8f52fd5a74/download).
-Access requires the owning ChatGPT account. Git LFS import is pending; see
-[publication status](provenance.md#publication-validation).
+![Form study 02, core corrected: compact and open/contact poses around one tetrahedral core](assets/form-study-02-core-corrected.png)
+
+*Recommended appearance reference: core-corrected form study 02. Earlier iterations:
+[form study 01](assets/form-study-01.png) (underside and articulated views) and
+[form study 02](assets/form-study-02.png) (superseded gem core).*
 
 A nanite is a compact articulated machine built around one rigid cyan tetrahedral core. Silver faceted shell pieces surround the core on all sides. Dark joints separate the pieces and let short edge mechanisms unfold to make contact, then retract into a coherent protective silhouette. It is a complete three-dimensional object: turning it over reveals more of the same construction, not a flat chassis plate.
 
