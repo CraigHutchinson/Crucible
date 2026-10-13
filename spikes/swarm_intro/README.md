@@ -445,9 +445,9 @@ whole sequence takes more ticks.
 The scaffold build through its camera at 1.0, 2.6, 3.2, 4.0, 5.5, 6.5, 7.5, 8.5, 9.5, 10.5,
 12.5 and 15.5 s: the macro on the first unit to wake; the bed lifting off and the stream
 head; units arriving at the title; then close-ups that follow wherever letters are being
-built (the C and I, the R and U, the I and B, the U and second C, the B and L, the L and E), the
-view turning from
-one side of the title to the other; the pull-out to the whole title; the hold and opening.
+built (the C and I, the R and U, the I and B, the U and second C, the B and L, the L and
+E), the view turning from one side of the title to the other; the pull-out to the whole
+title; the hold and opening.
 Frame labels give the time on screen: the close-up plays at half speed.
 
 ### Lying (S0)
