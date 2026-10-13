@@ -51,7 +51,6 @@ constexpr float plateThickness = 0.04F;
 constexpr float plateGap = 0.035F;         // Articulated: gap between neighbouring plates, in edge lengths
 constexpr float plateLift = 0.07F;         // Shielded: shield lift at full open
 constexpr float plateHinge = 0.4F;         // Articulated: hinge angle at full open, radians
-constexpr float coreEdge = 0.42F;          // Frame: solid core
 constexpr float housingEdge = 0.6F;        // Shielded+: containment housing
 constexpr float silhouetteInset = 0.93F;  // Silhouette: outline scale toward the shell centre
 constexpr float heartRadius = 0.094F;      // inside the housing's inscribed sphere (0.122)
@@ -683,19 +682,10 @@ NaniteMesh buildNanite(NaniteDetail detail, const NanitePosture& posture, std::u
         }
     }
 
-    if (structure == NaniteStructure::Frame)
-    {
-        // One opaque core at the rigid centre: a dark housing whose faces open onto
-        // luminous facets, the frame-level stand-in for housing and heart.
-        const float s = coreEdge;
-        emitRounded(builder, tetrahedron(centre + (Vec{0.0F, -shellHeight * 0.25F, shellCircum}) * s,
-            centre + (Vec{-0.5F, -shellHeight * 0.25F, -shellIn}) * s, centre + (Vec{0.5F, -shellHeight * 0.25F, -shellIn}) * s,
-            centre + (Vec{0.0F, shellHeight * 0.75F, 0.0F}) * s), 0.012F * scale, std::min(segments, 1), NaniteMaterial::Graphite,
-            0.62F, 0.03F, 0.0F);
-        return mesh;
-    }
 
-    // Containment housing: rigid, the shell's orientation, its vertices toward the hubs.
+    // Containment housing: rigid, the shell's orientation, its vertices toward the hubs. Frame
+    // shares it with the shielded levels, so all three show the same interior through the
+    // same window (a dark core here read as a black hole against their light glass).
     std::array<Vec, 4> housing{};
     {
         const std::array<Vec, 4> unit{{{0.0F, -shellHeight * 0.25F, shellCircum}, {-0.5F, -shellHeight * 0.25F, -shellIn},
@@ -731,12 +721,13 @@ std::span<const NaniteLodStep> naniteLodLadder() noexcept
     using P = NaniteSurface;
     // Switch sizes from the lab's comparison of neighbouring rungs (mean colour difference
     // over the unit, four views, 4x4 supersampled). A rung without a fade differs by at most
-    // 3% where it starts; the two fading steps add parts and differ by 7-8% where they start.
-    static constexpr std::array<NaniteLodStep, 6> ladder{{
+    // 3% where it starts; the two fading steps add parts and differ by 5.6% and 7.6% where they start.
+    static constexpr std::array<NaniteLodStep, 7> ladder{{
         {{S::Silhouette, P::Flat}, 0.0F, false},
-        {{S::Shielded, P::Flat}, 10.0F, true},
-        {{S::Shielded, P::Chamfer}, 14.0F, false},
-        {{S::Shielded, P::Bevel}, 40.0F, false},
+        {{S::Frame, P::Flat}, 10.0F, true},
+        {{S::Frame, P::Chamfer}, 14.0F, false},
+        {{S::Frame, P::Bevel}, 40.0F, false},
+        {{S::Shielded, P::Bevel}, 48.0F, false},
         {{S::Articulated, P::Bevel}, 64.0F, true},
         {{S::Articulated, P::Hero}, 160.0F, false},
     }};
@@ -767,11 +758,11 @@ std::span<const NaniteDevicePreset> naniteDevicePresets() noexcept
     using S = NaniteStructure;
     using P = NaniteSurface;
     static constexpr std::array<NaniteDevicePreset, 5> presets{{
-        {"Mobile (Android / WebGL)", {S::Shielded, P::Flat}, {S::Silhouette, P::Flat}},
-        {"Handheld console (Switch class)", {S::Shielded, P::Chamfer}, {S::Silhouette, P::Flat}},
-        {"High-end mobile (iOS A15+ class)", {S::Shielded, P::Bevel}, {S::Shielded, P::Flat}},
-        {"Desktop (PC / console)", {S::Articulated, P::Bevel}, {S::Shielded, P::Chamfer}},
-        {"Desktop 4K hero", {S::Articulated, P::Hero}, {S::Shielded, P::Bevel}},
+        {"Mobile (Android / WebGL)", {S::Frame, P::Chamfer}, {S::Silhouette, P::Flat}},
+        {"Handheld console (Switch class)", {S::Frame, P::Bevel}, {S::Silhouette, P::Flat}},
+        {"High-end mobile (iOS A15+ class)", {S::Shielded, P::Bevel}, {S::Frame, P::Flat}},
+        {"Desktop (PC / console)", {S::Articulated, P::Bevel}, {S::Frame, P::Chamfer}},
+        {"Desktop 4K hero", {S::Articulated, P::Hero}, {S::Frame, P::Bevel}},
     }};
     return presets;
 }

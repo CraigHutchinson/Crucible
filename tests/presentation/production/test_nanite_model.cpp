@@ -217,8 +217,8 @@ int main()
         };
         require(materials({NaniteStructure::Silhouette, NaniteSurface::Bevel}) == std::array{true, true, false, true},
             "Silhouette is a silver shell with opaque graphite windows onto a luminous facet");
-        require(materials({NaniteStructure::Frame, NaniteSurface::Flat}) == std::array{true, true, false, true},
-            "Frame has silver rails, graphite hubs and a luminous core");
+        require(materials({NaniteStructure::Frame, NaniteSurface::Flat}) == std::array{true, true, true, true},
+            "Frame has silver rails and bars, graphite hubs, and the housing and heart");
         require(materials({NaniteStructure::Shielded, NaniteSurface::Flat}) == std::array{true, true, true, true},
             "Shielded adds the housing around a separate heart");
 
@@ -330,7 +330,7 @@ int main()
         const NaniteDetail mobile{NaniteStructure::Shielded, NaniteSurface::Flat};
         require(ladder[selectNaniteLod(1000.0F, mobile, ladder.size())].detail_.surface_ == NaniteSurface::Flat,
             "A cap cuts the ladder");
-        require(ladder[selectNaniteLod(1000.0F, mobile, ladder.size() - 1)].detail_.structure_ == NaniteStructure::Shielded,
+        require(ladder[selectNaniteLod(1000.0F, mobile, ladder.size() - 1)].detail_.structure_ == NaniteStructure::Frame,
             "A current rung above the cap falls to the cap");
         require(selectNaniteLod(std::numeric_limits<float>::quiet_NaN(), top, ladder.size()) == 0,
             "A nonfinite size uses the silhouette");

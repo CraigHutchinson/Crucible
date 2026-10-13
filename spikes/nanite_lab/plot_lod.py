@@ -40,8 +40,9 @@ def main(path, out):
 
     top.plot(seconds, [r["size"] for r in rows], color=FADE, linewidth=2)
     top.set_yscale("log")
-    top.set_yticks([6, 10, 14, 40, 64, 150])
-    top.set_yticklabels(["6", "10", "14", "40", "64", "150"])
+    ticks = [6] + [step["minPixels"] for step in data["ladder"][1:] if step["minPixels"] <= 150] + [150]
+    top.set_yticks(ticks)
+    top.set_yticklabels([f"{t:g}" for t in ticks])
     for rung, step in enumerate(data["ladder"][1:], start=1):
         if step["minPixels"] > 150:
             continue
