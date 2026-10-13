@@ -725,7 +725,7 @@ std::span<const NaniteLodStep> naniteLodLadder() noexcept
     using P = NaniteSurface;
     // Switch sizes from the lab's comparison of neighbouring rungs (mean colour difference
     // over the unit, four views, 4x4 supersampled). A rung without a fade differs by at most
-    // 3% where it starts; the two fading steps add parts and differ by 7-9% at any size.
+    // 3% where it starts; the two fading steps add parts and differ by 7-8% where they start.
     static constexpr std::array<NaniteLodStep, 6> ladder{{
         {{S::Silhouette, P::Flat}, 0.0F, false},
         {{S::Shielded, P::Flat}, 10.0F, true},

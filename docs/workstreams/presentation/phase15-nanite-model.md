@@ -126,6 +126,79 @@ plate pass through the neighbouring face), and rounding is limited to half a par
 edge so clipped corners stay closed. The lab's swarm gives each unit its own variant; the
 production renderer uses variant 0 for every instance until per-instance meshes exist.
 
+## M3: distance consistency
+
+User direction: check that detail changes with distance without a visible pop or change.
+
+**Method.** The lab renders a single unit at an exact projected size (the diameter, in
+pixels, of a 0.62-radius bounding sphere), 4x4 supersampled, over the stage background with
+bloom off, and compares two renders pixel by pixel: mean colour difference over the unit's
+pixels and coverage overlap, averaged over four views (`lod_study.mjs`). A dolly then sweeps
+a turning unit from 6 to 150 px and back over 10 s and, per frame, measures the **jump** a
+switch causes (what is shown, against what the previous frame's choice would show at the
+same pose) for a hard cut and for a 0.25 s cross-fade, next to the change the unit's own
+motion makes (`lod_dolly.mjs`). Small sizes exaggerate the metric: at 8 px the unit is a
+few dozen pixels, so one changed pixel is a few percent.
+
+**What the measurement found and changed.**
+
+- *Frame is see-through* (open rails around a core) while Silhouette and Shielded are
+  solid. It differs at every size, so it stays a level but is left off the distance ladder.
+- *The silhouette popped* against the shielded level by 8–15% at 6–16 px. Its window was
+  larger and darker, it lacked the dark corner hubs, and it covered about 15% more pixels,
+  because the higher levels' sunk rails and rounded hubs inset their visible outline. The
+  window now matches the shielded window (0.40 of the face), graphite corner caps sit where
+  hubs are (the edge strips split there, so no T-junctions), and the silhouette is drawn at
+  0.93 scale toward the shell centre. Silhouette→Shielded is now 5.6% at 8 px and 6.8% at
+  10 px (worst view 8%), from 8–9%.
+- *Surface steps are small*; Shielded→Articulated adds parts and differs by 6–9% at any size.
+
+**The ladder** (`naniteLodLadder`, `selectNaniteLod`): six rungs, each adding detail on at
+least one axis and never removing any, so a hardware cap cuts it at a prefix. A rung starts
+where its neighbour's difference is at most 3%, except the two steps that add parts, which
+fade:
+
+| Rung | Level | Starts at | Difference entering (mean) | Fade flag |
+| --- | --- | ---: | ---: | --- |
+| 0 | Silhouette, Flat | 0 px | | |
+| 1 | Shielded, Flat | 10 px | 6.8% | yes |
+| 2 | Shielded, Chamfer | 14 px | 2.8% | |
+| 3 | Shielded, Bevel | 40 px | 2.7% | |
+| 4 | Articulated, Bevel | 64 px | 7.6% | yes |
+| 5 | Articulated, Hero | 160 px | 0.5% | |
+
+A unit steps up as soon as its size reaches a rung and steps down only 15% below the rung's
+start, so a size jittering around a boundary does not flicker (tested: at most one switch in
+200 frames of ±7% jitter). The lab fades **every** switch over 0.25 s with dithered
+(alpha-hashed) materials and lets a switch wait until a running fade finishes; the flag says
+which switches a renderer must fade if it can only afford some.
+
+![Every rung at each switch size (10, 14, 40, 64 px), real pixels enlarged](phase15-nanite-model/ladder-strip.png)
+
+*Rows: the six rungs at 10, 14, 40 and 64 px (the switch sizes), real pixels enlarged.*
+
+![Dolly chart: size against the ladder; per-frame switch jump for hard cut and cross-fade against the unit's own motion](phase15-nanite-model/dolly-chart.png)
+
+| Dolly, 6–150 px, 300 frames | Hard cut | 0.25 s cross-fade |
+| --- | ---: | ---: |
+| Largest switch jump in one frame | 6.5% | 0.85% |
+| 99th percentile jump | 4.8% | 0.83% |
+| Unit's own motion per frame (reference) | mean 3.4%, up to 6.7% | |
+| Difference from always-highest detail | mean 4.3%, worst 10.5% (at 8 px) | mean 4.2%, worst 10.0% |
+
+With the fade, every switch adds less change per frame than the motion that causes it; the
+remaining difference from always-highest detail is the cost of the simplification at small
+sizes, which the dolly shows changing smoothly rather than in steps.
+[Dolly video](phase15-nanite-model/dolly.mp4): reference | hard cut | cross-fade, real pixels
+enlarged 2x.
+
+**Lab.** The Distance view drives one unit through the ladder from its on-screen size
+(slider or auto dolly), capped by the selected hardware class, with the cross-fade on or off.
+
+**Not yet native.** The production renderer still draws one level for every instance. Next:
+one instance batch per rung chosen by `selectNaniteLod`, and the fade as a dithered discard in
+`nanite.mat` with a per-instance fade value.
+
 ## Platform for iterating: web first for form, Filament for acceptance
 
 Recommendation: keep **one C++ generator** and iterate its form and detail levels in the
@@ -169,6 +242,10 @@ level), the glass housing, and a capture. Hosted CI compiles the renderer and th
   housing and heart rigid under stretch and open; heart clearance for any turn; housing
   inside the shell; deterministic bytes; nonfinite postures build the rest pose; presets
   ordered by hero cost.
+- The ladder test: monotone rungs at rising sizes and cost, every preset cap on the ladder,
+  step-up at a rung's start, hold inside and step down below the hysteresis band, at most
+  one switch for a size jittering ±7% around each boundary, caps cut the ladder, nonfinite
+  sizes give the silhouette.
 - The model test passes in Release, Debug and ASan/UBSan locally; CI runs every platform,
   the sanitizer job and the Windows production build of the renderer and material.
 - Lab stills and video: `capture.mjs`, headless Chromium with SwiftShader.
@@ -188,10 +265,13 @@ level), the glass housing, and a capture. Hosted CI compiles the renderer and th
 
 ## Evidence files
 
-All in [phase15-nanite-model/](phase15-nanite-model/), regenerated at M2: `matrix.png`,
+All in [phase15-nanite-model/](phase15-nanite-model/), regenerated at M3 (the turntable
+video is from M2; the Articulated levels it shows did not change): `matrix.png`,
 `unit-hero.png`, `unit-silhouette.png`, `unit-silhouette-bevel.png`,
 `unit-closed-bevel.png`, `underside.png`, `unit-stretched.png`, `swarm.png`, `lab-panel.png`
-(the lab with its controls), `turntable.mp4`, and `triangles.json` (the triangle table and
-presets as the lab read them from the WebAssembly build). Rendered by
+(the lab with its controls), `turntable.mp4`, `triangles.json` (the triangle table and
+presets as the lab read them from the WebAssembly build), and for M3 `ladder-strip.png`,
+`pop-study.json` (every neighbouring pair on the grid, 6–128 px), `pop-study-silhouette.json` (Silhouette to Shielded, the ladder's first step), `dolly.json`, `dolly-chart.png` and
+`dolly.mp4`. Rendered by
 `spikes/nanite_lab/capture.mjs` from this commit's generator with Emscripten 6.0.12, three.js
 0.170.0 and headless Chromium (SwiftShader).
