@@ -2,9 +2,7 @@
 
 2026-10-13 · User-directed groundwork; visual proposals, not new gameplay rules.
 
-Artwork: [download the four-study bundle](https://chatgpt.com/api/library/files/libfile_2ff8ecf595c48191a40b1f8f52fd5a74/download).
-Access requires the owning ChatGPT account. Git LFS import is pending; see
-[publication status](provenance.md#publication-validation).
+![Reactor study: tetrahedral containment housing with one luminous crystal; cyan circle, amber triangle, violet diamond and lime square instances](assets/reactor-factions-01.png)
 
 ## Three nested layers
 
