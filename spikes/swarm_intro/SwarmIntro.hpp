@@ -124,7 +124,7 @@ struct IntroSettings
     LodMode lod = LodMode::Camera;
     Build build = Build::Lying;
     float viewTilt = 0.4F;         ///< Upright builds' view: screen y = height + tilt * depth (oblique front camera).
-    std::uint32_t claimCap = 96;   ///< Climb build: slots claimed but not yet locked, per letter.
+    std::uint32_t claimCap = 96;   ///< Climb build: slots claimed but not yet locked, per letter and depth layer.
     float stuckSeconds = 40.0F / 60.0F; ///< Choreography seconds without progress before a unit counts as stuck.
     float pushSeconds = 0.5F;           ///< Choreography seconds a push contingency's repelling magnet stays on.
     float raiseDelay = 0.15F;      ///< Raise build: pause between a letter's last lock and its rise.
@@ -189,6 +189,7 @@ struct RenderRow
     Tier tier;
     float actSince;
     std::uint8_t magnet;   ///< Active MagnetMode, 0 when off.
+    std::uint8_t layer;    ///< Depth layer of the title tile the unit is bound for (0 otherwise).
     bool shaped;           ///< Locked into a tile: `shape` holds its morphed corners.
     std::array<float, 6> shape;   ///< Corner offsets in the letter's plane (x, up), when shaped.
 };
@@ -289,6 +290,8 @@ private:
     /** Marks slots reachable from the ground without crossing a panel not yet upright. */
     void updateClimbable();
     void goalApproach(const Mind& mind, float& gx, float& gy) const;
+    /** Flat assembly: a front-layer tile seats only on a locked tile of the layer behind. */
+    [[nodiscard]] bool faceBacked(std::size_t slot) const;
 
     // Systems.
     void gather();
@@ -301,6 +304,8 @@ private:
     [[nodiscard]] bool progressOf(const Pose& pose, const Mind& mind, float& value) const;
     void setMagnet(std::uint32_t unit, Mind& mind, MagnetMode mode, bool on);
     void pushAway(std::uint32_t unit, const Pose& pose, float& vx, float& vy) const;
+    /** Depth of the band in front of a letter where its climbers wait: 2 units per depth layer. */
+    [[nodiscard]] float stagingBand() const { return 2.0F * static_cast<float>(std::max(1, settings_.wordmark.layers)); }
     void stagingPoint(std::uint32_t unit, const Mind& mind, float& x, float& y) const;
     void resolveSystem();
     void lodSystem();

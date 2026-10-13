@@ -202,11 +202,11 @@ RunSummary run(const Options& options, bool capture)
                 std::fprintf(f, "# time=%.6f cx=%.4f cy=%.4f half_width=%.4f aspect=%.6f view=%s tilt=%.3f tile=%.4f pace=%.6f\n", m.time, cam.cx,
                              cam.cy, cam.halfWidth, cam.aspect, options.settings.build != Build::Lying ? "oblique" : "top",
                              options.settings.viewTilt, options.settings.wordmark.tile, options.settings.pace);
-                std::fprintf(f, "x,y,z,heading,act,tier,act_since,plane,magnet,s0x,s0y,s1x,s1y,s2x,s2y\n");
+                std::fprintf(f, "x,y,z,heading,act,tier,act_since,plane,magnet,layer,s0x,s0y,s1x,s1y,s2x,s2y\n");
                 for (const RenderRow& r : rows)
                 {
-                    std::fprintf(f, "%.3f,%.3f,%.3f,%.4f,%s,%d,%.3f,%.4f,%u", r.x, r.y, r.z, r.heading, actName(r.act),
-                                 static_cast<int>(r.tier), r.actSince, r.plane, static_cast<unsigned>(r.magnet));
+                    std::fprintf(f, "%.3f,%.3f,%.3f,%.4f,%s,%d,%.3f,%.4f,%u,%u", r.x, r.y, r.z, r.heading, actName(r.act),
+                                 static_cast<int>(r.tier), r.actSince, r.plane, static_cast<unsigned>(r.magnet), static_cast<unsigned>(r.layer));
                     if (r.shaped)
                     {
                         std::fprintf(f, ",%.4f,%.4f,%.4f,%.4f,%.4f,%.4f", r.shape[0], r.shape[1], r.shape[2], r.shape[3], r.shape[4], r.shape[5]);
@@ -290,6 +290,7 @@ bool parse(int argc, char** argv, Options& o)
         else if (a == "--claim-cap") { const char* v = next(); if (!v) return false; o.settings.claimCap = static_cast<std::uint32_t>(std::atoi(v)); }
         else if (a == "--count") { const char* v = next(); if (!v) return false; o.settings.nanites = std::strtoul(v, nullptr, 10); }
         else if (a == "--hero-cap") { const char* v = next(); if (!v) return false; o.settings.heroCap = std::strtoul(v, nullptr, 10); }
+        else if (a == "--layers") { const char* v = next(); if (!v) return false; o.settings.wordmark.layers = std::max(1, std::atoi(v)); }
         else if (a == "--pace") { const char* v = next(); if (!v) return false; o.settings.pace = std::strtof(v, nullptr); }
         else if (a == "--seconds") { const char* v = next(); if (!v) return false; o.seconds = std::strtof(v, nullptr); }
         else if (a == "--frames") { const char* v = next(); if (!v) return false; o.framesDir = v; }
@@ -326,7 +327,7 @@ int main(int argc, char** argv)
     if (!parse(argc, argv, options))
     {
         std::fprintf(stderr,
-                     "usage: crucible_swarm_intro [--verify] [--build lying|climb|raise|hybrid|scaffold] [--raise-letters MASK] [--rows] [--morph F] [--count N] [--hero-cap N] [--lod camera|hero|near|far]\n"
+                     "usage: crucible_swarm_intro [--verify] [--build lying|climb|raise|hybrid|scaffold] [--raise-letters MASK] [--rows] [--morph F] [--layers N] [--count N] [--hero-cap N] [--lod camera|hero|near|far]\n"
                      "                            [--seconds S] [--pace P] [--frames DIR] [--every TICKS] [--metrics FILE]\n"
                      "                            [--events-jsonl FILE] [--health-json FILE] [--claim-cap N]\n");
         return 2;

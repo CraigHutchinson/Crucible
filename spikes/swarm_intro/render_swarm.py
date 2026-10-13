@@ -44,14 +44,18 @@ def load(path):
     tile = float(groups[7] or 0.0)
     pace = float(groups[8] or 1.0)   # choreography seconds per presentation second
     rows = []
+    columns = lines[1].split(",")
+    first_corner = columns.index("s0x") if "s0x" in columns else len(columns)
+    layer_at = columns.index("layer") if "layer" in columns else None
     for line in lines[2:]:
         fields = line.split(",")
         x, y, z, h, act, tier, since = fields[:7]
         plane = float(fields[7]) if len(fields) > 7 else 0.0   # tilt about x: 0 ground, pi/2 wall
         magnet = int(fields[8]) if len(fields) > 8 else 0      # 1 lift, 2 push, 3 seat
+        layer = int(fields[layer_at]) if layer_at is not None else 0   # depth layer (3D tessellation)
         # Locked tiles carry their morphed corners (letter plane: x along, y up the letter).
-        shape = tuple(float(v) for v in fields[9:15]) if len(fields) >= 15 else None
-        rows.append((float(x), float(y), float(z), float(h), act, int(tier), float(since), plane, magnet, shape))
+        shape = tuple(float(v) for v in fields[first_corner:first_corner + 6]) if len(fields) >= first_corner + 6 else None
+        rows.append((float(x), float(y), float(z), float(h), act, int(tier), float(since), plane, magnet, shape, layer))
     return {"time": t, "cx": cx, "cy": cy, "hw": hw, "aspect": aspect, "view": view, "tilt": tilt, "tile": tile, "pace": pace, "rows": rows}
 
 
@@ -62,8 +66,8 @@ class Canvas:
         self.size = size
         self.items = []
 
-    def polygon(self, points, fill):
-        self.items.append(("polygon", points, fill))
+    def polygon(self, points, fill, outline=None):
+        self.items.append(("polygon", points, fill, outline))
 
     def ellipse(self, box, fill):
         self.items.append(("ellipse", box, fill))
@@ -79,7 +83,7 @@ class Canvas:
         draw = ImageDraw.Draw(out)
         for item in self.items:
             if item[0] == "polygon":
-                draw.polygon(item[1], fill=item[2])
+                draw.polygon(item[1], fill=item[2], outline=item[3])
             elif item[0] == "ellipse":
                 draw.ellipse(item[1], fill=item[2])
             elif item[0] == "point":
@@ -97,7 +101,8 @@ class Canvas:
         for item in self.items:
             if item[0] == "polygon":
                 pts = " ".join(f"{x:.1f},{y:.1f}" for x, y in item[1])
-                parts.append(f'<polygon points="{pts}" fill="{colour(item[2])}"/>')
+                stroke = f' stroke="{colour(item[3])}" stroke-width="0.6"' if item[3] else ""
+                parts.append(f'<polygon points="{pts}" fill="{colour(item[2])}"{stroke}/>')
             elif item[0] == "ellipse":
                 x0, y0, x1, y1 = item[1]
                 parts.append(f'<circle cx="{(x0 + x1) / 2:.1f}" cy="{(y0 + y1) / 2:.1f}" r="{(x1 - x0) / 2:.1f}" fill="{colour(item[2])}"/>')
@@ -109,7 +114,7 @@ class Canvas:
         return "\n".join(parts)
 
 
-def draw_frame(frame, size=(960, 540), mode="beauty"):
+def draw_frame(frame, size=(960, 540), mode="beauty", yaw=0.0):
     w, h = size
     draw = Canvas(size)
     scale = w / (2.0 * frame["hw"])
@@ -119,18 +124,30 @@ def draw_frame(frame, size=(960, 540), mode="beauty"):
     oblique = frame["view"] == "oblique"
     tilt = frame["tilt"]
 
+    cyaw, syaw = math.cos(math.radians(yaw)), math.sin(math.radians(yaw))
+
+    def turned(x, y):
+        """Yaw about the vertical axis through the view centre: (across, depth)."""
+        return (cx + (x - cx) * cyaw - y * syaw, (x - cx) * syaw + y * cyaw)
+
     def project(x, y, z):
-        """World (z up) to screen. Top: looking down, lift nudges up. Oblique: front view."""
-        vx, vy = (x, z + tilt * y) if oblique else (x, y + 0.35 * z)
+        """World (z up) to screen. Top: looking down, lift nudges up. Oblique: front view,
+        optionally yawed so the depth of a layered (3D tessellated) title shows."""
+        if oblique:
+            ax, depth = turned(x, y)
+            vx, vy = ax, z + tilt * depth
+        else:
+            vx, vy = x, y + 0.35 * z
         return (w * 0.5 + (vx - cx) * scale, h * 0.5 - (vy - cy) * scale)
 
     rest = ("dormant", "locked", "moored", "reserve")
     if oblique:
         # Painter's order: farther (larger depth y) first; on the wall, the face over the slot.
-        order = sorted(frame["rows"], key=lambda r: (-r[1], r[2]))
+        order = sorted(frame["rows"], key=lambda r: (-turned(r[0], r[1])[1], r[2]))
     else:
         order = sorted(frame["rows"], key=lambda r: (r[4] not in rest, r[2]))
-    for x, y, z, heading, act, tier, since, plane, magnet, shape in order:
+    deepest = max((r[10] for r in frame["rows"]), default=0)
+    for x, y, z, heading, act, tier, since, plane, magnet, shape, layer in order:
         px, py = project(x, y, z)
         if px < -20 or px > w + 20 or py < -20 or py > h + 20:
             continue
@@ -151,6 +168,10 @@ def draw_frame(frame, size=(960, 540), mode="beauty"):
             fill = SILVER_DIM if act in ("dormant", "reserve") else SILVER
             if act == "climb" or (plane < 0.1 and act not in rest and z > 0.1):
                 fill = tuple(min(255, v + 30) for v in fill)
+            if deepest > 0 and act in ("locked", "dock"):
+                # Layered title: deeper layers darker, so the staggered bond reads in depth.
+                shade = 1.0 - 0.22 * (deepest - layer) / max(1, deepest)
+                fill = tuple(int(v * shade) for v in fill)
             if mode == "magnets" and magnet:
                 fill = MAGNET_COLOURS[magnet]
             elif mode == "magnets":
@@ -169,7 +190,8 @@ def draw_frame(frame, size=(960, 540), mode="beauty"):
             points = [corner(radius * math.cos(a), radius * math.sin(a)) for a in (0.0, third, -third)]
         else:
             points = [corner(0.55, 0.0), corner(-0.38, 0.36), corner(-0.38, -0.36)]
-        draw.polygon(points, fill)
+        edge = tuple(int(v * 0.72) for v in fill) if shape is not None and mode == "beauty" and scale >= 6.0 else None
+        draw.polygon(points, fill, edge)
         if mode == "beauty" and scale >= 6.0:
             # Core: wake pulse decays to a steady glow; dormant cores are dark.
             if act == "dormant":
@@ -195,9 +217,9 @@ def nearest(frames, time):
     return min(frames, key=lambda f: abs(f["time"] - time))
 
 
-def sheet(frames, times, mode, path):
+def sheet(frames, times, mode, path, yaw=0.0):
     """Three-column contact sheet; an .svg path writes vectors, anything else a raster."""
-    tiles = [draw_frame(nearest(frames, t), (640, 360), mode) for t in times]
+    tiles = [draw_frame(nearest(frames, t), (640, 360), mode, yaw) for t in times]
     columns = 3
     rows = (len(tiles) + columns - 1) // columns
     width, height = columns * 640 + (columns - 1) * 4, rows * 360 + (rows - 1) * 4
@@ -221,7 +243,7 @@ def presentation_step(frames):
     return (frames[-1]["time"] - frames[0]["time"]) / (len(frames) - 1) / frames[0]["pace"]
 
 
-def video(frames, path, mode, size, hold):
+def video(frames, path, mode, size, hold, yaw=0.0):
     """Pipes rasterised frames to ffmpeg as raw RGB; the final frame is held for `hold` s."""
     ffmpeg = shutil.which("ffmpeg")
     if not ffmpeg:
@@ -236,7 +258,7 @@ def video(frames, path, mode, size, hold):
     with subprocess.Popen(command, stdin=subprocess.PIPE) as encoder:
         last = b""
         for f in frames:
-            last = draw_frame(f, (w, h), mode).image().convert("RGB").tobytes()
+            last = draw_frame(f, (w, h), mode, yaw).image().convert("RGB").tobytes()
             encoder.stdin.write(last)
         for _ in range(int(round(hold * fps))):
             encoder.stdin.write(last)
@@ -258,6 +280,7 @@ def main():
     parser.add_argument("--hold", type=float, default=2.0, help="seconds to hold the final frame in the video")
     parser.add_argument("--magnets", type=pathlib.Path, help="sheet coloured by magnet mode: cyan lift, amber push, white seat")
     parser.add_argument("--times", default="1.0,3.0,5.0,6.8,8.4,11.9")
+    parser.add_argument("--yaw", type=float, default=0.0, help="oblique view: degrees of yaw about the vertical, to show depth layers")
     parser.add_argument("--zoom", help="override the camera for sheets: cx,cy,half_width (view units)")
     args = parser.parse_args()
     frames = [load(p) for p in sorted(args.frames.glob("frame_*.csv"))]
@@ -269,17 +292,17 @@ def main():
         for f in frames:
             f["cx"], f["cy"], f["hw"] = cx, cy, hw
     if args.sheet:
-        sheet(frames, times, "beauty", args.sheet)
+        sheet(frames, times, "beauty", args.sheet, args.yaw)
     if args.tiers:
-        sheet(frames, times, "tiers", args.tiers)
+        sheet(frames, times, "tiers", args.tiers, args.yaw)
     if args.magnets:
-        sheet(frames, times, "magnets", args.magnets)
+        sheet(frames, times, "magnets", args.magnets, args.yaw)
     if args.gif:
-        images = [draw_frame(f, (640, 360), args.gif_mode).image() for f in frames]
+        images = [draw_frame(f, (640, 360), args.gif_mode, args.yaw).image() for f in frames]
         step_ms = int(round(presentation_step(frames) * 1000))
         images[0].save(args.gif, save_all=True, append_images=images[1:], duration=step_ms, loop=0, optimize=True)
     if args.mp4:
-        video(frames, args.mp4, args.mp4_mode, args.mp4_size, args.hold)
+        video(frames, args.mp4, args.mp4_mode, args.mp4_size, args.hold, args.yaw)
 
 
 if __name__ == "__main__":

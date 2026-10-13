@@ -125,7 +125,9 @@ SwarmIntro::SwarmIntro(IntroSettings settings)
         Mind mind;
         mind.speedScale = 0.9F + 0.2F * unit(seed, 1);
         mind.reaction = 0.05F + 0.2F * unit(seed, 2);
-        mind.laneOffset = (unit(seed, 3) - 0.5F) * 8.0F;
+        // Lane width scales with the tiles it carries: depth layers multiply the flow through
+        // the same three lanes, and flow is density x width x speed.
+        mind.laneOffset = (unit(seed, 3) - 0.5F) * 8.0F * static_cast<float>(std::max(1, settings_.wordmark.layers));
         entities_.push_back(world_.create(Identity{ i, seed }, bed[i], Motion{}, mind, HiddenTier{ 0 }));
         gTier_[i] = static_cast<std::uint8_t>(Tier::Hidden);
     }
@@ -150,11 +152,19 @@ void SwarmIntro::buildConstruction()
     slotNeighbours_.assign(count, {});
     float minY = std::numeric_limits<float>::max();
     for (const Slot& slot : slots_) minY = std::min(minY, slot.y);
+    // 3D tessellation: adjacent layers bond face to face. A wedge overlaps the two or three
+    // wedges of the next layer whose centroids lie within 0.6 side (staggered lattices put
+    // them 0.5 and 0.87 units apart); those are face links, so a front tile can be held by
+    // the built layer behind it as well as from below, and depth counts through the bond.
+    const float faceLink = 0.6F * tile;
     for (std::uint32_t a = 0; a < count; ++a)
     {
         for (std::uint32_t b = a + 1; b < count; ++b)
         {
-            if (slots_[a].letter == slots_[b].letter && std::hypot(slots_[a].x - slots_[b].x, slots_[a].y - slots_[b].y) <= link)
+            if (slots_[a].letter != slots_[b].letter) continue;
+            const float d = std::hypot(slots_[a].x - slots_[b].x, slots_[a].y - slots_[b].y);
+            const int layers = std::abs(static_cast<int>(slots_[a].layer) - static_cast<int>(slots_[b].layer));
+            if ((layers == 0 && d <= link) || (layers == 1 && d <= faceLink))
             {
                 slotNeighbours_[a].push_back(b);
                 slotNeighbours_[b].push_back(a);
@@ -293,6 +303,23 @@ void SwarmIntro::buildConstruction()
     }
 }
 
+bool SwarmIntro::faceBacked(std::size_t slot) const
+{
+    // Flat assembly (planned slots) builds layer by layer: a front wedge seats only on a
+    // locked wedge of the layer behind in the same flat body (letter or panel). A front wedge
+    // on a panel's edge with none of its own panel behind it overhangs, carried by the rigid
+    // interlocked panel; waiting on a climbed tile there would deadlock the panel's rise.
+    if (slots_[slot].layer == 0) return true;
+    bool backed = false;
+    for (std::uint32_t b : slotNeighbours_[slot])
+    {
+        if (slots_[b].layer + 1 != slots_[slot].layer || slotClimbs_[b] || slotPanel_[b] != slotPanel_[slot]) continue;
+        if (slotLocked_[b]) return true;
+        backed = true;
+    }
+    return !backed;
+}
+
 bool SwarmIntro::supported(std::size_t slot, std::span<const std::uint8_t> locked) const
 {
     if (slotDepth_[slot] == 0) return true;
@@ -344,10 +371,15 @@ void SwarmIntro::worldOf(const Pose& pose, const Mind& mind, float& wx, float& w
 {
     wx = pose.x;
     plane = 0.0F;
+    // 3D tessellation: a unit bound for a title tile stands that tile's layer in front of the
+    // back face, along the face normal (up when flat, toward the camera when upright).
+    const bool titled = !mind.ribbon && mind.goal >= 0 &&
+                        (mind.act == Act::Locked || mind.act == Act::Dock || mind.act == Act::Climb);
+    const float layer = titled ? static_cast<float>(slots_[static_cast<std::size_t>(mind.goal)].layer) * settings_.wordmark.layerDepth : 0.0F;
     if (onWall(mind))
     {
         // Wall sheet: height is the sheet coordinate; lift is a stand-off in front of the face.
-        wy = wallY_ - pose.z;
+        wy = wallY_ - pose.z - layer;
         wz = pose.y - wallBand_;
         plane = kPi * 0.5F;
         return;
@@ -357,12 +389,12 @@ void SwarmIntro::worldOf(const Pose& pose, const Mind& mind, float& wx, float& w
         // Hinge the flat letter about its baseline (the wall line), top swinging up.
         plane = panelAngle(static_cast<std::size_t>(slotPanel_[static_cast<std::size_t>(mind.goal)]));
         const float r = pose.y - wallY_;
-        wy = wallY_ + r * std::cos(plane);
-        wz = r * std::sin(plane) + pose.z;
+        wy = wallY_ + r * std::cos(plane) - layer * std::sin(plane);
+        wz = r * std::sin(plane) + (pose.z + layer) * std::cos(plane);
         return;
     }
     wy = pose.y;
-    wz = pose.z;
+    wz = pose.z + layer;
 }
 
 void SwarmIntro::viewOf(const Pose& pose, const Mind& mind, float& vx, float& vy) const
@@ -561,9 +593,9 @@ void SwarmIntro::planAssignment(std::span<const Pose> bed)
         const auto& climbs = slotClimbs_;
         const float baseY = wallY_;
         std::stable_sort(ls.begin(), ls.end(), [&](std::uint32_t a, std::uint32_t b) {
-            const std::uint32_t ka = climbs[a] ? slotDepth_[a] : 0;
-            const std::uint32_t kb = climbs[b] ? slotDepth_[b] : 0;
-            if (ka != kb) return ka < kb;
+            const std::uint32_t ka = climbs[a] ? slotDepth_[a] : slots_[a].layer;
+            const std::uint32_t kb = climbs[b] ? slotDepth_[b] : slots_[b].layer;
+            if (ka != kb) return ka < kb;   // climbed: shallow first; flat: back layer first
             const float ay = climbs[a] ? baseY : slots_[a].y;
             const float by = climbs[b] ? baseY : slots_[b].y;
             const float da = std::hypot(slots_[a].x - ex, ay - ey);
@@ -661,7 +693,11 @@ bool SwarmIntro::flows(const Pose& pose, const Mind& mind) const
     // each other in layers (as the Big Hero 6 microbots slide over one another) instead of
     // colliding; the heap is where the swarm pours onto the wall.
     if (!climber(mind)) return false;
-    return mind.act == Act::Climb || (mind.act == Act::Seek && mind.goal >= 0 && pose.y > wallY_ - kHeapDepth);
+    if (mind.act == Act::Climb || (mind.act == Act::Seek && mind.goal >= 0 && pose.y > wallY_ - kHeapDepth)) return true;
+    // Depth layers: a letter's waiting crowd outgrows its staging band (a two-layer U sends
+    // about 300 climbers in two seconds), so the waiting crowd heaps too, a mound in front
+    // of the letter, rather than pressing into contact (measured 6-8% of visible movers).
+    return settings_.wordmark.layers > 1 && (mind.act == Act::Queue || mind.act == Act::Seek) && pose.y > wallY_ - kHeapDepth - stagingBand();
 }
 
 float SwarmIntro::seatHeading(float slotHeading, float current) const
@@ -1284,7 +1320,7 @@ void SwarmIntro::advanceAct(std::uint32_t unit, Pose& pose, Mind& mind)
     const float sx = mind.ribbon ? ribbon_[goal].x : slots_[goal].x;
     const float sy = mind.ribbon ? ribbon_[goal].y : slots_[goal].y;
     const float sh = mind.ribbon ? ribbon_[goal].heading : seatHeading(slots_[goal].heading, pose.heading);
-    const bool structural = mind.ribbon || !slotClimbs_[goal] || supported(goal, slotStanding_);
+    const bool structural = mind.ribbon || (!slotClimbs_[goal] && faceBacked(goal)) || supported(goal, slotStanding_);
     if (structural && std::hypot(sx - pose.x, sy - pose.y) < 0.12F && std::abs(wrapAngle(sh - pose.heading)) < 0.15F)
     {
         pose = { sx, sy, 0.0F, sh };
@@ -1568,7 +1604,9 @@ void SwarmIntro::stagingPoint(std::uint32_t index, const Mind& mind, float& x, f
     }
     const float spread = unit(mix(index), 7);
     x = minX + (maxX - minX) * spread;
-    y = wallY_ - 4.0F - 2.0F * unit(mix(index), 8);
+    // The band deepens with the letter's depth layers: each layer brings as many climbers to
+    // the same base width.
+    y = wallY_ - 4.0F - stagingBand() * unit(mix(index), 8);
 }
 
 void SwarmIntro::setMagnet(std::uint32_t unit, Mind& mind, MagnetMode mode, bool on)
@@ -1640,11 +1678,13 @@ void SwarmIntro::claimSystem()
     // Climb build, first come first served: units queued at a letter's base claim slots in
     // arrival order. A slot is claimable once it could be supported soon: on the ground row,
     // or with a lower neighbour already locked or claimed. Each letter keeps at most claimCap
-    // claims in flight. Serial and in (arrival, identity) order, so it is deterministic.
+    // claims in flight per depth layer (a two-layer letter has twice the tiles at each
+    // level). Serial and in (arrival, identity) order, so it is deterministic.
     if (!climbing()) return;
+    const std::uint32_t claimCap = settings_.claimCap * static_cast<std::uint32_t>(std::max(1, settings_.wordmark.layers));
     for (std::uint8_t letter = 0; letter < 8; ++letter)
     {
-        if (!letterClimbs_[letter] || letterInFlight_[letter] >= settings_.claimCap) continue;
+        if (!letterClimbs_[letter] || letterInFlight_[letter] >= claimCap) continue;
         queueScratch_.clear();
         world_.each<Identity, Pose, Motion, Mind>([&](Identity& id, Pose&, Motion&, Mind& mind) {
             if (mind.act == Act::Queue && mind.letter == static_cast<std::int8_t>(letter)) queueScratch_.push_back({ mind.arrived, id.index });
@@ -1654,7 +1694,7 @@ void SwarmIntro::claimSystem()
         std::uint32_t rank = 0;
         for (const auto& [arrived, unitIndex] : queueScratch_)
         {
-            if (letterInFlight_[letter] >= settings_.claimCap) break;
+            if (letterInFlight_[letter] >= claimCap) break;
             Pose* pose = world_.find<Pose>(entities_[unitIndex]);
             Mind* mind = world_.find<Mind>(entities_[unitIndex]);
             std::int64_t best = -1;
@@ -2024,8 +2064,9 @@ void SwarmIntro::snapshot(std::vector<RenderRow>& out)
         float wx, wy, wz, plane;
         worldOf(pose, mind, wx, wy, wz, plane);
         const bool shaped = mind.act == Act::Locked && !mind.ribbon && settings_.wordmark.tile > 0.0F;
+        const std::uint8_t layer = !mind.ribbon && mind.goal >= 0 ? slots_[static_cast<std::size_t>(mind.goal)].layer : 0;
         out[id.index] = { wx, wy, wz, pose.heading, plane, mind.act, static_cast<Tier>(gTier_[id.index]), mind.actSince, mind.magnet,
-                          shaped, shaped ? slots_[static_cast<std::size_t>(mind.goal)].shape : std::array<float, 6>{} };
+                          layer, shaped, shaped ? slots_[static_cast<std::size_t>(mind.goal)].shape : std::array<float, 6>{} };
     });
 }
 

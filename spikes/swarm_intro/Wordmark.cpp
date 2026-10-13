@@ -443,8 +443,21 @@ std::vector<Slot> buildWordmark(const WordmarkSettings& settings, WordmarkStats*
             std::vector<Polyline> lines;
             for (const Polyline& line : glyph(kWord[i], w, h, inset)) lines.push_back(capped(line, cap));
             const float halfThickness = static_cast<float>(settings.strokeRows) * 0.5F * settings.pitch;
-            tessellate(lines, w, h, settings.tile, halfThickness, settings.morph * settings.tile, origin, static_cast<std::uint8_t>(i),
-                       slots, local, before, after);
+            for (int layer = 0; layer < std::max(1, settings.layers); ++layer)
+            {
+                // Odd layers: the glyph moves half a side across a fixed lattice, which is the
+                // lattice shifted against the glyph. Tiles then straddle the joints behind.
+                const float shift = (layer & 1) != 0 ? settings.tile * 0.5F : 0.0F;
+                std::vector<Polyline> shifted = lines;
+                for (Polyline& line : shifted)
+                {
+                    for (Point& point : line) point.x += shift;
+                }
+                const std::size_t first = slots.size();
+                tessellate(shifted, w + shift, h, settings.tile, halfThickness, settings.morph * settings.tile,
+                           Point{ origin.x - shift, origin.y }, static_cast<std::uint8_t>(i), slots, local, before, after);
+                for (std::size_t k = first; k < slots.size(); ++k) slots[k].layer = static_cast<std::uint8_t>(layer);
+            }
             continue;
         }
         for (const Polyline& line : glyph(kWord[i], w, h, inset))

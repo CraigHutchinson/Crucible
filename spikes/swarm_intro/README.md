@@ -1,7 +1,7 @@
 # Nanite swarm intro spike
 
 Headless, deterministic prototype of the CRUCIBLE title sequence's swarm behaviour: building
-blocks S0 to S0h of the
+blocks S0 to S0i of the
 [nanite swarm design](../../docs/concepts/phase15-experience/nanite-swarm-design.md).
 It answers a narrow question: **can a few thousand view-owned nanites perform the
 director's beats with intelligent-looking behaviour near the camera, cheap non-penetrating
@@ -20,6 +20,7 @@ User direction, 2026-10-12:
 - Each iteration is pushed and merged.
 - 2026-10-13: play the intro at about **66% speed** so the climbing reads (the default pace
   is 2/3); render videos as MP4.
+- 2026-10-13: consider **3D tessellation** (S0i, `--layers`).
 
 **Times are choreography seconds** (the authored beats) unless marked "on screen". At the
 default `--pace 0.6667`, each tick shows 1/60 s but advances the choreography by 1/90 s, so a
@@ -43,8 +44,23 @@ upright builds.
 The climb build runs on two connected surfaces: the ground and the wall face. The wall face
 is stored as a second interaction surface, offset so the two never interact, and joined to
 the ground along the wall's base. That is the "surface" interpretation of upright
-assembly. Full three-axis interlocking (units attaching on any face, overhangs, depth) is a
-later stage in the design.
+assembly.
+
+## 3D tessellation (S0i)
+
+`--layers N` gives the title depth: N layers of the same tiling, each `layerDepth` (one
+diameter) in front of the last, with every odd layer on a lattice shifted half a tile side.
+Each wedge then overlaps two or three wedges of the layer behind, a staggered bond like
+brickwork. Overlapping wedges of adjacent layers are linked in the build graph (face
+links), so the one support rule now spans three axes: a tile needs the ground or a locked
+neighbour of lower build depth, and a front tile can be held by the face behind it. Flat
+assembly seats a front wedge only on a locked wedge of the same flat body. Lane width and
+each letter's waiting band scale with the layer count, and a multi-layer letter's waiting
+climbers heap and flow over each other. With one layer, every state hash is unchanged.
+
+Two layers need about twice the units: `--layers 2 --count 3072`. The renderer's `--yaw`
+turns the oblique camera so the depth shows; deeper layers are shaded darker, and locked
+tiles are drawn with their edges.
 
 ## Tessellated title (solid join) and morphing tiles
 
@@ -169,7 +185,7 @@ to 11.8 s (with the earlier 1,104 unmorphed tiles).
 ```sh
 cmake --preset release -DCRUCIBLE_BUILD_SWARM_SPIKE=ON
 cmake --build --preset release --target crucible_swarm_intro
-ctest --preset release -R swarm_intro      # 5 --verify cases + 5 diagnostics receivers
+ctest --preset release -R swarm_intro      # 7 --verify cases + 6 diagnostics receivers (2 with --layers 2)
 ./build/release/spikes/swarm_intro/crucible_swarm_intro --build scaffold \
     --events-jsonl events.jsonl --health-json health.json --frames frames --every 1
 python3 spikes/swarm_intro/render_swarm.py frames --sheet beats.svg --magnets magnets.svg \
@@ -177,12 +193,13 @@ python3 spikes/swarm_intro/render_swarm.py frames --sheet beats.svg --magnets ma
 ```
 
 Options: `--build lying|raise|climb|hybrid|scaffold`, `--raise-letters MASK`, `--morph F` (0.35), `--rows`, `--count N` (1536), `--hero-cap N` (128),
-`--claim-cap N` (96), `--lod camera|hero|near|far`, `--pace P` (0.6667; 1 is the original
+`--claim-cap N` (96 per depth layer), `--layers N` (1), `--lod camera|hero|near|far`, `--pace P` (0.6667; 1 is the original
 speed), `--seconds S` (on screen; default 12 s of choreography, 15 s for the climbing
 builds), `--metrics FILE`.
 Renderer: `--tiers`, `--magnets` (cyan lift, amber push, white seat), `--gif`, `--gif-mode`,
 `--mp4` (H.264 at the capture's on-screen rate, 60 fps with `--every 1`; `--mp4-mode`,
-`--mp4-size 1280x720`, `--hold 2` seconds on the last frame) and `--zoom cx,cy,half_width`.
+`--mp4-size 1280x720`, `--hold 2` seconds on the last frame), `--yaw DEG` (oblique view
+turned to show depth layers) and `--zoom cx,cy,half_width`.
 Sheet `--times` are choreography seconds; frame labels also show the time on screen.
 
 ## Acceptance (`--verify`)
@@ -205,6 +222,7 @@ seconds, so they scale with the pace.
   - Raise: every letter upright by 10.0 s.
 - **Lying:** a uniform hero tier completes by 12.5 s† (11.0 s for 959 row slots, scaled for 1,104 tiles).
 - **Hybrid and scaffold:** every drawbridge panel upright by 13.5 s†, plus the climb gates.
+- **Two layers** (`--layers 2 --count 3072`, climb and scaffold in CTest): every gate above.
 - **Climb** (15 s sequence):
   - Title complete by 12.5 s, leaving a hold and the menu handoff by 15 s.
   - At most 0.5%† of climber-ticks off the built face. Attached means touching it: within a
@@ -229,11 +247,26 @@ a device budget. 1,066 morphed tiles. Times are choreography seconds; on screen 
 | Scaffold, 16384 | 10.49 s | 7.92 s | 0.11% / 0.73 d | 34 → 34 | 2.55 / 6.95 ms |
 
 Off the built face: climb 0 of 59,537 climber-ticks, hybrid 0 of 24,241, scaffold 3 of
-33,327. Release, Debug and ASan/UBSan pass all ten CTest cases (five `--verify`, five
+33,327. Release, Debug and ASan/UBSan pass all thirteen CTest cases (seven `--verify`, six
 diagnostics receivers). They produce the same state hashes with this compiler (22.5 s on
 screen, 1536 units: lying `3c951c0d05bdb744`, raise `1efad3ea9ba609a3`, climb
 `e920c8aee60c63c8`, hybrid `efa270be5513e8b4`, scaffold `b75543d06ac47437`). Cross-compiler
 or cross-platform bit equality is not claimed.
+
+Two depth layers (S0i, `--layers 2 --count 3072`, 2,146 tiles):
+
+| Run | Title complete | Upright | Worst contacts / min gap | Stuck → recovered | Tick p50 / p95 |
+|---|---|---|---|---|---|
+| Lying | 8.42 s | – | 0.06% / 0.76 d | 0 → 0 | 0.15 / 3.13 ms |
+| Raise | 8.49 s | 9.54 s | 0.24% / 0.71 d | 1 → 1 | 0.23 / 5.94 ms |
+| Climb | 10.88 s | 10.88 s | 0.18% / 0.74 d | 35 → 35 | 0.65 / 9.48 ms |
+| Hybrid | 10.00 s | 8.73 s (raised) | 0.20% / 0.73 d | 10 → 10 | 0.28 / 6.19 ms |
+| Scaffold | 10.63 s | 8.58 s (panels) | 0.32% / 0.77 d | 97 → 97 | 1.13 / 7.63 ms |
+
+Off the built face: climb 46 of 93,342 climber-ticks, scaffold 112 of 59,739; no
+unsupported lock. State hashes: lying `be4fd2c08b663418`, raise `7428bbb6181136e1`, climb
+`a30621b1ea7cbc40`, hybrid `4cbff8369e5b08a8`, scaffold `b42d1698c2d1343e`. Three layers
+(3,212 tiles, 4,608 units) lock 3,211 by 15 s (finding 22).
 
 A slower pace costs nothing per presented tick: each tick advances less choreography, and
 p50 fell because the per-tick work shrinks with the smaller step. The whole sequence takes
@@ -279,6 +312,20 @@ up; climbers gather at the bases; arms and bowls grow from the standing stems; c
 The B, L and E at 6.6, 7.2, 7.8, 8.4, 9.2 and 10.5 s: the L and E stems rise as drawbridges
 (foreshortened while rising) while climbers wait at the E's base; then they pour over the
 standing stems to build the E's arms and the B's bowls.
+
+### 3D tessellation (S0i)
+
+![Two depth layers: the scaffold build seen at 30 degrees of yaw](evidence/layers.svg)
+
+The scaffold build with two staggered layers, the camera yawed 30° so the depth shows: stem
+panels assemble flat as two-layer slabs and swing up; climbers build both layers of the
+arms and bowls, the front layer held by the face behind it; complete at 10.6 s.
+
+![Two depth layers, close-up of the B, L and E](evidence/layers-closeup.svg)
+
+The B, L and E at 35° of yaw: the L stem rising as a slab, its thickness and the back
+layer's darker edge visible; the staggered joints between the layers show where tile
+edges cross.
 
 ### Morphing tiles
 
@@ -407,6 +454,23 @@ the finished letters as single faces.
     after a swap handed a unit a farther slot, its distance never beat the best distance it
     had reached toward the old one. The progress baseline now resets when the goal changes,
     as it already did when the act changed; the lying build has no stuck episodes.
+22. **Staggered layers give 3D interlocking with the same support rule** (S0i). Face links
+    between overlapping wedges of adjacent layers let build depth count through the bond,
+    so a front tile can be held by the face behind it; nothing else in the climbing
+    vocabulary changed. Two layers pass every gate. Doubling the tiles exposed three
+    capacity limits, each fixed by scaling with the layer count (single-layer hashes are
+    unchanged):
+    - a front panel wedge waited on a climbed wedge behind it, and the panel never rose:
+      flat assembly now counts face backing only within the same flat body;
+    - lanes carried twice the flow: lane width now scales with the layers (lying contacts
+      1.2% to 0.06%);
+    - climbing letters' waiting crowds packed into contact (U: 300 climbers, 6–8%): they now
+      heap and flow over each other like the wall-base heap (0.2–0.3%).
+
+    Three layers leave one enclosed front-layer pocket unfilled at 15 s: TERMES-style
+    construction avoids this with a no-enclosed-holes build order, the follow-up before
+    deeper titles. Cost: scaffold p50 1.1 ms per presented tick against 0.5 ms with one
+    layer, mostly surface routing over the larger letter graphs.
 
 ## Limits
 
@@ -415,7 +479,10 @@ materials, bloom or real wedge mesh. One fixed seed. Glyphs are a prototype stro
 square caps, not the licensed wordmark asset. A unit snaps to its morphed shape when it
 locks; a gradual morph while seating is a renderer detail for S1. The raise hinge is a rigid pose transform:
 nothing yet shows what lifts the letter. Climbers and heaped seekers stack in layers; only
-other ground movers are held apart.
+other ground movers are held apart. Depth layers (S0i) are rendered as shaded flat tiles in
+a yawed oblique view, not as extruded prisms; units on the wall still move in the face's
+plane, and a layer's depth is placement, not a third motion axis. At most two layers
+complete; overhangs and climbing onto the back face are not modelled.
 
 Skip, reduced motion, resize and focus behaviour belong to the frontend package and are not
 exercised. No GPU, audio or participant evidence.
