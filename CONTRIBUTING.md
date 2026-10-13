@@ -68,6 +68,12 @@ for the optional Vulkan/shader profile. Use `--build-dir build/<preset>` to prob
 an existing cached compiler and flags. The development canary exercises C++23
 `std::expected`, thread startup and executable loading. Failures/unknown required
 capabilities block; the checker never installs tools or disables leak detection.
+The JSON receipt goes to stdout; stderr carries a summary naming each blocking check,
+its status and reason, its time against its limit, the command it ran and a next step
+(status `unknown` reads "undecided": the check could not decide, for example a timed-out
+canary, which does not show the capability missing; re-run, or raise `--timeout`/`--budget`). On
+GitHub Actions each blocking check is also an error annotation, and the job summary
+gets a table of every check. The test runner prints the same summary.
 
 The test runner checks the exact selected CTest inventory after its narrow mode
 repair. Portable tests require no GPU. Selected executing GPU cases additionally

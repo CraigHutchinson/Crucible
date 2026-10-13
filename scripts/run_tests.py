@@ -15,7 +15,7 @@ import stat
 import subprocess
 import sys
 
-from check_prerequisites import check_prerequisites
+from check_prerequisites import check_prerequisites, report
 
 
 def repair_permissions(tests: list[dict], artifact_root: Path) -> list[Path]:
@@ -101,7 +101,8 @@ def main() -> int:
             args.prerequisite_report.parent.mkdir(parents=True, exist_ok=True)
             args.prerequisite_report.write_text(rendered + "\n")
         if not receipt["ok"]:
-            print("Test prerequisites blocked execution; see receipt above.", file=sys.stderr)
+            report(receipt)
+            print("Test prerequisites blocked execution; see the summary and receipt above.", file=sys.stderr)
             return 1
         return subprocess.run(command, cwd=repo).returncode
     except subprocess.CalledProcessError as error:

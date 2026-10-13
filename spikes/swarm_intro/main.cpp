@@ -23,13 +23,14 @@ using namespace crucible::spike::swarm;
 struct Options
 {
     IntroSettings settings{};
-    float seconds = 0.0F;   // presentation seconds; 0 runs 12 s of choreography (15 s for climbing builds)
+    float seconds = 0.0F;   // presentation seconds; 0 runs the build's sequence on screen (SwarmIntro::sequenceSeconds)
     std::string framesDir;
     int every = 4;
     std::string metricsPath;
     std::string eventsPath;   // Sub0Log JSONL messages
     std::string healthPath;   // one swarm_health object
     bool verify = false;
+    bool switchLevers = false;   // verify: change the levers mid-run (camera-led, then activity-led)
 };
 
 struct RunSummary
@@ -40,6 +41,9 @@ struct RunSummary
     float firstLock = -1.0F;
     float allLocked = -1.0F;
     float allRaised = -1.0F;   // raise build: every letter upright
+    float shownLength = 0.0F;  // presentation seconds: the run, the title locked, the panels raised
+    float shownLocked = -1.0F;
+    float shownRaised = -1.0F;
     std::uint32_t worstOverlaps = 0;
     float worstOverlapRatio = 0.0F;
     float worstOverlapTime = 0.0F;
@@ -47,6 +51,9 @@ struct RunSummary
     std::uint32_t maxHeroes = 0;
     std::uint32_t maxMigrations = 0;
     std::uint64_t yields = 0;
+    std::uint64_t deliberations = 0;   // hero System 2 deliberations
+    std::vector<float> predictedCost;  // per tick, cost units
+    float minFidelity = 1.0F;
     std::uint64_t claims = 0;
     std::uint64_t stuck = 0;
     std::uint64_t recovered = 0;
@@ -75,7 +82,17 @@ struct RunSummary
 std::string label(const IntroSettings& s)
 {
     const char* build = s.build == Build::Lying ? "lying" : (s.build == Build::Climb ? "climb" : (s.build == Build::Raise ? "raise" : (s.build == Build::Hybrid ? "hybrid" : "scaffold")));
-    const char* lod = s.lod == LodMode::Camera ? "camera" : (s.lod == LodMode::AllHero ? "uniform-hero" : (s.lod == LodMode::AllNear ? "uniform-near" : "uniform-far"));
+    const char* lod = "uniform-far";
+    switch (s.lod)
+    {
+    case LodMode::Camera: lod = "camera"; break;
+    case LodMode::Activity: lod = "activity"; break;
+    case LodMode::Blend: lod = "blend"; break;
+    case LodMode::AllHero: lod = "uniform-hero"; break;
+    case LodMode::AllNear: lod = "uniform-near"; break;
+    case LodMode::AllFar: lod = "uniform-far"; break;
+    case LodMode::AllHidden: lod = "uniform-hidden"; break;
+    }
     return std::string(build) + "/" + lod;
 }
 
@@ -115,7 +132,10 @@ RunSummary run(const Options& options, bool capture)
     const std::uint32_t raiseTarget = intro.panelCount();
     summary.panels = raiseTarget;
     summary.ribbon = std::min(intro.ribbonCount(), options.settings.nanites - intro.assignedSlots());
-    const int ticks = static_cast<int>(options.seconds / options.settings.tickSeconds + 0.5F);
+    // Default length: the build's sequence on screen, the close-up tour played slower.
+    const float sequence = intro.presentAt(intro.sequenceSeconds());
+    const float seconds = options.seconds > 0.0F ? (options.verify ? std::max(options.seconds, sequence) : options.seconds) : sequence;
+    const int ticks = static_cast<int>(seconds / options.settings.tickSeconds + 0.5F);
     std::FILE* metrics = nullptr;
     if (capture && !options.metricsPath.empty())
     {
@@ -132,6 +152,24 @@ RunSummary run(const Options& options, bool capture)
     int windowStart = 0;
     for (int t = 0; t < ticks; ++t)
     {
+        if (options.switchLevers)
+        {
+            // Levers are dynamic: hand fidelity to the camera for the middle of the build, then
+            // to activity, and the run must still converge.
+            LodLevers levers = options.settings.levers;
+            if (intro.time() >= 4.0F && intro.time() < 8.0F)
+            {
+                levers.viewWeight = 1.0F;
+                levers.activityWeight = 0.2F;
+            }
+            else if (intro.time() >= 8.0F)
+            {
+                levers.viewWeight = 0.1F;
+                levers.activityWeight = 1.0F;
+                levers.heroPeriod = 3;
+            }
+            intro.setLevers(levers);
+        }
         intro.tick();
         const TickMetrics& m = intro.metrics();
         float total = 0.0F;
@@ -162,6 +200,9 @@ RunSummary run(const Options& options, bool capture)
         summary.maxHeroes = std::max(summary.maxHeroes, m.tierCount[0]);
         if (t > 0) summary.maxMigrations = std::max(summary.maxMigrations, m.migrations);   // tick0 seeds every tier
         summary.yields += m.heroYields;
+        summary.deliberations += m.deliberations;
+        summary.predictedCost.push_back(m.predictedCost);
+        summary.minFidelity = std::min(summary.minFidelity, m.fidelity);
         summary.claims += m.claims;
         summary.stuck += m.stuck;
         summary.recovered += m.recovered;
@@ -200,16 +241,18 @@ RunSummary run(const Options& options, bool capture)
             {
                 const Camera& cam = intro.camera();
                 const NaniteBody& body = options.settings.body;
+                // pace: the current pace; shown: presentation seconds; yaw: the camera's turn.
                 std::fprintf(f, "# time=%.6f cx=%.4f cy=%.4f half_width=%.4f aspect=%.6f view=%s tilt=%.3f tile=%.4f pace=%.6f "
-                                "body=%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,%.4f\n", m.time, cam.cx,
+                                "body=%.4f,%.4f,%.4f,%.4f,%.4f,%.4f shown=%.6f yaw=%.3f\n", m.time, cam.cx,
                              cam.cy, cam.halfWidth, cam.aspect, options.settings.build != Build::Lying ? "oblique" : "top",
-                             options.settings.viewTilt, options.settings.wordmark.tile, options.settings.pace, body.height, body.noseHeight,
-                             body.shoulder, body.spineFront, body.spineRear, body.dartLength, body.dartWidth, body.coreLength);
-                std::fprintf(f, "x,y,z,heading,act,tier,act_since,plane,magnet,layer,s0x,s0y,s1x,s1y,s2x,s2y\n");
+                             options.settings.viewTilt, options.settings.wordmark.tile, intro.paceAt(m.time), body.height, body.span,
+                             body.lean, body.core, body.stretch, body.stretchSpeed, static_cast<double>(t + 1) * options.settings.tickSeconds,
+                             cam.yaw);
+                std::fprintf(f, "x,y,z,heading,act,tier,act_since,plane,magnet,layer,speed,s0x,s0y,s1x,s1y,s2x,s2y\n");
                 for (const RenderRow& r : rows)
                 {
-                    std::fprintf(f, "%.3f,%.3f,%.3f,%.4f,%s,%d,%.3f,%.4f,%u,%u", r.x, r.y, r.z, r.heading, actName(r.act),
-                                 static_cast<int>(r.tier), r.actSince, r.plane, static_cast<unsigned>(r.magnet), static_cast<unsigned>(r.layer));
+                    std::fprintf(f, "%.3f,%.3f,%.3f,%.4f,%s,%d,%.3f,%.4f,%u,%u,%.3f", r.x, r.y, r.z, r.heading, actName(r.act),
+                                 static_cast<int>(r.tier), r.actSince, r.plane, static_cast<unsigned>(r.magnet), static_cast<unsigned>(r.layer), r.speed);
                     if (r.shaped)
                     {
                         std::fprintf(f, ",%.4f,%.4f,%.4f,%.4f,%.4f,%.4f", r.shape[0], r.shape[1], r.shape[2], r.shape[3], r.shape[4], r.shape[5]);
@@ -231,6 +274,9 @@ RunSummary run(const Options& options, bool capture)
         std::ostream& health = options.healthPath.empty() ? static_cast<std::ostream&>(std::cerr) : healthFile;
         summary.diagnosticsOk = diagnostics->writeJson(events, health);
     }
+    summary.shownLength = static_cast<float>(ticks) * options.settings.tickSeconds;
+    if (summary.allLocked >= 0.0F) summary.shownLocked = intro.presentAt(summary.allLocked);
+    if (summary.allRaised >= 0.0F) summary.shownRaised = intro.presentAt(summary.allRaised);
     return summary;
 }
 
@@ -247,7 +293,6 @@ void print(const std::string& label, const Options& options, const RunSummary& s
     const double ticks = static_cast<double>(s.tickMicros.size());
     // Beats and gates are choreography seconds; the presentation block is what a viewer sees.
     const double pace = options.settings.pace;
-    const auto present = [&](float t) { return t < 0.0F ? -1.0 : static_cast<double>(t) / pace; };
     std::printf("{\"run\":\"%s\",\"nanites\":%zu,\"slots\":%zu,\"ribbon\":%zu,\"hero_cap\":%zu,"
                 "\"first_lock_s\":%.3f,\"all_locked_s\":%.3f,\"all_raised_s\":%.3f,\"raised_letters\":%u,\"panels\":%u,\"locked_at_8_4\":%.4f,\"locked_at_10\":%.4f,\"moored_at_10\":%.4f,"
                 "\"worst_visible_overlaps\":%u,\"worst_overlap_ratio\":%.4f,\"worst_overlap_time_s\":%.3f,\"min_visible_gap\":%.3f,"
@@ -255,17 +300,20 @@ void print(const std::string& label, const Options& options, const RunSummary& s
                 "\"tick_us_p50\":%.1f,\"tick_us_p95\":%.1f,\"tick_us_max\":%.1f,"
                 "\"mean_us\":{\"gather\":%.1f,\"signal\":%.1f,\"behaviour\":%.1f,\"resolve\":%.1f,\"lod\":%.1f,\"metrics\":%.1f},"
                 "\"outline\":{\"corners\":%zu,\"rms_before\":%.3f,\"rms_after\":%.3f,\"max_morph\":%.3f,\"min_area_ratio\":%.3f},"
-                "\"pace\":%.4f,\"presentation\":{\"length_s\":%.3f,\"all_locked_s\":%.3f,\"all_raised_s\":%.3f},"
+                "\"pace\":%.4f,\"close_pace\":%.4f,\"presentation\":{\"length_s\":%.3f,\"all_locked_s\":%.3f,\"all_raised_s\":%.3f},"
+                "\"deliberations\":%llu,\"cost_p50\":%.1f,\"cost_p95\":%.1f,\"cost_max\":%.1f,\"min_fidelity\":%.2f,"
                 "\"state_hash\":\"%016llx\"}\n",
-                label.c_str(), options.settings.nanites, s.slots, s.ribbon, options.settings.heroCap, s.firstLock, s.allLocked, s.allRaised, static_cast<unsigned>(s.raisedMask), s.panels, s.lockedAt84,
+                label.c_str(), options.settings.nanites, s.slots, s.ribbon, options.settings.levers.heroCap, s.firstLock, s.allLocked, s.allRaised, static_cast<unsigned>(s.raisedMask), s.panels, s.lockedAt84,
                 s.lockedAt10, s.mooredAt10, s.worstOverlaps, s.worstOverlapRatio, s.worstOverlapTime, s.minVisibleGap, s.maxHeroes,
                 s.maxMigrations, static_cast<unsigned long long>(s.yields), static_cast<unsigned long long>(s.swaps), static_cast<unsigned long long>(s.claims), static_cast<unsigned long long>(s.stuck), static_cast<unsigned long long>(s.recovered), static_cast<unsigned long long>(s.pushes), static_cast<unsigned long long>(s.reclaims), s.maxStuckNow, s.stuckAtEnd, static_cast<unsigned long long>(s.climberTicks), s.diagnosticsOk ? "true" : "false", s.lockedAtEnd, static_cast<unsigned long long>(s.unsupported), static_cast<unsigned long long>(s.offSurface), static_cast<unsigned long long>(s.clicks),
                 s.peakClicksPer100ms, percentile(s.tickMicros, 0.5F), percentile(s.tickMicros, 0.95F),
                 percentile(s.tickMicros, 1.0F), s.systemMicros[0] / ticks, s.systemMicros[1] / ticks, s.systemMicros[2] / ticks,
                 s.systemMicros[3] / ticks, s.systemMicros[4] / ticks, s.systemMicros[5] / ticks,
                 s.wordmark.boundaryCorners, s.wordmark.outlineRmsBefore, s.wordmark.outlineRmsAfter, s.wordmark.maxMorph,
-                s.wordmark.minAreaRatio, pace, ticks * static_cast<double>(options.settings.tickSeconds), present(s.allLocked),
-                present(s.allRaised), static_cast<unsigned long long>(s.hash));
+                s.wordmark.minAreaRatio, pace, static_cast<double>(options.settings.closePace), static_cast<double>(s.shownLength),
+                static_cast<double>(s.shownLocked), static_cast<double>(s.shownRaised),
+                static_cast<unsigned long long>(s.deliberations), percentile(s.predictedCost, 0.5F), percentile(s.predictedCost, 0.95F),
+                percentile(s.predictedCost, 1.0F), static_cast<double>(s.minFidelity), static_cast<unsigned long long>(s.hash));
 }
 
 bool parse(int argc, char** argv, Options& o)
@@ -292,9 +340,17 @@ bool parse(int argc, char** argv, Options& o)
         else if (a == "--morph") { const char* v = next(); if (!v) return false; o.settings.wordmark.morph = std::strtof(v, nullptr); }
         else if (a == "--claim-cap") { const char* v = next(); if (!v) return false; o.settings.claimCap = static_cast<std::uint32_t>(std::atoi(v)); }
         else if (a == "--count") { const char* v = next(); if (!v) return false; o.settings.nanites = std::strtoul(v, nullptr, 10); }
-        else if (a == "--hero-cap") { const char* v = next(); if (!v) return false; o.settings.heroCap = std::strtoul(v, nullptr, 10); }
+        else if (a == "--hero-cap") { const char* v = next(); if (!v) return false; o.settings.levers.heroCap = std::strtoul(v, nullptr, 10); }
+        else if (a == "--view-weight") { const char* v = next(); if (!v) return false; o.settings.levers.viewWeight = std::strtof(v, nullptr); }
+        else if (a == "--activity-weight") { const char* v = next(); if (!v) return false; o.settings.levers.activityWeight = std::strtof(v, nullptr); }
+        else if (a == "--hero-min") { const char* v = next(); if (!v) return false; o.settings.levers.heroMin = std::strtof(v, nullptr); }
+        else if (a == "--near-min") { const char* v = next(); if (!v) return false; o.settings.levers.nearMin = std::strtof(v, nullptr); }
+        else if (a == "--hero-period") { const char* v = next(); if (!v) return false; o.settings.levers.heroPeriod = static_cast<std::uint32_t>(std::strtoul(v, nullptr, 10)); }
+        else if (a == "--route-period") { const char* v = next(); if (!v) return false; o.settings.levers.routePeriod = static_cast<std::uint32_t>(std::strtoul(v, nullptr, 10)); }
+        else if (a == "--budget") { const char* v = next(); if (!v) return false; o.settings.levers.budget = std::strtof(v, nullptr); }
         else if (a == "--layers") { const char* v = next(); if (!v) return false; o.settings.wordmark.layers = std::max(1, std::atoi(v)); }
         else if (a == "--pace") { const char* v = next(); if (!v) return false; o.settings.pace = std::strtof(v, nullptr); }
+        else if (a == "--close-pace") { const char* v = next(); if (!v) return false; o.settings.closePace = std::strtof(v, nullptr); }
         else if (a == "--seconds") { const char* v = next(); if (!v) return false; o.seconds = std::strtof(v, nullptr); }
         else if (a == "--frames") { const char* v = next(); if (!v) return false; o.framesDir = v; }
         else if (a == "--every") { const char* v = next(); if (!v) return false; o.every = std::max(1, std::atoi(v)); }
@@ -310,6 +366,9 @@ bool parse(int argc, char** argv, Options& o)
             else if (m == "hero") o.settings.lod = LodMode::AllHero;
             else if (m == "near") o.settings.lod = LodMode::AllNear;
             else if (m == "far") o.settings.lod = LodMode::AllFar;
+            else if (m == "hidden") o.settings.lod = LodMode::AllHidden;
+            else if (m == "activity") o.settings.lod = LodMode::Activity;
+            else if (m == "blend") o.settings.lod = LodMode::Blend;
             else return false;
         }
         else return false;
@@ -330,21 +389,18 @@ int main(int argc, char** argv)
     if (!parse(argc, argv, options))
     {
         std::fprintf(stderr,
-                     "usage: crucible_swarm_intro [--verify] [--build lying|climb|raise|hybrid|scaffold] [--raise-letters MASK] [--rows] [--morph F] [--layers N] [--count N] [--hero-cap N] [--lod camera|hero|near|far]\n"
-                     "                            [--seconds S] [--pace P] [--frames DIR] [--every TICKS] [--metrics FILE]\n"
+                     "usage: crucible_swarm_intro [--verify] [--build lying|climb|raise|hybrid|scaffold] [--raise-letters MASK] [--rows] [--morph F] [--layers N] [--count N] [--hero-cap N] [--lod blend|camera|activity|hero|near|far|hidden] [--view-weight W] [--activity-weight W] [--hero-min S] [--near-min S] [--hero-period N] [--route-period N] [--budget C]\n"
+                     "                            [--seconds S] [--pace P] [--close-pace P] [--frames DIR] [--every TICKS] [--metrics FILE]\n"
                      "                            [--events-jsonl FILE] [--health-json FILE] [--claim-cap N]\n");
         return 2;
     }
     try
     {
         const Build build = options.settings.build;
-        // Climbing builds use the fifteen-second sequence (user direction), in choreography
-        // seconds: at pace 2/3 a viewer sees 22.5 s.
-        const bool climbs = build == Build::Climb || build == Build::Hybrid || build == Build::Scaffold;
-        const float choreography = climbs ? 15.0F : 12.0F;
-        if (options.settings.pace <= 0.0F) return fail("pace is positive");
-        if (options.seconds <= 0.0F) options.seconds = choreography / options.settings.pace;
-        if (options.verify && climbs) options.seconds = std::max(options.seconds, choreography / options.settings.pace);
+        // The run lasts the build's sequence on screen unless --seconds says otherwise (run()):
+        // 12 s of choreography, 15 s when climbing (user direction), plus the closing pull-out,
+        // at `pace` with the close-up tour at `closePace`.
+        if (options.settings.pace <= 0.0F || options.settings.closePace <= 0.0F) return fail("pace is positive");
         const RunSummary main = run(options, true);
         print(label(options.settings), options, main);
         if (!options.verify) return 0;
@@ -359,7 +415,7 @@ int main(int argc, char** argv)
             if (main.wordmark.minAreaRatio < 0.499F) return fail("no morphed tile below half its area");
             if (main.wordmark.outlineRmsAfter > 0.6F * main.wordmark.outlineRmsBefore) return fail("morphing cuts outline error by 40% or more");
         }
-        if (main.maxHeroes > options.settings.heroCap) return fail("hero tier respects its cap");
+        if (main.maxHeroes > options.settings.levers.heroCap) return fail("hero tier respects its cap");
         if (main.mooredAt10 < 1.0F) return fail("ribbon fully moored by 10.0s");
         switch (build)
         {
@@ -389,21 +445,54 @@ int main(int argc, char** argv)
         const RunSummary again = run(options, false);
         if (again.hash != main.hash) return fail("identical runs produce identical state");
 
-        // LOD changes cost and texture, never the outcome: a uniform far tier completes too.
-        Options far = options;
-        far.settings.lod = LodMode::AllFar;
-        const RunSummary farRun = run(far, false);
-        print(label(far.settings), far, farRun);
-        if (farRun.allLocked < 0.0F || farRun.allLocked > (build == Build::Climb || build == Build::Hybrid || build == Build::Scaffold ? 14.0F : 10.0F)) return fail("uniform far tier completes the title");
-        if (build == Build::Lying)
+        // Isolation: every discrete decision tier, given the whole swarm on its own, must
+        // converge to the same goal (LOD changes cost and texture, never the outcome), and so
+        // must the other LOD mode. Convergence: the title locked (and raised) by the end of
+        // the build's sequence, every lock supported, no unit left stuck. Visible tiers keep
+        // the contact gates; hidden units are never drawn, so they have none. How closely the
+        // tiers agree is reported (spread), not yet gated: full deliberation (hero) is the
+        // slowest (SW-F31).
+        const bool climbs = build == Build::Climb || build == Build::Hybrid || build == Build::Scaffold;
+        const float deadline = climbs ? 15.0F : 12.0F;
+        float fastest = main.allLocked, slowest = main.allLocked;
+        for (const LodMode mode : { LodMode::Blend, LodMode::Camera, LodMode::Activity, LodMode::AllHero, LodMode::AllNear, LodMode::AllFar, LodMode::AllHidden })
         {
-            Options hero = options;
-            hero.settings.lod = LodMode::AllHero;
-            const RunSummary heroRun = run(hero, false);
-            print(label(hero.settings), hero, heroRun);
-            // Full deliberation everywhere is slower (measured): it must still finish. 11.0 s for
-            // 959 row slots, scaled to 12.5 s when tessellation raised the count to 1104.
-            if (heroRun.allLocked < 0.0F || heroRun.allLocked > 12.5F) return fail("uniform hero tier completes the title by 12.5s");
+            if (mode == options.settings.lod) continue;   // the main run
+            Options tier = options;
+            tier.settings.lod = mode;
+            // A tier's own logic in full: the hero isolation deliberates every tick. The System 2
+            // duty cycle is gated by the main run (period 2) and the switched-levers run (3).
+            if (mode == LodMode::AllHero) tier.settings.levers.heroPeriod = 1;
+            const RunSummary r = run(tier, false);
+            print(label(tier.settings), tier, r);
+            if (r.allLocked < 0.0F || r.allLocked > deadline) return fail("every LOD tier in isolation completes the title within the sequence");
+            if (r.panels > 0 && (r.allRaised < 0.0F || r.allRaised > deadline)) return fail("every LOD tier in isolation raises every panel within the sequence");
+            if (r.unsupported != 0) return fail("every LOD tier in isolation locks only on locked supports");
+            if (r.stuckAtEnd != 0) return fail("every LOD tier in isolation resolves every stuck episode");
+            if (mode != LodMode::AllHidden && (r.worstOverlapRatio > 0.03F || r.minVisibleGap < 0.5F))
+                return fail("every visible LOD tier in isolation keeps contacts at most 3% and gaps at least 0.5d");
+            fastest = std::min(fastest, r.allLocked);
+            slowest = std::max(slowest, r.allLocked);
+        }
+        std::printf("{\"isolation\":{\"fastest_s\":%.3f,\"slowest_s\":%.3f,\"spread_s\":%.3f}}\n", fastest, slowest, slowest - fastest);
+
+        // The levers are dynamic (S0n): switched mid-run (camera-led from 4 s, activity-led
+        // with a slower System 2 from 8 s), and under a decision budget that drives fidelity
+        // to its floor, the run must still converge with the main run's gates on contacts.
+        Options levered = options;
+        levered.settings.lod = LodMode::Blend;
+        levered.switchLevers = true;
+        Options budgeted = options;
+        budgeted.settings.lod = LodMode::Blend;
+        budgeted.settings.levers.budget = 4000.0F;
+        for (const Options& variant : { levered, budgeted })
+        {
+            const RunSummary r = run(variant, false);
+            print(label(variant.settings) + (variant.switchLevers ? "+switched" : "+budget"), variant, r);
+            if (r.allLocked < 0.0F || r.allLocked > deadline) return fail("a run with switched levers or a budget completes the title within the sequence");
+            if (r.panels > 0 && (r.allRaised < 0.0F || r.allRaised > deadline)) return fail("a run with switched levers or a budget raises every panel within the sequence");
+            if (r.unsupported != 0 || r.stuckAtEnd != 0) return fail("a run with switched levers or a budget locks only on supports and resolves every stuck episode");
+            if (r.worstOverlapRatio > 0.03F || r.minVisibleGap < 0.5F) return fail("a run with switched levers or a budget keeps visible contacts at most 3% and gaps at least 0.5d");
         }
         std::printf("{\"verify\":\"PASS\"}\n");
         return 0;

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Render crucible_swarm_intro frame captures into review images.
 
-Concept2D/dev-test evidence only: flat top-down wedges through the scripted orthographic
+Concept2D/dev-test evidence only: low-poly nanite bodies (nanite_mesh) through the scripted orthographic
 camera. It shows choreography, spacing and LOD tiers; it is not production fidelity.
 
     crucible_swarm_intro --frames frames --every 2
@@ -9,7 +9,9 @@ camera. It shows choreography, spacing and LOD tiers; it is not production fidel
 
 Sheets ending in .png (the committed evidence, stored through Git LFS) are rasterised with a
 256-colour palette to stay small; .svg writes vectors; other extensions are plain rasters. Sheet --times are choreography seconds; GIF and MP4 play at the
-presentation pace recorded in each capture (see IntroSettings::pace).
+presentation rate recorded in each capture's `shown` time (the pace eases slower during the
+camera's close-up tour; see IntroSettings::closePace). Oblique views turn with the camera
+path's yaw unless --yaw overrides it (--zoom sheets default to 0).
 
     crucible_swarm_intro --build scaffold --frames frames --every 1
     python3 render_swarm.py frames --mp4 intro.mp4          # needs ffmpeg on PATH
@@ -25,6 +27,7 @@ import numpy as np
 from PIL import Image, ImageDraw
 
 import nanite_mesh
+import playback
 
 BACKGROUND = (14, 16, 20)
 SILVER = (196, 202, 210)
@@ -36,10 +39,12 @@ TIER_COLOURS = {0: (255, 190, 60), 1: (80, 210, 255), 2: (150, 110, 255), 3: (90
 TIER_NAMES = {0: "hero", 1: "near", 2: "far", 3: "hidden"}
 MAGNET_COLOURS = {1: (60, 230, 255), 2: (255, 150, 40), 3: (250, 250, 250)}   # lift, push, seat
 HEADER = re.compile(r"# time=([\d.]+) cx=([-\d.]+) cy=([-\d.]+) half_width=([\d.]+) aspect=([\d.]+)"
-                    r"(?: view=(\w+) tilt=([\d.]+))?(?: tile=([\d.]+))?(?: pace=([\d.]+))?(?: body=([-\d.,]+))?")
+                    r"(?: view=(\w+) tilt=([\d.]+))?(?: tile=([\d.]+))?(?: pace=([\d.]+))?(?: body=([-\d.,]+))?"
+                    r"(?: shown=([\d.]+))?(?: yaw=([-\d.]+))?")
 MESH_SCALE = 6.0    # pixels per unit at which units are drawn as 3D bodies (below: silhouettes)
-SEAM_SCALE = 14.0   # ... at which seams are outlined (below, they would turn letters to texture)
-RING_SCALE = 10.0   # ... at which the core's dark recess ring is drawn
+PART_SCALE = 14.0   # ... at which shells split into hubs, rails and recessed shields, seams outlined
+GRAPHITE = (62, 66, 74)
+INTERIOR = (22, 24, 29)   # the shell's inside, seen through its windows
 LIGHT = np.array([-0.55, -0.45, 0.70]) / np.linalg.norm([-0.55, -0.45, 0.70])   # cool grazing key
 
 
@@ -52,20 +57,25 @@ def load(path):
     tile = float(groups[7] or 0.0)
     pace = float(groups[8] or 1.0)   # choreography seconds per presentation second
     body = nanite_mesh.parse_body(groups[9])
+    shown = float(groups[10]) if groups[10] else t / pace   # presentation seconds (pace varies since the tour)
+    camera_yaw = float(groups[11] or 0.0)                   # the camera path's turn, degrees
     rows = []
     columns = lines[1].split(",")
     first_corner = columns.index("s0x") if "s0x" in columns else len(columns)
     layer_at = columns.index("layer") if "layer" in columns else None
+    speed_at = columns.index("speed") if "speed" in columns else None
     for line in lines[2:]:
         fields = line.split(",")
         x, y, z, h, act, tier, since = fields[:7]
         plane = float(fields[7]) if len(fields) > 7 else 0.0   # tilt about x: 0 ground, pi/2 wall
         magnet = int(fields[8]) if len(fields) > 8 else 0      # 1 lift, 2 push, 3 seat
         layer = int(fields[layer_at]) if layer_at is not None else 0   # depth layer (3D tessellation)
+        speed = float(fields[speed_at]) if speed_at is not None else 0.0   # moving shells stretch
         # Locked tiles carry their morphed corners (letter plane: x along, y up the letter).
         shape = tuple(float(v) for v in fields[first_corner:first_corner + 6]) if len(fields) >= first_corner + 6 else None
-        rows.append((float(x), float(y), float(z), float(h), act, int(tier), float(since), plane, magnet, shape, layer))
-    return {"time": t, "cx": cx, "cy": cy, "hw": hw, "aspect": aspect, "view": view, "tilt": tilt, "tile": tile, "pace": pace, "body": body, "rows": rows}
+        rows.append((float(x), float(y), float(z), float(h), act, int(tier), float(since), plane, magnet, shape, layer, speed))
+    return {"time": t, "cx": cx, "cy": cy, "hw": hw, "aspect": aspect, "view": view, "tilt": tilt, "tile": tile, "pace": pace, "body": body, "rows": rows,
+            "shown": shown, "yaw": camera_yaw}
 
 
 class Canvas:
@@ -123,7 +133,7 @@ class Canvas:
         return "\n".join(parts)
 
 
-def draw_frame(frame, size=(960, 540), mode="beauty", yaw=0.0):
+def draw_frame(frame, size=(960, 540), mode="beauty", yaw=None):
     w, h = size
     draw = Canvas(size)
     scale = w / (2.0 * frame["hw"])
@@ -133,6 +143,8 @@ def draw_frame(frame, size=(960, 540), mode="beauty", yaw=0.0):
     oblique = frame["view"] == "oblique"
     tilt = frame["tilt"]
 
+    if yaw is None:
+        yaw = frame["yaw"] if oblique else 0.0   # the camera path's turn unless overridden
     cyaw, syaw = math.cos(math.radians(yaw)), math.sin(math.radians(yaw))
 
     def turned(x, y):
@@ -157,7 +169,7 @@ def draw_frame(frame, size=(960, 540), mode="beauty", yaw=0.0):
         order = sorted(frame["rows"], key=lambda r: (r[4] not in rest, r[2]))
     deepest = max((r[10] for r in frame["rows"]), default=0)
     bodies = []   # close enough for 3D bodies: drawn together, depth-sorted face by face
-    for x, y, z, heading, act, tier, since, plane, magnet, shape, layer in order:
+    for x, y, z, heading, act, tier, since, plane, magnet, shape, layer, speed in order:
         px, py = project(x, y, z)
         if px < -20 or px > w + 20 or py < -20 or py > h + 20:
             continue
@@ -166,7 +178,7 @@ def draw_frame(frame, size=(960, 540), mode="beauty", yaw=0.0):
         cp, sp = math.cos(plane), math.sin(plane)
 
         def corner(forward, side):
-            # A wedge lies in its plane: the ground (x, y), a wall face (x, z), or a letter
+            # A silhouette lies in its plane: the ground (x, y), a wall face (x, z), or a letter
             # part-way through its rise.
             ax = c * forward - s * side
             ay = s * forward + c * side
@@ -199,7 +211,7 @@ def draw_frame(frame, size=(960, 540), mode="beauty", yaw=0.0):
         else:
             core = CYAN
         if scale >= MESH_SCALE:
-            bodies.append((x, y, z, heading, plane, shape, fill, core if mode == "beauty" else None))
+            bodies.append((x, y, z, heading, plane, shape, fill, core if mode == "beauty" else None, speed))
             continue
         if shape is not None:
             # Morphed tile: corners in the letter's plane, mapped through the plane tilt.
@@ -211,12 +223,14 @@ def draw_frame(frame, size=(960, 540), mode="beauty", yaw=0.0):
             third = 2.0 * math.pi / 3.0
             points = [corner(radius * math.cos(a), radius * math.sin(a)) for a in (0.0, third, -third)]
         else:
-            points = [corner(0.55, 0.0), corner(-0.38, 0.36), corner(-0.38, -0.36)]
+            # A free unit's silhouette: its shell's base, stretched with speed.
+            stretch = float(nanite_mesh.stretch_amount(speed, frame["body"]))
+            points = [corner(a, b) for a, b in nanite_mesh.outline(frame["body"], stretch)]
         draw.polygon(points, fill)
     if bodies:
         draw_bodies(draw, bodies, frame, size, scale, oblique, tilt, cyaw, syaw)
-    shown = t / frame["pace"]
-    label = f"t={t:5.2f}s" + (f" ({shown:.2f} s shown)" if frame["pace"] != 1.0 else "") + f"  half-width={frame['hw']:.1f}u"
+    shown = frame["shown"]
+    label = f"t={t:5.2f}s" + (f" ({shown:.2f} s shown)" if abs(shown - t) > 1e-3 else "") + f"  half-width={frame['hw']:.1f}u"
     if mode == "tiers":
         counts = {k: 0 for k in TIER_NAMES}
         for row in frame["rows"]:
@@ -227,8 +241,9 @@ def draw_frame(frame, size=(960, 540), mode="beauty", yaw=0.0):
 
 
 def draw_bodies(draw, bodies, frame, size, scale, oblique, tilt, cyaw, syaw):
-    """3D nanite bodies (nanite_mesh): lit faces, back faces culled, all faces of all bodies
-    painted far to near, seams outlined, recessed cores on the top faces."""
+    """3D nanite bodies (nanite_mesh): per body, the shell's inside through its windows, the
+    core's lit faces, then the shell's front faces; bodies painted far to near. From
+    PART_SCALE pixels per unit, shells split into hubs, rails and recessed shields."""
     w, h = size
     cx, cy = frame["cx"], frame["cy"]
     body = frame["body"]
@@ -237,18 +252,19 @@ def draw_bodies(draw, bodies, frame, size, scale, oblique, tilt, cyaw, syaw):
     heading = np.array([b[3] for b in bodies])
     plane = np.array([b[4] for b in bodies])
     shaped = np.array([b[5] is not None for b in bodies])
-    free = nanite_mesh.dart(body)
+    free = nanite_mesh.footprint(body)
     corners = np.empty((n, 3, 2))
     for k, b in enumerate(bodies):
         corners[k] = np.array(b[5]).reshape(3, 2) if b[5] is not None else free
-    # Free units are darts pointing along their heading (corner 0); a locked unit takes its
-    # tile's footprint with the nose at the tile's apex (corner 2).
+    # A free unit's nose is along its heading (corner 0); a locked unit's is its tile's apex
+    # (corner 2).
     nose = np.where(shaped, 2, 0)
-    local = nanite_mesh.build(corners, nose, body)
+    local = nanite_mesh.shell(corners, nose, body)
+    # The core comes from the compact shell; a moving free unit's shell then stretches around it.
+    heart = nanite_mesh.to_world(nanite_mesh.core(local, body), origin, heading, plane, ~shaped)
+    amount = np.where(shaped, 0.0, nanite_mesh.stretch_amount(np.array([b[8] for b in bodies]), body))
+    local = nanite_mesh.elongate(local, amount, body)
     world = nanite_mesh.to_world(local, origin, heading, plane, ~shaped)
-    disc, halo = nanite_mesh.core(local, body)
-    disc = nanite_mesh.to_world(disc, origin, heading, plane, ~shaped)
-    halo = nanite_mesh.to_world(halo, origin, heading, plane, ~shaped)
     # View: the direction along which screen position is constant, pointing away from us.
     if oblique:
         away = np.array([syaw, cyaw, -tilt])
@@ -267,40 +283,50 @@ def draw_bodies(draw, bodies, frame, size, scale, oblique, tilt, cyaw, syaw):
             vx, vy = x, y + 0.35 * z
         return np.stack([w * 0.5 + (vx - cx) * scale, h * 0.5 - (vy - cy) * scale], axis=-1)
 
-    pts = screen(world)
-    disc_pts, halo_pts = screen(disc), screen(halo)
+    detail = scale >= PART_SCALE
     nrm = nanite_mesh.normals(world)
     facing = nrm @ toward
+    core_nrm = nanite_mesh.normals(heart, nanite_mesh.CORE_FACES)
+    core_facing = core_nrm @ toward
+    shell_pts, core_pts = screen(world), screen(heart)
+    parts = [nanite_mesh.face_parts(world, f, detail) for f in range(len(nanite_mesh.SHELL_FACES))]
+    parts_pts = [[(role, screen(quad)) for role, quad in face] for face in parts]
+    depth = world.mean(axis=1) @ away
     polys = []
     for k in range(n):
         base, core = bodies[k][6], bodies[k][7]
-        for f, face in enumerate(nanite_mesh.FACES):
+        layers = []
+        # The inside of the far faces: what a window shows around the core.
+        for f, face in enumerate(nanite_mesh.SHELL_FACES):
+            if facing[k, f] <= 1e-4:
+                layers.append(([tuple(p) for p in shell_pts[k, list(face)]], INTERIOR, None))
+        if core is not None:
+            for f, face in enumerate(nanite_mesh.CORE_FACES):
+                if core_facing[k, f] > 1e-4:
+                    layers.append(([tuple(p) for p in core_pts[k, list(face)]], nanite_mesh.shade_core(core, core_nrm[k, f], LIGHT), None))
+        for f in range(len(nanite_mesh.SHELL_FACES)):
             if facing[k, f] <= 1e-4:
                 continue
-            centre = world[k, list(face)].mean(axis=0)
-            colour = nanite_mesh.shade(base, nrm[k, f], LIGHT, toward)
-            role = nanite_mesh.ROLE[f]
-            seam = tuple(int(v * 0.5) for v in colour) if role != "wall" and scale >= SEAM_SCALE else None
-            polys.append((float(centre @ away), [tuple(p) for p in pts[k, list(face)]], colour, seam))
-        # The core spans the two rear-side facets either side of the spine: drawn just in
-        # front of them whenever either faces the camera.
-        holders = [f for f in nanite_mesh.CORE_FACES if facing[k, f] > 1e-4]
-        if core is not None and holders:
-            depth = min(float(world[k, list(nanite_mesh.FACES[f])].mean(axis=0) @ away) for f in holders)
-            if scale >= RING_SCALE:
-                ring = tuple(int(v * 0.30) for v in base)
-                polys.append((depth - 1e-3, [tuple(p) for p in halo_pts[k]], ring, None))
-            polys.append((depth - 2e-3, [tuple(p) for p in disc_pts[k]], core, None))
+            tones = {"shield": nanite_mesh.shade(tuple(int(v * 0.86) for v in base), nrm[k, f], LIGHT, toward),
+                     "rail": nanite_mesh.shade(base, nrm[k, f], LIGHT, toward),
+                     "hub": nanite_mesh.shade(GRAPHITE, nrm[k, f], LIGHT, toward)}
+            # Shields first, rails and hubs over them: the recess reads at the rails' edge.
+            for role, pts in sorted(parts_pts[f], key=lambda item: item[0] != "shield"):
+                colour = tones[role]
+                seam = tuple(int(v * 0.62) for v in colour) if detail else None
+                layers.append(([tuple(p) for p in pts[k]], colour, seam))
+        polys.append((float(depth[k]), layers))
     polys.sort(key=lambda item: -item[0])
-    for _, points, colour, seam in polys:
-        draw.polygon(points, colour, seam)
+    for _, layers in polys:
+        for points, colour, seam in layers:
+            draw.polygon(points, colour, seam)
 
 
 def nearest(frames, time):
     return min(frames, key=lambda f: abs(f["time"] - time))
 
 
-def sheet(frames, times, mode, path, yaw=0.0):
+def sheet(frames, times, mode, path, yaw=None):
     """Three-column contact sheet; an .svg path writes vectors, anything else a raster."""
     tiles = [draw_frame(nearest(frames, t), (640, 360), mode, yaw) for t in times]
     columns = 3
@@ -325,14 +351,15 @@ def sheet(frames, times, mode, path, yaw=0.0):
 
 
 def presentation_step(frames):
-    """Wall-clock seconds between captures: the choreography step over the pace."""
+    """Wall-clock seconds between captures (constant: captures are every N ticks, while the
+    choreography step varies with the pace)."""
     if len(frames) < 2:
         return 1.0 / 30.0
     # Averaged over the whole capture: headers round each time to microseconds.
-    return (frames[-1]["time"] - frames[0]["time"]) / (len(frames) - 1) / frames[0]["pace"]
+    return (frames[-1]["shown"] - frames[0]["shown"]) / (len(frames) - 1)
 
 
-def video(frames, path, mode, size, hold, yaw=0.0):
+def video(frames, path, mode, size, hold, yaw=None):
     """Pipes rasterised frames to ffmpeg as raw RGB; the final frame is held for `hold` s."""
     ffmpeg = shutil.which("ffmpeg")
     if not ffmpeg:
@@ -369,8 +396,13 @@ def main():
     parser.add_argument("--hold", type=float, default=2.0, help="seconds to hold the final frame in the video")
     parser.add_argument("--magnets", type=pathlib.Path, help="sheet coloured by magnet mode: cyan lift, amber push, white seat")
     parser.add_argument("--times", default="1.0,3.0,5.0,6.8,8.4,11.9")
-    parser.add_argument("--yaw", type=float, default=0.0, help="oblique view: degrees of yaw about the vertical, to show depth layers")
+    parser.add_argument("--yaw", type=float, default=None,
+                        help="oblique view: degrees of yaw about the vertical (default: the camera path's, or 0 with --zoom)")
     parser.add_argument("--zoom", help="override the camera for sheets: cx,cy,half_width (view units)")
+    parser.add_argument("--fps", type=float, help="GIF/MP4 at this presentation frame rate, frames between captures interpolated")
+    parser.add_argument("--extrapolate", action="store_true", help="with --fps: dead-reckon from the latest capture instead")
+    parser.add_argument("--reconstruct", type=int, metavar="STRIDE",
+                        help="print the position error of rebuilding the frames between every STRIDE-th capture")
     args = parser.parse_args()
     frames = [load(p) for p in sorted(args.frames.glob("frame_*.csv"))]
     if not frames:
@@ -380,12 +412,19 @@ def main():
         cx, cy, hw = (float(v) for v in args.zoom.split(","))
         for f in frames:
             f["cx"], f["cy"], f["hw"] = cx, cy, hw
+        if args.yaw is None:
+            args.yaw = 0.0
     if args.sheet:
         sheet(frames, times, "beauty", args.sheet, args.yaw)
     if args.tiers:
         sheet(frames, times, "tiers", args.tiers, args.yaw)
     if args.magnets:
         sheet(frames, times, "magnets", args.magnets, args.yaw)
+    if args.reconstruct:
+        for mode, (mean, p95, worst) in playback.reconstruction_error(frames, args.reconstruct).items():
+            print(f"{mode}: stride {args.reconstruct}, error mean {mean:.3f} d, p95 {p95:.3f} d, max {worst:.3f} d")
+    if args.fps:
+        frames = playback.resample(frames, args.fps, args.extrapolate)
     if args.gif:
         images = [draw_frame(f, (640, 360), args.gif_mode, args.yaw).image() for f in frames]
         step_ms = int(round(presentation_step(frames) * 1000))

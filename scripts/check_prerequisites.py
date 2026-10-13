@@ -224,6 +224,7 @@ def check_prerequisites(build_dir: Path | None = None, tests: list[dict] | None 
         return add(name, result["status"], result.get("output", ""),
                    returncode=result.get("returncode"), command=result.get("command"),
                    elapsed_seconds=result.get("elapsed_seconds"),
+                   timeout_seconds=result.get("timeout_seconds"),
                    process_scope=result.get("process_scope"),
                    output_truncated=result.get("output_truncated", False), **metadata)
 
@@ -377,6 +378,137 @@ def check_prerequisites(build_dir: Path | None = None, tests: list[dict] | None 
     return receipt
 
 
+# What each check establishes, for the human summary (the receipt keeps the short names).
+CHECK_PURPOSE = {
+    "python": "Python 3.10 or newer",
+    "configured_cache": "configured CMakeCache.txt",
+    "selected_inventory": "selected CTest inventory",
+    "cmake": "CMake 3.25 or newer",
+    "ninja": "Ninja",
+    "git": "Git",
+    "compiler": "configured C++ compiler",
+    "cxx23_expected": "C++23 compile-and-link canary using std::expected",
+    "runtime_canary": "canary run: standard library load and thread start",
+    "sanitizer_environment": "leak checking left enabled",
+    "sanitizer_canary": "ASan/UBSan canary build and run",
+    "hardware_selection": "a selected GPU receiver test",
+    "shader_compiler": "glslangValidator",
+    "display": "display for the SDL receiver",
+    "vulkan": "Vulkan device inventory",
+    "hardware_gpu": "physical GPU in the Vulkan inventory",
+    "spirv": "SPIR-V shader files",
+}
+# Status words for people: "unknown" means the check could not decide, not that a capability is missing.
+STATUS_WORDS = {"pass": "passed", "fail": "failed", "unknown": "undecided"}
+
+
+def blocking_checks(receipt: dict) -> list[dict]:
+    """Required checks that did not pass: the reasons a receipt is not ok."""
+    return [item for item in receipt.get("checks", [])
+            if item.get("required", True) and item.get("status") != "pass"]
+
+
+def _first_lines(text: str, limit: int = 400) -> str:
+    text = " ".join(line.strip() for line in str(text or "").strip().splitlines()[:4] if line.strip())
+    return text if len(text) <= limit else text[:limit - 3] + "..."
+
+
+def explain(item: dict) -> str:
+    """One check as a sentence: status, why, how long against its limit, and what it ran."""
+    status = item.get("status", "unknown")
+    name = item.get("name", "?")
+    purpose = CHECK_PURPOSE.get(name)
+    parts = [f"{name}" + (f" ({purpose})" if purpose else "") + f": {STATUS_WORDS.get(status, status)} [{status}]"]
+    detail = _first_lines(item.get("detail", ""))
+    if detail:
+        parts.append(detail)
+    elapsed, limit = item.get("elapsed_seconds"), item.get("timeout_seconds")
+    if elapsed is not None and limit:
+        parts.append(f"ran {elapsed:.1f}s of a {limit:g}s limit")
+    elif elapsed is not None:
+        parts.append(f"ran {elapsed:.1f}s")
+    timed_out = "timed out" in detail or "budget exhausted" in detail
+    if item.get("returncode") not in (None, 0) and not timed_out:   # after a timeout it is the kill's
+        parts.append(f"exit code {item['returncode']}")
+    command = item.get("command")
+    if command:
+        rendered = " ".join(str(arg) for arg in command)
+        parts.append("command: " + (rendered if len(rendered) <= 200 else rendered[:197] + "..."))
+    if timed_out:
+        parts.append("the probe was stopped before it finished, so nothing shows the capability missing: "
+                     "often a slow or busy runner (a compiler's first start); re-run, or raise --timeout/--budget to confirm")
+    elif status == "unknown":
+        parts.append("the capability could not be decided")
+    elif status == "fail":
+        parts.append("the capability is missing or broken")
+    return "; ".join(parts)
+
+
+def summarize(receipt: dict) -> str:
+    """Human summary for logs: what blocked, why, and what passed."""
+    checks = receipt.get("checks", [])
+    context = ", ".join(f"{key}={receipt[key]}" for key in ("stage", "compiler") if receipt.get(key))
+    elapsed = receipt.get("elapsed_seconds")
+    timing = f" in {elapsed:.1f}s" if isinstance(elapsed, (int, float)) else ""
+    if receipt.get("ok"):
+        return f"Prerequisites passed: {len(checks)} checks{timing}" + (f" ({context})." if context else ".")
+    blocking = blocking_checks(receipt)
+    lines = [f"Prerequisites blocked{timing}: {len(blocking)} required check(s) did not pass"
+             + (f" ({context})" if context else "") + "."]
+    if receipt.get("error"):
+        lines.append(f"  error: {receipt['error']}")
+    lines += ["  - " + explain(item) for item in blocking]
+    passed = [item.get("name", "?") for item in checks if item.get("status") == "pass"]
+    if passed:
+        lines.append("  passed: " + ", ".join(passed))
+    return "\n".join(lines)
+
+
+def _escape(value: str, *, property_value: bool = False) -> str:
+    value = str(value).replace("%", "%25").replace("\r", "%0D").replace("\n", "%0A")
+    return value.replace(":", "%3A").replace(",", "%2C") if property_value else value
+
+
+def github_annotations(receipt: dict, environ: dict | None = None) -> list[str]:
+    """GitHub Actions error annotations, one per blocking check (empty outside Actions)."""
+    environ = os.environ if environ is None else environ
+    if environ.get("GITHUB_ACTIONS") != "true" or receipt.get("ok"):
+        return []
+    items = blocking_checks(receipt) or [{"name": "receipt", "status": "fail", "detail": receipt.get("error", "no checks recorded")}]
+    return [f"::error title={_escape('Prerequisite ' + str(item.get('name', '?')) + ' ' + STATUS_WORDS.get(item.get('status', 'unknown'), str(item.get('status'))), property_value=True)}::"
+            + _escape(explain(item)) for item in items]
+
+
+def step_summary(receipt: dict) -> str:
+    """Markdown table of every check, for $GITHUB_STEP_SUMMARY."""
+    title = "passed" if receipt.get("ok") else "blocked"
+    rows = ["| Check | Status | Required | Time | Detail |", "|---|---|---|---|---|"]
+    for item in receipt.get("checks", []):
+        elapsed, limit = item.get("elapsed_seconds"), item.get("timeout_seconds")
+        time_text = f"{elapsed:.1f}s / {limit:g}s" if elapsed is not None and limit else (f"{elapsed:.1f}s" if elapsed is not None else "")
+        detail = _first_lines(item.get("detail", ""), 160).replace("|", "\\|")
+        rows.append(f"| {item.get('name', '?')} | {item.get('status', '?')} | {'yes' if item.get('required', True) else 'no'} | {time_text} | {detail} |")
+    error = f"\n\nError: {receipt['error']}" if receipt.get("error") else ""
+    return f"### Prerequisites {title}\n\n" + "\n".join(rows) + error + "\n"
+
+
+def report(receipt: dict, stream=None, environ: dict | None = None) -> None:
+    """Explain a receipt beside the JSON: a summary and, on GitHub Actions, annotations and a
+    step summary. Writes to stderr so stdout stays the machine-readable receipt."""
+    stream = sys.stderr if stream is None else stream
+    environ = os.environ if environ is None else environ
+    print(summarize(receipt), file=stream, flush=True)
+    for line in github_annotations(receipt, environ):
+        print(line, file=stream, flush=True)
+    summary_path = environ.get("GITHUB_STEP_SUMMARY")
+    if summary_path:
+        try:
+            with open(summary_path, "a", encoding="utf-8") as summary:
+                summary.write(step_summary(receipt))
+        except OSError as error:
+            print(f"Cannot write the step summary: {error}", file=stream)
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--stage", choices=["development", "test"], default="development")
@@ -397,7 +529,8 @@ def main() -> int:
                                       timeout=args.timeout, budget=args.budget)
     except (OSError, ValueError, KeyError) as error:
         receipt = {"schema": 1, "ok": False, "error": str(error)}
-    print(json.dumps(receipt, indent=2))
+    print(json.dumps(receipt, indent=2), flush=True)
+    report(receipt)
     return 0 if receipt["ok"] else 1
 
 

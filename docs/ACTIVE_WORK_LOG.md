@@ -14,7 +14,7 @@ Four PNGs were imported through Git LFS into `docs/concepts/nanite/assets/` in a
 follow-up (hashes verified against provenance.md); the docs embed them.
 
 
-## Nanite swarm behaviour design and S0-S0j spikes,2026-10-12/13
+## Nanite swarm behaviour design and S0-S0n spikes,2026-10-12/13
 
 Session `claude/crucible-nanite-swarm-design-89vg5m` claims only new paths
 `spikes/swarm_intro/` and `docs/concepts/phase15-experience/nanite-swarm-design.md`,
@@ -22,6 +22,12 @@ plus pointer edits to the Phase15 plan/review, concept README and the opt-in
 `CRUCIBLE_BUILD_SWARM_SPIKE` option (which also fetches the pinned Sub0Log). No
 frontend/renderer worktree paths, pins or
 native measurements are touched. Single-thread headless runs only; released.
+S0k (design consolidation) edits pointer text in `docs/concepts/nanite/` to
+record that the swarm renderer's body is a proxy of that space's form.
+At the user's request (a Windows CI preflight timed out with only the raw receipt),
+this session also edits `scripts/check_prerequisites.py`, `scripts/run_tests.py`,
+`tests/workflow/test_prerequisites.py` and CONTRIBUTING.md to report why a
+preflight blocked; receipt contents and gating are unchanged.
 
 ## Phase15 production renderer reprioritisation,2026-10-09
 

@@ -4,7 +4,9 @@
 
 Start here for nanite form, materials, articulation and close-up identity. These
 are generated design references and modelling requirements, not implemented
-meshes or evidence of a working rig. PR43's dart remains the runtime baseline.
+meshes or evidence of a working rig. The swarm prototype renders a low-poly
+[tetrahedral proxy](../phase15-experience/nanite-swarm-design.md#the-nanites-body-in-the-prototype-s0j-s0k)
+of this direction (S0k), replacing PR43's dart; it is not the approved rig.
 
 ![Reactor and faction study: open-shell nanite with tetrahedral housing and inner crystal; cyan, amber, violet and lime instances](assets/reactor-factions-01.png)
 

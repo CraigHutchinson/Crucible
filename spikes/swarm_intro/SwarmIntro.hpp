@@ -85,10 +85,29 @@ struct Mind
 
 /** LOD tier tags. Each tier is its own partition, so a tier system only touches its units
  *  and its cost scales with that tier's population, not the swarm's. */
-struct HeroTier { std::uint32_t since = 0; };
+/** Hero tier, with the unit's System 2 plan: the last deliberated choice, held as a turn and
+ *  a speed scale relative to the desired velocity, so System 1 can keep applying it to a
+ *  desire that moves on between deliberations. */
+struct HeroTier
+{
+    std::uint32_t since = 0;
+    float planTurn = 0.0F;
+    float planScale = 1.0F;
+    bool planned = false;
+};
 struct NearTier { std::uint32_t since = 0; };
-struct FarTier { std::uint32_t since = 0; };
-struct HiddenTier { std::uint32_t since = 0; };
+/** A cheap tier's System 2 for calm acts: the last goal steering (desired velocity and
+ *  facing), re-planned every LodLevers::routePeriod ticks; System 1 integrates it every tick. */
+struct RouteCache
+{
+    float vx = 0.0F;
+    float vy = 0.0F;
+    float face = 0.0F;
+    bool hasFace = false;
+    bool valid = false;
+};
+struct FarTier { std::uint32_t since = 0; RouteCache route; };
+struct HiddenTier { std::uint32_t since = 0; RouteCache route; };
 
 enum class Tier : std::uint8_t { Hero, Near, Far, Hidden };
 
@@ -103,7 +122,46 @@ enum class Tier : std::uint8_t { Hero, Near, Far, Hidden };
 enum class Build : std::uint8_t { Lying, Climb, Raise, Hybrid, Scaffold };
 
 /** How tiers are chosen. Uniform modes exist to prove LOD changes cost, not the outcome. */
-enum class LodMode : std::uint8_t { Camera, AllHero, AllNear, AllFar };
+/** Decision LOD: who earns which behaviour tier. Blend: a score weighing camera focus (actor
+ *  fidelity of motion and collision on screen) against activity (interaction complexity),
+ *  set by LodLevers. Camera: by on-screen position and size only. Activity: by what a unit
+ *  is doing only. All*: one tier for every unit, the isolation gates. */
+enum class LodMode : std::uint8_t { Camera, AllHero, AllNear, AllFar, AllHidden, Activity, Blend };
+
+/** The decision-LOD levers. Adjustable between ticks (SwarmIntro::setLevers): the intro, or
+ *  later a game, can shift fidelity toward the camera or toward activity, or tighten the
+ *  budget, while it runs. */
+struct LodLevers
+{
+    float viewWeight = 0.5F;       ///< Blend: weight of camera focus (on-screen size and centrality).
+    float activityWeight = 1.0F;   ///< Blend: weight of activity (contention and interaction).
+    float heroMin = 0.55F;         ///< Blend: least score for a hero candidate.
+    float nearMin = 0.30F;         ///< Blend: least score for the near tier.
+    std::size_t heroCap = 128;     ///< Upper bound on full per-unit decision makers.
+    /** System 2 cadence: a hero deliberates (sampled velocity obstacles) every this many ticks,
+     *  staggered by identity; between deliberations System 1 holds the last decision and
+     *  separates reactively every tick. 1 deliberates every tick. */
+    std::uint32_t heroPeriod = 2;
+    /** System 2 cadence of goal steering for calm units (cruising a lane) in the far and
+     *  hidden tiers: they re-plan every this many ticks, staggered by identity, and integrate
+     *  the last plan between. Goal logic is most of every tier's cost (S0n). 1 re-plans every
+     *  tick; the budget controller stretches it up to 4 as fidelity falls. */
+    std::uint32_t routePeriod = 1;
+    /** Decision budget per presented tick in cost units: thousands of instructions of the
+     *  behaviour and resolve passes, from the per-tier costs below (deterministic and
+     *  host-independent; a host's instructions per microsecond turns it into time). 0 is
+     *  unbounded. A deterministic controller scales fidelity (the hero cap, the near threshold
+     *  and, below half fidelity, the route cadence) to keep the predicted cost inside it. */
+    float budget = 0.0F;
+    // Per-mover costs, thousands of instructions per tick (S0n callgrind, scaffold, release):
+    // behaviour plus resolve. Deliberation dominates a hero; resolve dominates the rest.
+    float costHero = 14.2F;        ///< Per hero deliberation (System 2).
+    float costHeroHold = 6.4F;     ///< Per hero holding its plan (System 1).
+    float costNear = 6.3F;         ///< Per near unit.
+    float costFar = 5.5F;          ///< Per far unit.
+    float costFarUnseen = 3.0F;    ///< Per far unit off screen below half fidelity (no resolve).
+    float costHidden = 2.9F;       ///< Per hidden unit (no resolve).
+};
 
 struct IntroSettings
 {
@@ -115,14 +173,17 @@ struct IntroSettings
      *  sequence at 66% speed (15 s of choreography over 22.5 s) without retuning anything. The
      *  simulation steps are smaller, never larger, than the 60 Hz the behaviours were tuned at. */
     float pace = 2.0F / 3.0F;
+    /** Pace while the camera tours the construction close up (cameraAt): slower, so a viewer
+     *  can follow units seating. Eased in and out; equal to `pace` keeps a constant pace. */
+    float closePace = 0.5F;
     float diameter = 1.0F;
     float cruiseSpeed = 30.0F;     ///< Lane speed, diameters per second.
     float wakeAt = 0.6F;           ///< First core pulse (shot01).
     float answerAt = 1.8F;         ///< Answer wave begins (shot02).
     float answerWindow = 1.9F;     ///< Wave reaches the last slotted unit by answerAt+window.
     float ribbonAt = 5.6F;         ///< Surplus units leave the bed for the ribbon (shot05 lead-in).
-    std::size_t heroCap = 128;     ///< Upper bound on full per-unit decision makers.
-    LodMode lod = LodMode::Camera;
+    LodLevers levers;              ///< Decision-LOD levers (Blend), the hero cap and System 2 cadence.
+    LodMode lod = LodMode::Blend;  ///< Decision LOD (S0n: camera focus and activity blended).
     Build build = Build::Lying;
     float viewTilt = 0.4F;         ///< Upright builds' view: screen y = height + tilt * depth (oblique front camera).
     std::uint32_t claimCap = 96;   ///< Climb build: slots claimed but not yet locked, per letter and depth layer.
@@ -148,13 +209,14 @@ struct Camera
     float pixelsWide = 1920.0F;
     [[nodiscard]] float halfHeight() const { return halfWidth / aspect; }
     [[nodiscard]] float pixelsPerUnit() const { return pixelsWide / (2.0F * halfWidth); }
+    float yaw = 0.0F;   ///< Oblique view: degrees of turn about the vertical (presentation only; the LOD ignores it).
 };
 
 /** One tick's diagnostics; costs are host wall time and advisory only. */
 struct TickMetrics
 {
     float time = 0.0F;
-    std::array<std::uint32_t, 4> tierCount{};
+    std::array<std::uint32_t, 4> tierCount{};   ///< Movers per decision tier.
     std::uint32_t migrations = 0;
     std::uint32_t visibleMovers = 0;
     std::uint32_t visibleOverlaps = 0;   ///< Mover pairs closer than 0.8 diameter, in view.
@@ -163,6 +225,10 @@ struct TickMetrics
     std::uint32_t moored = 0;
     std::uint32_t dockClicks = 0;
     std::uint32_t heroYields = 0;
+    std::uint32_t deliberations = 0;     ///< Hero System 2 deliberations this tick.
+    std::uint32_t routes = 0;            ///< Far and hidden goal re-plans this tick.
+    float predictedCost = 0.0F;          ///< Decision cost the LOD assignment predicts (cost units).
+    float fidelity = 1.0F;               ///< Budget controller's fidelity factor in [kMinFidelity, 1].
     std::uint32_t goalSwaps = 0;         ///< Neighbouring seekers that traded slots (d-CAPT style).
     std::uint32_t unsupported = 0;       ///< Climb build: locks without a locked support (must stay 0).
     std::uint32_t offSurface = 0;        ///< Climb build: climbers above the base with no locked unit within reach.
@@ -194,6 +260,7 @@ struct RenderRow
     std::uint8_t layer;    ///< Depth layer of the title tile the unit is bound for (0 otherwise).
     bool shaped;           ///< Locked into a tile: `shape` holds its morphed corners.
     std::array<float, 6> shape;   ///< Corner offsets in the letter's plane (x, up), when shaped.
+    float speed;                  ///< Diameters per choreography second (the renderer stretches moving shells).
 };
 
 // ---- The intro --------------------------------------------------------------------------
@@ -211,10 +278,23 @@ public:
     /** Advances one fixed tick. Systems run in a declared order against a frozen gather. */
     void tick();
 
-    /** @return Elapsed choreography time in seconds (presentation time is this over pace). */
+    /** Replaces the decision-LOD levers; takes effect from the next tick's LOD pass. */
+    void setLevers(const LodLevers& levers) { settings_.levers = levers; }
+    /** @return The current decision-LOD levers. */
+    [[nodiscard]] const LodLevers& levers() const { return settings_.levers; }
+
+    /** @return Elapsed choreography time in seconds (presentation time: presentAt). */
     [[nodiscard]] float time() const { return time_; }
-    /** @return Choreography seconds one tick advances: tickSeconds * pace. */
-    [[nodiscard]] float stepSeconds() const { return settings_.tickSeconds * settings_.pace; }
+    /** @return Choreography seconds the next tick advances: tickSeconds * paceAt(time). */
+    [[nodiscard]] float stepSeconds() const { return settings_.tickSeconds * paceAt(time_); }
+    /** @return Choreography seconds per presentation second at choreography time t: `pace`,
+     *  easing to `closePace` while the camera tours the construction close up. */
+    [[nodiscard]] float paceAt(float t) const;
+    /** @return Presentation (on-screen) seconds at which choreography time t is shown. */
+    [[nodiscard]] float presentAt(float t) const;
+    /** @return Choreography length: the build's sequence (12 s, or 15 s when climbing) and the
+     *  closing pull-out to the whole title. */
+    [[nodiscard]] float sequenceSeconds() const;
     /** @return The camera of the most recent tick. */
     [[nodiscard]] const Camera& camera() const { return camera_; }
     /** @return Diagnostics of the most recent tick. */
@@ -269,6 +349,11 @@ private:
     void buildLanes(float bedTop);
     void lanePoint(const Lane& lane, float s, float& x, float& y, float& tx, float& ty) const;
     [[nodiscard]] Camera cameraAt(float t) const;
+    /** This tick's camera: the scripted path (cameraAt), blended during the close-up tour
+     *  with a follow camera that tracks where the title is being built (densest cluster of
+     *  docking, climbing and just-locked units, with hysteresis), or the head of the stream
+     *  before building starts. Deterministic: it reads the previous tick's state. */
+    void updateCamera();
     void buildConstruction();
     [[nodiscard]] bool supported(std::size_t slot, std::span<const std::uint8_t> locked) const;
     /** True when any letter is climbed (climb or hybrid build). */
@@ -330,6 +415,14 @@ private:
     void integrate(Pose& pose, Motion& motion, float vx, float vy, const Desire& d, float turnRate);
     [[nodiscard]] float liftOf(const Identity& id, const Pose& pose, const Mind& mind) const;
     void heroChoose(const Identity& id, const Pose& pose, float& vx, float& vy);
+    /** System 1 reactive separation from nearby ground movers (near tier; heroes between
+     *  deliberations). */
+    void separate(std::uint32_t unit, const Pose& pose, const Mind& mind, float& vx, float& vy) const;
+    /** Blend LOD: what a unit's act asks of its decisions, 0 (resting) to 1 (stuck). */
+    [[nodiscard]] static float activityOf(const Mind& mind);
+    /** Goal steering for a far or hidden unit, re-planned at the route cadence for lane
+     *  cruising and every tick otherwise. */
+    Desire plannedDesire(const Identity& id, Pose& pose, Mind& mind, RouteCache& route);
     [[nodiscard]] bool isMover(Act act) const;
     [[nodiscard]] bool flows(const Pose& pose, const Mind& mind) const;
     [[nodiscard]] float seatHeading(float slotHeading, float current) const;
@@ -344,6 +437,8 @@ private:
     std::array<Lane, 3> lanes_{};
     std::size_t assignedSlots_ = 0;
     float hopDelay_ = 0.05F;
+    float fidelity_ = 1.0F;   ///< Budget controller state (LodLevers::budget); 1 when unbounded.
+    std::uint32_t routePeriod_ = 1;   ///< Effective route cadence: the lever, stretched by the budget.
     std::uint32_t tickIndex_ = 0;
     float time_ = 0.0F;
     Camera camera_{};
@@ -383,6 +478,7 @@ private:
     std::vector<std::pair<std::uint32_t, std::uint32_t>> queueScratch_;   // (arrived tick, unit)
     std::vector<std::uint32_t> gStall_;
     std::vector<std::uint8_t> gPush_;
+    std::uint32_t gPushers_ = 0;   ///< Units pushing this tick (gather); pushAway is free when none.
     std::vector<std::uint8_t> gLayer_;   // flows over others this tick (climb build)
     SwarmDiagnostics* diagnostics_ = nullptr;
     std::uint64_t claimsTotal_ = 0, stuckTotal_ = 0, recoveredTotal_ = 0;
@@ -393,6 +489,11 @@ private:
     std::vector<float> routeCost_;
     std::vector<std::pair<float, std::uint32_t>> routeHeap_;
     float firstX_ = 0.0F, firstY_ = 0.0F;
+    /** The title in view coordinates (x, and screen height in the oblique view or y when
+     *  lying), for the camera's close-up tour. */
+    float titleMinX_ = 0.0F, titleMaxX_ = 0.0F, titleMidY_ = 0.0F;
+    float followX_ = 0.0F, followY_ = 0.0F;   ///< Follow camera centre, smoothed (view units).
+    int focusBin_ = -1;                       ///< Title section the follow camera holds on.
     std::vector<std::uint32_t> hop_;   // planner's BFS hop count from first_
 
     // Frozen gather (tick-start epoch), indexed by Identity::index.
