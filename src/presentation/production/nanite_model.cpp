@@ -592,22 +592,14 @@ NaniteMesh buildNanite(NaniteDetail detail, const NanitePosture& posture, std::u
         }
     }
 
-    if (structure == NaniteStructure::Frame)
-    {
-        // One opaque core at the rigid centre: a dark housing whose faces open onto
-        // luminous facets, the frame-level stand-in for housing and heart.
-        const float s = coreEdge;
-        emitRounded(builder, tetrahedron(centre + (Vec{0.0F, -shellHeight * 0.25F, shellCircum}) * s,
-            centre + (Vec{-0.5F, -shellHeight * 0.25F, -shellIn}) * s, centre + (Vec{0.5F, -shellHeight * 0.25F, -shellIn}) * s,
-            centre + (Vec{0.0F, shellHeight * 0.75F, 0.0F}) * s), 0.012F * scale, std::min(segments, 1), NaniteMaterial::Graphite,
-            0.62F, 0.03F, 0.0F);
-        return mesh;
-    }
 
-    // Face shields: plates around a central window onto the housing, uneven in reach,
-    // thickness and tilt, with clipped corners. Articulated splits each into two hinged plates
-    // and stacks a smaller armour plate on one. Face 0 is the base: it carries the unit and
-    // never opens.
+    // Face plates around a central window, the same band the silhouette's rim covers, so
+    // neighbouring levels share their outline and window. Frame plates are plain, fixed
+    // bars. Shields (Shielded and up) are uneven in reach, thickness and tilt, with clipped
+    // corners; Articulated splits each into two hinged plates and stacks a smaller armour
+    // plate on one. Face 0 is the base: it carries the unit and never opens.
+    const bool irregular = structure >= NaniteStructure::Shielded;
+    const auto vary = [&](float low, float high, float plain) { return irregular ? random(low, high) : plain; };
     const float recessDepth = articulated ? 0.02F : plateRecess;
     for (int face = 0; face < 4; ++face)
     {
@@ -628,10 +620,10 @@ NaniteMesh buildNanite(NaniteDetail detail, const NanitePosture& posture, std::u
             const Vec toCentroid = (centroid - a) - edgeDirection * dot(centroid - a, edgeDirection);
             const float clearance = (recessDepth + 0.075F) / std::tan(dihedral) + 0.012F;
             const float rimMinimum = clearance / std::sqrt(dot(toCentroid, toCentroid));
-            const Vec outerA = lerp(a, centroid, std::max(plateRim + random(-0.02F, 0.02F), rimMinimum)) + recess;
-            const Vec outerB = lerp(b, centroid, std::max(plateRim + random(-0.02F, 0.02F), rimMinimum)) + recess;
-            const Vec innerA = lerp(a, centroid, plateWindow + random(-0.06F, 0.05F)) + recess;
-            const Vec innerB = lerp(b, centroid, plateWindow + random(-0.06F, 0.05F)) + recess;
+            const Vec outerA = lerp(a, centroid, std::max(plateRim + vary(-0.02F, 0.02F, 0.0F), rimMinimum)) + recess;
+            const Vec outerB = lerp(b, centroid, std::max(plateRim + vary(-0.02F, 0.02F, 0.0F), rimMinimum)) + recess;
+            const Vec innerA = lerp(a, centroid, plateWindow + vary(-0.06F, 0.05F, 0.0F)) + recess;
+            const Vec innerB = lerp(b, centroid, plateWindow + vary(-0.06F, 0.05F, 0.0F)) + recess;
             const float split = articulated ? random(0.38F, 0.62F) : 1.0F;
             const float gap = articulated ? 0.035F : 0.0F;
             const std::array<std::array<float, 2>, 2> pieces{{{gap, split - gap * 0.5F}, {split + gap * 0.5F, 1.0F - gap}}};
@@ -648,7 +640,7 @@ NaniteMesh buildNanite(NaniteDetail detail, const NanitePosture& posture, std::u
                 for (int corner = 0; corner < 4; ++corner)
                 {
                     const Vec here = quad[corner], previous = quad[(corner + 3) % 4], next = quad[(corner + 1) % 4];
-                    if (corner >= 2)
+                    if (corner >= 2 || !irregular)
                     {
                         outline.push_back(here);
                         continue;
@@ -661,16 +653,16 @@ NaniteMesh buildNanite(NaniteDetail detail, const NanitePosture& posture, std::u
                 }
                 // Pose: a slight inward tilt about the outer edge, then the opening.
                 const Vec hingeAxis = normalize(o1 - o0);
-                float tilt = random(0.0F, 0.09F);
+                float tilt = vary(0.0F, 0.09F, 0.0F);
                 if (dot(rotateAbout(i0, o0, hingeAxis, tilt) - i0, normal) > 0.0F) tilt = -tilt;
                 float hinge = articulated && face != 0 ? open * plateHinge : 0.0F;
                 if (dot(rotateAbout(i0, o0, hingeAxis, hinge) - i0, normal) < 0.0F) hinge = -hinge;
-                const Vec lift = face == 0 ? Vec{} : normal * (open * plateLift * (articulated ? 0.6F : 1.0F));
+                const Vec lift = face == 0 || !irregular ? Vec{} : normal * (open * plateLift * (articulated ? 0.6F : 1.0F));
                 const auto pose = [&](Vec point) { return rotateAbout(rotateAbout(point, o0, hingeAxis, tilt), o0, hingeAxis, hinge) + lift; };
-                const float thickness = random(0.032F, 0.052F);
+                const float thickness = vary(0.032F, 0.052F, 0.042F);
                 std::vector<Vec> posed;
                 for (const auto& point : outline) posed.push_back(pose(point));
-                const Vec plateNormal = normalize(cross(posed[2] - posed[0], posed[5] - posed[0]));
+                const Vec plateNormal = normalize(cross(posed[1] - posed[0], posed.back() - posed[0]));
                 const Vec outward = dot(plateNormal, normal) > 0.0F ? plateNormal : plateNormal * -1.0F;
                 emitRounded(builder, prism(posed, outward * -thickness), 0.012F * scale, segments, NaniteMaterial::Silver);
                 if (articulated && face != 0 && piece == stacked)
@@ -687,6 +679,18 @@ NaniteMesh buildNanite(NaniteDetail detail, const NanitePosture& posture, std::u
                 }
             }
         }
+    }
+
+    if (structure == NaniteStructure::Frame)
+    {
+        // One opaque core at the rigid centre: a dark housing whose faces open onto
+        // luminous facets, the frame-level stand-in for housing and heart.
+        const float s = coreEdge;
+        emitRounded(builder, tetrahedron(centre + (Vec{0.0F, -shellHeight * 0.25F, shellCircum}) * s,
+            centre + (Vec{-0.5F, -shellHeight * 0.25F, -shellIn}) * s, centre + (Vec{0.5F, -shellHeight * 0.25F, -shellIn}) * s,
+            centre + (Vec{0.0F, shellHeight * 0.75F, 0.0F}) * s), 0.012F * scale, std::min(segments, 1), NaniteMaterial::Graphite,
+            0.62F, 0.03F, 0.0F);
+        return mesh;
     }
 
     // Containment housing: rigid, the shell's orientation, its vertices toward the hubs.

@@ -16,7 +16,7 @@ namespace crucible::presentation::production
 enum class NaniteStructure : std::uint8_t
 {
     Silhouette, ///< One closed tetrahedral shell, each face windowed down to a luminous facet (opaque).
-    Frame,      ///< Silver edge rails and graphite corner hubs around one solid luminous core.
+    Frame,      ///< Rails, hubs and plain face bars around open windows onto a dark core with luminous facets.
     Shielded,   ///< Adds recessed face shields, a glass containment housing and a separate heart crystal.
     Articulated ///< Splits shields and rails into hinged plates and jointed fingers; adds cradle struts and contact pads.
 };
@@ -96,8 +96,9 @@ struct NaniteLodStep
 
 /** The distance ladder, lowest rung first. Every rung adds detail on at least one axis and
  * never removes any, so a cap cuts the ladder at a prefix. Switch sizes come from the lab's
- * pixel comparison of neighbouring rungs (docs/workstreams/presentation/phase15-nanite-model.md);
- * Frame is left off because its see-through frame cannot match the solid levels at any size.
+ * pixel comparison of neighbouring rungs (docs/workstreams/presentation/phase15-nanite-model.md).
+ * Frame shares the band and window of its neighbours but is left off: through it the ladder
+ * would fade twice where one fade reaches Shielded.
  * @return Static storage, valid for the program's lifetime.
  */
 [[nodiscard]] std::span<const NaniteLodStep> naniteLodLadder() noexcept;

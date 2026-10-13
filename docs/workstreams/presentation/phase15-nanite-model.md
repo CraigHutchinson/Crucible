@@ -30,7 +30,7 @@ cell. Headless SwiftShader render with three.js materials, not the Filament rend
 | Structure | Parts | | Surface | Shaping |
 | --- | --- | --- | --- | --- |
 | Silhouette | One closed tetrahedron, each face windowed down to a luminous facet, with graphite corner caps | | Flat | Sharp planar parts |
-| Frame | 6 silver edge rails, 4 graphite corner hubs, a dark core windowed onto luminous facets | | Chamfer | One flat chamfer on every part edge |
+| Frame | 6 silver edge rails, 4 graphite corner hubs, 12 plain face bars (the shields' band) around open windows onto a dark core with luminous facets | | Chamfer | One flat chamfer on every part edge |
 | Shielded | + 12 uneven, clipped, tilted shield plates (3 per face around a window), glass housing, separate heart crystal | | Bevel | Rounded edges and corners, smooth normals (3 steps) |
 | Articulated | 24 split, hinged plates with 9 stacked armour plates; rails split at an uneven joint with two collars each; cradle struts; housing edges | | Hero | 6-step rounding, more crystal facets |
 
@@ -46,7 +46,7 @@ Triangles per unit (vertices after welding), from the contract test:
 | Structure \ Surface | Flat | Chamfer | Bevel | Hero |
 | --- | ---: | ---: | ---: | ---: |
 | Silhouette | 76 (156) | 116 (240) | 220 (232) | 436 (376) |
-| Frame | 140 (300) | 412 (920) | 1,308 (789) | 3,612 (1,939) |
+| Frame | 284 (540) | 940 (2,072) | 3,180 (1,750) | 8,940 (4,635) |
 | Shielded | 342 (666) | 1,190 (2,582) | 4,140 (2,180) | 11,636 (5,948) |
 | Articulated | 1,170 (2,238) | 4,114 (8,894) | 11,552 (6,879) | 27,688 (14,973) |
 
@@ -142,8 +142,15 @@ few dozen pixels, so one changed pixel is a few percent.
 
 **What the measurement found and changed.**
 
-- *Frame is see-through* (open rails around a core) while Silhouette and Shielded are
-  solid. It differs at every size, so it stays a level but is left off the distance ladder.
+- *Frame was thin and see-through* (narrow rails around a core) while the silhouette's rim
+  was a wide solid band: different shapes at the same scale (user review). Frame now has
+  plain face bars over exactly the band the shields and the silhouette's rim cover, around
+  the same window, onto its dark windowed core; the three levels share outline, band and
+  window. Frame→Shielded is now 4.6–5.7% at 10–32 px. Frame stays off the distance ladder:
+  through Frame the ladder would fade twice (Silhouette→Frame 7.3% at 10 px, then
+  Frame→Shielded), against one 6.8% fade straight to Shielded, whose flat level costs 342
+  triangles to Frame's 284. A renderer that wants the open look can use it without a large
+  pop.
 - *The silhouette popped* against the shielded level by 8–15% at 6–16 px. Its window was
   larger and darker, it lacked the dark corner hubs, and it covered about 15% more pixels,
   because the higher levels' sunk rails and rounded hubs inset their visible outline. The

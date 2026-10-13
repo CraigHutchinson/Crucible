@@ -9,6 +9,7 @@
 #include <stdexcept>
 #include <string>
 #include <tuple>
+#include <vector>
 
 #include "crucible/presentation/production/nanite_model.hpp"
 
@@ -51,12 +52,28 @@ void checkWellFormed(const NaniteMesh& mesh, const std::string& label)
         require(std::abs(dot(vertex.normal_, vertex.normal_) - 1.0F) < 1e-3F, label + ": normal not unit length");
         require(vertex.position_[1] > -1e-4F, label + ": below the ground plane");
     }
-    std::map<std::tuple<long, long, long>, int> ids;
+    // Weld by distance, not by rounding: two copies of one point that straddle a grid line
+    // must still meet. Look in the point's cell and its neighbours.
+    std::map<std::tuple<long, long, long>, std::vector<std::pair<Vec, int>>> cells;
+    int nextId = 0;
     const auto id = [&](std::uint32_t index)
     {
         const auto& p = mesh.vertices_.at(index).position_;
-        const auto key = std::tuple{std::lround(p[0] * 1e4), std::lround(p[1] * 1e4), std::lround(p[2] * 1e4)};
-        return ids.try_emplace(key, static_cast<int>(ids.size())).first->second;
+        const long x = std::lround(p[0] * 1e4), y = std::lround(p[1] * 1e4), z = std::lround(p[2] * 1e4);
+        for (long dx = -1; dx <= 1; ++dx)
+            for (long dy = -1; dy <= 1; ++dy)
+                for (long dz = -1; dz <= 1; ++dz)
+                {
+                    const auto found = cells.find({x + dx, y + dy, z + dz});
+                    if (found == cells.end()) continue;
+                    for (const auto& [point, known] : found->second)
+                    {
+                        const Vec d = sub(point, p);
+                        if (dot(d, d) < 1e-10F) return known;
+                    }
+                }
+        cells[{x, y, z}].push_back({p, nextId});
+        return nextId++;
     };
     std::map<std::pair<int, int>, int> balance;
     double volume = 0.0;
