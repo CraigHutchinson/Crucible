@@ -1,6 +1,6 @@
 add_executable(crucible_game game_main.cpp)
 target_link_libraries(crucible_game PRIVATE crucible_options Crucible::Application
-    Crucible::Frontend Crucible::CinematicChoreography Crucible::ProductionRenderer
+    Crucible::Frontend Crucible::SwarmIntroAdapter Crucible::ProductionRenderer
     Crucible::ImGuiSDL3 Crucible::Presentation)
 set_target_properties(crucible_game PROPERTIES CXX_EXTENSIONS OFF)
 foreach(font_path IN ITEMS

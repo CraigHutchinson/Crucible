@@ -751,3 +751,47 @@ format benchmark, focused tests and evidence on `perf/json-append` from2bd85d5.
 Serial CPU/build reservation; no workers. Measure cold formatting first, preserve
 schema/owned output and quiescent lifetime contracts, receive actual merged
 upstream revision through runtime and desktop JSON consumers before promotion.
+
+## Native swarm receiving R1, 2026-10-13
+
+Root owns coordinator, prototype viewport/finite camera gate, manifests and all
+serial CPU/GPU runs on `.worktrees/phase15-native-swarm` (`codex/production-swarm`).
+Graphics agent owns production renderer/materials/mesh validation; consumer agent
+owns the adapter/body port/reference fixtures. No worker builds or benchmarks.
+Shared camera/mesh contracts belong to root. Source baseline204c211 includes PR47;
+PR48 merged as f0aeeb3 after all11 exact-head hosted jobs passed. The first native
+body capture gates lighting refinement; concepts and native receiving stay distinct.
+
+## M3 native swarm integration, 2026-10-14
+
+Root fetched main9a52060 and merged PR49–51 into `codex/production-swarm`.
+Model and test workers authored disjoint source-only packages; root owns serial
+CPU/GPU receiving. User authorized increased memory for fidelity: 288 MiB bounded
+external staging, three 40 MiB slots, one-million-corner frame cap. Release62/62
+passes; independent C++ review has no blocking findings. Final Debug/native
+receiving and publication follow; no frame-time or physical-scanout claim.
+Historical worktrees and failed/intermediate captures remain preserved.
+
+Final local receiving: Release62/62, Debug6/6 and ten clean-source native Vulkan
+readbacks passed; all ten images inspected. Source-only workers are released.
+Root retains the delivery/CI ownership; exclusive device work is released.
+
+Hosted PR52 receiving exposed a macOS system `label` name collision in the swarm
+CLI; rename its private helper to `settingsLabel` (local Debug Scaffold case passes).
+The initial source-profile test also inferred height from the tallest visible LOD
+vertex, an invalid proxy for a rounded model's stacking envelope. Check the actual
+received profile; independent model-envelope and source-state/contact/settling
+gates remain. Portable hosted verification reruns at the correction head.
+
+The initial mesh loop also borrowed through a temporary optional frame. Hold the
+optional explicitly while iterating, avoiding reliance on range-for temporary
+lifetime extension in partial C++23 toolchains. Retain the original controlled
+zero-tick compact-envelope geometry gate alongside the explicit source-profile
+gate; neither its threshold nor the independent contact gates are weakened.
+Published native log bytes are preserved with -text for cross-platform hash parity.
+
+Linux headless full receiving now passes at d7b8614, including the retained
+compact-envelope threshold after the explicit frame lifetime fix. macOS exposed
+a second private CLI collision via std::print ADL; rename that helper to
+printSummary and rebuild the affected target. Final hosted checks run at the
+resulting head; production capture inputs are unchanged by these CLI/test fixes.

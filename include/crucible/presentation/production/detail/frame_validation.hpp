@@ -26,11 +26,18 @@ namespace crucible::presentation::production::detail
     };
     if (frame.poses_.size() > CinematicFrame::maxInstances || !isPosition(frame.camera_.eye_)
         || !isPosition(frame.camera_.target_) || !std::isfinite(frame.camera_.verticalFovRadians_)
-        || frame.camera_.verticalFovRadians_ <= 0.1F || frame.camera_.verticalFovRadians_ >= 2.8F
+        || (!frame.camera_.orthographic_ && (frame.camera_.verticalFovRadians_ <= 0.1F || frame.camera_.verticalFovRadians_ >= 2.8F))
         || !std::isfinite(frame.keyIntensity_) || frame.keyIntensity_ < 0 || frame.keyIntensity_ > 8
         || !std::isfinite(frame.glowIntensity_) || frame.glowIntensity_ < 0 || frame.glowIntensity_ > 4)
     {
         return false;
+    }
+    if (frame.camera_.orthographic_)
+    {
+        const auto extent = *frame.camera_.orthographic_;
+        if (!std::isfinite(extent.halfWidth_) || !std::isfinite(extent.halfHeight_)
+            || extent.halfWidth_ <= 0.01F || extent.halfWidth_ > 1024
+            || extent.halfHeight_ <= 0.01F || extent.halfHeight_ > 32768) return false;
     }
     double lengthSquared{}, horizontalSquared{};
     for (std::size_t axis = 0; axis < 3; ++axis)

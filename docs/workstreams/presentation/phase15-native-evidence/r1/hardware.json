@@ -1,0 +1,14 @@
+[
+  {
+    "Name": "Intel(R) Graphics",
+    "DriverVersion": "32.0.101.9033",
+    "PNPDeviceID": "PCI\\VEN_8086&DEV_7D67&SUBSYS_801917AA&REV_06\\3&11583659&1&10",
+    "AdapterRAM": 4293918720
+  },
+  {
+    "Name": "NVIDIA GeForce RTX 5070 Laptop GPU",
+    "DriverVersion": "32.0.16.1714",
+    "PNPDeviceID": "PCI\\VEN_10DE&DEV_2D58&SUBSYS_801917AA&REV_A1\\A1D63A679B2DB04800",
+    "AdapterRAM": 4293918720
+  }
+]

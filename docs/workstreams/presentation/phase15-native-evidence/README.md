@@ -1,4 +1,4 @@
-# Native production receiver: R0
+# Native production receiving: R0 and M3 R1
 
 2026-10-13. These are actual Vulkan composed-frame readbacks from
 `crucible_game`, not generated concepts. The selected device was NVIDIA GeForce
@@ -72,3 +72,43 @@ speed-stretched shell and morphed docking footprints require an explicit bounded
 geometry/camera receiver. Retain reduced-motion and immediate skip throughout.
 New single-unit articulated rig/crystal concepts remain separately gated. Apple,
 Linux production graphics, native DX12, audio and human review remain open.
+
+## M3 R1: latest model in the actual Scaffold, 2026-10-14
+
+All ten serial native Vulkan readbacks passed and were visually inspected: initial,
+immediate menu preparation, macro, assembly, settled title, menu, options, missions,
+advancing mission completion and reduced-motion startup. The [clean-source manifest](r1/receiving.json)
+records checkpoint0102ed5, an empty tracked diff, executable/studio/material/font
+hashes, per-image identities, actual clocks, body profile and emitted detail counts.
+The selected RTX5070 Laptop GPU is recorded in each native log; this remains
+readback evidence rather than physical scanout or performance.
+
+![Actual M3 nanites in the operated macro shot](r1/macro.png)
+
+![Actual assembled M3 title](r1/hero.png)
+
+![Actual M3 menu background and themed controls](r1/menu.png)
+
+The macro emits1,048,218 corners, with30 Articulated/Bevel units among38 visible
+units. The settled title emits586,752 corners for all1536 units:1408 silhouette,
+38 frame-flat and90 frame-chamfer. Four variants across six cold rungs retain
+3,322,172 bytes; no cold numerical slivers were omitted. Source height is0.898146,
+span1.1 and lean0. Opaque housing omissions are explicitly counted. The renderer's
+external staging cap is288 MiB, not a total process/GPU-memory assertion.
+
+[Release62/62](r1/release-tests.log) and [Debug6/6](r1/debug-tests.log) include model,
+normal/winding, global bounds, zero ordinary hot allocations and unchanged
+source contact/clearance/settling gates at portrait and desktop sizes. Independent
+C++ review found no blocking issues. The old27-case proxy oracle remains a test
+fixture; it does not qualify M3.
+
+The silver macro geometry and wide title now remain visible after correcting the
+material's UV intensity flip and receiving a convolved studio environment. These
+are integration progress, not final cinematic fidelity. Visible rung differences
+still need native fade/calibration, the menu panel obscures the left title letters,
+and the skip panel dominates the intro composition. The mission overview is
+readable as a bounded state receiver but needs stronger gameplay material cues.
+Next pair composition and native transition refinement with complete-frame
+profiling under the [optimization process](../../../OPTIMIZATION_PROCESS.md).
+Precise GPU articulation, glass, audio, participant acceptance and additional
+production platforms remain open.

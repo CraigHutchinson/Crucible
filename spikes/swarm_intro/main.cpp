@@ -13,6 +13,7 @@
 #include <memory>
 #include <string>
 #include <string_view>
+#include <stdexcept>
 #include <vector>
 
 #include "SwarmIntro.hpp"
@@ -83,7 +84,7 @@ struct RunSummary
     std::size_t ribbon = 0;
 };
 
-std::string label(const IntroSettings& s)
+std::string settingsLabel(const IntroSettings& s)
 {
     const char* build = s.build == Build::Lying ? "lying" : (s.build == Build::Climb ? "climb" : (s.build == Build::Raise ? "raise" : (s.build == Build::Hybrid ? "hybrid" : "scaffold")));
     const char* lod = "uniform-far";
@@ -180,14 +181,26 @@ RunSummary run(const Options& options, bool capture)
         {
             const Camera& cam = intro.camera();
             const float dt = options.settings.tickSeconds;
+            if (!std::isfinite(cam.cx) || !std::isfinite(cam.cy) || !std::isfinite(cam.yaw) ||
+                !std::isfinite(cam.halfWidth) || cam.halfWidth <= 0.0F ||
+                !std::isfinite(cam.aspect) || cam.aspect <= 0.0F ||
+                !std::isfinite(cam.pixelsWide) || cam.pixelsWide <= 0.0F ||
+                !std::isfinite(dt) || dt <= 0.0F)
+                throw std::runtime_error("invalid camera before smoothness measurement");
             if (t > 0)
             {
                 const float frame = 2.0F * lastCam.halfWidth;
                 const float px = (cam.cx - lastCam.cx) / dt / frame, py = (cam.cy - lastCam.cy) / dt / frame;
-                summary.camPan = std::max(summary.camPan, std::hypot(px, py));
-                if (t > 1) summary.camPanAccel = std::max(summary.camPanAccel, std::hypot(px - lastPanX, py - lastPanY) / dt);
-                summary.camZoom = std::max(summary.camZoom, std::abs(std::log(cam.halfWidth / lastCam.halfWidth)) / dt);
-                summary.camYaw = std::max(summary.camYaw, std::abs(cam.yaw - lastCam.yaw) / dt);
+                const float pan = std::hypot(px, py);
+                const float acceleration = std::hypot(px - lastPanX, py - lastPanY) / dt;
+                const float zoom = std::abs(std::log(cam.halfWidth / lastCam.halfWidth)) / dt;
+                const float yaw = std::abs(cam.yaw - lastCam.yaw) / dt;
+                if (!std::isfinite(pan) || !std::isfinite(acceleration) || !std::isfinite(zoom) || !std::isfinite(yaw))
+                    throw std::runtime_error("nonfinite camera smoothness derivative");
+                summary.camPan = std::max(summary.camPan, pan);
+                if (t > 1) summary.camPanAccel = std::max(summary.camPanAccel, acceleration);
+                summary.camZoom = std::max(summary.camZoom, zoom);
+                summary.camYaw = std::max(summary.camYaw, yaw);
                 lastPanX = px;
                 lastPanY = py;
             }
@@ -310,7 +323,7 @@ float percentile(std::vector<float> values, float p)
     return values[k];
 }
 
-void print(const std::string& label, const Options& options, const RunSummary& s)
+void printSummary(const std::string& label, const Options& options, const RunSummary& s)
 {
     const double ticks = static_cast<double>(s.tickMicros.size());
     // Beats and gates are choreography seconds; the presentation block is what a viewer sees.
@@ -426,7 +439,7 @@ int main(int argc, char** argv)
         // at `pace` with the close-up tour at `closePace`.
         if (options.settings.pace <= 0.0F || options.settings.closePace <= 0.0F) return fail("pace is positive");
         const RunSummary main = run(options, true);
-        print(label(options.settings), options, main);
+        printSummary(settingsLabel(options.settings), options, main);
         if (!options.verify) return 0;
 
         // Acceptance per build; thresholds and their history are recorded in README.md.
@@ -470,7 +483,8 @@ int main(int argc, char** argv)
         // presented seconds, with margin over the rig's own caps (0.6 frame widths a second,
         // 1.2 per second squared, 0.9 log zoom and 12 degrees a second); a change of zoom adds
         // apparent pan, hence the margin.
-        if (main.camPan > 0.9F || main.camPanAccel > 2.5F || main.camZoom > 1.0F || main.camYaw > 15.0F)
+        if (!std::isfinite(main.camPan) || !std::isfinite(main.camPanAccel) ||
+            !std::isfinite(main.camZoom) || !std::isfinite(main.camYaw) || main.camPan > 0.9F || main.camPanAccel > 2.5F || main.camZoom > 1.0F || main.camYaw > 15.0F)
             return fail("camera moves smoothly: pan <= 0.9 frame widths/s, pan acceleration <= 2.5 fw/s^2, zoom <= 1.0 log/s, yaw <= 15 deg/s");
 
         const RunSummary again = run(options, false);
@@ -495,7 +509,7 @@ int main(int argc, char** argv)
             // duty cycle is gated by the main run (period 2) and the switched-levers run (3).
             if (mode == LodMode::AllHero) tier.settings.levers.heroPeriod = 1;
             const RunSummary r = run(tier, false);
-            print(label(tier.settings), tier, r);
+            printSummary(settingsLabel(tier.settings), tier, r);
             if (r.allLocked < 0.0F || r.allLocked > deadline) return fail("every LOD tier in isolation completes the title within the sequence");
             if (r.panels > 0 && (r.allRaised < 0.0F || r.allRaised > deadline)) return fail("every LOD tier in isolation raises every panel within the sequence");
             if (r.unsupported != 0) return fail("every LOD tier in isolation locks only on locked supports");
@@ -519,7 +533,7 @@ int main(int argc, char** argv)
         for (const Options& variant : { levered, budgeted })
         {
             const RunSummary r = run(variant, false);
-            print(label(variant.settings) + (variant.switchLevers ? "+switched" : "+budget"), variant, r);
+            printSummary(settingsLabel(variant.settings) + (variant.switchLevers ? "+switched" : "+budget"), variant, r);
             if (r.allLocked < 0.0F || r.allLocked > deadline) return fail("a run with switched levers or a budget completes the title within the sequence");
             if (r.panels > 0 && (r.allRaised < 0.0F || r.allRaised > deadline)) return fail("a run with switched levers or a budget raises every panel within the sequence");
             if (r.unsupported != 0 || r.stuckAtEnd != 0) return fail("a run with switched levers or a budget locks only on supports and resolves every stuck episode");

@@ -9,6 +9,7 @@
 #include <vector>
 
 #include "crucible/presentation/production/cinematic_frame.hpp"
+#include "crucible/presentation/production/nanite_mesh_frame.hpp"
 
 struct SDL_Window;
 struct ImGuiContext;
@@ -90,6 +91,17 @@ public:
      * every accepted framework frame is ended, including a later recoverable error.
      */
     [[nodiscard]] FrameReceipt tryRender(const CinematicFrame& frame,
+        const ImDrawData& drawData, std::uint64_t frameId);
+    /** Copies a complete authored body mesh and UI into the same bounded frame slots.
+     * @param frame Synchronously borrowed mesh; no caller storage survives this call.
+     * @param drawData Synchronously borrowed current-context UI draw data.
+     * @param frameId Monotonic submission identity; retry the same ID after skip.
+     * @return The same correlated submission/refusal disposition as the pose consumer.
+     * @note Mesh mode hides pose instances; capture and surface lifetimes are shared.
+     * Role/intensity attributes pass through unchanged; their native UV0 encoding
+     * explicitly disables Filament's default texture-coordinate y flip.
+     */
+    [[nodiscard]] FrameReceipt tryRender(const NaniteMeshFrame& frame,
         const ImDrawData& drawData, std::uint64_t frameId);
     /** Drains outstanding work before replacing the surface extent.
      * @param extent Requested drawable pixels; a zero axis suspends rendering.

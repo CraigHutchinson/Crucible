@@ -13,3 +13,4 @@
 *.ogg filter=lfs diff=lfs merge=lfs -text
 *.mp3 filter=lfs diff=lfs merge=lfs -text
 docs/workstreams/integration/phase12-evidence/runtime-budgets/** -text
+docs/workstreams/presentation/phase15-native-evidence/r1/*.log -text

@@ -120,3 +120,7 @@ or mission thresholds change for visual fidelity. Decorative intro nanites are
 view-owned and never impersonate authoritative gameplay population. Warm UI/font
 costs, cold startup/resize/save costs and simulation hot-path allocation gates are
 recorded separately. Native build/capture/performance campaigns are serialized.
+
+## Received M3 production swarm, 2026-10-14
+
+The latest model and operated Scaffold meet in the [bounded native receiver](../decisions/phase15-m3-swarm-receiver.md): actual compact-envelope height, seeded variants, six per-unit detail rungs, one-million-corner cap and user-authorized 288 MiB external staging. The [native evidence](../workstreams/presentation/phase15-native-evidence/README.md) distinguishes GPU readback from scanout and performance. Next pair cinematic/LOD/material review with complete-frame VTune and vectorization/alias analysis under the optimization process. Rig, fades, glass, audio and platform qualification remain separate.

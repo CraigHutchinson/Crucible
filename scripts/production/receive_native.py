@@ -35,22 +35,27 @@ def main() -> int:
     output.mkdir(parents=True, exist_ok=False)
     exe = build / "src/game/crucible_game.exe"
     resources = build / "src/presentation/production/crucible/presentation/production/resources"
-    inputs = [exe, *sorted(resources.glob("*.filamat")),
+    inputs = [exe, resources / "studio_environment.bin", *sorted(resources.glob("*.filamat")),
               *sorted((exe.parent / "assets/production/fonts").rglob("*.ttf"))]
-    if len(inputs) != 6:
-        raise RuntimeError("Expected executable, three compiled materials and two packaged fonts")
+    if len(inputs) != 8:
+        raise RuntimeError("Expected executable, convolved studio resource, four materials and two packaged fonts")
     source = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=repo, text=True).strip()
     diff = subprocess.check_output(["git", "diff", "HEAD", "--"], cwd=repo)
     report = {"schema": 1, "source": source,
               "tracked_worktree_diff_sha256": hashlib.sha256(diff).hexdigest(),
               "inputs": [{"path": str(path.relative_to(repo)), "sha256": digest(path)} for path in inputs],
-              "scanout_verified": False, "performance_measurement": False, "cases": []}
-    cases = [("macro", ["--capture-ms", "500"]),
-             ("assembly", ["--capture-ms", "6000"]),
-             ("hero", ["--capture-ms", "9000"]),
-             ("menu", ["--menu"]), ("options", ["--screen", "options"]),
-             ("missions", ["--screen", "missions"]),
+              "scanout_verified": False, "performance_measurement": False, "renderer_staging_cap_mib": 288,
+              "mesh_corner_cap": 1048576, "model_baseline": "main9a52060 M3", "cases": []}
+    cases = [("initial", ["--capture-ms", "0"]), ("menu-preparing", ["--menu"]),
+             ("macro", ["--capture-ms", "500"]),
+             ("assembly", ["--capture-ms", "18000"]),
+             ("hero", ["--capture-ms", "30000"]),
+             ("menu", ["--menu", "--capture-ms", "45000"]), ("options", ["--screen", "options", "--capture-ms", "45000"]),
+             ("missions", ["--screen", "missions", "--capture-ms", "45000"]),
              ("world", ["--route", "--capture-frame", "64"])]
+    reduced_profile = output / "reduced-motion.progress"
+    reduced_profile.write_text("CRUCIBLE_PROGRESS 1\n0 0 0 1 0 0\n", encoding="ascii")
+    cases.append(("reduced-motion", ["--profile", str(reduced_profile)]))
     for name, flags in cases:
         print(f"Receiving {name}", flush=True)
         png = output / f"{name}.png"
@@ -73,6 +78,22 @@ def main() -> int:
             raise RuntimeError("Readback dimensions or evidence classification mismatch")
         if name == "world" and (receipt["sequence"] != "committed-mission-world" or receipt["completed_tick"] < 64):
             raise RuntimeError("World capture did not receive advancing committed mission state")
+        if name in ("initial", "macro", "assembly", "hero") and receipt["mesh_vertices"] <= 0:
+            raise RuntimeError("Source body capture did not contain actual prototype geometry")
+        if name in ("hero", "menu", "options", "missions") and not receipt["static_ready"]:
+            raise RuntimeError("Settled capture did not receive the completed source")
+        if name in ("menu-preparing", "reduced-motion") and (receipt["mesh_vertices"] != 0 or receipt["static_ready"]):
+            raise RuntimeError("Hidden preparation displayed an animated source frame")
+        if name in ("menu-preparing", "reduced-motion") and receipt["screen_id"] != 1:
+            raise RuntimeError("Hidden preparation did not expose the usable menu immediately")
+        if receipt["mesh_vertices"] > 1048576:
+            raise RuntimeError("Native mesh escaped the complete-frame cap")
+        if receipt["mesh_vertices"] and (receipt["sequence"] != "M3-scaffold-model" or
+                not 0.89 < receipt["body_height"] < 0.91 or receipt["body_lean"] != 0 or
+                receipt["visible_units"] + receipt["culled_units"] != 1536 or
+                sum(receipt["model_rungs"]) != receipt["visible_units"] or
+                receipt["model_cache_bytes"] > 24 * 1024 * 1024):
+            raise RuntimeError("Native capture did not receive the bounded latest-model profile")
         report["cases"].append({"name": name, "command": command, "exit_code": process.returncode,
                                 "png_sha256": digest(png), "log_sha256": digest(log), "receipt": receipt})
         (output / "receiving.json").write_text(json.dumps(report, indent=2) + "\n", encoding="utf-8")

@@ -5,7 +5,12 @@ Continuation,2026-10-13: preserved source and received main through PR46. PR33
 merged as3f4c4565378a8881641506f3e7e39fbdff465c34 after all10 exact-head jobs
 passed in run37963145591. Native R0 now compiles and receives seven actual Vulkan
 readbacks; [commands, captures and visual findings](../workstreams/presentation/phase15-native-evidence/README.md).
-The updated PR47 intro is reviewed separately; R0 is not final visual acceptance.
+PR47 merged as1b9747b2e7fab31351dc225cbc4fa123c34c0370. PR48 received the
+production game and merged asf0aeeb3c8e6f02c8569e51200e76e5412182563f after
+all11 exact-head jobs passed in run38426970642. R1 now receives the actual Scaffold
+source/body through the [frozen mesh and clock contract](../decisions/phase15-swarm-native-receiver.md).
+Local new contract tests pass in Release and Debug; wide-title lighting refinement
+and final R1 publication remain in progress. R0 and R1 are not final visual acceptance.
 Baseline: `13642fe79c848a8509f2935d7357ad107e309c81`, PR31 merge.
 Planning checkpoint: PR32 merged as9f1716410cd223ad65237ded1779a7c3b4f39d54 after
 all10 exact-head jobs passed on8bdf587 in run37955070682.
@@ -78,3 +83,21 @@ product-neutral consumers.
 P15-F01-F06 are open with owners/gates above. Carried Phase14 and earlier follow-ups
 remain listed in the phase plan. Implementation, receiving, publication/merge and
 claim closure are pending; historical worktrees and artifacts remain preserved.
+
+## Native M3 increment, 2026-10-14
+
+R0 merged through PR48 after all11 exact-head jobs passed. Root then fetched and
+merged PR49–51 and received M3 models in the actual operated Scaffold sequence.
+Cold caches, explicit smooth-normal packets, physical heart fitting, conservative
+visibility and budgeted per-unit detail preserve bounded storage and hot-path
+allocation gates. User-authorized staging rises to288 MiB; source remains1536 units.
+Release62/62 passes, including taller-body contact and settling at two viewports.
+Independent C++ review has no blocking findings.
+
+The UV intensity-channel flip caused the black wide-shot title and is corrected.
+Actual macro and settled-title readbacks show richer silver geometry, using a
+convolved studio environment. [Native evidence and limits](../workstreams/presentation/phase15-native-evidence/README.md) supersede the earlier statement that all captures were pending.
+The overall phase remains in progress: native fades/rig/glass, final cinematic
+acceptance, audio, participant evidence, other production platforms and Phase14
+G3–G5 remain open. Next receive art refinement together with measured complete-frame
+optimization; a higher cap does not establish a performance result.

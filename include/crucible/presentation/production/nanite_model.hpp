@@ -71,12 +71,19 @@ struct NaniteMesh
     std::vector<std::uint32_t> indices_;
 };
 
+/** Returns the compact enclosing tetrahedron, independent of detail and variant.
+ * @return Unit-space corners: nose, rear left, rear right, apex. The visual
+ * Silhouette inset lies inside this envelope, above its ground plane.
+ * @note Value storage, no allocation; used for source attachment and mesh mapping.
+ */
+[[nodiscard]] std::array<std::array<float, 3>, 4> naniteCompactEnvelope() noexcept;
+
 /** Builds one nanite procedurally for a detail level and posture.
  * @param detail Structure and surface levels; each axis is independent.
  * @param posture Articulation; out-of-range values are clamped.
  * @param variant Seed for the unit's irregularity (plate reach, cuts, tilt, rail widths,
  *        heart facets); every variant keeps the same parts, silhouette and triangle count.
- * @return Closed parts, each consistently wound outward; identical inputs give identical bytes.
+ * @return Closed parts, each consistently wound outward; identical inputs give identical vertex/index values within the same toolchain.
  * @throws std::bad_alloc Mesh storage cannot be allocated.
  */
 [[nodiscard]] NaniteMesh buildNanite(NaniteDetail detail, const NanitePosture& posture = {}, std::uint32_t variant = 0);

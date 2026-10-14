@@ -1,5 +1,13 @@
-add_executable(crucible_swarm_intro main.cpp SwarmIntro.cpp SwarmDiagnostics.cpp Wordmark.cpp)
-target_link_libraries(crucible_swarm_intro PRIVATE crucible_options Sub0ECS::Sub0ECS Sub0Log::Sub0Log)
+add_library(crucible_swarm_intro_core SwarmIntro.cpp SwarmDiagnostics.cpp Wordmark.cpp)
+add_library(Crucible::SwarmIntroPrototype ALIAS crucible_swarm_intro_core)
+target_include_directories(crucible_swarm_intro_core PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+target_link_libraries(crucible_swarm_intro_core PUBLIC crucible_options Sub0ECS::Sub0ECS
+    PRIVATE Sub0Log::Sub0Log)
+set_target_properties(crucible_swarm_intro_core PROPERTIES CXX_EXTENSIONS OFF)
+
+if(CRUCIBLE_BUILD_SWARM_SPIKE)
+add_executable(crucible_swarm_intro main.cpp)
+target_link_libraries(crucible_swarm_intro PRIVATE Crucible::SwarmIntroPrototype)
 if(BUILD_TESTING)
     foreach(build IN ITEMS lying raise climb hybrid scaffold)
         add_test(NAME swarm_intro_${build} COMMAND crucible_swarm_intro --verify --build ${build})
@@ -27,4 +35,6 @@ if(BUILD_TESTING)
     add_test(NAME swarm_intro_diagnostics_layers2_scaffold
         COMMAND Python3::Interpreter ${CMAKE_CURRENT_SOURCE_DIR}/verify_diagnostics.py $<TARGET_FILE:crucible_swarm_intro> --build scaffold --layers 2 --count 3072)
     set_tests_properties(swarm_intro_diagnostics_layers2_scaffold PROPERTIES LABELS "presentation;spike;diagnostics" TIMEOUT 600)
+endif()
+
 endif()

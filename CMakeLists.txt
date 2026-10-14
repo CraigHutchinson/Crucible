@@ -54,6 +54,9 @@ add_subdirectory(src/interactions)
 add_subdirectory(src/scheduling)
 add_subdirectory(src/telemetry)
 add_subdirectory(src/presentation)
+if(CRUCIBLE_BUILD_GAME OR CRUCIBLE_BUILD_SWARM_SPIKE)
+    add_subdirectory(spikes/swarm_intro)
+endif()
 add_subdirectory(src/presentation/production)
 
 add_library(crucible_core src/simulation.cpp)
@@ -86,7 +89,8 @@ if(CRUCIBLE_BUILD_GAME)
         application/frontend.hpp application/frontend_view.hpp application/frontend_intent.hpp
         application/game_journey.hpp application/profile_store.hpp application/progress_profile.hpp
         presentation/production/cinematic_frame.hpp presentation/production/cinematic_choreography.hpp
-        presentation/production/production_renderer.hpp presentation/production/nanite_model.hpp)
+        presentation/production/production_renderer.hpp presentation/production/nanite_model.hpp
+        presentation/production/nanite_mesh_frame.hpp presentation/production/swarm_intro_adapter.hpp)
         string(REPLACE "/" "_" unit "${header}")
         set(source "${CMAKE_CURRENT_BINARY_DIR}/header_checks/${unit}.cpp")
         file(WRITE "${source}" "#include \"crucible/${header}\"\n")
@@ -127,10 +131,6 @@ endif()
 
 if(CRUCIBLE_BUILD_RULE_SPIKE)
     add_subdirectory(spikes/structural)
-endif()
-
-if(CRUCIBLE_BUILD_SWARM_SPIKE)
-    add_subdirectory(spikes/swarm_intro)
 endif()
 
 if(CRUCIBLE_BUILD_RENDER_SPIKE)

@@ -64,3 +64,47 @@ and choose a consumed adapter contract. Keep new rig, docking and crystal animat
 in a bounded single-unit study until their geometry gates pass. No faction mechanic,
 population increase, DX12 support, Apple/Linux production qualification, audio,
 participant acceptance or Phase14 G3-G5 acceptance is implied by this increment.
+
+## Received prototype increment R1, 2026-10-13
+
+PR47's operated Scaffold1536 sequence now reaches native Vulkan through its actual
+source library, an owned snapshot/body adapter and synchronous bounded mesh borrow.
+There is no copied simulation. Orthographic affine projection preserves the source
+viewport; actual presented ticks and choreography seconds remain separate. Skip and
+reduced motion reach usable menus immediately and prepare the static scene in at
+most four hidden source ticks per coordinator pass. Suspension discards decorative
+debt, and mission Runtime remains independent. Explicit capture seeks are cold,
+forward-only, at most2700ticks/45presented seconds; interactive startup never seeks.
+
+Independent agent review found and corrected zero-tick captures showing an empty
+floor and reduced-motion startup waiting on the intro. New27-case checked-in Python
+geometry references, regular-core/clearance/rigidity properties, maximum4096-unit
+mesh/detail bounds and actual source settling tests pass locally in Release and
+Debug. Corpus identities are checked without NumPy. Hosted platform/sanitizer
+receiving now builds the actual portable adapter; native graphics still uses the
+qualified Release closure. No throughput claim comes from these captures.
+
+## Latest M3 receiving increment, 2026-10-14
+
+Fetched and merged main9a52060, including PR49–51. The native producer now caches
+four seeded model variants at six rungs, preserves physical heart fit and transfers
+the actual compact envelope to Scaffold. Render-only visibility and nearest-first
+detail allocation stay within1,048,576 corners; the user authorized a bounded
+288 MiB external renderer staging cap. The old proxy/oracle remains a test fixture,
+not a production rendering fallback. [Frozen M3 contract](../../decisions/phase15-m3-swarm-receiver.md).
+
+Native inspection isolated the black settled title: Filament's default UV flip
+turned the intensity channel from one into zero. The numeric-channel material now
+disables that flip. A received, convolved studio environment and one effective key
+light expose the silver planes; unused secondary directional lighting is removed.
+Macro and settled-title readbacks show the actual richer geometry. Release passes
+62/62 tests, including unchanged contact, overlap, clearance and settling gates at
+portrait and desktop source viewports. No timing claim follows from readbacks.
+
+The next balanced slice pairs cinematic composition, visible LOD transition review
+and material readability with complete-frame profiling. Follow
+[the optimization process](../../OPTIMIZATION_PROCESS.md): establish VTune capability,
+inspect vectorization/assembly and alias/lifetime assumptions, iterate three passes,
+then receive controlled combinations in the game. Native cross-fades, transparent
+housing, per-part GPU rig, audio, participant review and additional production
+platforms remain open.

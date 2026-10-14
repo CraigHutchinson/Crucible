@@ -685,6 +685,18 @@ float SwarmIntro::presentAt(float t) const
     return static_cast<float>(shown);
 }
 
+bool SwarmIntro::trySetViewport(float aspect, float pixelsWide) noexcept
+{
+    if (!std::isfinite(aspect) || aspect < 1.0F / 32.0F || aspect > 32.0F ||
+        !std::isfinite(pixelsWide) || pixelsWide < 1.0F || pixelsWide > 4096.0F)
+        return false;
+    viewportAspect_ = aspect;
+    viewportPixelsWide_ = pixelsWide;
+    camera_.aspect = aspect;
+    camera_.pixelsWide = pixelsWide;
+    return true;
+}
+
 Camera SwarmIntro::cameraAt(float t) const
 {
     // Orthographic stand-in for the brief's lens path. A macro on the first unit to wake,
@@ -716,6 +728,8 @@ Camera SwarmIntro::cameraAt(float t) const
                                      { sequence + 0.75F * kOpenSeconds, 0.0F, openY, 96.0F, 0.0F },
                                      { sequence + kOpenSeconds, 0.0F, openY, 96.0F, 0.0F } } };
     Camera cam;
+    cam.aspect = viewportAspect_;
+    cam.pixelsWide = viewportPixelsWide_;
     std::size_t k = 0;
     while (k + 2 < keys.size() && t > keys[k + 1].t) ++k;
     const Key& a = keys[k];
@@ -732,7 +746,7 @@ Camera SwarmIntro::cameraAt(float t) const
 namespace
 {
 // Camera operator (S0o). Rig springs: natural frequencies in radians per presented second
-// (critically damped, so no overshoot); limits in frame widths, log zoom and degrees per
+// (critical damping coefficients with a clamped discrete step); limits in frame widths, log zoom and degrees per
 // presented second, chosen so a move reads as a camera move rather than a cut.
 constexpr float kRigPosition = 1.4F;
 constexpr float kRigZoom = 1.2F;
@@ -950,6 +964,8 @@ void SwarmIntro::updateCamera()
     spring(rig_.logW, rig_.vw, shot_.logW, kRigZoom, kMaxZoom, 4.0F * kMaxZoom, dt);
     spring(rig_.yaw, rig_.vyaw, shot_.yaw, kRigYaw, kMaxYaw, 4.0F * kMaxYaw, dt);
     camera_ = Camera{};
+    camera_.aspect = viewportAspect_;
+    camera_.pixelsWide = viewportPixelsWide_;
     camera_.cx = rig_.x;
     camera_.cy = rig_.y;
     camera_.halfWidth = std::exp(rig_.logW);
@@ -1662,15 +1678,15 @@ void SwarmIntro::heroChoose(const Identity& id, const Pose& pose, float& vx, flo
     {
         float px, py, vx, vy;
     };
-    std::array<Neighbour, 24> near{};
+    std::array<Neighbour, 24> neighbours{};
     std::size_t count = 0;
     forNeighbours(pose.x, pose.y, 4.0F * d, [&](std::uint32_t j) {
-        if (j == id.index || !gMover_[j] || gLayer_[j] || count == near.size()) return;
+        if (j == id.index || !gMover_[j] || gLayer_[j] || count == neighbours.size()) return;
         // Right of way: yield only to units that answered the wave earlier. Mutual yielding
         // between equals freezes dense streams (measured: all-hero runs jam without this).
         const bool senior = gWake_[j] < gWake_[id.index] || (gWake_[j] == gWake_[id.index] && j < id.index);
         if (!senior) return;
-        near[count++] = { gx_[j] - pose.x, gy_[j] - pose.y, gvx_[j], gvy_[j] };
+        neighbours[count++] = { gx_[j] - pose.x, gy_[j] - pose.y, gvx_[j], gvy_[j] };
     });
     if (count == 0) return;
 
@@ -1683,7 +1699,7 @@ void SwarmIntro::heroChoose(const Identity& id, const Pose& pose, float& vx, flo
         float ttc = horizon;
         for (std::size_t k = 0; k < count; ++k)
         {
-            const Neighbour& n = near[k];
+            const Neighbour& n = neighbours[k];
             const float wx = cx - n.vx;   // seniors do not reciprocate
             const float wy = cy - n.vy;
             const float b = n.px * wx + n.py * wy;

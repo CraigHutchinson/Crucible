@@ -1,0 +1,12 @@
+{
+  "source": "procedural studio; cmgen GGX prefilter and pre-scaled SH",
+  "face_size": 32,
+  "levels": 6,
+  "faces": 6,
+  "cpu_packaged_bytes": 32868,
+  "gpu_texture_bytes": 32760,
+  "generator_sha256": "090947fc4d7c8d4e8c9a7ce884e675718d904ca3ee2297858ba136f584750667",
+  "ktx_sha256": "dfdb315d48b8d8d0743b934e7a0c861ed03b2a63fee9b3e96494b4ce28e0a0a2",
+  "sh_sha256": "22004578147a803b8f9bd162cfecf40e2f4624ccf6d001b62285ec2d641110bf",
+  "packed_sha256": "37e1129e5f5051a24f4e422159069a9b8747aed4cf3390a27392aef30073990a"
+}
