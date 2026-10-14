@@ -775,3 +775,10 @@ Historical worktrees and failed/intermediate captures remain preserved.
 Final local receiving: Release62/62, Debug6/6 and ten clean-source native Vulkan
 readbacks passed; all ten images inspected. Source-only workers are released.
 Root retains the delivery/CI ownership; exclusive device work is released.
+
+Hosted PR52 receiving exposed a macOS system `label` name collision in the swarm
+CLI; rename its private helper to `settingsLabel` (local Debug Scaffold case passes).
+The initial source-profile test also inferred height from the tallest visible LOD
+vertex, an invalid proxy for a rounded model's stacking envelope. Check the actual
+received profile; independent model-envelope and source-state/contact/settling
+gates remain. Portable hosted verification reruns at the correction head.

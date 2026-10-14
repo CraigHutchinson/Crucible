@@ -229,8 +229,8 @@ Recommendation: keep **one C++ generator** and iterate its form and detail level
   Crucible pins 1.77.3 (`d852e34`); parity needs a from-source Filament web build and `matc`
   at the pin. That is worth doing when materials (glass housing, heart emission, bloom)
   become the bottleneck, which is the next step below.
-- **Acceptance stays native.** The production renderer consumes the generator now, so the
-  next native capture shows the real mesh in the real Vulkan path.
+- **Acceptance stays native.** The production renderer receives the generator in [ten actual R1
+  Vulkan readbacks](phase15-native-evidence/README.md); the lab remains separate evidence.
 
 ## Production consumer
 
@@ -241,7 +241,7 @@ visibility and a complete-frame budget of 1,048,576 corners. The actual source i
 contact and settling gates. Physical hearts retain a uniform compact fit while
 shells map onto source docking shapes. See the [received contract](../../decisions/phase15-m3-swarm-receiver.md).
 
-The mission overview's `makeNanite()` uses Distant/Silhouette/Flat rather than a hero
+The mission overview's `makeNanite()` uses Silhouette/Flat for distant units rather than a hero
 mesh for every tiny instance. Opaque production materials omit housing panes;
 transparent receiving remains open. Native per-unit detail is received, while the
 lab's cross-fade, articulated GPU rig and final material parity remain separate

@@ -89,7 +89,7 @@ qualified Release closure. No throughput claim comes from these captures.
 Fetched and merged main9a52060, including PR49–51. The native producer now caches
 four seeded model variants at six rungs, preserves physical heart fit and transfers
 the actual compact envelope to Scaffold. Render-only visibility and nearest-first
-detail allocation stay within one million corners; the user authorized a bounded
+detail allocation stay within1,048,576 corners; the user authorized a bounded
 288 MiB external renderer staging cap. The old proxy/oracle remains a test fixture,
 not a production rendering fallback. [Frozen M3 contract](../../decisions/phase15-m3-swarm-receiver.md).
 
