@@ -1,0 +1,806 @@
+<title>Nanite Detail Lab</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&family=Saira+Semi+Condensed:wght@500;600&display=swap">
+<style>
+/* Layout: one full-height stage (WebGL) with a dense instrument panel at its side; the panel drops below the stage on narrow screens. */
+:root {
+    --bg: #090c10;
+    --panel: #10151b;
+    --line: #1f2831;
+    --fg: #d9e0e7;
+    --muted: #7f8c99;
+    --accent: #3fd3e8;
+    --display: "Saira Semi Condensed", "Arial Narrow", system-ui, sans-serif;
+    --body: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+    --mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+    color-scheme: dark;
+}
+html, body { height: 100%; }
+[hidden] { display: none !important; }
+body { background: var(--bg); color: var(--fg); font: 14px/1.45 var(--body); }
+.lab { display: grid; grid-template-columns: minmax(0, 1fr) 320px; height: 100%; }
+.stage { position: relative; min-width: 0; min-height: 0; overflow: hidden; }
+.stage canvas { display: block; width: 100%; height: 100%; touch-action: none; }
+.labels { position: absolute; inset: 0; pointer-events: none; }
+.tag { position: absolute; transform: translate(-50%, 0); font: 500 11px/1.3 var(--mono); color: var(--muted); text-align: center; white-space: nowrap; }
+.tag b { color: var(--fg); font-weight: 500; }
+.axis { position: absolute; font: 600 12px/1 var(--display); letter-spacing: .12em; text-transform: uppercase; color: var(--accent); }
+.hud { position: absolute; left: 16px; top: 14px; display: flex; flex-direction: column; gap: 2px; pointer-events: none; }
+.hud h1 { margin: 0; font: 600 20px/1.1 var(--display); letter-spacing: .06em; text-transform: uppercase; }
+.hud p { margin: 0; font: 12px/1.4 var(--mono); color: var(--muted); }
+.status { position: absolute; inset: 0; display: grid; place-items: center; padding-inline: 16px; text-align: center; color: var(--muted); font: 13px/1.5 var(--mono); }
+.panel { background: var(--panel); border-left: 1px solid var(--line); overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 18px; }
+.group { display: flex; flex-direction: column; gap: 8px; }
+.group > h2 { margin: 0; font: 600 12px/1 var(--display); letter-spacing: .14em; text-transform: uppercase; color: var(--muted); }
+.seg { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); border: 1px solid var(--line); border-radius: 4px; overflow: hidden; }
+.seg.three { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.seg button { appearance: none; border: 0; border-right: 1px solid var(--line); background: transparent; color: var(--fg); padding: 7px 4px; font: 500 12px/1.2 var(--body); cursor: pointer; }
+.seg button:last-child { border-right: 0; }
+.seg button[aria-pressed="true"] { background: color-mix(in srgb, var(--accent) 22%, transparent); color: var(--fg); box-shadow: inset 0 -2px 0 var(--accent); }
+.seg button:focus-visible, select:focus-visible, input:focus-visible, .check input:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+.hint { margin: 0; font-size: 12px; color: var(--muted); }
+.row { display: grid; grid-template-columns: 74px minmax(0, 1fr) 40px; align-items: center; gap: 8px; font-size: 13px; }
+.row output { font: 12px var(--mono); color: var(--muted); text-align: right; font-variant-numeric: tabular-nums; }
+input[type="range"] { width: 100%; accent-color: var(--accent); }
+select { width: 100%; background: var(--bg); color: var(--fg); border: 1px solid var(--line); border-radius: 4px; padding: 7px 8px; font: 13px var(--body); }
+.swatches { display: flex; gap: 8px; }
+.swatches button { flex: 1; appearance: none; border: 1px solid var(--line); border-radius: 4px; background: var(--bg); color: var(--fg); padding: 6px 0; font: 500 12px var(--body); cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; }
+.swatches button i { width: 10px; height: 10px; border-radius: 2px; background: var(--c); box-shadow: 0 0 8px var(--c); }
+.swatches button[aria-pressed="true"] { border-color: var(--c); }
+.checks { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 12px; }
+.check { display: flex; align-items: center; gap: 8px; font-size: 13px; cursor: pointer; }
+.check input { accent-color: var(--accent); }
+dl.stats { margin: 0; display: grid; grid-template-columns: auto 1fr; gap: 4px 12px; font: 12px/1.4 var(--mono); }
+dl.stats dt { color: var(--muted); }
+dl.stats dd { margin: 0; text-align: right; font-variant-numeric: tabular-nums; }
+table.budget { width: 100%; border-collapse: collapse; font: 11px/1.3 var(--mono); font-variant-numeric: tabular-nums; }
+table.budget th, table.budget td { padding: 4px 3px; border-bottom: 1px solid var(--line); text-align: right; }
+table.budget th:first-child, table.budget td:first-child { text-align: left; }
+table.budget th { color: var(--muted); font-weight: 500; }
+table.budget tr.on td { color: var(--accent); }
+@media (max-width: 760px) {
+    .lab { grid-template-columns: minmax(0, 1fr); grid-template-rows: 58vh auto; height: auto; }
+    .panel { border-left: 0; border-top: 1px solid var(--line); overflow: visible; }
+}
+</style>
+
+<div class="lab">
+    <section class="stage" id="stage" aria-label="Nanite preview">
+        <div class="hud">
+            <h1>Nanite detail lab</h1>
+            <p id="hudLine">Loading the production generator…</p>
+        </div>
+        <div class="labels" id="labels"></div>
+        <div class="status" id="status">Compiling the procedural model (WebAssembly)…</div>
+    </section>
+    <aside class="panel" aria-label="Controls">
+        <div class="group">
+            <h2>View</h2>
+            <div class="seg" id="view">
+                <button type="button" data-v="unit" aria-pressed="true">One unit</button>
+                <button type="button" data-v="matrix" aria-pressed="false">Matrix</button>
+                <button type="button" data-v="swarm" aria-pressed="false">Swarm</button>
+                <button type="button" data-v="distance" aria-pressed="false">Distance</button>
+            </div>
+        </div>
+        <div class="group">
+            <h2>Structure</h2>
+            <div class="seg" id="structure">
+                <button type="button" data-v="0" aria-pressed="false">Silhouette</button>
+                <button type="button" data-v="1" aria-pressed="false">Frame</button>
+                <button type="button" data-v="2" aria-pressed="false">Shielded</button>
+                <button type="button" data-v="3" aria-pressed="true">Articulated</button>
+            </div>
+            <p class="hint" id="structureHint"></p>
+        </div>
+        <div class="group">
+            <h2>Surface</h2>
+            <div class="seg" id="surface">
+                <button type="button" data-v="0" aria-pressed="false">Flat</button>
+                <button type="button" data-v="1" aria-pressed="false">Chamfer</button>
+                <button type="button" data-v="2" aria-pressed="true">Bevel</button>
+                <button type="button" data-v="3" aria-pressed="false">Hero</button>
+            </div>
+            <p class="hint" id="surfaceHint"></p>
+        </div>
+        <div class="group">
+            <h2>Hardware class</h2>
+            <select id="preset" aria-label="Hardware class preset"></select>
+            <table class="budget" id="budget" aria-label="Triangles per unit at each preset"></table>
+        </div>
+        <div class="group">
+            <h2>Distance</h2>
+            <label class="row" for="lodSize">Size <input id="lodSize" type="range" min="0" max="1" step="0.001" value="0.35"><output id="lodSizeOut">0</output></label>
+            <div class="checks">
+                <label class="check" for="dolly"><input id="dolly" type="checkbox" checked> Auto dolly</label>
+                <label class="check" for="fade"><input id="fade" type="checkbox" checked> Cross-fade</label>
+            </div>
+            <p class="hint" id="distanceHint">The Distance view picks the detail level from the unit's on-screen size, capped by the hardware class.</p>
+        </div>
+        <div class="group">
+            <h2>Posture</h2>
+            <label class="row" for="stretch">Stretch <input id="stretch" type="range" min="0" max="1" step="0.01" value="0"><output id="stretchOut">0.00</output></label>
+            <label class="row" for="open">Open <input id="open" type="range" min="0" max="1" step="0.01" value="0.35"><output id="openOut">0.35</output></label>
+            <label class="row" for="spin">Heart spin <input id="spin" type="range" min="0" max="2" step="0.05" value="0.6"><output id="spinOut">0.60</output></label>
+            <label class="row" for="variant">Variant <input id="variant" type="range" min="0" max="63" step="1" value="0"><output id="variantOut">0</output></label>
+            <label class="check" for="cycle"><input id="cycle" type="checkbox"> Play the travel and contact cycle</label>
+        </div>
+        <div class="group">
+            <h2>Palette slot</h2>
+            <div class="swatches" id="palette">
+                <button type="button" data-v="cyan" style="--c:#3fd3e8" aria-pressed="true"><i></i>Cyan</button>
+                <button type="button" data-v="amber" style="--c:#ffab2e" aria-pressed="false"><i></i>Amber</button>
+                <button type="button" data-v="violet" style="--c:#a463ff" aria-pressed="false"><i></i>Violet</button>
+                <button type="button" data-v="lime" style="--c:#a6e83a" aria-pressed="false"><i></i>Lime</button>
+            </div>
+        </div>
+        <div class="group">
+            <h2>Render</h2>
+            <div class="checks">
+                <label class="check" for="turntable"><input id="turntable" type="checkbox" checked> Turntable</label>
+                <label class="check" for="bloom"><input id="bloom" type="checkbox" checked> Bloom</label>
+                <label class="check" for="glass"><input id="glass" type="checkbox" checked> Glass housing</label>
+                <label class="check" for="wire"><input id="wire" type="checkbox"> Wireframe</label>
+                <label class="check" for="underside"><input id="underside" type="checkbox"> Underside</label>
+            </div>
+        </div>
+        <div class="group">
+            <h2>This unit</h2>
+            <dl class="stats" id="stats"></dl>
+        </div>
+    </aside>
+</div>
+
+<script type="importmap">
+{ "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.min.js",
+    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"
+} }
+</script>
+<script type="module">
+import * as THREE from "three";
+import { OrbitControls } from "three/addons/controls/OrbitControls.js";
+import { RoomEnvironment } from "three/addons/environments/RoomEnvironment.js";
+import { EffectComposer } from "three/addons/postprocessing/EffectComposer.js";
+import { RenderPass } from "three/addons/postprocessing/RenderPass.js";
+import { UnrealBloomPass } from "three/addons/postprocessing/UnrealBloomPass.js";
+import { OutputPass } from "three/addons/postprocessing/OutputPass.js";
+
+const STRUCTURES = ["Silhouette", "Frame", "Shielded", "Articulated"];
+const SURFACES = ["Flat", "Chamfer", "Bevel", "Hero"];
+const STRUCTURE_HINTS = [
+    "One closed tetrahedron; each face windowed down to a glowing facet, no transparency.",
+    "Rails, hubs and plain face bars (the shields' band) around open windows onto a dark core with glowing facets.",
+    "Uneven, clipped and tilted face shields, a glass housing and a separate heart crystal.",
+    "Split hinged plates with stacked armour, jointed and collared rails, cradle struts and housing edges.",
+];
+const SURFACE_HINTS = [
+    "Sharp planar parts: fewest triangles.",
+    "One flat chamfer on every part edge.",
+    "Rounded edges with smooth normals.",
+    "Finer rounding and a more faceted heart for close 4K views.",
+];
+const PALETTE = { cyan: 0x3fd3e8, amber: 0xffab2e, violet: 0xa463ff, lime: 0xa6e83a };
+const MATRIX_YAW = 0.6;
+const CORE_CENTRE = new THREE.Vector3(0, 0.81649658 * 0.25, 0);
+
+const state = {
+    view: "unit", structure: 3, surface: 2, stretch: 0, open: 0.35, spin: 0.6, cycle: false,
+    palette: "cyan", variant: 0, lodSize: 0.35, dolly: true, fade: true, turntable: true, bloom: true, glass: true, wire: false, underside: false,
+};
+const $ = (id) => document.getElementById(id);
+const statusEl = $("status");
+
+let wasm;
+try {
+    const factory = (await import("./nanite_model.mjs")).default;
+    wasm = await factory();
+} catch (error) {
+    statusEl.textContent = "The procedural model could not start in this browser (" + error.message + "). WebAssembly and ES modules are required.";
+    throw error;
+}
+
+// ---- Generator access -------------------------------------------------------------
+function build(structure, surface, posture) {
+    const t0 = performance.now();
+    const vertexCount = wasm._labBuild(structure, surface, posture.stretch, posture.open, posture.turn, posture.variant ?? state.variant);
+    const vertexPtr = wasm._labVertices() >> 2;
+    const indexCount = wasm._labIndexCount();
+    const indexPtr = wasm._labIndices() >> 2;
+    const raw = wasm.HEAPF32.subarray(vertexPtr, vertexPtr + vertexCount * 7);
+    const indices = wasm.HEAPU32.subarray(indexPtr, indexPtr + indexCount);
+    const position = new Float32Array(vertexCount * 3), normal = new Float32Array(vertexCount * 3);
+    const material = new Uint8Array(vertexCount);
+    for (let v = 0; v < vertexCount; ++v) {
+        position.set(raw.subarray(v * 7, v * 7 + 3), v * 3);
+        normal.set(raw.subarray(v * 7 + 3, v * 7 + 6), v * 3);
+        material[v] = raw[v * 7 + 6];
+    }
+    // Sort triangles into one draw group per material.
+    const buckets = [[], [], [], []];
+    for (let i = 0; i < indexCount; i += 3) buckets[material[indices[i]]].push(indices[i], indices[i + 1], indices[i + 2]);
+    const geometry = new THREE.BufferGeometry();
+    geometry.setAttribute("position", new THREE.BufferAttribute(position, 3));
+    geometry.setAttribute("normal", new THREE.BufferAttribute(normal, 3));
+    const ordered = new Uint32Array(indexCount);
+    let offset = 0;
+    const perMaterial = [];
+    buckets.forEach((bucket, index) => {
+        ordered.set(bucket, offset);
+        if (bucket.length) geometry.addGroup(offset, bucket.length, index);
+        perMaterial.push(bucket.length / 3);
+        offset += bucket.length;
+    });
+    geometry.setIndex(new THREE.BufferAttribute(ordered, 1));
+    geometry.computeBoundingSphere();
+    return { geometry, triangles: indexCount / 3, vertices: vertexCount, perMaterial, ms: performance.now() - t0 };
+}
+const presets = Array.from({ length: wasm._labPresetCount() }, (_, i) => ({
+    name: wasm.UTF8ToString(wasm._labPresetName(i)),
+    hero: [wasm._labPreset(i, 0), wasm._labPreset(i, 1)],
+    swarm: [wasm._labPreset(i, 2), wasm._labPreset(i, 3)],
+}));
+const triangleTable = STRUCTURES.map((_, s) => SURFACES.map((__, p) => {
+    const mesh = build(s, p, { stretch: 0, open: 0, turn: 0 });
+    mesh.geometry.dispose();
+    return mesh.triangles;
+}));
+
+// ---- Renderer ---------------------------------------------------------------------
+const stage = $("stage");
+const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, preserveDrawingBuffer: true });
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.0;
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+stage.prepend(renderer.domElement);
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x07090c);
+scene.fog = new THREE.Fog(0x07090c, 7, 22);
+const pmrem = new THREE.PMREMGenerator(renderer);
+scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
+scene.environmentIntensity = 0.32;
+
+const camera = new THREE.PerspectiveCamera(30, 1, 0.01, 200);
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true;
+controls.target.set(0, 0.3, 0);
+
+const key = new THREE.DirectionalLight(0xffffff, 1.7);
+key.position.set(2.5, 4, 2.2);
+key.castShadow = true;
+key.shadow.mapSize.set(2048, 2048);
+key.shadow.camera.left = key.shadow.camera.bottom = -3;
+key.shadow.camera.right = key.shadow.camera.top = 3;
+key.shadow.bias = -0.0004;
+key.shadow.radius = 4;
+scene.add(key);
+const rim = new THREE.DirectionalLight(0x9fc4ff, 1.4);
+rim.position.set(-3, 1.6, -2.5);
+scene.add(rim);
+const heartLight = new THREE.PointLight(PALETTE.cyan, 0.6, 1.4, 2);
+scene.add(heartLight);
+
+const ground = new THREE.Mesh(new THREE.PlaneGeometry(80, 80),
+    new THREE.MeshStandardMaterial({ color: 0x07090c, roughness: 0.85, metalness: 0, envMapIntensity: 0.25 }));
+ground.rotation.x = -Math.PI / 2;
+ground.receiveShadow = true;
+scene.add(ground);
+
+const materials = {
+    silver: new THREE.MeshPhysicalMaterial({ color: 0xc9cfd6, metalness: 1, roughness: 0.4 }),
+    graphite: new THREE.MeshStandardMaterial({ color: 0x24282e, metalness: 0.75, roughness: 0.42 }),
+    glass: new THREE.MeshPhysicalMaterial({ color: 0xffffff, metalness: 0, roughness: 0.06, transmission: 1, thickness: 0.04,
+        ior: 1.45, attenuationDistance: 0.25, transparent: true }),
+    smoke: new THREE.MeshStandardMaterial({ color: 0x0b1418, metalness: 0.2, roughness: 0.1, transparent: true, opacity: 0.32, depthWrite: false }),
+    heart: new THREE.MeshStandardMaterial({ color: 0x0b2a30, emissiveIntensity: 3.4, roughness: 0.25, metalness: 0, flatShading: true }),
+};
+const wireMaterial = new THREE.MeshBasicMaterial({ color: 0x8fe9f7, wireframe: true, transparent: true, opacity: 0.35 });
+function materialSet() {
+    if (state.wire) return [wireMaterial, wireMaterial, wireMaterial, wireMaterial];
+    return [materials.silver, materials.graphite, state.glass ? materials.glass : materials.smoke, materials.heart];
+}
+function applyPalette() {
+    const colour = new THREE.Color(PALETTE[state.palette]);
+    materials.heart.emissive.copy(colour);
+    materials.heart.color.copy(colour).multiplyScalar(0.3);
+    materials.glass.attenuationColor.copy(colour).lerp(new THREE.Color(0xffffff), 0.55);
+    materials.smoke.color.copy(colour).multiplyScalar(0.12);
+    heartLight.color.copy(colour);
+    document.documentElement.style.setProperty("--accent", "#" + colour.getHexString());
+}
+
+const composer = new EffectComposer(renderer);
+composer.addPass(new RenderPass(scene, camera));
+const bloom = new UnrealBloomPass(new THREE.Vector2(256, 256), 0.6, 0.3, 3.0);
+composer.addPass(bloom);
+composer.addPass(new OutputPass());
+
+// ---- Scene content ------------------------------------------------------------------
+const content = new THREE.Group();
+scene.add(content);
+let units = []; // { mesh, structure, surface, label }
+let lastStats = null;
+
+function clearContent() {
+    for (const unit of units) { unit.mesh.geometry.dispose(); content.remove(unit.mesh); }
+    units = [];
+    $("labels").replaceChildren();
+}
+function addUnit(structure, surface, posture, x, z, label) {
+    const built = build(structure, surface, posture);
+    const mesh = new THREE.Mesh(built.geometry, materialSet());
+    mesh.castShadow = mesh.receiveShadow = true;
+    mesh.position.set(x, 0, z);
+    content.add(mesh);
+    units.push({ mesh, structure, surface, label, built });
+    return built;
+}
+function posture(time) {
+    if (!state.cycle) return { stretch: state.stretch, open: state.open, turn: time * state.spin * 1.4 };
+    // Travel (stretch out and back), then a contact: shields open and settle.
+    const phase = (time % 8) / 8;
+    const pulse = (a, b) => { const t = Math.min(Math.max((phase - a) / (b - a), 0), 1); return Math.sin(Math.PI * t) ** 2; };
+    return { stretch: pulse(0.0, 0.45), open: pulse(0.5, 0.95), turn: time * state.spin * 1.4 };
+}
+
+function layout(time) {
+    clearContent();
+    const p = posture(time);
+    distanceGroup.visible = state.view === "distance";
+    if (state.view === "distance") {
+        // Units live in distanceGroup and are swapped by updateDistance each frame.
+    } else if (state.view === "unit") {
+        lastStats = addUnit(state.structure, state.surface, p, 0, 0);
+    } else if (state.view === "matrix") {
+        const spacing = 1.45;
+        for (let s = 0; s < 4; ++s) {
+            for (let q = 0; q < 4; ++q) {
+                const built = addUnit(s, q, { ...p, turn: p.turn }, (q - 1.5) * spacing, (s - 1.5) * spacing * 1.05,
+                    `${STRUCTURES[s]} · ${SURFACES[q]}`);
+                units.at(-1).mesh.rotation.y = MATRIX_YAW;
+                if (s === state.structure && q === state.surface) lastStats = built;
+            }
+        }
+    } else {
+        // A small swarm at one preset: heroes in front at the hero cap, the rest at the swarm cap.
+        const preset = presets[Number($("preset").value)] ?? presets[presets.length - 1];
+        let index = 0;
+        for (let row = 0; row < 7; ++row) {
+            for (let col = -6; col <= 6; ++col) {
+                const near = row === 0 && Math.abs(col) <= 1;
+                const [s, q] = near ? preset.hero : preset.swarm;
+                const jitter = Math.sin(index * 12.9898) * 0.18;
+                const built = addUnit(s, q, { stretch: 0, open: near ? p.open : 0, turn: p.turn + index, variant: index + 1 },
+                    col * 1.5 + (row % 2) * 0.75 + jitter, -row * 1.45 + jitter);
+                units.at(-1).mesh.rotation.y = Math.sin(index * 3.1) * 0.6;
+                if (near && col === 0) lastStats = built;
+                ++index;
+            }
+        }
+    }
+    heartLight.visible = state.view === "unit";
+    heartLight.position.copy(CORE_CENTRE);
+    heartLight.intensity = state.structure >= 1 ? 0.6 : 0;
+    frameCamera();
+    updatePanel();
+}
+
+let framedFor = "";
+function frameCamera() {
+    const keyName = state.view + (state.underside ? "-under" : "");
+    if (framedFor === keyName) return;
+    framedFor = keyName;
+    if (state.view === "unit") {
+        controls.target.set(0, 0.3, 0.1);
+        camera.position.set(state.underside ? 1.4 : 2.0, state.underside ? -0.75 : 0.95, state.underside ? 1.6 : 2.3);
+        ground.visible = !state.underside;
+    } else if (state.view === "matrix") {
+        controls.target.set(0, 0.1, 0.35);
+        camera.position.set(0, 7.2, 9.4);
+        ground.visible = true;
+    } else if (state.view === "swarm") {
+        controls.target.set(0, 0, -3.4);
+        camera.position.set(0.8, 3.4, 4.6);
+        ground.visible = true;
+    } else {
+        ground.visible = false;
+    }
+    controls.enabled = state.view !== "distance";
+    scene.fog = state.view === "distance" ? null : sceneFog;
+    camera.far = state.view === "distance" ? 5000 : 200;
+    camera.updateProjectionMatrix();
+    controls.update();
+}
+
+// ---- Distance view: the ladder in action -------------------------------------------
+const distanceGroup = new THREE.Group();
+scene.add(distanceGroup);
+const sceneFog = scene.fog;
+const rungMeshes = new Map(); // rung -> mesh, rebuilt when the variant changes
+let rungVariant = -1;
+const fadeMaterials = () => materialSet().map((m) => { const c = m.clone(); c.alphaHash = true; c.transparent = false; return c; });
+const fading = { selected: -1, from: -1, w: 1, fromSet: null, toSet: null };
+function rungMesh(rung) {
+    if (rungVariant !== state.variant) {
+        for (const mesh of rungMeshes.values()) { mesh.geometry.dispose(); distanceGroup.remove(mesh); }
+        rungMeshes.clear();
+        rungVariant = state.variant;
+    }
+    if (!rungMeshes.has(rung)) {
+        const [s, q] = ladder[rung].detail;
+        const built = build(s, q, { stretch: 0, open: 0, turn: 0.6, variant: state.variant });
+        const mesh = new THREE.Mesh(built.geometry, materialSet());
+        mesh.castShadow = true;
+        mesh.userData.triangles = built.triangles;
+        rungMeshes.set(rung, mesh);
+        distanceGroup.add(mesh);
+    }
+    return rungMeshes.get(rung);
+}
+function updateDistance(time, delta) {
+    if (state.dolly) state.lodSize = 1 - Math.abs(1 - ((time / 12) % 2));
+    const pixels = 4 * Math.pow(300 / 4, state.lodSize);
+    const preset = presets[Number($("preset").value)] ?? presets[presets.length - 1];
+    const fadeFrames = 15; // 0.25 s at 60 fps
+    if (fading.w < 1) fading.w = Math.min(1, fading.w + 1 / fadeFrames);
+    const next = fading.w < 1 ? fading.selected : wasm._labSelect(pixels, preset.hero[0], preset.hero[1], fading.selected);
+    if (next !== fading.selected) {
+        if (fading.selected >= 0 && state.fade) { fading.from = fading.selected; fading.w = 1 / fadeFrames; }
+        fading.selected = next;
+    }
+    for (const [rung, mesh] of rungMeshes) mesh.visible = false;
+    const to = rungMesh(fading.selected);
+    to.visible = true;
+    if (fading.w < 1 && fading.from >= 0) {
+        const from = rungMesh(fading.from);
+        from.visible = true;
+        fading.fromSet ??= fadeMaterials(); fading.toSet ??= fadeMaterials();
+        fading.fromSet.forEach((m) => { m.opacity = 1 - fading.w; });
+        fading.toSet.forEach((m) => { m.opacity = fading.w; });
+        from.material = fading.fromSet; to.material = fading.toSet;
+    } else {
+        to.material = materialSet();
+        fading.fromSet = fading.toSet = null;
+    }
+    distanceGroup.rotation.y = turn;
+    // Place the camera so the bounding sphere spans `pixels` device pixels of the canvas.
+    const height = renderer.domElement.height;
+    const distance = BOUND_RADIUS * height / (pixels * Math.tan(camera.fov * Math.PI / 360));
+    const target = new THREE.Vector3(0, 0.3, 0.05);
+    camera.position.set(0, target.y + distance * Math.sin(0.45), target.z + distance * Math.cos(0.45));
+    camera.lookAt(target);
+    const [s, q] = ladder[fading.selected].detail;
+    $("lodSizeOut").textContent = pixels.toFixed(0);
+    $("lodSize").value = String(state.lodSize);
+    $("hudLine").textContent = `${pixels.toFixed(0)} px · rung ${fading.selected}: ${STRUCTURES[s]} · ${SURFACES[q]} · ` +
+        `${to.userData.triangles.toLocaleString("en-GB")} triangles${fading.w < 1 ? " · cross-fading" : ""}`;
+}
+
+// ---- Panel ------------------------------------------------------------------------
+function pressed(groupId, value) {
+    for (const button of $(groupId).querySelectorAll("button")) button.setAttribute("aria-pressed", String(button.dataset.v === String(value)));
+}
+function updatePanel() {
+    pressed("view", state.view);
+    pressed("structure", state.structure);
+    pressed("surface", state.surface);
+    pressed("palette", state.palette);
+    $("structureHint").textContent = STRUCTURE_HINTS[state.structure];
+    $("surfaceHint").textContent = SURFACE_HINTS[state.surface];
+    for (const id of ["stretch", "open", "spin"]) $(id + "Out").textContent = Number(state[id]).toFixed(2);
+    $("variantOut").textContent = String(state.variant);
+    const s = lastStats;
+    if (s) {
+        $("stats").innerHTML = [
+            ["Detail", `${STRUCTURES[state.structure]} · ${SURFACES[state.surface]}`],
+            ["Triangles", s.triangles.toLocaleString("en-GB")],
+            ["Vertices", s.vertices.toLocaleString("en-GB")],
+            ["Silver / graphite", `${s.perMaterial[0]} / ${s.perMaterial[1]}`],
+            ["Housing / heart", `${s.perMaterial[2]} / ${s.perMaterial[3]}`],
+            ["Build (wasm)", `${s.ms.toFixed(2)} ms`],
+            ["4096 units", `${(s.triangles * 4096 / 1e6).toFixed(2)} M tris`],
+        ].map(([k, v]) => `<dt>${k}</dt><dd>${v}</dd>`).join("");
+    }
+    const selected = Number($("preset").value);
+    $("budget").innerHTML = "<tr><th>Class</th><th>Hero</th><th>Swarm</th><th>×4096</th></tr>" + presets.map((p, i) => {
+        const hero = triangleTable[p.hero[0]][p.hero[1]], swarm = triangleTable[p.swarm[0]][p.swarm[1]];
+        return `<tr class="${i === selected ? "on" : ""}"><td>${p.name.replace(/ \(.*\)/, "")}</td><td>${hero.toLocaleString("en-GB")}</td>` +
+            `<td>${swarm.toLocaleString("en-GB")}</td><td>${(swarm * 4096 / 1e6).toFixed(2)}M</td></tr>`;
+    }).join("");
+    $("hudLine").textContent = state.view === "matrix" ? "Rows: structure. Columns: surface. Same posture in every cell."
+        : state.view === "swarm" ? `${presets[selected]?.name}: three hero units, swarm at its cap`
+        : `${STRUCTURES[state.structure]} structure · ${SURFACES[state.surface]} surface`;
+}
+
+function wireSegment(id, key, parse = Number) {
+    $(id).addEventListener("click", (event) => {
+        const button = event.target.closest("button");
+        if (!button) return;
+        state[key] = parse(button.dataset.v);
+        if (key === "palette") applyPalette();
+        dirty = true;
+    });
+}
+wireSegment("view", "view", String);
+wireSegment("structure", "structure");
+wireSegment("surface", "surface");
+wireSegment("palette", "palette", String);
+$("lodSize").addEventListener("input", (e) => { state.lodSize = Number(e.target.value); state.dolly = false; $("dolly").checked = false; });
+for (const id of ["stretch", "open", "spin", "variant"]) $(id).addEventListener("input", (e) => { state[id] = Number(e.target.value); dirty = true; });
+for (const id of ["cycle", "turntable", "bloom", "glass", "wire", "underside", "dolly", "fade"]) {
+    $(id).addEventListener("change", (e) => { state[id] = e.target.checked; dirty = true; });
+}
+$("preset").innerHTML = presets.map((p, i) => `<option value="${i}">${p.name}</option>`).join("");
+$("preset").value = String(presets.length - 2);
+$("preset").addEventListener("change", (e) => {
+    const p = presets[Number(e.target.value)];
+    [state.structure, state.surface] = p.hero;
+    dirty = true;
+});
+
+// ---- Frame loop -------------------------------------------------------------------
+function resize() {
+    const { clientWidth: w, clientHeight: h } = stage;
+    renderer.setSize(w, h, false);
+    composer.setSize(w, h);
+    camera.aspect = w / Math.max(h, 1);
+    camera.updateProjectionMatrix();
+}
+new ResizeObserver(resize).observe(stage);
+
+function placeLabels() {
+    const box = stage.getBoundingClientRect();
+    const host = $("labels");
+    if (state.view !== "matrix") return;
+    if (!host.childElementCount) {
+        for (const unit of units) {
+            const tag = document.createElement("div");
+            tag.className = "tag";
+            tag.innerHTML = `<b>${SURFACES[unit.surface]}</b> ${unit.built.triangles.toLocaleString("en-GB")}`;
+            host.append(tag);
+            unit.tag = tag;
+        }
+        STRUCTURES.forEach((name, s) => {
+            const axis = document.createElement("div");
+            axis.className = "axis";
+            axis.textContent = name;
+            host.append(axis);
+            units[s * 4].axis = axis;
+        });
+    }
+    const v = new THREE.Vector3();
+    for (const unit of units) {
+        v.copy(unit.mesh.position).setY(-0.05).add(new THREE.Vector3(0, 0, 0.5)).project(camera);
+        unit.tag.style.left = `${(v.x * 0.5 + 0.5) * box.width}px`;
+        unit.tag.style.top = `${(-v.y * 0.5 + 0.5) * box.height}px`;
+        if (unit.axis) {
+            v.copy(unit.mesh.position).add(new THREE.Vector3(-0.85, 0.3, 0)).project(camera);
+            unit.axis.style.left = `${Math.max((v.x * 0.5 + 0.5) * box.width - 110, 8)}px`;
+            unit.axis.style.top = `${(-v.y * 0.5 + 0.5) * box.height}px`;
+        }
+    }
+}
+
+let dirty = true;
+let turn = 0;
+let lastTime = performance.now() / 1000;
+function renderAt(time, delta) {
+    const animate = state.cycle || (state.spin > 0 && state.view === "unit");
+    if (dirty || animate) { layout(time); dirty = false; }
+    if (state.turntable) turn += delta * 0.35;
+    content.rotation.y = state.view === "unit" ? turn : 0;
+    for (const unit of units) unit.mesh.material = materialSet();
+    if (state.view === "distance") updateDistance(time, delta); else controls.update();
+    placeLabels();
+    if (state.bloom && !state.wire) composer.render(); else renderer.render(scene, camera);
+}
+function frame() {
+    const now = performance.now() / 1000;
+    renderAt(now, Math.min(now - lastTime, 0.1));
+    lastTime = now;
+    requestAnimationFrame(frame);
+}
+applyPalette();
+resize();
+statusEl.hidden = true;
+
+
+// ---- Detail-transition study ----------------------------------------------------------
+// Renders one unit at an exact projected size (bounding-sphere diameter in pixels), 4x4
+// supersampled, bloom off, over the stage background, and compares two renders pixel by pixel.
+const BOUND_RADIUS = 0.62;
+const BACKGROUND = [7 / 255, 9 / 255, 12 / 255];
+function renderAtSize(structure, surface, sizePx, yaw, elevation, posture = {}, canvasPx = 0) {
+    const R = canvasPx || Math.max(16, Math.ceil(sizePx * 1.6)), S = 4, W = R * S;
+    clearContent();
+    addUnit(structure, surface, { stretch: 0, open: 0, turn: 0.6, variant: 0, ...posture }, 0, 0);
+    units[0].mesh.rotation.y = yaw;
+    content.rotation.y = 0;
+    const fovHalf = (camera.fov * Math.PI / 180) / 2;
+    const distance = BOUND_RADIUS * R / (sizePx * Math.tan(fovHalf)); // sphere spans sizePx of R
+    const target = new THREE.Vector3(0, 0.3, 0.05);
+    camera.aspect = 1;
+    camera.position.set(0, target.y + distance * Math.sin(elevation), target.z + distance * Math.cos(elevation));
+    camera.lookAt(target);
+    camera.updateProjectionMatrix();
+    const hidden = [ground.visible, scene.background, scene.fog, heartLight.visible];
+    ground.visible = false; scene.background = null; scene.fog = null; heartLight.visible = false;
+    renderer.setPixelRatio(1);
+    renderer.setSize(W, W, false);
+    renderer.setClearColor(0x000000, 0);
+    renderer.render(scene, camera);
+    const gl = renderer.getContext();
+    const raw = new Uint8Array(W * W * 4);
+    gl.readPixels(0, 0, W, W, gl.RGBA, gl.UNSIGNED_BYTE, raw);
+    [ground.visible, scene.background, scene.fog, heartLight.visible] = hidden;
+    // Box-downsample to the real size and composite (premultiplied) over the background.
+    const image = new Float32Array(R * R * 4);
+    for (let y = 0; y < W; ++y) {
+        for (let x = 0; x < W; ++x) {
+            const o = ((y / S | 0) * R + (x / S | 0)) * 4, i = (y * W + x) * 4;
+            for (let c = 0; c < 4; ++c) image[o + c] += raw[i + c] / 255 / (S * S);
+        }
+    }
+    for (let o = 0; o < image.length; o += 4) {
+        for (let c = 0; c < 3; ++c) image[o + c] += BACKGROUND[c] * (1 - image[o + 3]);
+    }
+    return { image, size: R };
+}
+function compareImages(a, b) {
+    let union = 0, inter = 0, solid = 0, sum = 0;
+    const diffs = [];
+    for (let o = 0; o < a.length; o += 4) {
+        const aa = a[o + 3], ba = b[o + 3];
+        if (aa < 0.02 && ba < 0.02) continue;
+        ++union;
+        if (aa > 0.5 || ba > 0.5) ++solid;
+        if (aa > 0.5 && ba > 0.5) ++inter;
+        const d = (Math.abs(a[o] - b[o]) + Math.abs(a[o + 1] - b[o + 1]) + Math.abs(a[o + 2] - b[o + 2])) / 3;
+        sum += d;
+        diffs.push(d);
+    }
+    diffs.sort((x, y) => x - y);
+    return { mean: sum / Math.max(union, 1), p95: diffs[Math.floor(diffs.length * 0.95)] ?? 0,
+        iou: inter / Math.max(solid, 1), pixels: union };
+}
+function popStudy(pairs, sizes, views) {
+    const rows = [];
+    for (const [a, b] of pairs) {
+        for (const size of sizes) {
+            const metrics = views.map(([yaw, elevation]) =>
+                compareImages(renderAtSize(a[0], a[1], size, yaw, elevation).image, renderAtSize(b[0], b[1], size, yaw, elevation).image));
+            const mean = (key) => metrics.reduce((t, m) => t + m[key], 0) / metrics.length;
+            rows.push({ from: a, to: b, size, mean: mean("mean"), p95: mean("p95"), iou: mean("iou"),
+                worst: Math.max(...metrics.map((m) => m.mean)) });
+        }
+    }
+    framedFor = ""; dirty = true; resize();
+    return rows;
+}
+/// Upscaled (nearest) side-by-side strip of renders for visual review, as a data URL.
+function studyStrip(levels, size, yaw, elevation, zoom) {
+    const renders = levels.map(([s, p]) => renderAtSize(s, p, size, yaw, elevation));
+    const R = renders[0].size, canvas = document.createElement("canvas");
+    canvas.width = R * zoom * renders.length; canvas.height = R * zoom;
+    const ctx = canvas.getContext("2d");
+    renders.forEach(({ image }, index) => {
+        const data = ctx.createImageData(R, R);
+        for (let y = 0; y < R; ++y) for (let x = 0; x < R; ++x) {
+            const o = ((R - 1 - y) * R + x) * 4, d = (y * R + x) * 4;
+            for (let c = 0; c < 3; ++c) data.data[d + c] = Math.min(255, Math.round(Math.pow(image[o + c], 1) * 255));
+            data.data[d + 3] = 255;
+        }
+        const tile = document.createElement("canvas");
+        tile.width = R; tile.height = R;
+        tile.getContext("2d").putImageData(data, 0, 0);
+        ctx.imageSmoothingEnabled = false;
+        ctx.drawImage(tile, index * R * zoom, 0, R * zoom, R * zoom);
+    });
+    framedFor = ""; dirty = true; resize();
+    return canvas.toDataURL("image/png");
+}
+
+
+// ---- Distance dolly: automatic detail against always-highest detail -------------------
+const ladder = Array.from({ length: wasm._labLadderCount() }, (_, i) => ({
+    detail: [wasm._labLadder(i, 0), wasm._labLadder(i, 1)], crossFade: !!wasm._labLadder(i, 2), minPixels: wasm._labLadderPixels(i),
+}));
+/// Renders a size sweep at a fixed canvas, returning per-frame metrics and, optionally, frames
+/// (reference | hard cut | cross-fade) as data URLs. The unit turns slowly throughout.
+function dollyStudy({ frames = 300, fps = 30, fromPx = 6, toPx = 150, canvasPx = 160, fadeSeconds = 0.25,
+    cap = [3, 3], keepFrames = false, zoom = 2, fadeAll = true } = {}) {
+    const blend = (a, b, w) => { const out = new Float32Array(a.length); for (let i = 0; i < a.length; ++i) out[i] = a[i] * (1 - w) + b[i] * w; return out; };
+    const capRung = Math.max(...ladder.map((r, i) => (r.detail[0] <= cap[0] && r.detail[1] <= cap[1] ? i : 0)));
+    const fadeFrames = Math.max(1, Math.round(fadeSeconds * fps));
+    const rows = [], images = [];
+    // Shown state: blending from rung `from` to rung `to` at weight w (w = 1: only `to`).
+    let cut = null, fade = null, selected = -1, selectedCut = -1, previousReference = null;
+    for (let f = 0; f < frames; ++f) {
+        const u = 1 - Math.abs(1 - 2 * f / (frames - 1)); // 0 -> 1 -> 0
+        const size = fromPx * Math.pow(toPx / fromPx, u);
+        const yaw = 0.4 + f / fps * 0.5;
+        const cache = new Map();
+        const render = (r) => {
+            if (!cache.has(r)) cache.set(r, renderAtSize(ladder[r].detail[0], ladder[r].detail[1], size, yaw, 0.45, {}, canvasPx).image);
+            return cache.get(r);
+        };
+        const show = (state) => (state.w < 1 ? blend(render(state.from), render(state.to), state.w) : render(state.to));
+        // Hard cut: switch the frame the selector says. Cross-fade: blend over fadeFrames, and
+        // a switch waits for a running fade to finish, so a fade is never cut short.
+        const previousCut = cut, previousFade = fade;
+        const nextCut = wasm._labSelect(size, cap[0], cap[1], selectedCut);
+        cut = { from: nextCut, to: nextCut, w: 1 };
+        selectedCut = nextCut;
+        const fadingNow = fade && fade.w < 1;
+        const next = fadingNow ? selected : wasm._labSelect(size, cap[0], cap[1], selected);
+        if (selected < 0) fade = { from: next, to: next, w: 1 };
+        else if (next !== selected) {
+            const entering = fadeAll || ladder[Math.max(next, selected)].crossFade;
+            fade = entering ? { from: selected, to: next, w: 1 / fadeFrames } : { from: next, to: next, w: 1 };
+        } else if (fade.w < 1) fade = { ...fade, w: Math.min(1, fade.w + 1 / fadeFrames) };
+        selected = next;
+        const reference = render(capRung), shownCut = show(cut), shownFade = show(fade);
+        const row = { frame: f, size, rung: nextCut, rungFade: next, fadeWeight: fade.w, errorCut: compareImages(shownCut, reference).mean,
+            errorFade: compareImages(shownFade, reference).mean, jumpCut: 0, jumpFade: 0 };
+        // Jump: what is shown now against what the previous frame's state would show now.
+        if (previousCut) {
+            row.jumpCut = compareImages(shownCut, show(previousCut)).mean;
+            const carried = previousFade.w < 1 ? previousFade : { from: previousFade.to, to: previousFade.to, w: 1 };
+            row.jumpFade = compareImages(shownFade, show(carried)).mean;
+        }
+        row.motion = previousReference ? compareImages(reference, previousReference).mean : 0;
+        previousReference = reference;
+        rows.push(row);
+        if (keepFrames) images.push(panelImage([reference, shownCut, shownFade], canvasPx, zoom));
+    }
+    framedFor = ""; dirty = true; resize();
+    return { rows, images, ladder, capRung };
+}
+function panelImage(list, R, zoom) {
+    const canvas = document.createElement("canvas");
+    canvas.width = R * zoom * list.length + (list.length - 1) * 4; canvas.height = R * zoom;
+    const ctx = canvas.getContext("2d");
+    ctx.fillStyle = "#1c232b"; ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.imageSmoothingEnabled = false;
+    list.forEach((image, index) => {
+        const data = new ImageData(R, R);
+        for (let y = 0; y < R; ++y) for (let x = 0; x < R; ++x) {
+            const o = ((R - 1 - y) * R + x) * 4, d = (y * R + x) * 4;
+            for (let c = 0; c < 3; ++c) data.data[d + c] = Math.min(255, Math.round(image[o + c] * 255));
+            data.data[d + 3] = 255;
+        }
+        const tile = document.createElement("canvas");
+        tile.width = R; tile.height = R;
+        tile.getContext("2d").putImageData(data, 0, 0);
+        ctx.drawImage(tile, index * (R * zoom + 4), 0, R * zoom, R * zoom);
+    });
+    return canvas.toDataURL("image/png");
+}
+
+// Deterministic hooks for headless captures: set state, then render one exact frame.
+window.lab = {
+    state, presets, triangleTable,
+    set(next) { Object.assign(state, next); if (next.palette) applyPalette(); if (next.view || "underside" in next) framedFor = ""; dirty = true; updatePanel(); },
+    still(time, yaw = 0) { turn = yaw; resize(); renderAt(time, 0); },
+    stats: () => lastStats && { triangles: lastStats.triangles, vertices: lastStats.vertices, ms: lastStats.ms },
+    popStudy, studyStrip, dollyStudy, ladder,
+    // Mean colour and coverage of each level at a size, over four views (diagnostics).
+    levelColours(levels, size) {
+        const views = [[0.3, 0.45], [1.9, 0.45], [3.5, 0.45], [5.1, 0.2]];
+        const result = levels.map(([s, p]) => {
+            let r = 0, g = 0, b = 0, a = 0;
+            for (const [yaw, elevation] of views) {
+                const { image } = renderAtSize(s, p, size, yaw, elevation);
+                for (let o = 0; o < image.length; o += 4) { if (image[o + 3] < 0.5) continue; r += image[o]; g += image[o + 1]; b += image[o + 2]; ++a; }
+            }
+            return `S${s}P${p} rgb ${(r / a).toFixed(3)} ${(g / a).toFixed(3)} ${(b / a).toFixed(3)} covered ${(a / views.length).toFixed(0)}`;
+        });
+        framedFor = ""; dirty = true; resize();
+        return result.join("\n");
+    },
+};
+if (!new URLSearchParams(location.search).has("capture")) requestAnimationFrame(frame);
+</script>

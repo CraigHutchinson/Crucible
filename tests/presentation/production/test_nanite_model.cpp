@@ -1,0 +1,357 @@
+#include <algorithm>
+#include <array>
+#include <cmath>
+#include <cstdint>
+#include <cstring>
+#include <iostream>
+#include <limits>
+#include <map>
+#include <stdexcept>
+#include <string>
+#include <tuple>
+#include <vector>
+
+#include "crucible/presentation/production/nanite_model.hpp"
+
+namespace
+{
+using namespace crucible::presentation::production;
+using Vec = std::array<float, 3>;
+
+constexpr std::array structures{NaniteStructure::Silhouette, NaniteStructure::Frame, NaniteStructure::Shielded,
+    NaniteStructure::Articulated};
+constexpr std::array surfaces{NaniteSurface::Flat, NaniteSurface::Chamfer, NaniteSurface::Bevel, NaniteSurface::Hero};
+constexpr std::array postures{NanitePosture{}, NanitePosture{1.0F, 0.0F, 0.0F}, NanitePosture{0.0F, 1.0F, 0.0F},
+    NanitePosture{0.6F, 0.7F, 2.1F}};
+
+void require(bool condition, const std::string& message)
+{
+    if (!condition) throw std::runtime_error(message);
+}
+
+std::string name(NaniteDetail detail)
+{
+    return "S" + std::to_string(static_cast<int>(detail.structure_)) + "P" + std::to_string(static_cast<int>(detail.surface_));
+}
+
+Vec sub(Vec a, Vec b) { return {a[0] - b[0], a[1] - b[1], a[2] - b[2]}; }
+float dot(Vec a, Vec b) { return a[0] * b[0] + a[1] * b[1] + a[2] * b[2]; }
+Vec cross(Vec a, Vec b) { return {a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]}; }
+
+/// Every triangle valid, every part closed (position-welded directed edges pair up) and wound outward.
+void checkWellFormed(const NaniteMesh& mesh, const std::string& label)
+{
+    require(!mesh.indices_.empty() && mesh.indices_.size() % 3 == 0, label + ": triangle list");
+    require(mesh.vertices_.size() < 65536, label + ": exceeds 16-bit index range");
+    for (const auto& vertex : mesh.vertices_)
+    {
+        for (int axis = 0; axis < 3; ++axis)
+        {
+            require(std::isfinite(vertex.position_[axis]) && std::isfinite(vertex.normal_[axis]), label + ": nonfinite");
+        }
+        require(std::abs(dot(vertex.normal_, vertex.normal_) - 1.0F) < 1e-3F, label + ": normal not unit length");
+        require(vertex.position_[1] > -1e-4F, label + ": below the ground plane");
+    }
+    // Weld by distance, not by rounding: two copies of one point that straddle a grid line
+    // must still meet. Look in the point's cell and its neighbours.
+    std::map<std::tuple<long, long, long>, std::vector<std::pair<Vec, int>>> cells;
+    int nextId = 0;
+    const auto id = [&](std::uint32_t index)
+    {
+        const auto& p = mesh.vertices_.at(index).position_;
+        const long x = std::lround(p[0] * 1e4), y = std::lround(p[1] * 1e4), z = std::lround(p[2] * 1e4);
+        for (long dx = -1; dx <= 1; ++dx)
+            for (long dy = -1; dy <= 1; ++dy)
+                for (long dz = -1; dz <= 1; ++dz)
+                {
+                    const auto found = cells.find({x + dx, y + dy, z + dz});
+                    if (found == cells.end()) continue;
+                    for (const auto& [point, known] : found->second)
+                    {
+                        const Vec d = sub(point, p);
+                        if (dot(d, d) < 1e-10F) return known;
+                    }
+                }
+        cells[{x, y, z}].push_back({p, nextId});
+        return nextId++;
+    };
+    std::map<std::pair<int, int>, int> balance;
+    double volume = 0.0;
+    for (std::size_t index = 0; index < mesh.indices_.size(); index += 3)
+    {
+        const auto a = mesh.indices_[index], b = mesh.indices_[index + 1], c = mesh.indices_[index + 2];
+        require(a < mesh.vertices_.size() && b < mesh.vertices_.size() && c < mesh.vertices_.size(), label + ": index range");
+        const auto& pa = mesh.vertices_[a].position_;
+        const auto& pb = mesh.vertices_[b].position_;
+        const auto& pc = mesh.vertices_[c].position_;
+        const Vec face = cross(sub(pb, pa), sub(pc, pa));
+        // A smooth vertex normal never faces away from its own triangle.
+        for (const auto vertex : {a, b, c})
+        {
+            require(dot(face, mesh.vertices_[vertex].normal_) > -1e-7F, label + ": normal opposes its winding");
+        }
+        volume += dot(pa, cross(pb, pc)) / 6.0;
+        const std::array corner{id(a), id(b), id(c)};
+        for (int edge = 0; edge < 3; ++edge)
+        {
+            const int from = corner[edge], to = corner[(edge + 1) % 3];
+            if (from == to) continue; // degenerate sliver at a rounding pole
+            if (from < to) ++balance[{from, to}];
+            else --balance[{to, from}];
+        }
+    }
+    for (const auto& [edge, count] : balance) require(count == 0, label + ": open or inconsistently wound part");
+    require(volume > 0.0, label + ": parts wound inward");
+}
+
+std::size_t triangles(NaniteDetail detail) { return buildNanite(detail).indices_.size() / 3; }
+
+std::vector<Vec> positionsOf(const NaniteMesh& mesh, NaniteMaterial material)
+{
+    std::vector<Vec> result;
+    for (const auto& vertex : mesh.vertices_)
+    {
+        if (vertex.material_ == material) result.push_back(vertex.position_);
+    }
+    return result;
+}
+}
+
+int main()
+{
+    try
+    {
+        for (const auto structure : structures)
+        {
+            for (const auto surface : surfaces)
+            {
+                for (std::size_t pose = 0; pose < postures.size(); ++pose)
+                {
+                    const NaniteDetail detail{structure, surface};
+                    checkWellFormed(buildNanite(detail, postures[pose]), name(detail) + " pose " + std::to_string(pose));
+                }
+            }
+        }
+        require(triangles({NaniteStructure::Silhouette, NaniteSurface::Flat}) <= 96,
+            "The lowest detail on both axes stays a few dozen triangles");
+
+        // Every level at rest stays inside the shell tetrahedron, for any variant, so a
+        // renderer stepping between levels keeps the outline. Open plates may leave it.
+        const auto planes = [](float stretch)
+        {
+            const std::array<Vec, 4> c{{{0.0F, 0.0F, 0.57735027F + 0.9F * stretch}, {-0.5F, 0.0F, -0.28867513F},
+                {0.5F, 0.0F, -0.28867513F}, {0.0F, 0.81649658F, 0.0F}}};
+            std::array<std::pair<Vec, Vec>, 4> result{};
+            const std::array<std::array<int, 3>, 4> f{{{0, 2, 1}, {0, 1, 3}, {1, 2, 3}, {2, 0, 3}}};
+            for (int face = 0; face < 4; ++face)
+            {
+                Vec normal = cross(sub(c[f[face][1]], c[f[face][0]]), sub(c[f[face][2]], c[f[face][0]]));
+                const int other = 6 - f[face][0] - f[face][1] - f[face][2];
+                if (dot(normal, sub(c[other], c[f[face][0]])) > 0.0F) normal = {-normal[0], -normal[1], -normal[2]};
+                const float length = std::sqrt(dot(normal, normal));
+                result[face] = {c[f[face][0]], {normal[0] / length, normal[1] / length, normal[2] / length}};
+            }
+            return result;
+        };
+        const auto inside = [&](const NaniteMesh& mesh, float stretch, float tolerance, NaniteMaterial only, bool all)
+        {
+            const auto shell = planes(stretch);
+            for (const auto& vertex : mesh.vertices_)
+            {
+                if (!all && vertex.material_ != only) continue;
+                for (const auto& [point, normal] : shell)
+                {
+                    if (dot(sub(vertex.position_, point), normal) > tolerance) return false;
+                }
+            }
+            return true;
+        };
+        for (const auto structure : structures)
+        {
+            for (const auto surface : surfaces)
+            {
+                for (const std::uint32_t variant : {0U, 7U, 123456U})
+                {
+                    for (const float stretch : {0.0F, 1.0F})
+                    {
+                        const NaniteDetail detail{structure, surface};
+                        require(inside(buildNanite(detail, {stretch, 0.0F, 1.0F}, variant), stretch, 2e-3F,
+                            NaniteMaterial::Silver, true), name(detail) + ": a closed unit leaves its silhouette");
+                    }
+                }
+            }
+        }
+
+        // Variants change the unit's irregularity, never its parts or triangle count.
+        for (const auto structure : structures)
+        {
+            const NaniteDetail detail{structure, NaniteSurface::Bevel};
+            const auto first = buildNanite(detail, {}, 1);
+            const auto second = buildNanite(detail, {}, 2);
+            require(first.indices_.size() == second.indices_.size(), name(detail) + ": variants differ in size");
+            checkWellFormed(second, name(detail) + " variant 2");
+            if (structure >= NaniteStructure::Frame)
+            {
+                require(positionsOf(first, NaniteMaterial::Silver) != positionsOf(second, NaniteMaterial::Silver),
+                    name(detail) + ": variants must differ");
+            }
+        }
+
+        // Each axis adds triangles on its own, whatever the other axis holds.
+        for (std::size_t s = 0; s < structures.size(); ++s)
+        {
+            for (std::size_t p = 0; p < surfaces.size(); ++p)
+            {
+                const auto count = triangles({structures[s], surfaces[p]});
+                if (s > 0) require(count > triangles({structures[s - 1], surfaces[p]}), "Structure axis must add detail");
+                if (p > 0) require(count > triangles({structures[s], surfaces[p - 1]}), "Surface axis must add detail");
+            }
+        }
+
+        // Materials appear by structure level: silhouette silver only; frame adds hubs and a core.
+        const auto materials = [](NaniteDetail detail)
+        {
+            std::array<bool, 4> seen{};
+            for (const auto& vertex : buildNanite(detail).vertices_) seen[static_cast<int>(vertex.material_)] = true;
+            return seen;
+        };
+        require(materials({NaniteStructure::Silhouette, NaniteSurface::Bevel}) == std::array{true, true, false, true},
+            "Silhouette is a silver shell with opaque graphite windows onto a luminous facet");
+        require(materials({NaniteStructure::Frame, NaniteSurface::Flat}) == std::array{true, true, true, true},
+            "Frame has silver rails and bars, graphite hubs, and the housing and heart");
+        require(materials({NaniteStructure::Shielded, NaniteSurface::Flat}) == std::array{true, true, true, true},
+            "Shielded adds the housing around a separate heart");
+
+        // Core, housing and heart are rigid: stretch and open never move them.
+        for (const auto structure : {NaniteStructure::Frame, NaniteStructure::Shielded, NaniteStructure::Articulated})
+        {
+            const NaniteDetail detail{structure, NaniteSurface::Bevel};
+            const auto rest = buildNanite(detail);
+            const auto moved = buildNanite(detail, {1.0F, 1.0F, 0.0F});
+            for (const auto material : {NaniteMaterial::Housing, NaniteMaterial::Heart})
+            {
+                require(positionsOf(rest, material) == positionsOf(moved, material), name(detail) + ": core must stay rigid");
+            }
+            require(positionsOf(rest, NaniteMaterial::Silver) != positionsOf(moved, NaniteMaterial::Silver),
+                name(detail) + ": stretch and open must move the shell");
+        }
+        require(positionsOf(buildNanite({NaniteStructure::Frame, NaniteSurface::Flat}), NaniteMaterial::Silver)
+            == positionsOf(buildNanite({NaniteStructure::Frame, NaniteSurface::Flat}, {0.0F, 1.0F, 0.0F}), NaniteMaterial::Silver),
+            "A frame has no shields to open");
+
+        // The heart stays clear inside the housing's inscribed sphere for any turn; the
+        // housing stays inside the compact shell.
+        const Vec centre{0.0F, 0.81649658F * 0.25F, 0.0F};
+        for (const float turn : {0.0F, 0.7F, 2.5F, 5.9F, 40.0F})
+        {
+            for (const auto& p : positionsOf(buildNanite({NaniteStructure::Articulated, NaniteSurface::Hero}, {0, 0, turn}),
+                     NaniteMaterial::Heart))
+            {
+                const Vec d = sub(p, centre);
+                require(std::sqrt(dot(d, d)) < 0.122F * 0.8F, "Heart must keep clearance inside its housing");
+            }
+        }
+        require(inside(buildNanite({NaniteStructure::Shielded, NaniteSurface::Hero}), 0.0F, -0.05F, NaniteMaterial::Housing, false),
+            "Housing must stay well inside the shell");
+
+        // Identical inputs give identical bytes; nonfinite postures fall back to rest.
+        const auto first = buildNanite({NaniteStructure::Articulated, NaniteSurface::Hero}, {0.3F, 0.4F, 1.0F});
+        const auto second = buildNanite({NaniteStructure::Articulated, NaniteSurface::Hero}, {0.3F, 0.4F, 1.0F});
+        bool same = first.indices_ == second.indices_ && first.vertices_.size() == second.vertices_.size();
+        for (std::size_t index = 0; same && index < first.vertices_.size(); ++index)
+        {
+            const auto& a = first.vertices_[index];
+            const auto& b = second.vertices_[index];
+            same = std::memcmp(a.position_.data(), b.position_.data(), sizeof(a.position_)) == 0
+                && std::memcmp(a.normal_.data(), b.normal_.data(), sizeof(a.normal_)) == 0 && a.material_ == b.material_;
+        }
+        require(same, "Generation must be deterministic");
+        const float nan = std::numeric_limits<float>::quiet_NaN();
+        const auto clamped = buildNanite({NaniteStructure::Articulated, NaniteSurface::Chamfer}, {nan, nan, nan});
+        const auto rest = buildNanite({NaniteStructure::Articulated, NaniteSurface::Chamfer});
+        require(clamped.indices_ == rest.indices_ && clamped.vertices_.size() == rest.vertices_.size(),
+            "Nonfinite posture must build the rest pose");
+
+        // Presets rise in hero detail and never give the swarm more than the hero.
+        const auto presets = naniteDevicePresets();
+        require(presets.size() == 5, "Five proposed hardware classes");
+        std::size_t previous = 0;
+        for (const auto& preset : presets)
+        {
+            const auto hero = triangles(preset.hero_), swarm = triangles(preset.swarm_);
+            require(hero >= previous && swarm <= hero, std::string(preset.name_) + ": preset order");
+            previous = hero;
+        }
+
+        // The distance ladder: monotone on both axes, rising start sizes, presets on it.
+        const auto ladder = naniteLodLadder();
+        require(ladder.front().minPixels_ == 0.0F, "The lowest rung covers every size");
+        for (std::size_t rung = 1; rung < ladder.size(); ++rung)
+        {
+            const auto& below = ladder[rung - 1].detail_;
+            const auto& above = ladder[rung].detail_;
+            require(above.structure_ >= below.structure_ && above.surface_ >= below.surface_
+                && (above.structure_ > below.structure_ || above.surface_ > below.surface_), "Each rung adds detail");
+            require(ladder[rung].minPixels_ > ladder[rung - 1].minPixels_, "Rungs start at rising sizes");
+            require(triangles(above) > triangles(below), "Each rung costs more");
+        }
+        const auto onLadder = [&](NaniteDetail detail)
+        {
+            return std::ranges::any_of(ladder, [&](const NaniteLodStep& step)
+                { return step.detail_.structure_ == detail.structure_ && step.detail_.surface_ == detail.surface_; });
+        };
+        for (const auto& preset : presets)
+        {
+            require(onLadder(preset.hero_) && onLadder(preset.swarm_), std::string(preset.name_) + ": caps must be rungs");
+        }
+
+        // Selection: up at the rung's start, down only below the hysteresis band; no
+        // oscillation for a size jittering around a boundary; caps respected.
+        const NaniteDetail top{NaniteStructure::Articulated, NaniteSurface::Hero};
+        require(selectNaniteLod(0.0F, top, ladder.size()) == 0, "Tiny units use the silhouette");
+        require(selectNaniteLod(1000.0F, top, ladder.size()) == ladder.size() - 1, "Huge units use the top rung");
+        for (std::size_t rung = 1; rung < ladder.size(); ++rung)
+        {
+            const float start = ladder[rung].minPixels_;
+            require(selectNaniteLod(start, top, rung - 1) == rung, "Steps up at the rung's start");
+            require(selectNaniteLod(start * 0.95F, top, rung) == rung, "Holds inside the hysteresis band");
+            require(selectNaniteLod(start * (1.0F - naniteLodHysteresis) * 0.99F, top, rung) == rung - 1,
+                "Steps down below the band");
+            std::size_t shown = ladder.size(), changes = 0;
+            for (int frame = 0; frame < 200; ++frame)
+            {
+                const float jitter = start * (1.0F + 0.07F * std::sin(frame * 0.9F));
+                const auto next = selectNaniteLod(jitter, top, shown);
+                if (shown < ladder.size() && next != shown) ++changes;
+                shown = next;
+            }
+            require(changes <= 1, "A size jittering 7% around a boundary switches at most once");
+        }
+        const NaniteDetail mobile{NaniteStructure::Shielded, NaniteSurface::Flat};
+        require(ladder[selectNaniteLod(1000.0F, mobile, ladder.size())].detail_.surface_ == NaniteSurface::Flat,
+            "A cap cuts the ladder");
+        require(ladder[selectNaniteLod(1000.0F, mobile, ladder.size() - 1)].detail_.structure_ == NaniteStructure::Frame,
+            "A current rung above the cap falls to the cap");
+        require(selectNaniteLod(std::numeric_limits<float>::quiet_NaN(), top, ladder.size()) == 0,
+            "A nonfinite size uses the silhouette");
+
+        std::cout << "triangles (vertices) by structure x surface\n";
+        for (const auto structure : structures)
+        {
+            for (const auto surface : surfaces)
+            {
+                const auto mesh = buildNanite({structure, surface});
+                std::cout << "  " << name({structure, surface}) << ' ' << mesh.indices_.size() / 3 << " ("
+                          << mesh.vertices_.size() << ")";
+            }
+            std::cout << '\n';
+        }
+        std::cout << "Procedural nanite model PASS\n";
+        return 0;
+    }
+    catch (const std::exception& error)
+    {
+        std::cerr << "FAIL: " << error.what() << '\n';
+        return 1;
+    }
+}

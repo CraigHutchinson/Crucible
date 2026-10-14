@@ -34,6 +34,29 @@ Four PNGs were imported through Git LFS into `docs/concepts/nanite/assets/` in a
 follow-up (hashes verified against provenance.md); the docs embed them.
 
 
+## Nanite distance consistency (M3),2026-10-13
+
+Session branch `claude/crucible-nanite-lod-consistency` edits the M1/M2 paths only
+(generator and its public header, test, lab and its studies, evidence and the nanite model
+doc) plus pointer text in the Phase15 review. No renderer, simulation or pin change.
+Headless SwiftShader renders only; released.
+
+## Nanite model inner detail and intricacy (M2),2026-10-13
+
+Session branch `claude/crucible-nanite-intricacy` edits the M1 paths only (generator, its
+test, lab, evidence and the nanite model doc) plus pointer text in the Phase15 review and
+concept README. No renderer, simulation or pin change. Headless SwiftShader renders only; released.
+
+## Procedural nanite model with two detail axes (M1),2026-10-13
+
+Session branch `claude/crucible-nanite-model-lod` adds new paths
+`include/crucible/presentation/production/nanite_model.hpp`,
+`src/presentation/production/nanite_model.cpp`, its test, `spikes/nanite_lab/` and
+`docs/workstreams/presentation/phase15-nanite-model*`, and edits the production renderer's
+mesh (`makeNanite()` replaces `makeWedge()`), `materials/nanite.mat`, the production
+CMake/header-check lists and pointer text in the Phase15 plan/review and nanite concept
+README. No simulation, pins or native captures. Headless SwiftShader renders only; released.
+
 ## Nanite swarm behaviour design and S0-S0o spikes,2026-10-12/13
 
 Session `claude/crucible-nanite-swarm-design-89vg5m` claims only new paths

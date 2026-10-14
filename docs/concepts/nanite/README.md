@@ -43,6 +43,15 @@ owns assembly/choreography; this space owns detailed visual studies. Link new
 revisions here, retain prompts and inspection notes, and explicitly mark any
 superseded direction. Do not copy competing body specifications into both places.
 
+Status, M1 (2026-10-13): a [procedural model](../../workstreams/presentation/phase15-nanite-model.md)
+builds this direction at four structure and four surface levels (shell, rails, hubs, shields,
+housing, heart; cradle struts and jointed rails at the top level), articulates stretch, open
+and heart turn around a rigid core, and replaces PR48's wedge in the production renderer. It
+is a blockout for review, not the approved rig: no contact mechanism or docking yet.
+M2 adds opaque face windows onto the heart at the lowest levels and seeded per-unit
+irregularity (uneven, clipped, split and stacked plates; collared rails) toward the
+studies' jagged character.
+
 Next increment: core/housing/shell blockout, underside turntable, one contact
 mechanism and close-up reactor animation. Two-unit docking and a small title
 patch follow single-unit review. Full intro replacement is a separate receiving

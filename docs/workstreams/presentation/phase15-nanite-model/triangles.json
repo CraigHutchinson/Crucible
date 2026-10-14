@@ -1,0 +1,85 @@
+{
+ "table": [
+  [
+   76,
+   116,
+   220,
+   436
+  ],
+  [
+   246,
+   902,
+   3180,
+   8948
+  ],
+  [
+   342,
+   1190,
+   4140,
+   11636
+  ],
+  [
+   1170,
+   4114,
+   11552,
+   27688
+  ]
+ ],
+ "presets": [
+  {
+   "name": "Mobile (Android / WebGL)",
+   "hero": [
+    1,
+    1
+   ],
+   "swarm": [
+    0,
+    0
+   ]
+  },
+  {
+   "name": "Handheld console (Switch class)",
+   "hero": [
+    1,
+    2
+   ],
+   "swarm": [
+    0,
+    0
+   ]
+  },
+  {
+   "name": "High-end mobile (iOS A15+ class)",
+   "hero": [
+    2,
+    2
+   ],
+   "swarm": [
+    1,
+    0
+   ]
+  },
+  {
+   "name": "Desktop (PC / console)",
+   "hero": [
+    3,
+    2
+   ],
+   "swarm": [
+    1,
+    1
+   ]
+  },
+  {
+   "name": "Desktop 4K hero",
+   "hero": [
+    3,
+    3
+   ],
+   "swarm": [
+    1,
+    2
+   ]
+  }
+ ]
+}

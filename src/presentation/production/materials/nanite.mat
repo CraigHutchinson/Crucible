@@ -14,10 +14,21 @@ fragment {
         prepareMaterial(material);
         int index = materialParams.batchBase + int(getInstanceIndex());
         float core = texelFetch(materialParams_cores, ivec2(index % 64, index / 64), 0).r;
-        bool inset = getUV0().x > 0.5;
-        material.baseColor = inset ? vec4(0.04, 0.58, 0.72, 1.0) : vec4(0.68, 0.76, 0.82, 1.0);
-        material.metallic = inset ? 0.25 : 0.88;
-        material.roughness = inset ? 0.20 : 0.26;
-        material.emissive = vec4(inset ? vec3(0.04, 1.1, 1.6) * core * materialParams.glow : vec3(0.0), 0.0);
+        // uv0.x carries the generator's NaniteMaterial: 0 silver, 1 graphite, 3 heart.
+        int role = int(getUV0().x + 0.5);
+        if (role == 3) {
+            material.baseColor = vec4(0.03, 0.30, 0.38, 1.0);
+            material.metallic = 0.0;
+            material.roughness = 0.22;
+            material.emissive = vec4(vec3(0.04, 1.1, 1.6) * core * materialParams.glow, 0.0);
+        } else if (role == 1) {
+            material.baseColor = vec4(0.12, 0.13, 0.15, 1.0);
+            material.metallic = 0.7;
+            material.roughness = 0.45;
+        } else {
+            material.baseColor = vec4(0.78, 0.81, 0.85, 1.0);
+            material.metallic = 1.0;
+            material.roughness = 0.3;
+        }
     }
 }

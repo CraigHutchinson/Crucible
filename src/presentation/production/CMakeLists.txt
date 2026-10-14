@@ -4,6 +4,15 @@ target_include_directories(crucible_cinematic_choreography PUBLIC "${PROJECT_SOU
 target_link_libraries(crucible_cinematic_choreography PUBLIC crucible_options)
 set_target_properties(crucible_cinematic_choreography PROPERTIES CXX_EXTENSIONS OFF)
 
+# Renderer-independent procedural nanite: built everywhere so its tests and the web lab
+# (spikes/nanite_lab) run without the production graphics closure.
+add_library(crucible_nanite_model nanite_model.cpp)
+add_library(Crucible::NaniteModel ALIAS crucible_nanite_model)
+target_compile_features(crucible_nanite_model PUBLIC cxx_std_23)
+target_include_directories(crucible_nanite_model PUBLIC "${PROJECT_SOURCE_DIR}/include")
+target_link_libraries(crucible_nanite_model PRIVATE crucible_options)
+set_target_properties(crucible_nanite_model PROPERTIES CXX_EXTENSIONS OFF)
+
 if(CRUCIBLE_BUILD_GAME OR CRUCIBLE_BUILD_SWARM_SPIKE)
 
 add_library(crucible_swarm_intro_adapter STATIC swarm_intro_adapter.cpp nanite_proxy_mesh.cpp)
@@ -84,5 +93,5 @@ target_compile_features(crucible_production_renderer PUBLIC cxx_std_23)
 target_include_directories(crucible_production_renderer PUBLIC "${PROJECT_SOURCE_DIR}/include"
     PRIVATE "${CMAKE_CURRENT_BINARY_DIR}")
 target_link_libraries(crucible_production_renderer PUBLIC Crucible::FilamentRuntime Crucible::ImGui SDL3::SDL3
-    PRIVATE crucible_options)
+    PRIVATE crucible_options Crucible::NaniteModel)
 set_target_properties(crucible_production_renderer PROPERTIES CXX_EXTENSIONS OFF)
