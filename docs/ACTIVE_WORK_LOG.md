@@ -825,3 +825,10 @@ Native receiving passed from clean474a92b:1800 rendered frames, source1730ticks,
 settled swarm and final menu screen, drain and exit0. Two readbacks inspected.
 Root released local CPU/GPU; exact-head hosted CI/publication and merge remain.
 Failed captures and original refusal diagnostics stay in the owned build tree.
+
+Hosted run38575708870 exposed a test-only ASan allocation mismatch: stock
+SwarmIntro stable_sort uses nothrow new, while the fixture replaced only ordinary
+new/delete with malloc/free instrumentation. Complete nothrow overloads now route
+through the same counted allocator. Independent review and focused Release pass;
+no sanitizer suppression or runtime change. CI checks this fixture before running
+the full unchanged sanitizer suite. Final corrected-head checks remain pending.
