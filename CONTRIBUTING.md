@@ -125,3 +125,16 @@ The setup converts current tracked PNGs to LFS without rewriting published
 history. Historical Git blobs remain in older commits. Do not run
 `git lfs migrate import` on shared branches without a separately coordinated
 history migration.
+
+## Contribution terms
+
+Crucible is AGPL-3.0-only and copyright Craig Hutchinson (see [NOTICE](NOTICE)). By submitting a
+contribution you certify that you have the right to contribute it (the
+[Developer Certificate of Origin](https://developercertificate.org/)). You also grant Craig Hutchinson
+(and Craig Hutchinson's successors and assigns) permission to distribute your contribution under AGPL-3.0 and under
+other licence terms, including commercial store builds. Add a sign-off to each commit:
+`Signed-off-by: Your Name <email@example.com>` (`git commit -s`).
+
+Contributions of artwork or media follow the NOTICE terms for game content. Only add third-party code
+or assets whose licence is compatible with AGPL-3.0, and record them in NOTICE.
+

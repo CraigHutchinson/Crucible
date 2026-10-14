@@ -1,0 +1,43 @@
+Crucible
+========
+
+Copyright (c) 2025-2026 Craig Hutchinson. All rights not granted below are reserved.
+
+Code and documentation text
+---------------------------
+Licensed under the GNU Affero General Public License, version 3 only
+(AGPL-3.0-only). See LICENSE. This covers source code, build and test scripts,
+shaders and documentation text in this repository, except where a file or
+directory states otherwise.
+
+Artwork, media and game content
+-------------------------------
+Images, illustrations and concept art, 3D models, textures, audio and video
+in this repository are NOT covered by the AGPL. This includes
+docs/concepts/** and assets/** except the fonts listed below. They are
+Copyright (c) Craig Hutchinson, all rights reserved.
+
+You may copy them unmodified only as part of a copy or fork of this repository,
+for building, running, testing, reviewing and contributing to Crucible. Any
+other use, including redistribution on its own or in another product, needs
+written permission.
+
+Name and marks
+--------------
+"Crucible" as the name of this game, and its logos, are reserved. A modified
+version must not be presented as the official game or imply endorsement.
+
+Commercial terms
+----------------
+The copyright holder may also distribute Crucible under other terms, for
+example as a store build. For use that is not compatible with AGPL-3.0, open an
+issue titled "Commercial License Request: <Your Organization Name>".
+
+Third-party components (each under its own licence)
+---------------------------------------------------
+- Rajdhani font: SIL Open Font License 1.1 (assets/production/fonts/rajdhani/OFL.txt)
+- Source Sans 3 font: SIL Open Font License 1.1 (assets/production/fonts/source-sans/LICENSE.md)
+- SDL3: zlib licence (fetched at build time)
+- Sub0Pub, Sub0Log, Sub0Pipeline, Sub0HexGrid: MIT (fetched at build time)
+- Sub0ECS: AGPL-3.0-only or commercial (fetched at build time)
+Other optional or spike dependencies keep the licences of their own projects.
