@@ -3,6 +3,7 @@
 #include <atomic>
 #include <cmath>
 #include <cstddef>
+#include <cstdint>
 #include <cstdlib>
 #include <iostream>
 #include <limits>
@@ -168,6 +169,123 @@ void compareFreeSource(detail::SwarmModelMesh& producer)
         }
     }
 }
+void verifyStockSourceRefusal(detail::SwarmModelMesh& producer)
+{
+    IntroSettings settings;
+    settings.build = Build::Scaffold;
+    settings.nanites = 1536;
+    settings.body = modelProfile();
+    SwarmIntro source{settings};
+    require(source.trySetViewport(1280.0F / 864.0F, 1280), "Stock refusal source viewport refused");
+    std::vector<RenderRow> rows;
+    rows.reserve(NaniteMeshFrame::maxUnits);
+    producer.reset();
+    // Preserve the actual actors, morphed shapes and camera at the first failing
+    // desktop tick, with a short receiving prefix to retain adjacent LOD history.
+    for (unsigned tick = 1; tick <= 439; ++tick)
+    {
+        source.tick();
+        if (tick < 430) continue;
+        source.snapshot(rows);
+        require(rows.size() == settings.nanites, "Stock refusal fixture changed the source population");
+        require(producer.tryBuild(rows, settings.body, source.camera(), settings.viewTilt, source.time(), settings.diameter),
+            "Stock source M3 packet refused near desktop tick 439");
+        require(detail::isValidFrame(producer.getFrame()), "Stock source packet failed the original mesh validator");
+        const auto stats = producer.getStats();
+        require(stats.visibleUnits_ + stats.culledUnits_ == settings.nanites &&
+            std::accumulate(stats.actualRungCounts_.begin(), stats.actualRungCounts_.end(), std::size_t{0}) == stats.visibleUnits_,
+            "Stock refusal receiving lost a source identity");
+    }
+}
+void verifyIntermediateStretch(detail::SwarmModelMesh& producer)
+{
+    const auto body = modelProfile();
+    constexpr std::array<std::size_t, 6> identities{0, 1, 2, 3, 1070, 118};
+    constexpr std::array<std::size_t, 2> rungs{3, 5};
+    std::array<std::array<std::vector<NaniteMaterialRole>, 2>, 4> expectedRoles;
+    for (std::size_t variant = 0; variant < expectedRoles.size(); ++variant)
+    {
+        for (std::size_t selection = 0; selection < rungs.size(); ++selection)
+        {
+            const auto source = buildNanite(naniteLodLadder()[rungs[selection]].detail_, {}, static_cast<std::uint32_t>(variant));
+            auto& roles = expectedRoles[variant][selection];
+            for (std::size_t triangle = 0; triangle < source.indices_.size(); triangle += 3)
+            {
+                const auto& a = source.vertices_[source.indices_[triangle]];
+                const auto& b = source.vertices_[source.indices_[triangle + 1]];
+                const auto& c = source.vertices_[source.indices_[triangle + 2]];
+                const auto face = cross(subtract(convert(b.position_), convert(a.position_)), subtract(convert(c.position_), convert(a.position_)));
+                if (a.material_ == NaniteMaterial::Housing || dot(face, face) <= 1e-16) continue;
+                for (std::size_t corner = 0; corner < 3; ++corner) roles.push_back(roleFor(a.material_));
+            }
+        }
+    }
+    // Identity is the row index, not a field in RenderRow. Predecessors stay
+    // outside the view so the original failing variant retains its identity.
+    std::vector<RenderRow> rows(1071, freeRow());
+    for (auto& row : rows) row.x = 200;
+    for (const auto identity : identities)
+    {
+        rows[identity] = freeRow();
+        auto& row = rows[identity];
+        row.x = identity == 118 ? 31.99038F : 1.39230442F;
+        row.y = identity == 118 ? -10.0F : 7.5F;
+        row.z = identity == 118 ? 10.0F : 0.0F;
+        for (std::size_t selection = 0; selection < rungs.size(); ++selection)
+        {
+            const std::array<float, 3> speeds{9.5F, 10.5368996F, 18.0F};
+            // The wider view holds Frame/Bevel at the formerly refused speed;
+            // close-ups also exercise two additional intermediate stretches.
+            const auto speedCount = selection == 0 ? std::size_t{1} : speeds.size();
+            for (std::size_t speedIndex = 0; speedIndex < speedCount; ++speedIndex)
+            {
+                producer.reset();
+                row.speed = identity == 118 && speedIndex == 0 ? 10.5368996F : speeds[speedIndex];
+                row.heading = selection == 0 ? 0.0F : .43F;
+                row.plane = selection == 0 ? 0.0F : .7F;
+                auto camera = nearCamera();
+                camera.cx = row.x;
+                camera.cy = row.z + .4F * row.y;
+                if (selection == 0) { camera.halfWidth = 8; camera.pixelsWide = 400; }
+                else if (identity == 1070 || identity == 118)
+                {
+                    // Copied camera receipts; heading/plane remain deliberate
+                    // test poses because the failure log did not record them.
+                    camera.cx = identity == 1070 ? -3.68165922F : 27.0489235F;
+                    camera.cy = identity == 1070 ? 4.2228303F : 7.45619059F;
+                    camera.halfWidth = identity == 1070 ? 10.6312847F : 10.7426529F;
+                    camera.aspect = 1.48148143F;
+                    camera.pixelsWide = 1280;
+                }
+                require(producer.tryBuild(rows, body, camera, .4F, 2), "Intermediate-stretch M3 packet refused");
+                const auto stats = producer.getStats();
+                require(stats.visibleUnits_ == 1 && stats.culledUnits_ == rows.size() - 1 &&
+                    stats.actualRungCounts_[rungs[selection]] == 1, "Regression did not receive its stable identity/selected rung");
+                const auto frame = producer.getFrame();
+                const auto& roles = expectedRoles[identity % expectedRoles.size()][selection];
+                require(frame.normalMode_ == NaniteNormalMode::smooth && detail::isValidFrame(frame),
+                    "Intermediate-stretch M3 packet fails the unchanged receiver contract");
+                require(frame.vertices_.size() == roles.size(), "Normal repair discarded or duplicated an authoritative triangle");
+                for (std::size_t triangle = 0; triangle < frame.vertices_.size(); triangle += 3)
+                {
+                    const auto face = normalize(cross(
+                        subtract(convert(frame.vertices_[triangle + 1].position_), convert(frame.vertices_[triangle].position_)),
+                        subtract(convert(frame.vertices_[triangle + 2].position_), convert(frame.vertices_[triangle].position_))));
+                    for (std::size_t corner = 0; corner < 3; ++corner)
+                    {
+                        const auto& vertex = frame.vertices_[triangle + corner];
+                        const auto normal = convert(vertex.normal_);
+                        require(vertex.role_ == roles[triangle + corner], "Normal repair reordered authoritative material topology");
+                        require(std::isfinite(dot(normal, normal)) && std::abs(dot(normal, normal) - 1) <= .002 &&
+                            dot(face, normal) >= .01, "Mapped normal is not finite, unit length and in its face hemisphere");
+                    }
+                }
+            }
+        }
+        row = freeRow();
+        row.x = 200;
+    }
+}
 std::vector<NaniteMeshVertex> heartOf(const NaniteMeshFrame& frame)
 {
     std::vector<NaniteMeshVertex> result;
@@ -294,6 +412,8 @@ int main()
     {
         detail::SwarmModelMesh producer;
         compareFreeSource(producer);
+        verifyStockSourceRefusal(producer);
+        verifyIntermediateStretch(producer);
         verifyRigidityAndTile(producer);
         verifyBudgetAndCulling(producer);
         std::cout << "Authoritative M3 mesh/source transforms, smooth normals, rigid interior and balanced frame received\n";

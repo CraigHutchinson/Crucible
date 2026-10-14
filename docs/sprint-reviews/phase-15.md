@@ -101,3 +101,15 @@ The overall phase remains in progress: native fades/rig/glass, final cinematic
 acceptance, audio, participant evidence, other production platforms and Phase14
 G3–G5 remain open. Next receive art refinement together with measured complete-frame
 optimization; a higher cap does not establish a performance result.
+
+## Interactive M3 refusal follow-up, 2026-10-14
+
+User play exposed a missed acceptance path: producing every intermediate frame,
+rather than cold-seeking to a few stills. The failure is reproducible on merged
+PR52/main86d151f at presentation tick439. Correct unsupported smoothed shading
+normals after an independent float/double geometric winding proof; keep all
+original numerical and memory limits and every triangle. Add an actual per-tick
+production receiving test at two viewports, with bounded Debug/sanitizer sampling
+and focused intermediate source geometry. [Contract and diagnosis](../decisions/phase15-m3-swarm-receiver.md#interactive-normal-repair-2026-10-14).
+Publish uninterrupted native playback receipts with the fix. Sparse stills, source
+settling tests and green builds alone did not prove the interactive intro worked.

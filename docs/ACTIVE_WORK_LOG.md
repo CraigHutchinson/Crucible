@@ -795,3 +795,28 @@ compact-envelope threshold after the explicit frame lifetime fix. macOS exposed
 a second private CLI collision via std::print ADL; rename that helper to
 printSummary and rebuild the affected target. Final hosted checks run at the
 resulting head; production capture inputs are unchanged by these CLI/test fixes.
+
+## Interactive M3 mesh refusal repair, 2026-10-14
+
+Root verified PR52 source and evidence are merged on origin/main86d151f. Worktree
+phase15-native-swarm now uses codex/fix-swarm-mesh-refusal. Root owns model producer,
+adapter diagnostics, regression receiving and serial CPU/GPU runs (three compiler
+jobs maximum). Independent worker reads source only, with no builds or edits.
+Reproduce continuous playback: sparse cold seeks did not exercise every emitted
+intermediate mesh. Preserve numerical/resource gates and all historical artifacts.
+
+Delivery audit: all six historical production/design branch commits have identical
+patches already in main (a03ea54->b46a439,89cac40->9df4a79,0e8a28e->228bcae,
+a97e2d5->097a1ba,6423de1->263429a,e75cf59->466dc80). No missing work or stale
+branch merge is required. Continuous baseline reproduced the crash; diagnostic
+logs identify a smoothed-normal hemisphere failure, not capacity exhaustion.
+Repaired Release every-tick receiving passes both native viewports; unmodified
+main fails the same test at tick439. Original geometry/resource gates remain.
+Independent read-only correction/borrow review has no MUST or SHOULD findings.
+One reviewer hit a usage limit; the other completed review of root-authored code.
+
+Final local CPU receiving: Release63/63 passed, Debug model/adapter/full-path3/3
+passed, then the newly added focused source fixture passed in Debug. Both new
+continuous and short stock-source regressions fail against unmodified main and
+pass with the repair. Source-only workers are released; root owns native receiving
+and publication. No throughput or scanout claim is made.

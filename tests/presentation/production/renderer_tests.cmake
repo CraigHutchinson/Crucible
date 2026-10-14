@@ -49,6 +49,14 @@ if(TARGET Crucible::SwarmIntroAdapter)
     add_test(NAME production_swarm_intro_adapter COMMAND crucible_swarm_intro_adapter_tests)
     set_tests_properties(production_swarm_intro_adapter PROPERTIES
         LABELS "presentation;production;contract;lifetime" TIMEOUT 120)
+    add_executable(crucible_swarm_continuous_tests "${CMAKE_CURRENT_LIST_DIR}/test_swarm_continuous.cpp")
+    target_link_libraries(crucible_swarm_continuous_tests PRIVATE Crucible::SwarmIntroAdapter)
+    # Release receives every emitted tick. Debug/sanitizers sample the full path
+    # plus focused intermediate-normal fixtures without duplicating the full cost.
+    add_test(NAME production_swarm_continuous COMMAND crucible_swarm_continuous_tests
+        "$<IF:$<CONFIG:Debug>,32,1>")
+    set_tests_properties(production_swarm_continuous PROPERTIES
+        LABELS "presentation;production;contract;lifetime" TIMEOUT 900)
     add_executable(crucible_nanite_proxy_mesh_tests "${CMAKE_CURRENT_LIST_DIR}/test_nanite_proxy_mesh.cpp")
     target_include_directories(crucible_nanite_proxy_mesh_tests PRIVATE "${PROJECT_SOURCE_DIR}/src/presentation/production")
     target_link_libraries(crucible_nanite_proxy_mesh_tests PRIVATE
