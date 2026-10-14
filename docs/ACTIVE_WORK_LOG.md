@@ -771,3 +771,7 @@ external staging, three 40 MiB slots, one-million-corner frame cap. Release62/62
 passes; independent C++ review has no blocking findings. Final Debug/native
 receiving and publication follow; no frame-time or physical-scanout claim.
 Historical worktrees and failed/intermediate captures remain preserved.
+
+Final local receiving: Release62/62, Debug6/6 and ten clean-source native Vulkan
+readbacks passed; all ten images inspected. Source-only workers are released.
+Root retains the delivery/CI ownership; exclusive device work is released.

@@ -5,6 +5,10 @@ and received PR47 source `6597f26f`, merge `1b9747b`. This package receives that
 actual prototype through the real renderer; it does not redesign its assembly
 or claim the later articulated rig/crystal studies are implemented.
 
+The production model/profile/resource limits are now superseded by the
+[M3 receiver contract](phase15-m3-swarm-receiver.md). This document retains the
+original proxy receiving history and clock/coordinator decisions.
+
 ## Named consumers and scope
 
 `crucible_game` owns a separate decorative intro controller, then returns to the

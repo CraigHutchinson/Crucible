@@ -1,0 +1,501 @@
+{
+  "schema": 1,
+  "source": "0102ed5747e26ea97e0ea1a8ea57b7801837f2e2",
+  "tracked_worktree_diff_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "inputs": [
+    {
+      "path": "build\\production-release\\src\\game\\crucible_game.exe",
+      "sha256": "ad982d9ae73f946150518713220cdf46c1be19fd4054469adae184fc56494fcb"
+    },
+    {
+      "path": "build\\production-release\\src\\presentation\\production\\crucible\\presentation\\production\\resources\\studio_environment.bin",
+      "sha256": "37e1129e5f5051a24f4e422159069a9b8747aed4cf3390a27392aef30073990a"
+    },
+    {
+      "path": "build\\production-release\\src\\presentation\\production\\crucible\\presentation\\production\\resources\\floor.filamat",
+      "sha256": "22bab5b1fce9cb43fb9f865fe89526adc804c5fc0eb419673d623f9e92744182"
+    },
+    {
+      "path": "build\\production-release\\src\\presentation\\production\\crucible\\presentation\\production\\resources\\nanite.filamat",
+      "sha256": "9190ea28aca36cc8fd56452fd349217732f3e60195f2d609700323d4aa122455"
+    },
+    {
+      "path": "build\\production-release\\src\\presentation\\production\\crucible\\presentation\\production\\resources\\nanite_proxy.filamat",
+      "sha256": "1a7a505a95378cc4590ce77bbd1e0a2afda8c4ff42d80be33c69f916f8150a94"
+    },
+    {
+      "path": "build\\production-release\\src\\presentation\\production\\crucible\\presentation\\production\\resources\\ui_blit.filamat",
+      "sha256": "659c825307fd3071a5bffc8c8a8d1bf7f3cf0a85828c1f90c53d822d0b3bcdc7"
+    },
+    {
+      "path": "build\\production-release\\src\\game\\assets\\production\\fonts\\rajdhani\\Rajdhani-SemiBold.ttf",
+      "sha256": "94bbd25a18ca665999feb05a537de9fd2b860dcfb78bbe9ca00270825bf235da"
+    },
+    {
+      "path": "build\\production-release\\src\\game\\assets\\production\\fonts\\source-sans\\SourceSans3-Regular.ttf",
+      "sha256": "4644c81b86ec9caaa76b634889968ed3c4f4f52f054855933acc7c2b21e53b0f"
+    }
+  ],
+  "scanout_verified": false,
+  "performance_measurement": false,
+  "renderer_staging_cap_mib": 288,
+  "mesh_corner_cap": 1048576,
+  "model_baseline": "main9a52060 M3",
+  "cases": [
+    {
+      "name": "initial",
+      "command": [
+        "D:\\Craig\\GitHub\\Crucible\\.worktrees\\phase15-native-swarm\\build\\production-release\\src\\game\\crucible_game.exe",
+        "--capture",
+        "D:\\Craig\\GitHub\\Crucible\\.worktrees\\phase15-native-swarm\\build\\production-release\\receiving-m3-r1\\initial.png",
+        "--capture-ms",
+        "0"
+      ],
+      "exit_code": 0,
+      "png_sha256": "6fff29d5c7f5fa6f35c1563691814ab88d7b3ae1be7691808cf6415978b955b9",
+      "log_sha256": "1c8ca7fd3f769986e18a36462883546c07a3381f1832237e4d41f453d95a6e51",
+      "receipt": {
+        "source_pin": "d852e34cd5629a6f3851d613dcd17aa0ffd025a2",
+        "frame": 4,
+        "surface_generation": 1,
+        "width": 1280,
+        "height": 864,
+        "cinematic_ms": 0,
+        "sequence": "M3-scaffold-model",
+        "completed_tick": null,
+        "presented_ticks": 0,
+        "choreography_seconds": 0,
+        "static_ready": false,
+        "mesh_vertices": 1048218,
+        "screen_id": 0,
+        "body_height": 0.898146,
+        "body_span": 1.1,
+        "body_lean": 0,
+        "visible_units": 38,
+        "culled_units": 1498,
+        "model_cache_bytes": 3322172,
+        "cold_sliver_triangles": 0,
+        "omitted_housing_triangles": 1376,
+        "model_rungs": [
+          4,
+          3,
+          0,
+          1,
+          0,
+          30
+        ],
+        "scanout_verified": false
+      }
+    },
+    {
+      "name": "menu-preparing",
+      "command": [
+        "D:\\Craig\\GitHub\\Crucible\\.worktrees\\phase15-native-swarm\\build\\production-release\\src\\game\\crucible_game.exe",
+        "--capture",
+        "D:\\Craig\\GitHub\\Crucible\\.worktrees\\phase15-native-swarm\\build\\production-release\\receiving-m3-r1\\menu-preparing.png",
+        "--menu"
+      ],
+      "exit_code": 0,
+      "png_sha256": "e09b6ffab343ed3460cb4dd68dd125ab5c25b92e4eded6bc786e7feaff502aa5",
+      "log_sha256": "22de05a0951f2f741603f69ccf87299da9fabf39d4f2533db5cd887885581872",
+      "receipt": {
+        "source_pin": "d852e34cd5629a6f3851d613dcd17aa0ffd025a2",
+        "frame": 4,
+        "surface_generation": 1,
+        "width": 1280,
+        "height": 864,
+        "cinematic_ms": 7133,
+        "sequence": "decorative-static-floor-preparing",
+        "completed_tick": null,
+        "presented_ticks": 428,
+        "choreography_seconds": 4.19842,
+        "static_ready": false,
+        "mesh_vertices": 0,
+        "screen_id": 1,
+        "body_height": 0.898146,
+        "body_span": 1.1,
+        "body_lean": 0,
+        "visible_units": 0,
+        "culled_units": 0,
+        "model_cache_bytes": 0,
+        "cold_sliver_triangles": 0,
+        "omitted_housing_triangles": 0,
+        "model_rungs": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "scanout_verified": false
+      }
+    },
+    {
+      "name": "macro",
+      "command": [
+        "D:\\Craig\\GitHub\\Crucible\\.worktrees\\phase15-native-swarm\\build\\production-release\\src\\game\\crucible_game.exe",
+        "--capture",
+        "D:\\Craig\\GitHub\\Crucible\\.worktrees\\phase15-native-swarm\\build\\production-release\\receiving-m3-r1\\macro.png",
+        "--capture-ms",
+        "500"
+      ],
+      "exit_code": 0,
+      "png_sha256": "c9233049f972d4b33d63c250ff23e2b01aed9a7213cb475a1b8c6aa79afdb1f2",
+      "log_sha256": "e3accb399f2ebfef018f964fa739df81b107711139c671ed326fc9088e2a233c",
+      "receipt": {
+        "source_pin": "d852e34cd5629a6f3851d613dcd17aa0ffd025a2",
+        "frame": 4,
+        "surface_generation": 1,
+        "width": 1280,
+        "height": 864,
+        "cinematic_ms": 500,
+        "sequence": "M3-scaffold-model",
+        "completed_tick": null,
+        "presented_ticks": 30,
+        "choreography_seconds": 0.333333,
+        "static_ready": false,
+        "mesh_vertices": 1048218,
+        "screen_id": 0,
+        "body_height": 0.898146,
+        "body_span": 1.1,
+        "body_lean": 0,
+        "visible_units": 38,
+        "culled_units": 1498,
+        "model_cache_bytes": 3322172,
+        "cold_sliver_triangles": 0,
+        "omitted_housing_triangles": 1376,
+        "model_rungs": [
+          4,
+          3,
+          0,
+          1,
+          0,
+          30
+        ],
+        "scanout_verified": false
+      }
+    },
+    {
+      "name": "assembly",
+      "command": [
+        "D:\\Craig\\GitHub\\Crucible\\.worktrees\\phase15-native-swarm\\build\\production-release\\src\\game\\crucible_game.exe",
+        "--capture",
+        "D:\\Craig\\GitHub\\Crucible\\.worktrees\\phase15-native-swarm\\build\\production-release\\receiving-m3-r1\\assembly.png",
+        "--capture-ms",
+        "18000"
+      ],
+      "exit_code": 0,
+      "png_sha256": "55a2baa12cfcb613a8aed1e413367121effab0674dedda991b2ac40ad81800cd",
+      "log_sha256": "a356764c5e63c471c2ed758bbf93215c080267710091966d1f72555420fcf4f3",
+      "receipt": {
+        "source_pin": "d852e34cd5629a6f3851d613dcd17aa0ffd025a2",
+        "frame": 4,
+        "surface_generation": 1,
+        "width": 1280,
+        "height": 864,
+        "cinematic_ms": 18000,
+        "sequence": "M3-scaffold-model",
+        "completed_tick": null,
+        "presented_ticks": 1080,
+        "choreography_seconds": 9.63167,
+        "static_ready": false,
+        "mesh_vertices": 1048410,
+        "screen_id": 0,
+        "body_height": 0.898146,
+        "body_span": 1.1,
+        "body_lean": 0,
+        "visible_units": 181,
+        "culled_units": 1355,
+        "model_cache_bytes": 3322172,
+        "cold_sliver_triangles": 0,
+        "omitted_housing_triangles": 1324,
+        "model_rungs": [
+          150,
+          1,
+          0,
+          0,
+          1,
+          29
+        ],
+        "scanout_verified": false
+      }
+    },
+    {
+      "name": "hero",
+      "command": [
+        "D:\\Craig\\GitHub\\Crucible\\.worktrees\\phase15-native-swarm\\build\\production-release\\src\\game\\crucible_game.exe",
+        "--capture",
+        "D:\\Craig\\GitHub\\Crucible\\.worktrees\\phase15-native-swarm\\build\\production-release\\receiving-m3-r1\\hero.png",
+        "--capture-ms",
+        "30000"
+      ],
+      "exit_code": 0,
+      "png_sha256": "18c4daff4fdd2c016673e3920093924d4b7d20f6f67812ed62a013bd438595f4",
+      "log_sha256": "2b5ff5b76eccfd267ff25c2b58627bf5e9ca2022a7dc95c31504f1ae62d91dbb",
+      "receipt": {
+        "source_pin": "d852e34cd5629a6f3851d613dcd17aa0ffd025a2",
+        "frame": 4,
+        "surface_generation": 1,
+        "width": 1280,
+        "height": 864,
+        "cinematic_ms": 30000,
+        "sequence": "M3-scaffold-model",
+        "completed_tick": null,
+        "presented_ticks": 1800,
+        "choreography_seconds": 17.2813,
+        "static_ready": true,
+        "mesh_vertices": 586752,
+        "screen_id": 0,
+        "body_height": 0.898146,
+        "body_span": 1.1,
+        "body_lean": 0,
+        "visible_units": 1536,
+        "culled_units": 0,
+        "model_cache_bytes": 3322172,
+        "cold_sliver_triangles": 0,
+        "omitted_housing_triangles": 1952,
+        "model_rungs": [
+          1408,
+          38,
+          90,
+          0,
+          0,
+          0
+        ],
+        "scanout_verified": false
+      }
+    },
+    {
+      "name": "menu",
+      "command": [
+        "D:\\Craig\\GitHub\\Crucible\\.worktrees\\phase15-native-swarm\\build\\production-release\\src\\game\\crucible_game.exe",
+        "--capture",
+        "D:\\Craig\\GitHub\\Crucible\\.worktrees\\phase15-native-swarm\\build\\production-release\\receiving-m3-r1\\menu.png",
+        "--menu",
+        "--capture-ms",
+        "45000"
+      ],
+      "exit_code": 0,
+      "png_sha256": "2ded730122cb0cd6623c4da10ea867377642d27abd15c150a4cc3f44361f6349",
+      "log_sha256": "0a3b06bf6a78ccbac693d9cbe79060a01eb0170ffb8fe75cca0cf50936b0d5a3",
+      "receipt": {
+        "source_pin": "d852e34cd5629a6f3851d613dcd17aa0ffd025a2",
+        "frame": 4,
+        "surface_generation": 1,
+        "width": 1280,
+        "height": 864,
+        "cinematic_ms": 45000,
+        "sequence": "M3-scaffold-model",
+        "completed_tick": null,
+        "presented_ticks": 2700,
+        "choreography_seconds": 27.2806,
+        "static_ready": true,
+        "mesh_vertices": 552192,
+        "screen_id": 1,
+        "body_height": 0.898146,
+        "body_span": 1.1,
+        "body_lean": 0,
+        "visible_units": 1536,
+        "culled_units": 0,
+        "model_cache_bytes": 3322172,
+        "cold_sliver_triangles": 0,
+        "omitted_housing_triangles": 1664,
+        "model_rungs": [
+          1408,
+          56,
+          72,
+          0,
+          0,
+          0
+        ],
+        "scanout_verified": false
+      }
+    },
+    {
+      "name": "options",
+      "command": [
+        "D:\\Craig\\GitHub\\Crucible\\.worktrees\\phase15-native-swarm\\build\\production-release\\src\\game\\crucible_game.exe",
+        "--capture",
+        "D:\\Craig\\GitHub\\Crucible\\.worktrees\\phase15-native-swarm\\build\\production-release\\receiving-m3-r1\\options.png",
+        "--screen",
+        "options",
+        "--capture-ms",
+        "45000"
+      ],
+      "exit_code": 0,
+      "png_sha256": "4eb65a7f68b16ff1dd3e725b56ca7817fe1a51c9832acb104b85cad0bb351e7a",
+      "log_sha256": "f0313804906c4ca6524c70c4b5c94503519018bcfaa8dfb4538f333eff749281",
+      "receipt": {
+        "source_pin": "d852e34cd5629a6f3851d613dcd17aa0ffd025a2",
+        "frame": 4,
+        "surface_generation": 1,
+        "width": 1280,
+        "height": 864,
+        "cinematic_ms": 45000,
+        "sequence": "M3-scaffold-model",
+        "completed_tick": null,
+        "presented_ticks": 2700,
+        "choreography_seconds": 27.2806,
+        "static_ready": true,
+        "mesh_vertices": 552192,
+        "screen_id": 6,
+        "body_height": 0.898146,
+        "body_span": 1.1,
+        "body_lean": 0,
+        "visible_units": 1536,
+        "culled_units": 0,
+        "model_cache_bytes": 3322172,
+        "cold_sliver_triangles": 0,
+        "omitted_housing_triangles": 1664,
+        "model_rungs": [
+          1408,
+          56,
+          72,
+          0,
+          0,
+          0
+        ],
+        "scanout_verified": false
+      }
+    },
+    {
+      "name": "missions",
+      "command": [
+        "D:\\Craig\\GitHub\\Crucible\\.worktrees\\phase15-native-swarm\\build\\production-release\\src\\game\\crucible_game.exe",
+        "--capture",
+        "D:\\Craig\\GitHub\\Crucible\\.worktrees\\phase15-native-swarm\\build\\production-release\\receiving-m3-r1\\missions.png",
+        "--screen",
+        "missions",
+        "--capture-ms",
+        "45000"
+      ],
+      "exit_code": 0,
+      "png_sha256": "2a5275b17d7fd889298a1462063f190bf5b4ce0d0a7501068cbd3e74d8ca9b43",
+      "log_sha256": "73d722ba601dd4b6b2f832b94636ffc08719ab48c154580012ad1b5c53866416",
+      "receipt": {
+        "source_pin": "d852e34cd5629a6f3851d613dcd17aa0ffd025a2",
+        "frame": 4,
+        "surface_generation": 1,
+        "width": 1280,
+        "height": 864,
+        "cinematic_ms": 45000,
+        "sequence": "M3-scaffold-model",
+        "completed_tick": null,
+        "presented_ticks": 2700,
+        "choreography_seconds": 27.2806,
+        "static_ready": true,
+        "mesh_vertices": 552192,
+        "screen_id": 2,
+        "body_height": 0.898146,
+        "body_span": 1.1,
+        "body_lean": 0,
+        "visible_units": 1536,
+        "culled_units": 0,
+        "model_cache_bytes": 3322172,
+        "cold_sliver_triangles": 0,
+        "omitted_housing_triangles": 1664,
+        "model_rungs": [
+          1408,
+          56,
+          72,
+          0,
+          0,
+          0
+        ],
+        "scanout_verified": false
+      }
+    },
+    {
+      "name": "world",
+      "command": [
+        "D:\\Craig\\GitHub\\Crucible\\.worktrees\\phase15-native-swarm\\build\\production-release\\src\\game\\crucible_game.exe",
+        "--capture",
+        "D:\\Craig\\GitHub\\Crucible\\.worktrees\\phase15-native-swarm\\build\\production-release\\receiving-m3-r1\\world.png",
+        "--route",
+        "--capture-frame",
+        "64"
+      ],
+      "exit_code": 0,
+      "png_sha256": "e1fe0540465be6576fe482bd2b4deb5a26825399abec5639aa6200f75319ae97",
+      "log_sha256": "d32d2bae348454b78afa2039d53498d522626478c7ee6649db8ed1c8bdadc49c",
+      "receipt": {
+        "source_pin": "d852e34cd5629a6f3851d613dcd17aa0ffd025a2",
+        "frame": 64,
+        "surface_generation": 1,
+        "width": 1280,
+        "height": 864,
+        "cinematic_ms": 0,
+        "sequence": "committed-mission-world",
+        "completed_tick": 267,
+        "presented_ticks": 0,
+        "choreography_seconds": 0,
+        "static_ready": false,
+        "mesh_vertices": 0,
+        "screen_id": 7,
+        "body_height": 0.898146,
+        "body_span": 1.1,
+        "body_lean": 0,
+        "visible_units": 0,
+        "culled_units": 0,
+        "model_cache_bytes": 0,
+        "cold_sliver_triangles": 0,
+        "omitted_housing_triangles": 0,
+        "model_rungs": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "scanout_verified": false
+      }
+    },
+    {
+      "name": "reduced-motion",
+      "command": [
+        "D:\\Craig\\GitHub\\Crucible\\.worktrees\\phase15-native-swarm\\build\\production-release\\src\\game\\crucible_game.exe",
+        "--capture",
+        "D:\\Craig\\GitHub\\Crucible\\.worktrees\\phase15-native-swarm\\build\\production-release\\receiving-m3-r1\\reduced-motion.png",
+        "--profile",
+        "D:\\Craig\\GitHub\\Crucible\\.worktrees\\phase15-native-swarm\\build\\production-release\\receiving-m3-r1\\reduced-motion.progress"
+      ],
+      "exit_code": 0,
+      "png_sha256": "17dcf1afabd78303a1f2f2309c7cd91ec5d753686846a805ccabfb15333680da",
+      "log_sha256": "66a43605a7f07fc3cf411cf5b8a74d89cbf098a3e1a567fd05191d5a6821d664",
+      "receipt": {
+        "source_pin": "d852e34cd5629a6f3851d613dcd17aa0ffd025a2",
+        "frame": 4,
+        "surface_generation": 1,
+        "width": 1280,
+        "height": 864,
+        "cinematic_ms": 7533,
+        "sequence": "decorative-static-floor-preparing",
+        "completed_tick": null,
+        "presented_ticks": 452,
+        "choreography_seconds": 4.39842,
+        "static_ready": false,
+        "mesh_vertices": 0,
+        "screen_id": 1,
+        "body_height": 0.898146,
+        "body_span": 1.1,
+        "body_lean": 0,
+        "visible_units": 0,
+        "culled_units": 0,
+        "model_cache_bytes": 0,
+        "cold_sliver_triangles": 0,
+        "omitted_housing_triangles": 0,
+        "model_rungs": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "scanout_verified": false
+      }
+    }
+  ]
+}

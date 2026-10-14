@@ -1,0 +1,9 @@
+FEngine (64 bits) created at 0000020B695E8AC0 (threading is enabled)
+FEngine resolved backend: Vulkan
+Vulkan device driver: NVIDIA 617.14
+Selected physical device 'NVIDIA GeForce RTX 5070 Laptop GPU' from 2 physical devices. (vendor 0x10de, device 0x2d58, driver 0x9a438000, api 1.4)
+Backend feature level: 3
+FEngine feature level: 1
+vkCreateSwapchain: 1280x864, 44, 0, swapchain-size=3, identity-transform=true, depth=126, protected=false
+Captured mesh: shields=802728, rails=0, hubs=243120, cores=2370, intensity_min=0.402161, intensity_max=0.622458
+Crucible production receiver: M3-scaffold-model, SDL window/events, native composed frames=5, capture=1, final intro parity unqualified
