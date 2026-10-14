@@ -13,6 +13,7 @@
 #include <memory>
 #include <string>
 #include <string_view>
+#include <stdexcept>
 #include <vector>
 
 #include "SwarmIntro.hpp"
@@ -180,14 +181,26 @@ RunSummary run(const Options& options, bool capture)
         {
             const Camera& cam = intro.camera();
             const float dt = options.settings.tickSeconds;
+            if (!std::isfinite(cam.cx) || !std::isfinite(cam.cy) || !std::isfinite(cam.yaw) ||
+                !std::isfinite(cam.halfWidth) || cam.halfWidth <= 0.0F ||
+                !std::isfinite(cam.aspect) || cam.aspect <= 0.0F ||
+                !std::isfinite(cam.pixelsWide) || cam.pixelsWide <= 0.0F ||
+                !std::isfinite(dt) || dt <= 0.0F)
+                throw std::runtime_error("invalid camera before smoothness measurement");
             if (t > 0)
             {
                 const float frame = 2.0F * lastCam.halfWidth;
                 const float px = (cam.cx - lastCam.cx) / dt / frame, py = (cam.cy - lastCam.cy) / dt / frame;
-                summary.camPan = std::max(summary.camPan, std::hypot(px, py));
-                if (t > 1) summary.camPanAccel = std::max(summary.camPanAccel, std::hypot(px - lastPanX, py - lastPanY) / dt);
-                summary.camZoom = std::max(summary.camZoom, std::abs(std::log(cam.halfWidth / lastCam.halfWidth)) / dt);
-                summary.camYaw = std::max(summary.camYaw, std::abs(cam.yaw - lastCam.yaw) / dt);
+                const float pan = std::hypot(px, py);
+                const float acceleration = std::hypot(px - lastPanX, py - lastPanY) / dt;
+                const float zoom = std::abs(std::log(cam.halfWidth / lastCam.halfWidth)) / dt;
+                const float yaw = std::abs(cam.yaw - lastCam.yaw) / dt;
+                if (!std::isfinite(pan) || !std::isfinite(acceleration) || !std::isfinite(zoom) || !std::isfinite(yaw))
+                    throw std::runtime_error("nonfinite camera smoothness derivative");
+                summary.camPan = std::max(summary.camPan, pan);
+                if (t > 1) summary.camPanAccel = std::max(summary.camPanAccel, acceleration);
+                summary.camZoom = std::max(summary.camZoom, zoom);
+                summary.camYaw = std::max(summary.camYaw, yaw);
                 lastPanX = px;
                 lastPanY = py;
             }
@@ -470,7 +483,8 @@ int main(int argc, char** argv)
         // presented seconds, with margin over the rig's own caps (0.6 frame widths a second,
         // 1.2 per second squared, 0.9 log zoom and 12 degrees a second); a change of zoom adds
         // apparent pan, hence the margin.
-        if (main.camPan > 0.9F || main.camPanAccel > 2.5F || main.camZoom > 1.0F || main.camYaw > 15.0F)
+        if (!std::isfinite(main.camPan) || !std::isfinite(main.camPanAccel) ||
+            !std::isfinite(main.camZoom) || !std::isfinite(main.camYaw) || main.camPan > 0.9F || main.camPanAccel > 2.5F || main.camZoom > 1.0F || main.camYaw > 15.0F)
             return fail("camera moves smoothly: pan <= 0.9 frame widths/s, pan acceleration <= 2.5 fw/s^2, zoom <= 1.0 log/s, yaw <= 15 deg/s");
 
         const RunSummary again = run(options, false);

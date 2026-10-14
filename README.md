@@ -19,8 +19,9 @@ presentation, with concept artwork and a modelling handoff.
 The separate **production migration receiver** now builds as `crucible_game` on
 qualified Windows Vulkan. It receives a real themed menu/options/mission journey
 and committed mission snapshots; see [build, controls and actual captures](docs/workstreams/presentation/phase15-native-evidence/README.md).
-Its original intro fixture is below final visual fidelity; the newer swarm/body
-prototype is the next integration source. Existing `crucible_desktop` remains the
+The production intro now consumes PR47's actual Scaffold swarm, operated camera
+and tetrahedral body proxy. Final cinematic fidelity remains open; reduced motion
+and immediate skip expose the usable menu while its static background prepares. Existing `crucible_desktop` remains the
 concept2D/dev-test platform.
 
 - **Play:** build/test `desktop-release`, then launch `crucible_desktop` (`.exe`
@@ -40,7 +41,7 @@ concept2D/dev-test platform.
   launch with `--diagnostics`; shutdown prints bounded decoded refusals/summaries.
   Use `--diagnostics-json` for typed JSONL and counted-loss health; see
   [structured diagnostics](docs/workstreams/runtime/structured-diagnostics.md).
-  Default production builds omit Log; drops are counted and decoding is cold work.
+  Ordinary headless builds omit Log; drops are counted and decoding is cold work.
 - **Automate first, then review:** [personal steps and expected results](docs/playtests/phase12-personal-review.md)
   map to passed tests. Manual review covers usability; computer control diagnoses failures.
 - **Limits:** fixed identities: 2048 in the mission or 100K/150K in scale mode;
@@ -199,7 +200,8 @@ Dependencies use a checksum-verified CPM bootstrap, namespaced targets and
 [full commit pins](cmake/DependencyPins.cmake): Sub0ECS master, Sub0Pub main (v2 merged), Sub0Pipeline main,
 Sub0Log and Sub0HexGrid H2. Gameplay directly consumes ECS/H2; live input uses Pub v2 and completed boundaries
 use a sequential Pipeline graph. Log supplies optional bounded runtime diagnostics
-when `CRUCIBLE_ENABLE_DIAGNOSTICS=ON`; production builds omit it by default.
+when `CRUCIBLE_ENABLE_DIAGNOSTICS=ON`; ordinary headless builds omit it by default. The opt-in production game also consumes
+Log through the actual decorative swarm prototype.
 [Phase11](docs/phases/phase11.md) records scoped delivery, owned frame
 publication, direct-path parity and lifetime receiving. Consumer builds disable dependency development tools.
 The [owned sub0 roadmap](docs/reuse/sub0-roadmap.md) names upstream evolution requirements and receiving owners.

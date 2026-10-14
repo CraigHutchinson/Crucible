@@ -4,6 +4,16 @@ target_include_directories(crucible_cinematic_choreography PUBLIC "${PROJECT_SOU
 target_link_libraries(crucible_cinematic_choreography PUBLIC crucible_options)
 set_target_properties(crucible_cinematic_choreography PROPERTIES CXX_EXTENSIONS OFF)
 
+if(CRUCIBLE_BUILD_GAME OR CRUCIBLE_BUILD_SWARM_SPIKE)
+
+add_library(crucible_swarm_intro_adapter STATIC swarm_intro_adapter.cpp nanite_proxy_mesh.cpp)
+add_library(Crucible::SwarmIntroAdapter ALIAS crucible_swarm_intro_adapter)
+target_include_directories(crucible_swarm_intro_adapter PUBLIC "${PROJECT_SOURCE_DIR}/include")
+target_link_libraries(crucible_swarm_intro_adapter PUBLIC crucible_options
+    PRIVATE Crucible::SwarmIntroPrototype)
+set_target_properties(crucible_swarm_intro_adapter PROPERTIES CXX_EXTENSIONS OFF)
+endif()
+
 if(NOT CRUCIBLE_BUILD_GAME)
     return()
 endif()
@@ -25,7 +35,7 @@ else()
 endif()
 set(material_outputs)
 set_property(GLOBAL APPEND PROPERTY JOB_POOLS crucible_material_tools=1)
-foreach(name IN ITEMS nanite floor ui_blit)
+foreach(name IN ITEMS nanite nanite_proxy floor ui_blit)
     set(output "${material_directory}/${name}.filamat")
     add_custom_command(OUTPUT "${output}"
         COMMAND "${CRUCIBLE_FILAMENT_BUILD_DIR}/tools/matc/matc${CMAKE_EXECUTABLE_SUFFIX}"
@@ -36,6 +46,24 @@ foreach(name IN ITEMS nanite floor ui_blit)
         VERBATIM)
     list(APPEND material_outputs "${output}")
 endforeach()
+# Product-owned radiance is convolved by the exact qualified cmgen tool.
+find_package(Python3 REQUIRED COMPONENTS Interpreter)
+set(studio_directory "${material_directory}/studio")
+set(studio_source "${CMAKE_CURRENT_SOURCE_DIR}/studio_environment.py")
+set(studio_pack "${material_directory}/studio_environment.bin")
+add_custom_command(OUTPUT "${studio_pack}" "${material_directory}/studio_environment.json"
+    COMMAND "${CMAKE_COMMAND}" -E make_directory "${studio_directory}"
+    COMMAND "${Python3_EXECUTABLE}" "${studio_source}" generate "${material_directory}/studio.hdr"
+    COMMAND "${CRUCIBLE_FILAMENT_BUILD_DIR}/tools/cmgen/cmgen${CMAKE_EXECUTABLE_SUFFIX}"
+        --quiet --format=ktx --size=32 --ibl-min-lod-size=1 --ibl-samples=128
+        "--deploy=${studio_directory}" --sh-output=studio_sh.bin "${material_directory}/studio.hdr"
+    COMMAND "${Python3_EXECUTABLE}" "${studio_source}" pack
+        "${studio_directory}/studio_ibl.ktx" "${studio_directory}/studio_sh.bin" "${studio_pack}"
+    DEPENDS "${studio_source}" "${CRUCIBLE_FILAMENT_BUILD_DIR}/tools/cmgen/cmgen${CMAKE_EXECUTABLE_SUFFIX}"
+    BYPRODUCTS "${material_directory}/studio.hdr" "${studio_directory}/studio_ibl.ktx" "${studio_directory}/studio_sh.bin"
+    JOB_POOL crucible_material_tools
+    VERBATIM)
+list(APPEND material_outputs "${studio_pack}")
 add_custom_command(OUTPUT "${material_directory}/crucible_materials.c" "${material_directory}/crucible_materials.h"
     COMMAND "${CRUCIBLE_FILAMENT_BUILD_DIR}/tools/resgen/resgen${CMAKE_EXECUTABLE_SUFFIX}"
         --quiet --cfile --package=crucible_materials "--deploy=${material_directory}" ${material_outputs}

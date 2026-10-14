@@ -1,0 +1,28 @@
+material {
+    name : CrucibleNaniteProxy,
+    shadingModel : lit,
+    // UV0 carries role/intensity values, not texture coordinates. Filament's
+    // MaterialBuilder defaults to flipping y, which would invert intensity.
+    flipUV : false,
+    requires : [ uv0 ],
+    parameters : [ { type : float, name : glow } ]
+}
+fragment {
+    void material(inout MaterialInputs material) {
+        prepareMaterial(material);
+        float role = getUV0().x;
+        float intensity = getUV0().y;
+        bool core = role > 2.5;
+        bool hub = role > 1.5 && !core;
+        bool rail = role > 0.5 && !hub && !core;
+        vec3 base = core ? vec3(0.04, 0.58, 0.72) :
+            (hub ? vec3(0.025, 0.035, 0.045) :
+            (rail ? vec3(0.76, 0.82, 0.88) : vec3(0.58, 0.66, 0.74)));
+        material.baseColor = vec4(min(base * intensity, vec3(1.0)), 1.0);
+        material.metallic = core ? 0.05 : (hub ? 0.35 : 0.85);
+        material.roughness = core ? 0.28 : (hub ? 0.48 : (rail ? 0.30 : 0.34));
+        // Physical cyan emitter: blue-channel peak 40,000 nits at unit intensity/glow; weight 1
+        // receives the same camera exposure as the surrounding lit alloy.
+        material.emissive = vec4(core ? vec3(0.04, 0.9, 1.4) * (40000.0 / 1.4) * intensity * materialParams.glow : vec3(0.0), 1.0);
+    }
+}

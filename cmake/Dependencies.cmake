@@ -11,7 +11,7 @@ CPMAddPackage(NAME Sub0Pipeline GITHUB_REPOSITORY CraigHutchinson/Sub0Pipeline
 CPMAddPackage(NAME Sub0Pub GITHUB_REPOSITORY CraigHutchinson/Sub0Pub
     GIT_TAG ${CRUCIBLE_SUB0PUB_REVISION} EXCLUDE_FROM_ALL YES
     OPTIONS "SUB0PUB_BUILD_TESTING OFF" "SUB0PUB_BUILD_EXAMPLES OFF")
-if(BUILD_TESTING OR CRUCIBLE_ENABLE_DIAGNOSTICS OR CRUCIBLE_BUILD_SWARM_SPIKE)
+if(BUILD_TESTING OR CRUCIBLE_ENABLE_DIAGNOSTICS OR CRUCIBLE_BUILD_SWARM_SPIKE OR CRUCIBLE_BUILD_GAME)
     # Diagnostics are optional; a production build without them does not fetch Log.
     # The swarm intro spike always records its events through Sub0Log.
     CPMAddPackage(NAME Sub0Log GITHUB_REPOSITORY CraigHutchinson/Sub0Log

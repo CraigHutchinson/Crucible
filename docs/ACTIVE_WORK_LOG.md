@@ -728,3 +728,13 @@ format benchmark, focused tests and evidence on `perf/json-append` from2bd85d5.
 Serial CPU/build reservation; no workers. Measure cold formatting first, preserve
 schema/owned output and quiescent lifetime contracts, receive actual merged
 upstream revision through runtime and desktop JSON consumers before promotion.
+
+## Native swarm receiving R1, 2026-10-13
+
+Root owns coordinator, prototype viewport/finite camera gate, manifests and all
+serial CPU/GPU runs on `.worktrees/phase15-native-swarm` (`codex/production-swarm`).
+Graphics agent owns production renderer/materials/mesh validation; consumer agent
+owns the adapter/body port/reference fixtures. No worker builds or benchmarks.
+Shared camera/mesh contracts belong to root. Source baseline204c211 includes PR47;
+PR48 merged as f0aeeb3 after all11 exact-head hosted jobs passed. The first native
+body capture gates lighting refinement; concepts and native receiving stay distinct.

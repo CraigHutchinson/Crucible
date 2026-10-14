@@ -278,6 +278,12 @@ public:
     /** Advances one fixed tick. Systems run in a declared order against a frozen gather. */
     void tick();
 
+    /** Updates the viewport at a coordinator boundary.
+     * @param aspect Finite drawable width/height in [1/32, 32].
+     * @param pixelsWide Finite drawable width in [1, 4096].
+     * @return False without mutation for unsupported dimensions. */
+    [[nodiscard]] bool trySetViewport(float aspect, float pixelsWide) noexcept;
+
     /** Replaces the decision-LOD levers; takes effect from the next tick's LOD pass. */
     void setLevers(const LodLevers& levers) { settings_.levers = levers; }
     /** @return The current decision-LOD levers. */
@@ -506,6 +512,8 @@ private:
         bool ready = false;
     };
     CameraRig rig_;
+    float viewportAspect_ = 16.0F / 9.0F;
+    float viewportPixelsWide_ = 1920.0F;
     /** The operator's shot (System 2): where it wants the camera, and since when. */
     struct Shot
     {

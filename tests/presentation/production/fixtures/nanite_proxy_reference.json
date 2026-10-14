@@ -1,0 +1,14 @@
+{
+  "format": 1,
+  "text_hash_format": "UTF-8 with canonical LF newlines",
+  "cases": 27,
+  "generator_sha256": "ff0c1c1f6f475e7d65ad01ea9ee6d8e42b77cace7b03892ae1f43f3d71b77fe1",
+  "sources": {
+    "spikes/swarm_intro/NaniteBody.hpp": "c66d9e19589ca88e10890cc0b1ec4289f8ee8587c65130ed17fbce335d1a63ad",
+    "spikes/swarm_intro/nanite_mesh.py": "9592ae3d40eaca362b2d34772ff1553c152bcb7de4ac0875ef9beac98e7ce065",
+    "spikes/swarm_intro/render_swarm.py": "d15473499063426ccea033f7e04d7e0a6c998d2456e3b479b14405b5900f7987"
+  },
+  "oracle_sha256": "1d7fa0346f6c7abe2c61deabc09450ed4bf5e460d8359623a2936695508e094e",
+  "numpy_version": "2.4.6",
+  "runtime_numpy_required": false
+}

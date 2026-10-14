@@ -7,6 +7,12 @@ target_link_libraries(crucible_production_packet_tests PRIVATE crucible_options)
 add_test(NAME production_scene_packet COMMAND crucible_production_packet_tests)
 set_tests_properties(production_scene_packet PROPERTIES LABELS "presentation;production;contract")
 
+add_executable(crucible_production_mesh_packet_tests "${CMAKE_CURRENT_LIST_DIR}/test_mesh_validation.cpp")
+target_link_libraries(crucible_production_mesh_packet_tests PRIVATE crucible_options)
+target_include_directories(crucible_production_mesh_packet_tests PRIVATE "${PROJECT_SOURCE_DIR}/include")
+add_test(NAME production_mesh_packet COMMAND crucible_production_mesh_packet_tests)
+set_tests_properties(production_mesh_packet PROPERTIES LABELS "presentation;production;contract")
+
 # Header math only; this fixture never initializes a framework engine or GPU.
 if(TARGET Crucible::FilamentRuntime)
     set(transform_modes precise)
@@ -24,4 +30,25 @@ if(TARGET Crucible::FilamentRuntime)
         add_test(NAME "production_native_transforms_${mode}" COMMAND "${target}")
         set_tests_properties("production_native_transforms_${mode}" PROPERTIES LABELS "presentation;production;contract")
     endforeach()
+endif()
+
+if(TARGET Crucible::SwarmIntroAdapter)
+    add_test(NAME production_nanite_proxy_reference_identity COMMAND Python3::Interpreter
+        "${CMAKE_CURRENT_LIST_DIR}/fixtures/verify_nanite_proxy_reference.py")
+    set_tests_properties(production_nanite_proxy_reference_identity PROPERTIES
+        LABELS "presentation;production;contract")
+    add_executable(crucible_swarm_intro_adapter_tests "${CMAKE_CURRENT_LIST_DIR}/test_swarm_intro_adapter.cpp")
+    target_link_libraries(crucible_swarm_intro_adapter_tests PRIVATE
+        Crucible::SwarmIntroAdapter Crucible::SwarmIntroPrototype)
+    add_test(NAME production_swarm_intro_adapter COMMAND crucible_swarm_intro_adapter_tests)
+    set_tests_properties(production_swarm_intro_adapter PROPERTIES
+        LABELS "presentation;production;contract;lifetime" TIMEOUT 120)
+    add_executable(crucible_nanite_proxy_mesh_tests "${CMAKE_CURRENT_LIST_DIR}/test_nanite_proxy_mesh.cpp")
+    target_include_directories(crucible_nanite_proxy_mesh_tests PRIVATE "${PROJECT_SOURCE_DIR}/src/presentation/production")
+    target_link_libraries(crucible_nanite_proxy_mesh_tests PRIVATE
+        Crucible::SwarmIntroAdapter Crucible::SwarmIntroPrototype)
+    add_test(NAME production_nanite_proxy_reference COMMAND crucible_nanite_proxy_mesh_tests
+        "${CMAKE_CURRENT_LIST_DIR}/fixtures/nanite_proxy_reference.txt")
+    set_tests_properties(production_nanite_proxy_reference PROPERTIES
+        LABELS "presentation;production;contract" TIMEOUT 120)
 endif()

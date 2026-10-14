@@ -9,8 +9,8 @@ fragment {
         vec2 uv = getUV0() * 48.0;
         vec2 seam = min(fract(uv), 1.0 - fract(uv));
         float panel = smoothstep(0.012, 0.025, min(seam.x, seam.y));
-        material.baseColor = vec4(mix(vec3(0.015, 0.025, 0.036), vec3(0.06, 0.085, 0.11), panel), 1.0);
-        material.metallic = 0.65;
-        material.roughness = 0.42;
+        material.baseColor = vec4(mix(vec3(0.012, 0.017, 0.024), vec3(0.015, 0.021, 0.029), panel), 1.0);
+        material.metallic = 0.35;
+        material.roughness = 0.70;
     }
 }

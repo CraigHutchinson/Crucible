@@ -748,8 +748,8 @@ nothing yet shows what lifts the letter. Climbers and heaped seekers stack in la
 other ground movers are held apart. Depth layers (S0i) show best in a yawed oblique view; units on the wall still move in the face's
 plane, and a layer's depth is placement, not a third motion axis. At most two layers
 complete; overhangs and climbing onto the back face are not modelled. The tour camera's
-section choice reads only counts of building units; it does not yet anticipate where the
-next letter will start, so it can arrive just after a section's first units seat.
+section choice combines building units with half-weight arriving goals. This bounded
+anticipation reads the current state; it does not know future construction decisions.
 
 Skip, reduced motion, resize and focus behaviour belong to the frontend package and are not
 exercised. No GPU, audio or participant evidence.

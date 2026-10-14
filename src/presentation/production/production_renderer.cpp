@@ -8,6 +8,7 @@
 #include <algorithm>
 #include <array>
 #include <atomic>
+#include <bit>
 #include <cmath>
 #include <cstring>
 #include <filament/Camera.h>
@@ -39,10 +40,12 @@
 #include <SDL3/SDL_metal.h>
 #endif
 #include <stdexcept>
+#include <type_traits>
 #include <utility>
 #include <utils/EntityManager.h>
 
 #include "crucible/presentation/production/detail/frame_validation.hpp"
+#include "crucible/presentation/production/detail/mesh_validation.hpp"
 #include "crucible/presentation/production/detail/native_transforms.hpp"
 #include "crucible/presentation/production/production_renderer.hpp"
 #include "crucible/presentation/production/resources/crucible_materials.h"
@@ -58,7 +61,16 @@ constexpr std::size_t maxIndices = 98304;
 constexpr std::size_t maxCommands = 256;
 constexpr std::size_t textureBytes = 64 * 1024 * 1024;
 constexpr std::size_t residentBytes = 128 * 1024 * 1024;
-constexpr std::size_t slotBytes = 2 * 1024 * 1024;
+constexpr std::size_t slotBytes = 15 * 1024 * 1024;
+constexpr std::size_t externalStagingLimit = 192 * 1024 * 1024;
+static_assert(3 * slotBytes + 2 * textureBytes + 16 * 1024 * 1024 <= externalStagingLimit);
+struct NativeMeshVertex
+{
+    float3 position_{};
+    quatf tangent_{};
+    float2 roleIntensity_{}; // raw UV0 data; nanite_proxy.mat disables Filament's default y flip.
+};
+static_assert(sizeof(NativeMeshVertex) == 36);
 static_assert(sizeof(ImDrawVert) == 20 && sizeof(ImDrawIdx) == 2);
 static_assert(sizeof(NanitePose) == 36 && sizeof(mat4f) == 64 && sizeof(float4) == 16);
 static_assert((sizeof(NanitePose) + sizeof(mat4f) + sizeof(float4)) * CinematicFrame::maxInstances <= 512 * 1024);
@@ -70,6 +82,7 @@ struct UploadPayload
     std::array<NanitePose, CinematicFrame::maxInstances> poses_{};
     std::array<mat4f, CinematicFrame::maxInstances> transforms_{};
     std::array<float4, CinematicFrame::maxInstances> cores_{};
+    std::array<NativeMeshVertex, NaniteMeshFrame::maxVertices> mesh_{};
 };
 static_assert(sizeof(UploadPayload) <= slotBytes);
 
@@ -77,11 +90,14 @@ static_assert(sizeof(UploadPayload) <= slotBytes);
 struct UploadSlot
 {
     UploadPayload payload_{};
-    std::array<std::byte, slotBytes - sizeof(UploadPayload)> padding_{};
+    std::array<std::byte, slotBytes - sizeof(UploadPayload) - 64> padding_{};
     std::atomic<unsigned> pending_{};
     VertexBuffer* vertices_{}; // owning; destroyed through the owning Engine.
     IndexBuffer* indices_{}; // owning; destroyed through the owning Engine.
+    VertexBuffer* meshVertices_{}; // owning; destroyed through the owning Engine.
+    float3 meshMinimum_{}, meshMaximum_{}; // validated copied mesh bounds for shadow fitting.
 };
+static_assert(sizeof(UploadSlot) <= slotBytes);
 
 struct MeshVertex
 {
@@ -223,14 +239,20 @@ struct ProductionRenderer::State
     View* uiView_{}; // owning; destroyed through Engine.
     Camera* camera_{}; // owning component of cameraEntity_, destroyed through Engine.
     Camera* uiCamera_{}; // owning component of uiCameraEntity_, destroyed through Engine.
+    Texture* studioReflections_{}; // owning; outlives ambient_ reflection binding.
     IndirectLight* ambient_{}; // owning; destroyed through Engine.
     Texture* cores_{}; // owning; destroyed through Engine.
     Material* naniteMaterial_{}; // owning; outlives its instances.
+    Material* proxyMaterial_{}; // owning; outlives its sole instance.
+    MaterialInstance* proxyInstance_{}; // owning; destroyed through Engine.
+    IndexBuffer* proxyIndices_{}; // owning; immutable identity indices.
+    utils::Entity proxyEntity_{};
+    std::vector<std::uint32_t> identityIndices_{};
     Material* floorMaterial_{}; // owning; outlives its instance.
     Material* uiMaterial_{}; // owning; outlives its instances.
     MaterialInstance* floorInstance_{}; // owning; destroyed through Engine.
     std::array<MaterialInstance*, maxCommands> uiInstances_{}; // owning entries; destroyed through Engine.
-    utils::Entity cameraEntity_{}, uiCameraEntity_{}, uiEntity_{}, floorEntity_{}, keyEntity_{}, rimEntity_{};
+    utils::Entity cameraEntity_{}, uiCameraEntity_{}, uiEntity_{}, floorEntity_{}, keyEntity_{};
     Mesh wedge_{makeWedge()}, floor_{makeFloor()};
     std::vector<Batch> batches_{};
     std::array<std::unique_ptr<UploadSlot>, 3> slots_{};
@@ -320,7 +342,7 @@ struct ProductionRenderer::State
             engine_->destroy(batch.material_);
             if (batch.entity_) entities.destroy(batch.entity_);
         }
-        for (auto entity : {uiEntity_, floorEntity_, keyEntity_, rimEntity_})
+        for (auto entity : {uiEntity_, floorEntity_, keyEntity_, proxyEntity_})
         {
             if (entity)
             {
@@ -337,6 +359,9 @@ struct ProductionRenderer::State
             }
         }
         for (auto* instance : uiInstances_) engine_->destroy(instance);
+        engine_->destroy(proxyInstance_);
+        engine_->destroy(proxyMaterial_);
+        engine_->destroy(proxyIndices_);
         engine_->destroy(floorInstance_);
         engine_->destroy(naniteMaterial_);
         engine_->destroy(floorMaterial_);
@@ -347,6 +372,7 @@ struct ProductionRenderer::State
         {
             engine_->destroy(slot->vertices_);
             engine_->destroy(slot->indices_);
+            engine_->destroy(slot->meshVertices_);
         }
         for (auto* mesh : {&wedge_, &floor_})
         {
@@ -354,6 +380,7 @@ struct ProductionRenderer::State
             engine_->destroy(mesh->indexBuffer_);
         }
         engine_->destroy(ambient_);
+        engine_->destroy(studioReflections_);
         engine_->destroy(view_);
         engine_->destroy(uiView_);
         engine_->destroy(scene_);
@@ -445,27 +472,62 @@ struct ProductionRenderer::State
         clear.clear = true;
         clear.clearColor = {0.015F, 0.025F, 0.045F, 1};
         renderer_->setClearOptions(clear);
-        const float3 irradiance{0.32F, 0.42F, 0.55F};
-        ambient_ = IndirectLight::Builder().irradiance(1, &irradiance).intensity(18000).build(*engine_);
+        // Immutable build-owned studio radiance: cmgen's real GGX prefilter plus
+        // its pre-scaled irradiance SH. This is procedural light, not captured HDR.
+        constexpr std::size_t shBytes = 9 * 3 * sizeof(float);
+        constexpr std::size_t reflectionBytes = 6 * 4 * (32 * 32 + 16 * 16 + 8 * 8 + 4 * 4 + 2 * 2 + 1);
+        static_assert(sizeof(float3) == 3 * sizeof(float));
+        static_assert(std::endian::native == std::endian::little);
+        if (CRUCIBLE_MATERIALS_STUDIO_ENVIRONMENT_SIZE != shBytes + reflectionBytes ||
+            !Texture::isTextureFormatSupported(*engine_, Texture::InternalFormat::R11F_G11F_B10F))
+            throw std::runtime_error("Bounded convolved studio environment is unsupported");
+        studioReflections_ = Texture::Builder().width(32).height(32).levels(6)
+            .sampler(Texture::Sampler::SAMPLER_CUBEMAP).format(Texture::InternalFormat::R11F_G11F_B10F).build(*engine_);
+        if (!studioReflections_) throw std::runtime_error("Studio reflection cubemap initialization failed");
+        std::size_t offset = shBytes;
+        for (std::size_t level = 0; level < 6; ++level)
+        {
+            const auto dimension = static_cast<std::uint32_t>(32 >> level);
+            const std::size_t bytes = 6 * 4 * dimension * dimension;
+            // Packaged arrays remain immutable and alive through Engine teardown.
+            Texture::PixelBufferDescriptor pixels(const_cast<std::uint8_t*>(CRUCIBLE_MATERIALS_STUDIO_ENVIRONMENT_DATA + offset),
+                bytes, Texture::Format::RGB, Texture::Type::UINT_10F_11F_11F_REV, 1);
+            studioReflections_->setImage(*engine_, level, 0, 0, 0, dimension, dimension, 6, std::move(pixels));
+            offset += bytes;
+        }
+        std::array<float3, 9> irradiance{};
+        std::memcpy(irradiance.data(), CRUCIBLE_MATERIALS_STUDIO_ENVIRONMENT_DATA, shBytes);
+        for (const auto& coefficient : irradiance)
+            for (std::size_t axis = 0; axis < 3; ++axis)
+                if (!std::isfinite(coefficient[axis]) || std::abs(coefficient[axis]) > 64)
+                    throw std::runtime_error("Studio irradiance coefficient is invalid");
+        ambient_ = IndirectLight::Builder().irradiance(3, irradiance.data()).reflections(studioReflections_)
+            .intensity(18000).build(*engine_);
         if (!ambient_)
         {
             throw std::runtime_error("Production ambient lighting could not be created");
         }
         scene_->setIndirectLight(ambient_);
         keyEntity_ = entities.create();
-        rimEntity_ = entities.create();
         if (LightManager::Builder(LightManager::Type::DIRECTIONAL).direction({-0.35F, -1, -0.45F})
-                .color({0.8F, 0.91F, 1}).intensity(60000).castShadows(true).build(*engine_, keyEntity_) != LightManager::Builder::Success
-            || LightManager::Builder(LightManager::Type::DIRECTIONAL).direction({0.8F, -0.4F, 0.8F})
-                .color({0.25F, 0.75F, 1}).intensity(14000).build(*engine_, rimEntity_) != LightManager::Builder::Success)
+                .color({0.8F, 0.91F, 1}).intensity(60000).castShadows(true).build(*engine_, keyEntity_) != LightManager::Builder::Success)
         {
             throw std::runtime_error("Production lighting could not be created");
         }
         scene_->addEntity(keyEntity_);
-        scene_->addEntity(rimEntity_);
         naniteMaterial_ = material(*engine_, CRUCIBLE_MATERIALS_NANITE_DATA, CRUCIBLE_MATERIALS_NANITE_SIZE);
         floorMaterial_ = material(*engine_, CRUCIBLE_MATERIALS_FLOOR_DATA, CRUCIBLE_MATERIALS_FLOOR_SIZE);
         uiMaterial_ = material(*engine_, CRUCIBLE_MATERIALS_UI_BLIT_DATA, CRUCIBLE_MATERIALS_UI_BLIT_SIZE);
+        proxyMaterial_ = material(*engine_, CRUCIBLE_MATERIALS_NANITE_PROXY_DATA, CRUCIBLE_MATERIALS_NANITE_PROXY_SIZE);
+        proxyInstance_ = proxyMaterial_->createInstance();
+        proxyEntity_ = entities.create();
+        proxyIndices_ = IndexBuffer::Builder().indexCount(NaniteMeshFrame::maxVertices)
+            .bufferType(IndexBuffer::IndexType::UINT).build(*engine_);
+        if (!proxyInstance_ || !proxyIndices_) throw std::runtime_error("Production proxy mesh initialization failed");
+        identityIndices_.resize(NaniteMeshFrame::maxVertices);
+        for (std::size_t index = 0; index < identityIndices_.size(); ++index)
+            identityIndices_[index] = static_cast<std::uint32_t>(index);
+        proxyIndices_->setBuffer(*engine_, IndexBuffer::BufferDescriptor(identityIndices_.data(), identityIndices_.size() * sizeof(std::uint32_t)));
         cores_ = Texture::Builder().width(64).height(64).levels(1).sampler(Texture::Sampler::SAMPLER_2D)
             .format(Texture::InternalFormat::RGBA32F).build(*engine_);
         if (!cores_)
@@ -513,7 +575,11 @@ struct ProductionRenderer::State
                 .attribute(VertexAttribute::COLOR, 0, VertexBuffer::AttributeType::UBYTE4, offsetof(ImDrawVert, col), sizeof(ImDrawVert))
                 .normalized(VertexAttribute::COLOR).build(*engine_);
             slot->indices_ = IndexBuffer::Builder().indexCount(maxIndices).bufferType(IndexBuffer::IndexType::USHORT).build(*engine_);
-            if (!slot->vertices_ || !slot->indices_) throw std::runtime_error("Production UI buffers failed");
+            slot->meshVertices_ = VertexBuffer::Builder().vertexCount(NaniteMeshFrame::maxVertices).bufferCount(1)
+                .attribute(VertexAttribute::POSITION, 0, VertexBuffer::AttributeType::FLOAT3, offsetof(NativeMeshVertex, position_), sizeof(NativeMeshVertex))
+                .attribute(VertexAttribute::TANGENTS, 0, VertexBuffer::AttributeType::FLOAT4, offsetof(NativeMeshVertex, tangent_), sizeof(NativeMeshVertex))
+                .attribute(VertexAttribute::UV0, 0, VertexBuffer::AttributeType::FLOAT2, offsetof(NativeMeshVertex, roleIntensity_), sizeof(NativeMeshVertex)).build(*engine_);
+            if (!slot->vertices_ || !slot->indices_ || !slot->meshVertices_) throw std::runtime_error("Production UI buffers failed");
         }
         auto& io = ImGui::GetIO();
         previousRendererFlags_ = io.BackendFlags & (ImGuiBackendFlags_RendererHasTextures | ImGuiBackendFlags_RendererHasVtxOffset);
@@ -736,6 +802,17 @@ struct ProductionRenderer::State
     void prepareScene(UploadSlot& slot, const CinematicFrame& frame)
     {
         auto& manager = engine_->getRenderableManager();
+        scene_->remove(proxyEntity_);
+        manager.destroy(proxyEntity_);
+        AmbientOcclusionOptions ao;
+        ao.enabled = true;
+        ao.radius = 0.6F;
+        view_->setAmbientOcclusionOptions(ao);
+        auto& lights = engine_->getLightManager();
+        const auto key = lights.getInstance(keyEntity_);
+        lights.setDirection(key, {-0.35F, -1, -0.45F});
+        lights.setColor(key, {0.8F, 0.91F, 1});
+        lights.setShadowCaster(key, true);
         const auto limit = metadata_.automaticInstanceLimit_;
         for (std::size_t index = 0; index < batches_.size(); ++index)
         {
@@ -759,6 +836,7 @@ struct ProductionRenderer::State
             }
             if (count)
             {
+                scene_->addEntity(batch.entity_);
                 batch.instances_->setLocalTransforms(slot.payload_.transforms_.data() + base, count);
                 batch.material_->setParameter("glow", frame.glowIntensity_);
             }
@@ -767,14 +845,70 @@ struct ProductionRenderer::State
         Texture::PixelBufferDescriptor descriptor(slot.payload_.cores_.data(), sizeof(slot.payload_.cores_),
             Texture::Format::RGBA, Texture::Type::FLOAT, 1, 0, 0, 0, releaseUpload, &slot.pending_);
         cores_->setImage(*engine_, 0, std::move(descriptor));
-        const auto& eye = frame.camera_.eye_;
-        const auto& target = frame.camera_.target_;
-        camera_->setProjection(frame.camera_.verticalFovRadians_ * 180.0 / std::numbers::pi,
+        prepareCamera(frame.camera_, frame.keyIntensity_);
+    }
+
+    void prepareCamera(const CinematicCamera& camera, float keyIntensity)
+    {
+        const auto& eye = camera.eye_;
+        const auto& target = camera.target_;
+        if (camera.orthographic_)
+        {
+            const auto extent = *camera.orthographic_;
+            camera_->setProjection(Camera::Projection::ORTHO, -extent.halfWidth_, extent.halfWidth_,
+                -extent.halfHeight_, extent.halfHeight_, 0.1, 2048);
+        }
+        else camera_->setProjection(camera.verticalFovRadians_ * 180.0 / std::numbers::pi,
             static_cast<double>(extent_.width_) / extent_.height_, 0.1, 2048, Camera::Fov::VERTICAL);
         camera_->lookAt({eye[0], eye[1], eye[2]}, {target[0], target[1], target[2]});
         auto& lights = engine_->getLightManager();
-        lights.setIntensity(lights.getInstance(keyEntity_), frame.keyIntensity_ * 15000);
+        lights.setIntensity(lights.getInstance(keyEntity_), keyIntensity * 15000);
     }
+
+    void prepareScene(UploadSlot& slot, const NaniteMeshFrame& frame)
+    {
+        auto& manager = engine_->getRenderableManager();
+        for (auto& batch : batches_) scene_->remove(batch.entity_);
+        // Mission-scale AO has no qualified radius for the sub-unit core windows.
+        // Keep it off in this mesh receiver until a matching radius is received.
+        AmbientOcclusionOptions ao;
+        ao.enabled = false;
+        view_->setAmbientOcclusionOptions(ao);
+        // The default pinned engine evaluates only the dominant directional
+        // light. Aim that startup key slightly above/left of the camera; a second
+        // directional fill would be ignored. Dense sub-unit self-shadow bias
+        // remains unqualified, so this receiving arm retains lit PBR without it.
+        auto& lights = engine_->getLightManager();
+        const auto key = lights.getInstance(keyEntity_);
+        const auto& eye = frame.camera_.eye_;
+        const auto& target = frame.camera_.target_;
+        const auto forward = normalize(float3{target[0] - eye[0], target[1] - eye[1], target[2] - eye[2]});
+        const auto right = normalize(cross(forward, float3{0, 1, 0}));
+        const auto up = cross(right, forward);
+        lights.setDirection(key, normalize(forward + right * 0.25F - up * 0.18F));
+        lights.setColor(key, {0.9F, 0.95F, 1});
+        lights.setShadowCaster(key, false);
+        scene_->remove(proxyEntity_);
+        manager.destroy(proxyEntity_);
+        if (!frame.vertices_.empty())
+        {
+            slot.pending_.fetch_add(1, std::memory_order_relaxed);
+            slot.meshVertices_->setBufferAt(*engine_, 0, VertexBuffer::BufferDescriptor(slot.payload_.mesh_.data(),
+                frame.vertices_.size() * sizeof(NativeMeshVertex), releaseUpload, &slot.pending_));
+            proxyInstance_->setParameter("glow", frame.glowIntensity_);
+            if (RenderableManager::Builder(1).boundingBox({(slot.meshMinimum_ + slot.meshMaximum_) * 0.5F,
+                    (slot.meshMaximum_ - slot.meshMinimum_) * 0.5F + float3{0.001F}}).culling(false)
+                .geometry(0, RenderableManager::PrimitiveType::TRIANGLES, slot.meshVertices_, proxyIndices_, 0, static_cast<std::uint32_t>(frame.vertices_.size()))
+                .material(0, proxyInstance_).castShadows(true).receiveShadows(true)
+                .build(*engine_, proxyEntity_) != RenderableManager::Builder::Success)
+                throw std::runtime_error("Production proxy mesh renderable failed");
+            scene_->addEntity(proxyEntity_);
+        }
+        prepareCamera(frame.camera_, frame.keyIntensity_);
+    }
+
+    template<class Frame>
+    FrameReceipt submit(const Frame& frame, const ImDrawData& drawData, std::uint64_t frameId);
 
     void prepareUi(UploadSlot& slot, const ImDrawData& data)
     {
@@ -860,10 +994,11 @@ ProductionRenderer::Status ProductionRenderer::beginUiFrame()
     }
 }
 
-ProductionRenderer::FrameReceipt ProductionRenderer::tryRender(const CinematicFrame& frame,
+template<class Frame>
+ProductionRenderer::FrameReceipt ProductionRenderer::State::submit(const Frame& frame,
     const ImDrawData& drawData, std::uint64_t frameId)
 {
-    auto& state = *state_;
+    auto& state = *this;
     if (state.failed_ || state.engine_->hasUnrecoverableFailure())
     {
         state.failed_ = true;
@@ -873,6 +1008,9 @@ ProductionRenderer::FrameReceipt ProductionRenderer::tryRender(const CinematicFr
     if (!frameId || frameId <= state.lastFrame_ || (state.captureRequest_ && !state.captureSubmitted_ && frameId > state.captureRequest_->frameId_))
         return state.receipt(Status::rejected, Reason::frameIdentity, frameId);
     if (!state.extent_.width_ || !state.extent_.height_) return state.receipt(Status::suspended, Reason::surface, frameId);
+    if constexpr (std::is_same_v<Frame, NaniteMeshFrame>)
+        if (frame.vertices_.size() > NaniteMeshFrame::maxVertices)
+            return state.receipt(Status::rejected, Reason::capacity, frameId);
     if (!detail::isValidFrame(frame)) return state.receipt(Status::rejected, Reason::invalidScene, frameId);
     const auto validation = state.validateUi(drawData);
     if (validation != Reason::none) return state.receipt(validation == Reason::busy ? Status::skipped : Status::rejected, validation, frameId);
@@ -880,15 +1018,35 @@ ProductionRenderer::FrameReceipt ProductionRenderer::tryRender(const CinematicFr
         { return slot->pending_.load(std::memory_order_acquire) == 0; });
     if (found == state.slots_.end()) return state.receipt(Status::skipped, Reason::busy, frameId);
     auto& slot = **found;
-    for (std::size_t index = 0; index < frame.poses_.size(); ++index)
+    if constexpr (std::is_same_v<Frame, CinematicFrame>)
     {
-        slot.payload_.poses_[index] = frame.poses_[index];
-        const auto model = detail::tryBuildTransform(frame.poses_[index]);
-        if (!model) return state.receipt(Status::rejected, Reason::invalidScene, frameId);
-        slot.payload_.transforms_[index] = *model;
-        slot.payload_.cores_[index] = {frame.poses_[index].coreIntensity_, 0, 0, 0};
+        for (std::size_t index = 0; index < frame.poses_.size(); ++index)
+        {
+            slot.payload_.poses_[index] = frame.poses_[index];
+            const auto model = detail::tryBuildTransform(frame.poses_[index]);
+            if (!model) return state.receipt(Status::rejected, Reason::invalidScene, frameId);
+            slot.payload_.transforms_[index] = *model;
+            slot.payload_.cores_[index] = {frame.poses_[index].coreIntensity_, 0, 0, 0};
+        }
+        std::fill(slot.payload_.cores_.begin() + frame.poses_.size(), slot.payload_.cores_.end(), float4{});
     }
-    std::fill(slot.payload_.cores_.begin() + frame.poses_.size(), slot.payload_.cores_.end(), float4{});
+    else
+    {
+        for (std::size_t index = 0; index < frame.vertices_.size(); ++index)
+        {
+            const auto& vertex = frame.vertices_[index];
+            slot.payload_.mesh_[index] = {{vertex.position_[0], vertex.position_[1], vertex.position_[2]},
+                detail::buildTangent(vertex.normal_),
+                {static_cast<float>(vertex.role_), vertex.intensity_}};
+            const auto& position = slot.payload_.mesh_[index].position_;
+            if (index == 0) slot.meshMinimum_ = slot.meshMaximum_ = position;
+            else for (std::size_t axis = 0; axis < 3; ++axis)
+            {
+                slot.meshMinimum_[axis] = std::min(slot.meshMinimum_[axis], position[axis]);
+                slot.meshMaximum_[axis] = std::max(slot.meshMaximum_[axis], position[axis]);
+            }
+        }
+    }
     state.copyUi(slot, drawData);
     try
     {
@@ -944,6 +1102,17 @@ ProductionRenderer::FrameReceipt ProductionRenderer::tryRender(const CinematicFr
         state.failed_ = true;
         return state.receipt(Status::failed, Reason::backend, frameId);
     }
+}
+
+ProductionRenderer::FrameReceipt ProductionRenderer::tryRender(const CinematicFrame& frame,
+    const ImDrawData& drawData, std::uint64_t frameId)
+{
+    return state_->submit(frame, drawData, frameId);
+}
+ProductionRenderer::FrameReceipt ProductionRenderer::tryRender(const NaniteMeshFrame& frame,
+    const ImDrawData& drawData, std::uint64_t frameId)
+{
+    return state_->submit(frame, drawData, frameId);
 }
 
 ProductionRenderer::FrameReceipt ProductionRenderer::tryResize(DrawableExtent extent)

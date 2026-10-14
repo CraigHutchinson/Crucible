@@ -1,6 +1,7 @@
 #pragma once
 
 #include <algorithm>
+#include <array>
 #include <cmath>
 #include <limits>
 #include <math/mat3.h>
@@ -12,6 +13,19 @@
 
 namespace crucible::presentation::production::detail
 {
+/** Packs an accepted outward unit normal into Filament's tangent quaternion.
+ * @param values Finite unit normal already accepted by mesh packet validation.
+ * @return Finite unit tangent quaternion with its third basis column outward.
+ */
+[[nodiscard]] inline filament::math::quatf buildTangent(const std::array<float, 3>& values) noexcept
+{
+    using namespace filament::math;
+    const auto normal = normalize(float3{values[0], values[1], values[2]});
+    const auto axis = std::abs(normal.x) < 0.8F ? float3{1, 0, 0} : float3{0, 1, 0};
+    const auto tangent = normalize(cross(axis, normal));
+    return mat3f::packTangentFrame(mat3f{tangent, cross(normal, tangent), normal});
+}
+
 /** Builds only transforms whose pinned instance-normal path stays finite.
  * @param pose Scene pose already accepted by packet validation.
  * @return Model matrix or refusal, without clamping/renormalizing the pose.

@@ -64,3 +64,28 @@ and choose a consumed adapter contract. Keep new rig, docking and crystal animat
 in a bounded single-unit study until their geometry gates pass. No faction mechanic,
 population increase, DX12 support, Apple/Linux production qualification, audio,
 participant acceptance or Phase14 G3-G5 acceptance is implied by this increment.
+
+## Received prototype increment R1, 2026-10-13
+
+PR47's operated Scaffold1536 sequence now reaches native Vulkan through its actual
+source library, an owned snapshot/body adapter and synchronous bounded mesh borrow.
+There is no copied simulation. Orthographic affine projection preserves the source
+viewport; actual presented ticks and choreography seconds remain separate. Skip and
+reduced motion reach usable menus immediately and prepare the static scene in at
+most four hidden source ticks per coordinator pass. Suspension discards decorative
+debt, and mission Runtime remains independent. Explicit capture seeks are cold,
+forward-only, at most2700ticks/45presented seconds; interactive startup never seeks.
+
+Independent agent review found and corrected zero-tick captures showing an empty
+floor and reduced-motion startup waiting on the intro. New27-case checked-in Python
+geometry references, regular-core/clearance/rigidity properties, maximum4096-unit
+mesh/detail bounds and actual source settling tests pass locally in Release and
+Debug. Corpus identities are checked without NumPy. Hosted platform/sanitizer
+receiving now builds the actual portable adapter; native graphics still uses the
+qualified Release closure. No throughput claim comes from these captures.
+
+The first actual macro and completed-title captures expose a lighting failure:
+silver letters become almost black at the wide shot. A bounded convolved procedural
+studio environment and restrained floor are received; material/camera-lighting
+refinement continues before final capture publication. Keep these findings separate
+from proxy geometry parity and final articulated/crystal concept acceptance.

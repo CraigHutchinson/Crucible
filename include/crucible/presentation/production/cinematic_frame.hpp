@@ -2,6 +2,7 @@
 
 #include <array>
 #include <cstddef>
+#include <optional>
 #include <span>
 
 namespace crucible::presentation::production
@@ -15,12 +16,15 @@ struct NanitePose
     float coreIntensity_{1.0F};
 };
 
-/// Perspective view of the decorative scene, independent of the simulation camera.
+/// Perspective or orthographic decorative view, independent of the simulation camera.
 struct CinematicCamera
 {
+    /// Positive orthographic half-extents; omission retains the perspective camera.
+    struct OrthographicExtent { float halfWidth_{1.0F}, halfHeight_{1.0F}; };
     std::array<float, 3> eye_{0.0F, 8.0F, 24.0F};
     std::array<float, 3> target_{};
     float verticalFovRadians_{0.75F};
+    std::optional<OrthographicExtent> orthographic_{};
 };
 
 /** Borrows one complete decorative scene for synchronous renderer consumption.

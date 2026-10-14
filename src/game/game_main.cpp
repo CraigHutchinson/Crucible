@@ -22,7 +22,7 @@
 #include "crucible/application/game_journey.hpp"
 #include "crucible/presentation/FieldTool.hpp"
 #include "crucible/presentation/ScenarioSnapshot.hpp"
-#include "crucible/presentation/production/cinematic_choreography.hpp"
+#include "crucible/presentation/production/swarm_intro_adapter.hpp"
 #include "crucible/presentation/production/production_renderer.hpp"
 #include "crucible/runtime/ReferenceMissionRoute.hpp"
 
@@ -66,7 +66,7 @@ LaunchOptions parseOptions(int argc, char** argv)
         else if (flag == "--capture-ms")
         {
             const auto time = parseUnsigned(argument());
-            if (time > 12000) throw std::invalid_argument("Capture time must be 0..12000 ms");
+            if (time > 45000) throw std::invalid_argument("Capture presentation time must be 0..45000 ms");
             result.captureTime_ = std::chrono::milliseconds{static_cast<std::int64_t>(time)};
         }
         else if (flag == "--capture-frame") result.captureFrame_ = parseUnsigned(argument());
@@ -185,7 +185,7 @@ std::optional<Position> pickGround(float x, float y, float width, float height,
 
 void saveCapture(ProductionRenderer::CaptureResult& capture, const std::filesystem::path& path,
     const ProductionRenderer::Metadata& metadata, std::chrono::milliseconds elapsed,
-    std::optional<std::uint64_t> worldTick)
+    std::optional<std::uint64_t> worldTick, SwarmIntroAdapter::AdvanceResult progress, std::size_t meshVertices, FrontendScreen screen)
 {
     const auto width = capture.extent_.width_, height = capture.extent_.height_;
     const std::size_t stride = static_cast<std::size_t>(width) * 4;
@@ -200,10 +200,15 @@ void saveCapture(ProductionRenderer::CaptureResult& capture, const std::filesyst
     output << "{\"source_pin\":\"" << metadata.sourcePin_.data() << "\",\"frame\":" << capture.frameId_
         << ",\"surface_generation\":" << capture.surfaceGeneration_ << ",\"width\":" << width
         << ",\"height\":" << height << ",\"cinematic_ms\":" << elapsed.count()
-        << ",\"sequence\":\"" << (worldTick ? "committed-mission-world" : "foundation-12s-wordmark")
+        << ",\"sequence\":\"" << (worldTick ? "committed-mission-world" : (meshVertices ? "PR47-scaffold-nanite-body" : "decorative-static-floor-preparing"))
         << "\",\"completed_tick\":";
     if (worldTick) output << *worldTick; else output << "null";
-    output << ",\"scanout_verified\":false}\n";
+    output << ",\"presented_ticks\":" << progress.totalPresentedTicks_
+        << ",\"choreography_seconds\":" << progress.choreographySeconds_
+        << ",\"static_ready\":" << (progress.staticReady_ ? "true" : "false")
+        << ",\"mesh_vertices\":" << meshVertices
+        << ",\"screen_id\":" << static_cast<unsigned>(screen)
+        << ",\"scanout_verified\":false}\n";
     output.flush();
     if (!output) throw std::runtime_error("Capture receipt write failed");
 }
@@ -230,7 +235,7 @@ int run(const LaunchOptions& options)
     Frontend frontend{*context, std::filesystem::path{base} / "assets/production/fonts"};
     PlatformBackend platform{*window};
     ProductionRenderer renderer{*window, *context};
-    CinematicChoreography choreography;
+    SwarmIntroAdapter swarm;
     GameJourney journey{options.profile_};
     if (journey.getFrontendView().options_.fullscreen_ && !trySetFullscreen(*window, true))
         throw std::runtime_error("Saved fullscreen preference could not be applied");
@@ -245,7 +250,9 @@ int run(const LaunchOptions& options)
     std::array<NanitePose, CinematicFrame::maxInstances> worldPoses{};
     presentation::FieldToolSettings tool;
     std::optional<Position> flowStart;
-    auto lastPump = Clock::now(), introStart = lastPump;
+    auto lastPump = Clock::now();
+    auto lastDecorativePump = lastPump;
+    bool coldSeekDone{};
     std::optional<Clock::time_point> captureStarted;
     if (options.capture_) captureStarted = lastPump;
     bool captureReserved{}, captureSubmitted{}, captureDone{}, focused{true};
@@ -257,6 +264,9 @@ int run(const LaunchOptions& options)
     std::chrono::milliseconds capturedSceneTime{};
     std::optional<std::uint64_t> capturedWorldTick;
     ProductionRenderer::Metadata captureMetadata{};
+    SwarmIntroAdapter::AdvanceResult capturedSwarmProgress{};
+    std::size_t capturedMeshVertices{};
+    FrontendScreen capturedScreen{FrontendScreen::intro};
     std::string_view nativeError;
     auto completeCapture = [&] {
         if (captureSubmitted && !captureDone &&
@@ -267,7 +277,7 @@ int run(const LaunchOptions& options)
             if (!options.capture_ || captured->frameId_ != options.captureFrame_ ||
                 captured->surfaceGeneration_ != captureMetadata.surfaceGeneration_)
                 throw std::runtime_error("Capture identity mismatch");
-            saveCapture(*captured, *options.capture_, captureMetadata, capturedSceneTime, capturedWorldTick);
+            saveCapture(*captured, *options.capture_, captureMetadata, capturedSceneTime, capturedWorldTick, capturedSwarmProgress, capturedMeshVertices, capturedScreen);
             captureDone = true;
         }
     };
@@ -290,6 +300,8 @@ int run(const LaunchOptions& options)
             if (event.type == SDL_EVENT_WINDOW_FOCUS_LOST || event.type == SDL_EVENT_WINDOW_MINIMIZED)
             {
                 focused = false;
+                swarm.suspend();
+                lastDecorativePump = now;
                 (void)navigate(journey, NavigationAction::pause);
                 lastPump = now;
                 flowStart.reset();
@@ -327,6 +339,8 @@ int run(const LaunchOptions& options)
             throw std::runtime_error("Capture surface changed before the targeted frame was submitted");
         if (pixelWidth <= 0 || pixelHeight <= 0 || !focused)
         {
+            swarm.suspend();
+            lastDecorativePump = now;
             (void)navigate(journey, NavigationAction::pause);
             lastPump = now;
             flowStart.reset();
@@ -373,17 +387,46 @@ int run(const LaunchOptions& options)
         ImGui::NewFrame();
         SDL_Rect safe;
         if (!SDL_GetWindowSafeArea(window.get(), &safe)) throw std::runtime_error(SDL_GetError());
+        const auto beforeView = journey.getFrontendView();
+        if (beforeView.screen_ == FrontendScreen::intro && beforeView.options_.reducedMotion_)
+            (void)navigate(journey, NavigationAction::skipIntro);
         auto view = journey.getFrontendView({static_cast<float>(safe.x), static_cast<float>(safe.y),
             static_cast<float>(safe.w), static_cast<float>(safe.h)});
         if (!nativeError.empty()) view.error_ = nativeError;
-        if (view.screen_ == FrontendScreen::intro && previousScreen != FrontendScreen::intro) introStart = now;
+        if (view.screen_ == FrontendScreen::intro && previousScreen != FrontendScreen::intro)
+        {
+            swarm.replay();
+            lastDecorativePump = now;
+        }
         previousScreen = view.screen_;
-        const auto intent = frontend.draw(view);
-        sceneTime = options.captureTime_.value_or(std::chrono::duration_cast<std::chrono::milliseconds>(now - introStart));
-        if (view.screen_ != FrontendScreen::intro || view.options_.reducedMotion_) sceneTime = CinematicChoreography::duration;
+        if (!swarm.trySetViewport(aspect, static_cast<float>(pixelWidth)))
+            throw std::runtime_error("Unsupported swarm viewport");
+        if (options.captureTime_ && !coldSeekDone)
+        {
+            const auto ticks = static_cast<std::uint32_t>(options.captureTime_->count() * 60 / 1000);
+            if (!swarm.trySeekPresentedTicks(ticks)) throw std::runtime_error("Swarm receiving seek refused");
+            coldSeekDone = true;
+        }
         const bool showWorld = journey.getSnapshot() && (view.screen_ == FrontendScreen::playing ||
             view.screen_ == FrontendScreen::paused || view.screen_ == FrontendScreen::results);
-        CinematicFrame frame = showWorld ? buildWorld(*journey.getSnapshot(), aspect, worldPoses) : choreography.evaluate(sceneTime, aspect);
+        const bool animatedIntro = view.screen_ == FrontendScreen::intro && !view.options_.reducedMotion_;
+        if (showWorld) swarm.suspend();
+        else if (!options.captureTime_)
+        {
+            (void)swarm.advance(std::chrono::duration_cast<std::chrono::nanoseconds>(now - lastDecorativePump),
+                animatedIntro ? SwarmIntroAdapter::PlaybackMode::animated : SwarmIntroAdapter::PlaybackMode::settling);
+        }
+        else
+        {
+            // Freeze explicit receiving time while refreshing viewport/geometry without a tick.
+            (void)swarm.advance(std::chrono::nanoseconds::zero());
+        }
+        lastDecorativePump = now;
+        const auto swarmProgress = swarm.getProgress();
+        sceneTime = std::chrono::milliseconds{static_cast<std::int64_t>(swarmProgress.totalPresentedTicks_) * 1000 / 60};
+        const auto intent = frontend.draw(view);
+        auto mesh = showWorld ? std::optional<NaniteMeshFrame>{} : swarm.getFrame();
+        CinematicFrame frame = showWorld ? buildWorld(*journey.getSnapshot(), aspect, worldPoses) : CinematicFrame{};
         const auto& io = ImGui::GetIO();
         const bool activeInput = view.screen_ == FrontendScreen::playing && view.transitionSerial_ == eventView.transitionSerial_;
         if (activeInput && !io.WantCaptureKeyboard)
@@ -421,13 +464,31 @@ int run(const LaunchOptions& options)
             captureReserved = true;
             captureMetadata = metadata;
         }
-        const auto receipt = renderer.tryRender(frame, *ImGui::GetDrawData(), frameId);
+        const auto receipt = mesh ? renderer.tryRender(*mesh, *ImGui::GetDrawData(), frameId) :
+            renderer.tryRender(frame, *ImGui::GetDrawData(), frameId);
         if (receipt.status_ == ProductionRenderer::Status::failed || receipt.status_ == ProductionRenderer::Status::rejected)
             throw std::runtime_error("Production frame refused: " + std::to_string(static_cast<int>(receipt.reason_)));
         if (receipt.status_ == ProductionRenderer::Status::scheduled && options.capture_ && frameId == options.captureFrame_)
         {
             captureSubmitted = true;
             capturedSceneTime = sceneTime;
+            capturedSwarmProgress = swarmProgress;
+            capturedScreen = view.screen_;
+            capturedMeshVertices = mesh ? mesh->vertices_.size() : 0;
+            if (mesh)
+            {
+                std::array<std::size_t, 4> roles{};
+                float minimum = 4.0F, maximum = 0.0F;
+                for (const auto& vertex : mesh->vertices_)
+                {
+                    ++roles[static_cast<std::size_t>(vertex.role_)];
+                    minimum = std::min(minimum, vertex.intensity_);
+                    maximum = std::max(maximum, vertex.intensity_);
+                }
+                std::cout << "Captured mesh: shields=" << roles[0] << ", rails=" << roles[1]
+                    << ", hubs=" << roles[2] << ", cores=" << roles[3]
+                    << ", intensity_min=" << minimum << ", intensity_max=" << maximum << '\n';
+            }
             capturedWorldTick = showWorld ? std::optional{journey.getSnapshot()->GetInfo()->completed_tick} : std::nullopt;
         }
         if (intent)
@@ -446,7 +507,7 @@ int run(const LaunchOptions& options)
             else (void)journey.tryApplyIntent(*intent);
         }
         if (skipIntro) (void)navigate(journey, NavigationAction::skipIntro);
-        else if (view.screen_ == FrontendScreen::intro && sceneTime >= CinematicChoreography::duration && !options.captureTime_)
+        else if (view.screen_ == FrontendScreen::intro && swarmProgress.sequenceFinished_ && !options.captureTime_)
             (void)navigate(journey, NavigationAction::skipIntro);
         if (view.screen_ != FrontendScreen::playing || journey.getFrontendView().screen_ != FrontendScreen::playing)
             lastPump = Clock::now();
@@ -467,7 +528,7 @@ int run(const LaunchOptions& options)
     if (options.capture_ && !captureDone) throw std::runtime_error("Exited before capture completion");
     if (renderer.tryDrain(std::chrono::seconds{5}) != ProductionRenderer::DrainStatus::drained)
         throw std::runtime_error("Production qualified drain did not complete");
-    std::cout << "Crucible production receiver: foundation-12s-wordmark, SDL window/events, native composed frames="
+    std::cout << "Crucible production receiver: PR47-scaffold-nanite-body, SDL window/events, native composed frames="
         << frameId << ", capture=" << captureDone << ", final intro parity unqualified\n";
     return 0;
 }
