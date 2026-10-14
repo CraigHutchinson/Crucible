@@ -213,8 +213,15 @@ game policy stays local until an independently consumed boundary justifies extra
 [capability backlog](docs/work-breakdown.md). The [workstream guide](docs/workstreams/README.md)
 defines ownership; the [active log](docs/ACTIVE_WORK_LOG.md) reserves paths and CPU.
 [Sprint reviews](docs/sprint-reviews/README.md) retain findings, evidence and follow-ups.
-The repository's own license remains undecided; dependency licenses stay with their projects.
 
 Delivered: [Phase12](docs/phases/phase12.md) received runtime budgets and opt-in bounded
 diagnostics and merged in PR25. [Phase13](docs/phases/phase13.md) dispatches readable controls in P13-01,
 interaction and sound slice, shaped by native receiving and measured limits.
+
+## License
+
+Crucible's code and documentation text are licensed under **AGPL-3.0-only** ([LICENSE](LICENSE)).
+Artwork, media and game content (concept art, models, audio, video) are **all rights reserved**:
+they can be copied unmodified only as part of this repository, for building, running and contributing.
+The name "Crucible" is reserved. Dependencies and bundled fonts keep their own licences.
+See [NOTICE](NOTICE) for details, including how to request commercial terms.
