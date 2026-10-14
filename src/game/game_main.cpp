@@ -543,8 +543,12 @@ int run(const LaunchOptions& options)
     if (options.capture_ && !captureDone) throw std::runtime_error("Exited before capture completion");
     if (renderer.tryDrain(std::chrono::seconds{5}) != ProductionRenderer::DrainStatus::drained)
         throw std::runtime_error("Production qualified drain did not complete");
+    const auto finalProgress = swarm.getProgress();
     std::cout << "Crucible production receiver: M3-scaffold-model, SDL window/events, native composed frames="
-        << frameId << ", capture=" << captureDone << ", final intro parity unqualified\n";
+        << frameId << ", capture=" << captureDone << ", source_ticks=" << finalProgress.totalPresentedTicks_
+        << ", static_ready=" << finalProgress.staticReady_
+        << ", final_screen=" << static_cast<unsigned>(journey.getFrontendView().screen_)
+        << ", final intro parity unqualified\n";
     return 0;
 }
 }
