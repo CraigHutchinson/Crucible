@@ -21,7 +21,7 @@ cell. Headless SwiftShader render with three.js materials, not the Filament rend
 | Piece | Where | Consumer |
 | --- | --- | --- |
 | Generator `buildNanite(NaniteDetail, NanitePosture, variant)` and device presets | `include/crucible/presentation/production/nanite_model.hpp`, `src/presentation/production/nanite_model.cpp` | Production renderer; web lab |
-| Production mesh: replaces the PR48 wedge for every cinematic instance | `production_renderer.cpp` `makeNanite()`, `materials/nanite.mat` (roles in uv0.x) | `crucible_game` |
+| Cinematic model with per-unit detail; distant mission instances | `SwarmModelMesh` with `materials/nanite_proxy.mat`; `makeNanite()` with `materials/nanite.mat` | `crucible_game` Scaffold and committed mission world |
 | Contract test (closure, winding, axes, rigidity, clearance, determinism) | `tests/presentation/production/test_nanite_model.cpp` (`production_nanite_model`) | CI on every platform |
 | WebAssembly lab and headless capture | `spikes/nanite_lab/` | Review on any device; this evidence |
 
@@ -209,7 +209,7 @@ enlarged 2x.
 (slider or auto dolly), capped by the selected hardware class, with the cross-fade on or off.
 
 **M3 native transfer.** The swarm receiver now selects bounded per-unit detail. Native cross-fade remains next:
-one instance batch per rung chosen by `selectNaniteLod`, and the fade as a dithered discard in
+A proposed receiving study uses one instance batch per rung chosen by `selectNaniteLod`, and the fade as a dithered discard in
 `nanite.mat` with a per-instance fade value.
 
 ## Platform for iterating: web first for form, Filament for acceptance

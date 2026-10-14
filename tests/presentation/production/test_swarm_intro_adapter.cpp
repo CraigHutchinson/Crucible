@@ -74,16 +74,19 @@ int main()
             !adapter.trySetViewport(std::numeric_limits<float>::quiet_NaN(), 640), "Invalid viewport admitted");
         require(adapter.trySetViewport(2.0F / 3.0F, 640), "Portrait viewport refused");
         require(adapter.trySeekPresentedTicks(0) && adapter.getFrame(), "Explicit zero-tick receiving unavailable");
-        require(adapter.getFrame()->camera_.orthographic_.has_value(), "Prototype camera replaced with perspective");
+        const auto initialFrame = adapter.getFrame();
+        require(initialFrame->camera_.orthographic_.has_value(), "Prototype camera replaced with perspective");
         const float receivedHeight = crucible::presentation::production::naniteCompactEnvelope()[3][1] * 1.10F;
         const auto profile = adapter.getProgress();
         float highestInitial{};
-        for (const auto& vertex : adapter.getFrame()->vertices_) highestInitial = std::max(highestInitial, vertex.position_[1]);
+        for (const auto& vertex : initialFrame->vertices_) highestInitial = std::max(highestInitial, vertex.position_[1]);
         std::cout << "Initial source envelope height=" << profile.bodyHeight_
             << " visible mesh height=" << highestInitial << '\n';
         require(std::abs(profile.bodyHeight_ - receivedHeight) <= 1e-6F &&
             profile.bodySpan_ == 1.10F && profile.bodyLean_ == 0,
             "Production source still uses the legacy proxy stacking height");
+        require(highestInitial > receivedHeight * .8F && highestInitial <= receivedHeight + .003F,
+            "Initial model escaped its compact stacking envelope");
         const auto overloaded = adapter.advance(std::chrono::seconds{1});
         require(overloaded.advancedTicks_ == 4 && overloaded.totalPresentedTicks_ == 4 &&
             overloaded.droppedPresentationTime_ >= std::chrono::milliseconds{750}, "Catch-up/debt cap missing");

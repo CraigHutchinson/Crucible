@@ -782,3 +782,10 @@ The initial source-profile test also inferred height from the tallest visible LO
 vertex, an invalid proxy for a rounded model's stacking envelope. Check the actual
 received profile; independent model-envelope and source-state/contact/settling
 gates remain. Portable hosted verification reruns at the correction head.
+
+The initial mesh loop also borrowed through a temporary optional frame. Hold the
+optional explicitly while iterating, avoiding reliance on range-for temporary
+lifetime extension in partial C++23 toolchains. Retain the original controlled
+zero-tick compact-envelope geometry gate alongside the explicit source-profile
+gate; neither its threshold nor the independent contact gates are weakened.
+Published native log bytes are preserved with -text for cross-platform hash parity.
