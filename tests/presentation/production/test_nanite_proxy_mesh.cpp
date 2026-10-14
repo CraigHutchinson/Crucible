@@ -141,7 +141,7 @@ void verifyBoundsAndRigidCore()
 {
     detail::NaniteProxyMesh producer;
     const auto capacity = producer.getCapacity();
-    require(capacity >= NaniteMeshFrame::maxVertices, "Mesh startup reserve missing");
+    require(capacity >= NaniteMeshFrame::maxProxyVertices, "Mesh startup reserve missing");
     NaniteBody body;
     Camera camera;
     camera.pixelsWide = 100;
@@ -199,7 +199,7 @@ void verifyBoundsAndRigidCore()
     }
     require(fullAccepted, "Maximum source population refused");
     require(allocationCalls.load(std::memory_order_relaxed) == 0, "Mesh evaluation allocated ordinary heap storage");
-    require(producer.getDetailedCount() == 128 && producer.getFrame().vertices_.size() == NaniteMeshFrame::maxVertices,
+    require(producer.getDetailedCount() == 128 && producer.getFrame().vertices_.size() == NaniteMeshFrame::maxProxyVertices,
         "Detailed body multiplier escaped frozen cap");
     require(producer.getFrame().vertices_[127 * 228].role_ == NaniteMaterialRole::rail &&
         producer.getFrame().vertices_[128 * 228].role_ == NaniteMaterialRole::shield, "Stable identity detail tie-break failed");

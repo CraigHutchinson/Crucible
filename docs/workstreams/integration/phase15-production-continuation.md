@@ -84,8 +84,27 @@ Debug. Corpus identities are checked without NumPy. Hosted platform/sanitizer
 receiving now builds the actual portable adapter; native graphics still uses the
 qualified Release closure. No throughput claim comes from these captures.
 
-The first actual macro and completed-title captures expose a lighting failure:
-silver letters become almost black at the wide shot. A bounded convolved procedural
-studio environment and restrained floor are received; material/camera-lighting
-refinement continues before final capture publication. Keep these findings separate
-from proxy geometry parity and final articulated/crystal concept acceptance.
+## Latest M3 receiving increment, 2026-10-14
+
+Fetched and merged main9a52060, including PR49–51. The native producer now caches
+four seeded model variants at six rungs, preserves physical heart fit and transfers
+the actual compact envelope to Scaffold. Render-only visibility and nearest-first
+detail allocation stay within one million corners; the user authorized a bounded
+288 MiB external renderer staging cap. The old proxy/oracle remains a test fixture,
+not a production rendering fallback. [Frozen M3 contract](../../decisions/phase15-m3-swarm-receiver.md).
+
+Native inspection isolated the black settled title: Filament's default UV flip
+turned the intensity channel from one into zero. The numeric-channel material now
+disables that flip. A received, convolved studio environment and one effective key
+light expose the silver planes; unused secondary directional lighting is removed.
+Macro and settled-title readbacks show the actual richer geometry. Release passes
+62/62 tests, including unchanged contact, overlap, clearance and settling gates at
+portrait and desktop source viewports. No timing claim follows from readbacks.
+
+The next balanced slice pairs cinematic composition, visible LOD transition review
+and material readability with complete-frame profiling. Follow
+[the optimization process](../../OPTIMIZATION_PROCESS.md): establish VTune capability,
+inspect vectorization/assembly and alias/lifetime assumptions, iterate three passes,
+then receive controlled combinations in the game. Native cross-fades, transparent
+housing, per-part GPU rig, audio, participant review and additional production
+platforms remain open.

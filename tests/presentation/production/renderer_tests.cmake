@@ -37,6 +37,12 @@ if(TARGET Crucible::SwarmIntroAdapter)
         "${CMAKE_CURRENT_LIST_DIR}/fixtures/verify_nanite_proxy_reference.py")
     set_tests_properties(production_nanite_proxy_reference_identity PROPERTIES
         LABELS "presentation;production;contract")
+    add_executable(crucible_swarm_model_mesh_tests "${CMAKE_CURRENT_LIST_DIR}/test_swarm_model_mesh.cpp")
+    target_link_libraries(crucible_swarm_model_mesh_tests PRIVATE
+        Crucible::SwarmIntroAdapter Crucible::SwarmIntroPrototype Crucible::NaniteModel)
+    add_test(NAME production_swarm_model_mesh COMMAND crucible_swarm_model_mesh_tests)
+    set_tests_properties(production_swarm_model_mesh PROPERTIES
+        LABELS "presentation;production;contract;lifetime" TIMEOUT 120)
     add_executable(crucible_swarm_intro_adapter_tests "${CMAKE_CURRENT_LIST_DIR}/test_swarm_intro_adapter.cpp")
     target_link_libraries(crucible_swarm_intro_adapter_tests PRIVATE
         Crucible::SwarmIntroAdapter Crucible::SwarmIntroPrototype)
@@ -46,7 +52,7 @@ if(TARGET Crucible::SwarmIntroAdapter)
     add_executable(crucible_nanite_proxy_mesh_tests "${CMAKE_CURRENT_LIST_DIR}/test_nanite_proxy_mesh.cpp")
     target_include_directories(crucible_nanite_proxy_mesh_tests PRIVATE "${PROJECT_SOURCE_DIR}/src/presentation/production")
     target_link_libraries(crucible_nanite_proxy_mesh_tests PRIVATE
-        Crucible::SwarmIntroAdapter Crucible::SwarmIntroPrototype)
+        Crucible::NaniteProxyFixture Crucible::SwarmIntroPrototype)
     add_test(NAME production_nanite_proxy_reference COMMAND crucible_nanite_proxy_mesh_tests
         "${CMAKE_CURRENT_LIST_DIR}/fixtures/nanite_proxy_reference.txt")
     set_tests_properties(production_nanite_proxy_reference PROPERTIES

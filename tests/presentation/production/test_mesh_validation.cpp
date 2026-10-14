@@ -60,7 +60,7 @@ void checkMesh()
     triangle = original;
     frame.vertices_ = std::span<const NaniteMeshVertex>{triangle.data(), 2};
     require(!detail::isValidFrame(frame), "Incomplete triangle accepted");
-    std::vector<NaniteMeshVertex> maximum(NaniteMeshFrame::maxVertices);
+    std::vector<NaniteMeshVertex> maximum(NaniteMeshFrame::maxVertices / 3 * 3);
     for (std::size_t index = 0; index < maximum.size(); ++index) maximum[index] = original[index % 3];
     frame.vertices_ = maximum;
     require(detail::isValidFrame(frame), "Maximum bounded mesh rejected");

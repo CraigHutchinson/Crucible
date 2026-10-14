@@ -15,7 +15,8 @@ namespace crucible::presentation::production::detail
  */
 [[nodiscard]] inline bool isValidFrame(const NaniteMeshFrame& frame) noexcept
 {
-    if (frame.vertices_.size() > NaniteMeshFrame::maxVertices || frame.vertices_.size() % 3 != 0
+    if ((frame.normalMode_ != NaniteNormalMode::flat && frame.normalMode_ != NaniteNormalMode::smooth)
+        || frame.vertices_.size() > NaniteMeshFrame::maxVertices || frame.vertices_.size() % 3 != 0
         || !isValidFrame(CinematicFrame{{}, frame.camera_, frame.keyIntensity_, frame.glowIntensity_})) return false;
     for (const auto& vertex : frame.vertices_)
     {
@@ -49,7 +50,7 @@ namespace crucible::presentation::production::detail
         for (const auto* vertex : {&a, &b, &c})
         {
             const double dot = cross[0] * vertex->normal_[0] + cross[1] * vertex->normal_[1] + cross[2] * vertex->normal_[2];
-            if (dot / length < 0.995) return false;
+            if (dot / length < (frame.normalMode_ == NaniteNormalMode::flat ? 0.995 : 0.01)) return false;
         }
     }
     return true;

@@ -761,3 +761,13 @@ owns the adapter/body port/reference fixtures. No worker builds or benchmarks.
 Shared camera/mesh contracts belong to root. Source baseline204c211 includes PR47;
 PR48 merged as f0aeeb3 after all11 exact-head hosted jobs passed. The first native
 body capture gates lighting refinement; concepts and native receiving stay distinct.
+
+## M3 native swarm integration, 2026-10-14
+
+Root fetched main9a52060 and merged PR49–51 into `codex/production-swarm`.
+Model and test workers authored disjoint source-only packages; root owns serial
+CPU/GPU receiving. User authorized increased memory for fidelity: 288 MiB bounded
+external staging, three 40 MiB slots, one-million-corner frame cap. Release62/62
+passes; independent C++ review has no blocking findings. Final Debug/native
+receiving and publication follow; no frame-time or physical-scanout claim.
+Historical worktrees and failed/intermediate captures remain preserved.

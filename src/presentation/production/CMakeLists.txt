@@ -15,12 +15,20 @@ set_target_properties(crucible_nanite_model PROPERTIES CXX_EXTENSIONS OFF)
 
 if(CRUCIBLE_BUILD_GAME OR CRUCIBLE_BUILD_SWARM_SPIKE)
 
-add_library(crucible_swarm_intro_adapter STATIC swarm_intro_adapter.cpp nanite_proxy_mesh.cpp)
+add_library(crucible_swarm_intro_adapter STATIC swarm_intro_adapter.cpp swarm_model_mesh.cpp)
 add_library(Crucible::SwarmIntroAdapter ALIAS crucible_swarm_intro_adapter)
 target_include_directories(crucible_swarm_intro_adapter PUBLIC "${PROJECT_SOURCE_DIR}/include")
 target_link_libraries(crucible_swarm_intro_adapter PUBLIC crucible_options
-    PRIVATE Crucible::SwarmIntroPrototype)
+    PRIVATE Crucible::SwarmIntroPrototype Crucible::NaniteModel)
 set_target_properties(crucible_swarm_intro_adapter PROPERTIES CXX_EXTENSIONS OFF)
+if(BUILD_TESTING)
+    # Retain the old geometry oracle as a test-only fixture, not a production fallback.
+    add_library(crucible_nanite_proxy_fixture STATIC nanite_proxy_mesh.cpp)
+    add_library(Crucible::NaniteProxyFixture ALIAS crucible_nanite_proxy_fixture)
+    target_include_directories(crucible_nanite_proxy_fixture PUBLIC "${PROJECT_SOURCE_DIR}/include")
+    target_link_libraries(crucible_nanite_proxy_fixture PUBLIC crucible_options PRIVATE Crucible::SwarmIntroPrototype)
+    set_target_properties(crucible_nanite_proxy_fixture PROPERTIES CXX_EXTENSIONS OFF)
+endif()
 endif()
 
 if(NOT CRUCIBLE_BUILD_GAME)

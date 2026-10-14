@@ -475,6 +475,12 @@ Tier tier(NaniteSurface surface) noexcept
 }
 }
 
+std::array<std::array<float, 3>, 4> naniteCompactEnvelope() noexcept
+{
+    return {{{0.0F, 0.0F, shellCircum}, {-0.5F, 0.0F, -shellIn},
+        {0.5F, 0.0F, -shellIn}, {0.0F, shellHeight, 0.0F}}};
+}
+
 NaniteMesh buildNanite(NaniteDetail detail, const NanitePosture& posture, std::uint32_t variant)
 {
     const float stretch = std::clamp(std::isfinite(posture.stretch_) ? posture.stretch_ : 0.0F, 0.0F, 1.0F);
@@ -493,8 +499,8 @@ NaniteMesh buildNanite(NaniteDetail detail, const NanitePosture& posture, std::u
     Builder builder(mesh, perSegment[static_cast<std::size_t>(structure) & 3] * static_cast<std::size_t>(segments + 1));
 
     // Shell corners: 0 nose (+Z), 1 rear left, 2 rear right, 3 apex. Only the nose stretches.
-    const std::array<Vec, 4> corners{{{0.0F, 0.0F, shellCircum + noseReach * stretch}, {-0.5F, 0.0F, -shellIn},
-        {0.5F, 0.0F, -shellIn}, {0.0F, shellHeight, 0.0F}}};
+    auto corners = naniteCompactEnvelope();
+    corners[0][2] += noseReach * stretch;
     // The core sits at the compact shell's centroid whatever the stretch: it is rigid.
     const Vec centre{0.0F, shellHeight * 0.25F, 0.0F};
     Vec shellCentre{};

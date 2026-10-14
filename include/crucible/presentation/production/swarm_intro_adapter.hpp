@@ -1,6 +1,8 @@
 #pragma once
 
+#include <array>
 #include <chrono>
+#include <cstddef>
 #include <cstdint>
 #include <memory>
 #include <optional>
@@ -9,7 +11,7 @@
 
 namespace crucible::presentation::production
 {
-/** Receives the actual Scaffold prototype through a bounded production mesh.
+/** Receives actual Scaffold choreography through bounded M3 model geometry.
  * @note Coordinator-only; decorative state never advances mission Runtime.
  * Returned mesh borrows expire on the next advance, seek, replay or destruction.
  */
@@ -25,6 +27,10 @@ public:
         std::chrono::nanoseconds droppedPresentationTime_{};
         float choreographySeconds_{};
         bool sequenceFinished_{}, staticReady_{};
+        std::array<std::size_t, 6> modelRungCounts_{};
+        std::size_t visibleUnits_{}, culledUnits_{}, modelCacheBytes_{};
+        std::size_t coldSliverTriangles_{}, omittedHousingTriangles_{};
+        float bodyHeight_{}, bodySpan_{}, bodyLean_{};
     };
 
     /** Allocates source Scaffold1536, its snapshot and reusable mesh storage.

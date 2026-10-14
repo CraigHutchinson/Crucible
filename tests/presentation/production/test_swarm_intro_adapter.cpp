@@ -1,16 +1,67 @@
+#include <algorithm>
 #include <chrono>
 #include <cmath>
+#include <cstdint>
 #include <iostream>
 #include <limits>
 #include <stdexcept>
 #include <SwarmIntro.hpp>
 
+#include "crucible/presentation/production/nanite_model.hpp"
 #include "crucible/presentation/production/swarm_intro_adapter.hpp"
 
 namespace
 {
 using crucible::presentation::production::SwarmIntroAdapter;
 void require(bool value, const char* reason) { if (!value) throw std::runtime_error(reason); }
+
+// Independent source observers receive the new profile's contact/stacking behavior;
+// these are the existing spike's gates, not geometry-generator mirror assertions.
+struct SourceReceiving
+{
+    std::uint64_t unsupported_{}, offSurface_{}, climberTicks_{};
+    double worstOverlapRatio_{};
+    float minimumGap_{std::numeric_limits<float>::infinity()};
+};
+void observeSource(const crucible::spike::swarm::SwarmIntro& source, SourceReceiving& receiving)
+{
+    const auto& camera = source.camera();
+    require(std::isfinite(camera.cx) && std::isfinite(camera.cy) && std::isfinite(camera.halfWidth) &&
+        camera.halfWidth > 0 && std::isfinite(camera.yaw), "New-height source produced a nonfinite camera");
+    const auto& metrics = source.metrics();
+    require(std::isfinite(metrics.time) && std::isfinite(metrics.visibleMinGap), "New-height source contact observation is nonfinite");
+    receiving.unsupported_ += metrics.unsupported;
+    receiving.offSurface_ += metrics.offSurface;
+    receiving.climberTicks_ += metrics.climbers;
+    const double ratio = metrics.visibleMovers ? static_cast<double>(metrics.visibleOverlaps) / metrics.visibleMovers : 0;
+    receiving.worstOverlapRatio_ = std::max(receiving.worstOverlapRatio_, ratio);
+    if (metrics.visibleMinGap >= 0) receiving.minimumGap_ = std::min(receiving.minimumGap_, metrics.visibleMinGap);
+}
+void finishSourceReceiving(crucible::spike::swarm::SwarmIntro& source, const crucible::spike::swarm::IntroSettings& settings,
+    SourceReceiving& receiving, unsigned presentedTicks)
+{
+    const auto complete = [&] {
+        return source.time() >= source.sequenceSeconds() && source.metrics().locked == source.assignedSlots() &&
+            source.metrics().raised == source.panelCount();
+    };
+    while (!complete() && presentedTicks < 4096)
+    {
+        source.tick();
+        ++presentedTicks;
+        observeSource(source, receiving);
+    }
+    std::cout << "New-height Scaffold source: aspect=" << source.camera().aspect << " ticks=" << presentedTicks
+        << " height=" << settings.body.height << " unsupported=" << receiving.unsupported_
+        << " off_surface=" << receiving.offSurface_ << " climber_ticks=" << receiving.climberTicks_
+        << " worst_overlap_ratio=" << receiving.worstOverlapRatio_ << " minimum_gap=" << receiving.minimumGap_ << '\n';
+    require(complete(), "New-height source failed to complete within4096presentation ticks");
+    require(receiving.unsupported_ == 0, "New-height source made an unsupported lock");
+    require(static_cast<double>(receiving.offSurface_) <= .005 * static_cast<double>(receiving.climberTicks_),
+        "New-height source exceeded its off-surface contact gate");
+    require(receiving.worstOverlapRatio_ <= .03, "New-height source exceeded its visible overlap gate");
+    require(std::isfinite(receiving.minimumGap_) && receiving.minimumGap_ >= .5F * settings.diameter,
+        "New-height source violated minimum mover separation");
+}
 }
 
 int main()
@@ -24,6 +75,11 @@ int main()
         require(adapter.trySetViewport(2.0F / 3.0F, 640), "Portrait viewport refused");
         require(adapter.trySeekPresentedTicks(0) && adapter.getFrame(), "Explicit zero-tick receiving unavailable");
         require(adapter.getFrame()->camera_.orthographic_.has_value(), "Prototype camera replaced with perspective");
+        const float receivedHeight = crucible::presentation::production::naniteCompactEnvelope()[3][1] * 1.10F;
+        float highestInitial{};
+        for (const auto& vertex : adapter.getFrame()->vertices_) highestInitial = std::max(highestInitial, vertex.position_[1]);
+        require(highestInitial > receivedHeight * .8F && highestInitial <= receivedHeight + .003F,
+            "Production source still uses the legacy proxy stacking height");
         const auto overloaded = adapter.advance(std::chrono::seconds{1});
         require(overloaded.advancedTicks_ == 4 && overloaded.totalPresentedTicks_ == 4 &&
             overloaded.droppedPresentationTime_ >= std::chrono::milliseconds{750}, "Catch-up/debt cap missing");
@@ -37,11 +93,25 @@ int main()
         require(!adapter.trySeekPresentedTicks(12) && adapter.getProgress().totalPresentedTicks_ == 13, "Backward seek mutated state");
         crucible::spike::swarm::IntroSettings settings;
         settings.build = crucible::spike::swarm::Build::Scaffold;
+        settings.body.height = crucible::presentation::production::naniteCompactEnvelope()[3][1] * settings.body.span;
+        settings.body.lean = 0;
         crucible::spike::swarm::SwarmIntro reference{settings};
         require(reference.trySetViewport(2.0F / 3.0F, 640), "Independent source viewport refused");
-        for (unsigned tick = 0; tick < 13; ++tick) reference.tick();
+        SourceReceiving portraitReceiving;
+        for (unsigned tick = 0; tick < 13; ++tick)
+        {
+            reference.tick();
+            observeSource(reference, portraitReceiving);
+        }
         require(adapter.getProgress().choreographySeconds_ == reference.time() &&
             adapter.getProgress().choreographySeconds_ != 13.0F / 60, "Presentation time reinterpreted as choreography time");
+        finishSourceReceiving(reference, settings, portraitReceiving, 13);
+        // The source's camera/decision LOD observes a different viewport on the
+        // native desktop receiver; receive that profile separately from portrait.
+        crucible::spike::swarm::SwarmIntro desktopReference{settings};
+        require(desktopReference.trySetViewport(1280.0F / 864.0F, 1280), "Native desktop source viewport refused");
+        SourceReceiving desktopReceiving;
+        finishSourceReceiving(desktopReference, settings, desktopReceiving, 0);
         adapter.replay();
         const auto preparing = adapter.advance({}, SwarmIntroAdapter::PlaybackMode::settling);
         require(preparing.advancedTicks_ == 4 && !preparing.staticReady_ && !adapter.getFrame(), "Hidden preparation displayed animated swarm");

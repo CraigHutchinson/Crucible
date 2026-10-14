@@ -200,7 +200,7 @@ void saveCapture(ProductionRenderer::CaptureResult& capture, const std::filesyst
     output << "{\"source_pin\":\"" << metadata.sourcePin_.data() << "\",\"frame\":" << capture.frameId_
         << ",\"surface_generation\":" << capture.surfaceGeneration_ << ",\"width\":" << width
         << ",\"height\":" << height << ",\"cinematic_ms\":" << elapsed.count()
-        << ",\"sequence\":\"" << (worldTick ? "committed-mission-world" : (meshVertices ? "PR47-scaffold-nanite-body" : "decorative-static-floor-preparing"))
+        << ",\"sequence\":\"" << (worldTick ? "committed-mission-world" : (meshVertices ? "M3-scaffold-model" : "decorative-static-floor-preparing"))
         << "\",\"completed_tick\":";
     if (worldTick) output << *worldTick; else output << "null";
     output << ",\"presented_ticks\":" << progress.totalPresentedTicks_
@@ -208,6 +208,21 @@ void saveCapture(ProductionRenderer::CaptureResult& capture, const std::filesyst
         << ",\"static_ready\":" << (progress.staticReady_ ? "true" : "false")
         << ",\"mesh_vertices\":" << meshVertices
         << ",\"screen_id\":" << static_cast<unsigned>(screen)
+        << ",\"body_height\":" << progress.bodyHeight_
+        << ",\"body_span\":" << progress.bodySpan_
+        << ",\"body_lean\":" << progress.bodyLean_
+        << ",\"visible_units\":" << progress.visibleUnits_
+        << ",\"culled_units\":" << progress.culledUnits_
+        << ",\"model_cache_bytes\":" << progress.modelCacheBytes_
+        << ",\"cold_sliver_triangles\":" << progress.coldSliverTriangles_
+        << ",\"omitted_housing_triangles\":" << progress.omittedHousingTriangles_
+        << ",\"model_rungs\":[";
+    for (std::size_t rung = 0; rung < progress.modelRungCounts_.size(); ++rung)
+    {
+        if (rung) output << ',';
+        output << progress.modelRungCounts_[rung];
+    }
+    output << ']'
         << ",\"scanout_verified\":false}\n";
     output.flush();
     if (!output) throw std::runtime_error("Capture receipt write failed");
@@ -528,7 +543,7 @@ int run(const LaunchOptions& options)
     if (options.capture_ && !captureDone) throw std::runtime_error("Exited before capture completion");
     if (renderer.tryDrain(std::chrono::seconds{5}) != ProductionRenderer::DrainStatus::drained)
         throw std::runtime_error("Production qualified drain did not complete");
-    std::cout << "Crucible production receiver: PR47-scaffold-nanite-body, SDL window/events, native composed frames="
+    std::cout << "Crucible production receiver: M3-scaffold-model, SDL window/events, native composed frames="
         << frameId << ", capture=" << captureDone << ", final intro parity unqualified\n";
     return 0;
 }

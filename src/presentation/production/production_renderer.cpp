@@ -62,8 +62,8 @@ constexpr std::size_t maxIndices = 98304;
 constexpr std::size_t maxCommands = 256;
 constexpr std::size_t textureBytes = 64 * 1024 * 1024;
 constexpr std::size_t residentBytes = 128 * 1024 * 1024;
-constexpr std::size_t slotBytes = 15 * 1024 * 1024;
-constexpr std::size_t externalStagingLimit = 192 * 1024 * 1024;
+constexpr std::size_t slotBytes = 40 * 1024 * 1024;
+constexpr std::size_t externalStagingLimit = 288 * 1024 * 1024;
 static_assert(3 * slotBytes + 2 * textureBytes + 16 * 1024 * 1024 <= externalStagingLimit);
 struct NativeMeshVertex
 {
@@ -146,13 +146,13 @@ struct Mesh
     }
 };
 
-/** The procedural nanite at the desktop hero detail; its material role rides in uv0.x.
+/** The procedural nanite at distant overview detail; its material role rides in uv0.x.
  * Housing panes are left out: this lit opaque material would hide the heart, and the
  * transparent housing has not been received in the native renderer yet.
  */
 Mesh makeNanite()
 {
-    const auto detail = naniteDevicePresets()[3].hero_; // desktop class
+    const auto detail = naniteLodLadder().front().detail_; // Distant overview; rich close-ups use the bounded intro receiver.
     const auto source = buildNanite(detail);
     if (source.vertices_.size() > std::numeric_limits<std::uint16_t>::max())
     {

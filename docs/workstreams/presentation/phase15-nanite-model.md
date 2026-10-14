@@ -123,7 +123,7 @@ Two geometric guards keep the silhouette exact: a plate starts far enough from i
 that edge's dihedral angle (on a stretched nose the sharp dihedral otherwise lets a thick
 plate pass through the neighbouring face), and rounding is limited to half a part's shortest
 edge so clipped corners stay closed. The lab's swarm gives each unit its own variant; the
-production renderer uses variant 0 for every instance until per-instance meshes exist.
+native swarm receiver caches variants 0–3 and selects by stable unit ID; the mission overview uses variant 0.
 
 ## M3: distance consistency
 
@@ -208,7 +208,7 @@ enlarged 2x.
 **Lab.** The Distance view drives one unit through the ladder from its on-screen size
 (slider or auto dolly), capped by the selected hardware class, with the cross-fade on or off.
 
-**Not yet native.** The production renderer still draws one level for every instance. Next:
+**M3 native transfer.** The swarm receiver now selects bounded per-unit detail. Native cross-fade remains next:
 one instance batch per rung chosen by `selectNaniteLod`, and the fade as a dithered discard in
 `nanite.mat` with a per-instance fade value.
 
@@ -234,15 +234,19 @@ Recommendation: keep **one C++ generator** and iterate its form and detail level
 
 ## Production consumer
 
-`makeNanite()` builds the desktop class's hero level (Articulated, Bevel: 11,552 triangles)
-once at startup and every cinematic instance draws it, replacing the PR48 wedge. The
-material reads the generator's role from uv0.x: silver, graphite, and the heart, whose
-emission keeps the per-instance `cores` intensity and `glow`. Housing panes are left out of
-the production mesh: the lit opaque material would hide the heart, and transparency is not
-yet received natively. With 1,251 wordmark instances that is about 14.5M triangles before
-shadows, which makes per-instance detail (next, 2) the first native performance step. Not yet done natively: per-instance detail selection (all instances share one
-level), the glass housing, and a capture. Hosted CI compiles the renderer and the material
-(`production` job); this session could not run it.
+The native Scaffold receiver caches four seeded variants at six consumed M3 rungs
+through Articulated/Bevel. It selects detail by projected size with hysteresis,
+visibility and a complete-frame budget of 1,048,576 corners. The actual source is
+1,536 units; its height now comes from the generator's compact envelope, preserving
+contact and settling gates. Physical hearts retain a uniform compact fit while
+shells map onto source docking shapes. See the [received contract](../../decisions/phase15-m3-swarm-receiver.md).
+
+The mission overview's `makeNanite()` uses Distant/Silhouette/Flat rather than a hero
+mesh for every tiny instance. Opaque production materials omit housing panes;
+transparent receiving remains open. Native per-unit detail is received, while the
+lab's cross-fade, articulated GPU rig and final material parity remain separate
+gates. [Actual native captures and provenance](phase15-native-evidence/README.md)
+are distinct from the lab renders above.
 
 ## Verification
 
@@ -265,10 +269,8 @@ level), the glass housing, and a capture. Hosted CI compiles the renderer and th
 
 ## Next
 
-1. Native capture of the new mesh (`receive_native.py`) on the RTX host; compare with the
-   reactor study under neutral light, bloom off first.
-2. Per-instance detail in the renderer: one batch per (structure, surface) level, chosen by
-   projected size and capped by the hardware class.
+1. Compare received native macro and settled title with the reactor concept; refine cinematic composition and material readability.
+2. Profile complete native frames and calibrate projected-size thresholds and fades on representative hardware, using the codified optimization workflow.
 3. Glass housing natively (transparent pass, or opaque smoked windows with a contained
    emissive heart as the design space allows).
 4. Filament web build at the pin for material parity in the lab, if three.js shading

@@ -83,3 +83,21 @@ product-neutral consumers.
 P15-F01-F06 are open with owners/gates above. Carried Phase14 and earlier follow-ups
 remain listed in the phase plan. Implementation, receiving, publication/merge and
 claim closure are pending; historical worktrees and artifacts remain preserved.
+
+## Native M3 increment, 2026-10-14
+
+R0 merged through PR48 after all11 exact-head jobs passed. Root then fetched and
+merged PR49–51 and received M3 models in the actual operated Scaffold sequence.
+Cold caches, explicit smooth-normal packets, physical heart fitting, conservative
+visibility and budgeted per-unit detail preserve bounded storage and hot-path
+allocation gates. User-authorized staging rises to288 MiB; source remains1536 units.
+Release62/62 passes, including taller-body contact and settling at two viewports.
+Independent C++ review has no blocking findings.
+
+The UV intensity-channel flip caused the black wide-shot title and is corrected.
+Actual macro and settled-title readbacks show richer silver geometry, using a
+convolved studio environment. [Native evidence and limits](../workstreams/presentation/phase15-native-evidence/README.md) supersede the earlier statement that all captures were pending.
+The overall phase remains in progress: native fades/rig/glass, final cinematic
+acceptance, audio, participant evidence, other production platforms and Phase14
+G3–G5 remain open. Next receive art refinement together with measured complete-frame
+optimization; a higher cap does not establish a performance result.

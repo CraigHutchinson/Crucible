@@ -20,7 +20,8 @@ The separate **production migration receiver** now builds as `crucible_game` on
 qualified Windows Vulkan. It receives a real themed menu/options/mission journey
 and committed mission snapshots; see [build, controls and actual captures](docs/workstreams/presentation/phase15-native-evidence/README.md).
 The production intro now consumes PR47's actual Scaffold swarm, operated camera
-and tetrahedral body proxy. Final cinematic fidelity remains open; reduced motion
+and the latest M3 procedural nanites, with bounded per-unit detail and seeded variants.
+The external renderer staging cap is 288 MiB; final cinematic fidelity remains open. Reduced motion
 and immediate skip expose the usable menu while its static background prepares. Existing `crucible_desktop` remains the
 concept2D/dev-test platform.
 

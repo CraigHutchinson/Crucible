@@ -202,7 +202,7 @@ bool emitBody(std::vector<NaniteMeshVertex>& output, const spike::swarm::RenderR
 }
 }
 
-NaniteProxyMesh::NaniteProxyMesh() { vertices_.reserve(NaniteMeshFrame::maxVertices); }
+NaniteProxyMesh::NaniteProxyMesh() { vertices_.reserve(NaniteMeshFrame::maxProxyVertices); }
 
 bool NaniteProxyMesh::tryBuild(std::span<const spike::swarm::RenderRow> rows,
     const spike::swarm::NaniteBody& body, const spike::swarm::Camera& camera,

@@ -7,7 +7,7 @@
 #include <SwarmIntro.hpp>
 #include <vector>
 
-#include "crucible/presentation/production/detail/nanite_proxy_mesh.hpp"
+#include "crucible/presentation/production/detail/swarm_model_mesh.hpp"
 #include "crucible/presentation/production/swarm_intro_adapter.hpp"
 
 namespace crucible::presentation::production
@@ -17,7 +17,7 @@ struct SwarmIntroAdapter::State
     spike::swarm::IntroSettings settings_{};
     std::unique_ptr<spike::swarm::SwarmIntro> source_;
     std::vector<spike::swarm::RenderRow> rows_;
-    detail::NaniteProxyMesh mesh_;
+    detail::SwarmModelMesh mesh_;
     AdvanceResult progress_{};
     std::int64_t debtUnits_{}; // One unit is1/60nanosecond; avoids rounding the60Hz tick.
     float aspect_{16.0F / 9.0F}, pixelsWide_{1920};
@@ -27,12 +27,18 @@ struct SwarmIntroAdapter::State
     {
         settings_.build = spike::swarm::Build::Scaffold;
         settings_.nanites = 1536;
+        settings_.body.height = naniteCompactEnvelope()[3][1] * settings_.body.span;
+        settings_.body.lean = 0.0F;
         rows_.reserve(NaniteMeshFrame::maxUnits);
         source_ = std::make_unique<spike::swarm::SwarmIntro>(settings_);
         if (!source_->trySetViewport(aspect_, pixelsWide_)) throw std::runtime_error("Default prototype viewport refused");
+        updateProgress();
     }
     void updateProgress()
     {
+        progress_.bodyHeight_ = settings_.body.height;
+        progress_.bodySpan_ = settings_.body.span;
+        progress_.bodyLean_ = settings_.body.lean;
         progress_.choreographySeconds_ = source_->time();
         progress_.sequenceFinished_ = source_->time() >= source_->sequenceSeconds();
         progress_.staticReady_ = progress_.sequenceFinished_ && source_->metrics().locked == source_->assignedSlots() &&
@@ -52,8 +58,18 @@ struct SwarmIntroAdapter::State
         source_->snapshot(rows_);
         if (rows_.size() != settings_.nanites || rows_.capacity() > NaniteMeshFrame::maxUnits ||
             !mesh_.tryBuild(rows_, settings_.body, source_->camera(), settings_.viewTilt, source_->time(), settings_.diameter))
-            throw std::runtime_error("Source nanite proxy mesh refused");
+            throw std::runtime_error("Source M3 nanite model mesh refused");
         frameAvailable_ = true;
+        const auto stats = mesh_.getStats();
+        progress_.modelRungCounts_ = stats.actualRungCounts_;
+        progress_.visibleUnits_ = stats.visibleUnits_;
+        progress_.culledUnits_ = stats.culledUnits_;
+        progress_.modelCacheBytes_ = stats.cacheBytes_;
+        progress_.coldSliverTriangles_ = stats.sliverTriangles_;
+        progress_.omittedHousingTriangles_ = stats.omittedHousingTriangles_;
+        progress_.bodyHeight_ = settings_.body.height;
+        progress_.bodySpan_ = settings_.body.span;
+        progress_.bodyLean_ = settings_.body.lean;
         refresh_ = false;
     }
 };
@@ -124,9 +140,11 @@ void SwarmIntroAdapter::replay()
     if (!replacement->trySetViewport(state_->aspect_, state_->pixelsWide_))
         throw std::runtime_error("Prototype replay viewport refused");
     state_->source_.swap(replacement);
+    state_->mesh_.reset();
     state_->rows_.clear();
     state_->debtUnits_ = 0;
     state_->progress_ = {};
+    state_->updateProgress();
     state_->frameAvailable_ = false;
     state_->refresh_ = true;
 }

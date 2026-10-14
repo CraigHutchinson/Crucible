@@ -44,7 +44,8 @@ def main() -> int:
     report = {"schema": 1, "source": source,
               "tracked_worktree_diff_sha256": hashlib.sha256(diff).hexdigest(),
               "inputs": [{"path": str(path.relative_to(repo)), "sha256": digest(path)} for path in inputs],
-              "scanout_verified": False, "performance_measurement": False, "cases": []}
+              "scanout_verified": False, "performance_measurement": False, "renderer_staging_cap_mib": 288,
+              "mesh_corner_cap": 1048576, "model_baseline": "main9a52060 M3", "cases": []}
     cases = [("initial", ["--capture-ms", "0"]), ("menu-preparing", ["--menu"]),
              ("macro", ["--capture-ms", "500"]),
              ("assembly", ["--capture-ms", "18000"]),
@@ -85,6 +86,14 @@ def main() -> int:
             raise RuntimeError("Hidden preparation displayed an animated source frame")
         if name in ("menu-preparing", "reduced-motion") and receipt["screen_id"] != 1:
             raise RuntimeError("Hidden preparation did not expose the usable menu immediately")
+        if receipt["mesh_vertices"] > 1048576:
+            raise RuntimeError("Native mesh escaped the complete-frame cap")
+        if receipt["mesh_vertices"] and (receipt["sequence"] != "M3-scaffold-model" or
+                not 0.89 < receipt["body_height"] < 0.91 or receipt["body_lean"] != 0 or
+                receipt["visible_units"] + receipt["culled_units"] != 1536 or
+                sum(receipt["model_rungs"]) != receipt["visible_units"] or
+                receipt["model_cache_bytes"] > 24 * 1024 * 1024):
+            raise RuntimeError("Native capture did not receive the bounded latest-model profile")
         report["cases"].append({"name": name, "command": command, "exit_code": process.returncode,
                                 "png_sha256": digest(png), "log_sha256": digest(log), "receipt": receipt})
         (output / "receiving.json").write_text(json.dumps(report, indent=2) + "\n", encoding="utf-8")
