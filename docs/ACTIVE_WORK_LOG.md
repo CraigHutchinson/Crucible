@@ -789,3 +789,9 @@ lifetime extension in partial C++23 toolchains. Retain the original controlled
 zero-tick compact-envelope geometry gate alongside the explicit source-profile
 gate; neither its threshold nor the independent contact gates are weakened.
 Published native log bytes are preserved with -text for cross-platform hash parity.
+
+Linux headless full receiving now passes at d7b8614, including the retained
+compact-envelope threshold after the explicit frame lifetime fix. macOS exposed
+a second private CLI collision via std::print ADL; rename that helper to
+printSummary and rebuild the affected target. Final hosted checks run at the
+resulting head; production capture inputs are unchanged by these CLI/test fixes.

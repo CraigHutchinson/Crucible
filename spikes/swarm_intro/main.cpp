@@ -323,7 +323,7 @@ float percentile(std::vector<float> values, float p)
     return values[k];
 }
 
-void print(const std::string& label, const Options& options, const RunSummary& s)
+void printSummary(const std::string& label, const Options& options, const RunSummary& s)
 {
     const double ticks = static_cast<double>(s.tickMicros.size());
     // Beats and gates are choreography seconds; the presentation block is what a viewer sees.
@@ -439,7 +439,7 @@ int main(int argc, char** argv)
         // at `pace` with the close-up tour at `closePace`.
         if (options.settings.pace <= 0.0F || options.settings.closePace <= 0.0F) return fail("pace is positive");
         const RunSummary main = run(options, true);
-        print(settingsLabel(options.settings), options, main);
+        printSummary(settingsLabel(options.settings), options, main);
         if (!options.verify) return 0;
 
         // Acceptance per build; thresholds and their history are recorded in README.md.
@@ -509,7 +509,7 @@ int main(int argc, char** argv)
             // duty cycle is gated by the main run (period 2) and the switched-levers run (3).
             if (mode == LodMode::AllHero) tier.settings.levers.heroPeriod = 1;
             const RunSummary r = run(tier, false);
-            print(settingsLabel(tier.settings), tier, r);
+            printSummary(settingsLabel(tier.settings), tier, r);
             if (r.allLocked < 0.0F || r.allLocked > deadline) return fail("every LOD tier in isolation completes the title within the sequence");
             if (r.panels > 0 && (r.allRaised < 0.0F || r.allRaised > deadline)) return fail("every LOD tier in isolation raises every panel within the sequence");
             if (r.unsupported != 0) return fail("every LOD tier in isolation locks only on locked supports");
@@ -533,7 +533,7 @@ int main(int argc, char** argv)
         for (const Options& variant : { levered, budgeted })
         {
             const RunSummary r = run(variant, false);
-            print(settingsLabel(variant.settings) + (variant.switchLevers ? "+switched" : "+budget"), variant, r);
+            printSummary(settingsLabel(variant.settings) + (variant.switchLevers ? "+switched" : "+budget"), variant, r);
             if (r.allLocked < 0.0F || r.allLocked > deadline) return fail("a run with switched levers or a budget completes the title within the sequence");
             if (r.panels > 0 && (r.allRaised < 0.0F || r.allRaised > deadline)) return fail("a run with switched levers or a budget raises every panel within the sequence");
             if (r.unsupported != 0 || r.stuckAtEnd != 0) return fail("a run with switched levers or a budget locks only on supports and resolves every stuck episode");
