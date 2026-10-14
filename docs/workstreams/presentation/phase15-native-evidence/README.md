@@ -112,3 +112,36 @@ Next pair composition and native transition refinement with complete-frame
 profiling under the [optimization process](../../../OPTIMIZATION_PROCESS.md).
 Precise GPU articulation, glass, audio, participant acceptance and additional
 production platforms remain open.
+
+## Interactive mesh refusal repair, 2026-10-14
+
+Normal playback on PR52/main86d151f could terminate with `Source M3 nanite model
+mesh refused`. The [diagnosis and numerical contract](../../../decisions/phase15-m3-swarm-receiver.md#interactive-normal-repair-2026-10-14) identify an unsupported smoothed corner normal after anisotropic docking/stretch. Correct only that shading normal; retain every triangle, independent winding proof and existing numerical/resource limits.
+
+[Clean-source receiving](mesh-refusal/receiving.json) records checkpoint474a92b,
+exact executable/studio/material/font hashes and raw native logs. Uninterrupted
+Vulkan playback reached1800 composed frames, all1730 source ticks, `static_ready=1`
+and menu `final_screen=1`, then drained and exited0. Two inspected readbacks show
+the former refusal's presentation time and settled title; these cold-seek stills
+remain distinct from the uninterrupted playback receipt. No scanout or performance
+claim follows.
+
+![Actual native model near the formerly refused source pose](mesh-refusal/former-refusal-pose.png)
+
+Release63/63 and Debug model/adapter/full-path3/3 pass; the latest focused source
+fixture also passes in Debug. Release produces and validates all1731 frames at
+1280x864 and1920x1080. Debug/sanitizers sample every32ticks with focused variants
+and intermediate poses. Both the full per-tick test and the short actual source
+fixture fail against the original producer, then pass with the repair. Raw test
+and negative-control logs are retained alongside the native evidence.
+
+To run uninterrupted production playback in PowerShell:
+
+```powershell
+Set-Location D:\Craig\GitHub\Crucible\.worktrees\phase15-native-swarm
+& .\build\production-release\src\game\crucible_game.exe
+```
+
+For a finite receiving run use `--frames 1800`. A screenshot's15-second readback
+deadline is separate: use `--capture-ms 7317` with the default capture frame for a
+finite still, rather than requesting a late screenshot frame during live playback.

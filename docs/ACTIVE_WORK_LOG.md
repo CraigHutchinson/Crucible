@@ -820,3 +820,8 @@ passed, then the newly added focused source fixture passed in Debug. Both new
 continuous and short stock-source regressions fail against unmodified main and
 pass with the repair. Source-only workers are released; root owns native receiving
 and publication. No throughput or scanout claim is made.
+
+Native receiving passed from clean474a92b:1800 rendered frames, source1730ticks,
+settled swarm and final menu screen, drain and exit0. Two readbacks inspected.
+Root released local CPU/GPU; exact-head hosted CI/publication and merge remain.
+Failed captures and original refusal diagnostics stay in the owned build tree.

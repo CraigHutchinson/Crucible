@@ -1,0 +1,145 @@
+{
+  "schema": 1,
+  "source": "474a92bcfaf9167fa9aecdf8c58178b28b0a3386",
+  "tracked_worktree_diff_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "baseline_main": "86d151f5f8a70286d977a344479d27ab4581c08e",
+  "scanout_verified": false,
+  "performance_measurement": false,
+  "inputs": [
+    {
+      "path": "build\\production-release\\src\\game\\crucible_game.exe",
+      "sha256": "36cc9e47b37189af1a632bb91299fbd05215f80a4f14b7cc9a8ed0225d32b9ee"
+    },
+    {
+      "path": "build\\production-release\\src\\presentation\\production\\crucible\\presentation\\production\\resources\\studio_environment.bin",
+      "sha256": "37e1129e5f5051a24f4e422159069a9b8747aed4cf3390a27392aef30073990a"
+    },
+    {
+      "path": "build\\production-release\\src\\presentation\\production\\crucible\\presentation\\production\\resources\\floor.filamat",
+      "sha256": "22bab5b1fce9cb43fb9f865fe89526adc804c5fc0eb419673d623f9e92744182"
+    },
+    {
+      "path": "build\\production-release\\src\\presentation\\production\\crucible\\presentation\\production\\resources\\nanite.filamat",
+      "sha256": "9190ea28aca36cc8fd56452fd349217732f3e60195f2d609700323d4aa122455"
+    },
+    {
+      "path": "build\\production-release\\src\\presentation\\production\\crucible\\presentation\\production\\resources\\nanite_proxy.filamat",
+      "sha256": "1a7a505a95378cc4590ce77bbd1e0a2afda8c4ff42d80be33c69f916f8150a94"
+    },
+    {
+      "path": "build\\production-release\\src\\presentation\\production\\crucible\\presentation\\production\\resources\\ui_blit.filamat",
+      "sha256": "659c825307fd3071a5bffc8c8a8d1bf7f3cf0a85828c1f90c53d822d0b3bcdc7"
+    },
+    {
+      "path": "build\\production-release\\src\\game\\assets\\production\\fonts\\rajdhani\\Rajdhani-SemiBold.ttf",
+      "sha256": "94bbd25a18ca665999feb05a537de9fd2b860dcfb78bbe9ca00270825bf235da"
+    },
+    {
+      "path": "build\\production-release\\src\\game\\assets\\production\\fonts\\source-sans\\SourceSans3-Regular.ttf",
+      "sha256": "4644c81b86ec9caaa76b634889968ed3c4f4f52f054855933acc7c2b21e53b0f"
+    }
+  ],
+  "cases": [
+    {
+      "name": "uninterrupted",
+      "arguments": [
+        "--frames",
+        "1800"
+      ],
+      "exit_code": 0,
+      "source_ticks": 1730,
+      "native_frames": 1800,
+      "static_ready": true,
+      "final_screen": 1,
+      "log_sha256": "26bc9087e02fe359160522ef165d3e70a1530745f1d72274dfb1cc551f8ff9c2"
+    },
+    {
+      "name": "former-refusal-pose",
+      "arguments": [
+        "--capture",
+        "D:\\Craig\\GitHub\\Crucible\\.worktrees\\phase15-native-swarm\\build\\production-release\\mesh-refusal-receiving\\former-refusal-pose.png",
+        "--capture-ms",
+        "7317"
+      ],
+      "exit_code": 0,
+      "png_sha256": "28a1533cc6e9fb6ebc0de369fd4066e658d9b2ee487bd99487f822bed4423314",
+      "log_sha256": "3f996d7ffe621759330cc20e7e1dd153ecc06d825bf7f78ad3fee25ad12245cd",
+      "receipt": {
+        "source_pin": "d852e34cd5629a6f3851d613dcd17aa0ffd025a2",
+        "frame": 4,
+        "surface_generation": 1,
+        "width": 1280,
+        "height": 864,
+        "cinematic_ms": 7316,
+        "sequence": "M3-scaffold-model",
+        "completed_tick": null,
+        "presented_ticks": 439,
+        "choreography_seconds": 4.29008,
+        "static_ready": false,
+        "mesh_vertices": 1048176,
+        "screen_id": 0,
+        "body_height": 0.898146,
+        "body_span": 1.1,
+        "body_lean": 0,
+        "visible_units": 89,
+        "culled_units": 1447,
+        "model_cache_bytes": 3322172,
+        "cold_sliver_triangles": 0,
+        "omitted_housing_triangles": 1408,
+        "model_rungs": [
+          57,
+          0,
+          0,
+          1,
+          2,
+          29
+        ],
+        "scanout_verified": false
+      }
+    },
+    {
+      "name": "settled",
+      "arguments": [
+        "--capture",
+        "D:\\Craig\\GitHub\\Crucible\\.worktrees\\phase15-native-swarm\\build\\production-release\\mesh-refusal-receiving\\settled.png",
+        "--capture-ms",
+        "30000"
+      ],
+      "exit_code": 0,
+      "png_sha256": "18c4daff4fdd2c016673e3920093924d4b7d20f6f67812ed62a013bd438595f4",
+      "log_sha256": "23ffed09cd910b109b210c6effd5d7579dd93073271f0d2d65da92f63a35d9e5",
+      "receipt": {
+        "source_pin": "d852e34cd5629a6f3851d613dcd17aa0ffd025a2",
+        "frame": 4,
+        "surface_generation": 1,
+        "width": 1280,
+        "height": 864,
+        "cinematic_ms": 30000,
+        "sequence": "M3-scaffold-model",
+        "completed_tick": null,
+        "presented_ticks": 1800,
+        "choreography_seconds": 17.2813,
+        "static_ready": true,
+        "mesh_vertices": 586752,
+        "screen_id": 0,
+        "body_height": 0.898146,
+        "body_span": 1.1,
+        "body_lean": 0,
+        "visible_units": 1536,
+        "culled_units": 0,
+        "model_cache_bytes": 3322172,
+        "cold_sliver_triangles": 0,
+        "omitted_housing_triangles": 1952,
+        "model_rungs": [
+          1408,
+          38,
+          90,
+          0,
+          0,
+          0
+        ],
+        "scanout_verified": false
+      }
+    }
+  ]
+}
