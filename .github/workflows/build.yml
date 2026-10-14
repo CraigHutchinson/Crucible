@@ -139,6 +139,8 @@ jobs:
       - run: python scripts/check_prerequisites.py --stage development --sanitize --timeout 30 --budget 60
       - run: cmake --preset desktop-sanitize -DCRUCIBLE_BUILD_RENDER_SPIKE=ON -DCRUCIBLE_BUILD_RULE_SPIKE=ON -DCRUCIBLE_BUILD_SWARM_SPIKE=ON -DCRUCIBLE_ENABLE_DIAGNOSTICS=ON
       - run: cmake --build --preset desktop-sanitize --parallel 4
+      - name: Check swarm allocation instrumentation before the full sanitizer suite
+        run: python scripts/run_tests.py --preset desktop-sanitize -R "^production_swarm_model_mesh$" --no-tests=error --output-on-failure
       - run: python scripts/run_tests.py --preset desktop-sanitize
 
   race:

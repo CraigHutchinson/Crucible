@@ -1,0 +1,47 @@
+{
+  "schema": 1,
+  "stage": "test",
+  "ok": true,
+  "checks": [
+    {
+      "name": "python",
+      "status": "pass",
+      "required": true,
+      "detail": "Python >=3.10 required",
+      "version": "3.14.5",
+      "executable": "C:\\Users\\craig\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe"
+    }
+  ],
+  "selected_tests": [
+    "production_swarm_model_mesh",
+    "production_swarm_intro_adapter",
+    "production_swarm_continuous"
+  ],
+  "scope": "Capability preflight only; no performance, physical-console or suite acceptance claim",
+  "capacity": {
+    "cpu_count": 24,
+    "memory_bytes": null,
+    "requirement": "No invented CPU/RAM minimum"
+  },
+  "compiler": "C:/Program Files/Microsoft Visual Studio/18/Community/VC/Tools/MSVC/14.51.36231/bin/Hostx64/x64/cl.exe",
+  "sanitizers": false,
+  "gpu_required": false,
+  "elapsed_seconds": 0.134
+}
+Test project D:/Craig/GitHub/Crucible/.worktrees/phase15-native-swarm/build/phase15-swarm-debug
+    Start 6: production_swarm_model_mesh
+1/3 Test #6: production_swarm_model_mesh ......   Passed    6.18 sec
+    Start 7: production_swarm_intro_adapter
+2/3 Test #7: production_swarm_intro_adapter ...   Passed   31.41 sec
+    Start 8: production_swarm_continuous
+3/3 Test #8: production_swarm_continuous ......   Passed  182.09 sec
+
+100% tests passed, 0 tests failed out of 3
+
+Label Time Summary:
+contract        = 219.69 sec*proc (3 tests)
+lifetime        = 219.69 sec*proc (3 tests)
+presentation    = 219.69 sec*proc (3 tests)
+production      = 219.69 sec*proc (3 tests)
+
+Total Test time (real) = 219.72 sec

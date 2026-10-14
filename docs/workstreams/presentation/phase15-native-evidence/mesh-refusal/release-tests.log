@@ -1,0 +1,249 @@
+{
+  "schema": 1,
+  "stage": "test",
+  "ok": true,
+  "checks": [
+    {
+      "name": "python",
+      "status": "pass",
+      "required": true,
+      "detail": "Python >=3.10 required",
+      "version": "3.14.5",
+      "executable": "C:\\Users\\craig\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe"
+    }
+  ],
+  "selected_tests": [
+    "workflow_permissions",
+    "workflow_prerequisites",
+    "production_scene_packet",
+    "production_mesh_packet",
+    "production_native_transforms_precise",
+    "production_native_transforms_fast",
+    "production_nanite_proxy_reference_identity",
+    "production_swarm_model_mesh",
+    "production_swarm_intro_adapter",
+    "production_swarm_continuous",
+    "production_nanite_proxy_reference",
+    "production_cinematic_choreography",
+    "production_nanite_model",
+    "production_cinematic_cli",
+    "gpu_packet_numeric",
+    "gpu_slot_retirement",
+    "simulation",
+    "stack_round_trip",
+    "scenario_integration",
+    "phase2_full_state",
+    "phase3_full_state",
+    "challenge_passive_cli",
+    "challenge_route_cli",
+    "structural_route_cli",
+    "contracts_values",
+    "runtime_scenario_settings",
+    "runtime_headless",
+    "runtime_ingress",
+    "runtime_session",
+    "runtime_clock",
+    "runtime_inspector",
+    "runtime_mission",
+    "runtime_reference_route",
+    "runtime_structural",
+    "runtime_intent_delivery",
+    "runtime_boundary_pipeline",
+    "runtime_backbone_parity",
+    "runtime_tick_observations",
+    "runtime_parallel_simulation",
+    "spatial_grid",
+    "spatial_hex_queries",
+    "spatial_allocation_reuse",
+    "spatial_caller_scratch",
+    "fields_sampling",
+    "blight_grid",
+    "swarm_steering",
+    "swarm_partition_rows",
+    "swarm_partition_allocations",
+    "swarm_dense_lookup",
+    "interactions_reclamation",
+    "interactions_reclamation_allocations",
+    "interactions_structural",
+    "scheduling_row_partitions",
+    "scheduling_row_floating_point",
+    "scheduling_row_allocations",
+    "camera_affine",
+    "field_tools",
+    "application_game_journey",
+    "application_profile_store",
+    "application_journey_passive_cli",
+    "application_journey_route_cli",
+    "application_journey_profile_cli",
+    "production_frontend"
+  ],
+  "scope": "Capability preflight only; no performance, physical-console or suite acceptance claim",
+  "capacity": {
+    "cpu_count": 24,
+    "memory_bytes": null,
+    "requirement": "No invented CPU/RAM minimum"
+  },
+  "compiler": "C:/Program Files/Microsoft Visual Studio/18/Community/VC/Tools/MSVC/14.51.36231/bin/Hostx64/x64/cl.exe",
+  "sanitizers": false,
+  "gpu_required": false,
+  "elapsed_seconds": 0.117
+}
+Test project D:/Craig/GitHub/Crucible/.worktrees/phase15-native-swarm/build/production-release
+      Start  1: workflow_permissions
+ 1/63 Test  #1: workflow_permissions .........................   Passed    0.11 sec
+      Start  2: workflow_prerequisites
+ 2/63 Test  #2: workflow_prerequisites .......................   Passed    0.65 sec
+      Start  3: production_scene_packet
+ 3/63 Test  #3: production_scene_packet ......................   Passed    0.01 sec
+      Start  4: production_mesh_packet
+ 4/63 Test  #4: production_mesh_packet .......................   Passed    0.04 sec
+      Start  5: production_native_transforms_precise
+ 5/63 Test  #5: production_native_transforms_precise .........   Passed    0.01 sec
+      Start  6: production_native_transforms_fast
+ 6/63 Test  #6: production_native_transforms_fast ............   Passed    0.01 sec
+      Start  7: production_nanite_proxy_reference_identity
+ 7/63 Test  #7: production_nanite_proxy_reference_identity ...   Passed    0.12 sec
+      Start  8: production_swarm_model_mesh
+ 8/63 Test  #8: production_swarm_model_mesh ..................   Passed    0.55 sec
+      Start  9: production_swarm_intro_adapter
+ 9/63 Test  #9: production_swarm_intro_adapter ...............   Passed    2.43 sec
+      Start 10: production_swarm_continuous
+10/63 Test #10: production_swarm_continuous ..................   Passed   86.14 sec
+      Start 11: production_nanite_proxy_reference
+11/63 Test #11: production_nanite_proxy_reference ............   Passed    0.04 sec
+      Start 12: production_cinematic_choreography
+12/63 Test #12: production_cinematic_choreography ............   Passed    0.07 sec
+      Start 13: production_nanite_model
+13/63 Test #13: production_nanite_model ......................   Passed    0.77 sec
+      Start 14: production_cinematic_cli
+14/63 Test #14: production_cinematic_cli .....................   Passed    0.01 sec
+      Start 15: gpu_packet_numeric
+15/63 Test #15: gpu_packet_numeric ...........................   Passed    0.01 sec
+      Start 16: gpu_slot_retirement
+16/63 Test #16: gpu_slot_retirement ..........................   Passed    0.01 sec
+      Start 17: simulation
+17/63 Test #17: simulation ...................................   Passed    0.01 sec
+      Start 18: stack_round_trip
+18/63 Test #18: stack_round_trip .............................   Passed    0.05 sec
+      Start 19: scenario_integration
+19/63 Test #19: scenario_integration .........................   Passed    0.01 sec
+      Start 20: phase2_full_state
+20/63 Test #20: phase2_full_state ............................   Passed    0.33 sec
+      Start 21: phase3_full_state
+21/63 Test #21: phase3_full_state ............................   Passed    0.34 sec
+      Start 22: challenge_passive_cli
+22/63 Test #22: challenge_passive_cli ........................   Passed    3.73 sec
+      Start 23: challenge_route_cli
+23/63 Test #23: challenge_route_cli ..........................   Passed    1.02 sec
+      Start 24: structural_route_cli
+24/63 Test #24: structural_route_cli .........................   Passed    1.98 sec
+      Start 25: contracts_values
+25/63 Test #25: contracts_values .............................   Passed    0.01 sec
+      Start 26: runtime_scenario_settings
+26/63 Test #26: runtime_scenario_settings ....................   Passed    1.92 sec
+      Start 27: runtime_headless
+27/63 Test #27: runtime_headless .............................   Passed    0.02 sec
+      Start 28: runtime_ingress
+28/63 Test #28: runtime_ingress ..............................   Passed    0.01 sec
+      Start 29: runtime_session
+29/63 Test #29: runtime_session ..............................   Passed    0.01 sec
+      Start 30: runtime_clock
+30/63 Test #30: runtime_clock ................................   Passed    0.01 sec
+      Start 31: runtime_inspector
+31/63 Test #31: runtime_inspector ............................   Passed    0.01 sec
+      Start 32: runtime_mission
+32/63 Test #32: runtime_mission ..............................   Passed    0.03 sec
+      Start 33: runtime_reference_route
+33/63 Test #33: runtime_reference_route ......................   Passed    0.02 sec
+      Start 34: runtime_structural
+34/63 Test #34: runtime_structural ...........................   Passed    0.21 sec
+      Start 35: runtime_intent_delivery
+35/63 Test #35: runtime_intent_delivery ......................   Passed    0.02 sec
+      Start 36: runtime_boundary_pipeline
+36/63 Test #36: runtime_boundary_pipeline ....................   Passed    0.23 sec
+      Start 37: runtime_backbone_parity
+37/63 Test #37: runtime_backbone_parity ......................   Passed    3.33 sec
+      Start 38: runtime_tick_observations
+38/63 Test #38: runtime_tick_observations ....................   Passed    0.02 sec
+      Start 39: runtime_parallel_simulation
+39/63 Test #39: runtime_parallel_simulation ..................   Passed    1.89 sec
+      Start 40: spatial_grid
+40/63 Test #40: spatial_grid .................................   Passed    0.02 sec
+      Start 41: spatial_hex_queries
+41/63 Test #41: spatial_hex_queries ..........................   Passed    0.32 sec
+      Start 42: spatial_allocation_reuse
+42/63 Test #42: spatial_allocation_reuse .....................   Passed    0.02 sec
+      Start 43: spatial_caller_scratch
+43/63 Test #43: spatial_caller_scratch .......................   Passed    0.01 sec
+      Start 44: fields_sampling
+44/63 Test #44: fields_sampling ..............................   Passed    0.01 sec
+      Start 45: blight_grid
+45/63 Test #45: blight_grid ..................................   Passed    0.01 sec
+      Start 46: swarm_steering
+46/63 Test #46: swarm_steering ...............................   Passed    0.31 sec
+      Start 47: swarm_partition_rows
+47/63 Test #47: swarm_partition_rows .........................   Passed    0.02 sec
+      Start 48: swarm_partition_allocations
+48/63 Test #48: swarm_partition_allocations ..................   Passed    0.03 sec
+      Start 49: swarm_dense_lookup
+49/63 Test #49: swarm_dense_lookup ...........................   Passed    0.27 sec
+      Start 50: interactions_reclamation
+50/63 Test #50: interactions_reclamation .....................   Passed    0.01 sec
+      Start 51: interactions_reclamation_allocations
+51/63 Test #51: interactions_reclamation_allocations .........   Passed    0.01 sec
+      Start 52: interactions_structural
+52/63 Test #52: interactions_structural ......................   Passed    0.27 sec
+      Start 53: scheduling_row_partitions
+53/63 Test #53: scheduling_row_partitions ....................   Passed    0.02 sec
+      Start 54: scheduling_row_floating_point
+54/63 Test #54: scheduling_row_floating_point ................   Passed    0.05 sec
+      Start 55: scheduling_row_allocations
+55/63 Test #55: scheduling_row_allocations ...................   Passed    0.01 sec
+      Start 56: camera_affine
+56/63 Test #56: camera_affine ................................   Passed    0.01 sec
+      Start 57: field_tools
+57/63 Test #57: field_tools ..................................   Passed    0.01 sec
+      Start 58: application_game_journey
+58/63 Test #58: application_game_journey .....................   Passed    0.60 sec
+      Start 59: application_profile_store
+59/63 Test #59: application_profile_store ....................   Passed    0.12 sec
+      Start 60: application_journey_passive_cli
+60/63 Test #60: application_journey_passive_cli ..............   Passed    1.99 sec
+      Start 61: application_journey_route_cli
+61/63 Test #61: application_journey_route_cli ................   Passed    0.57 sec
+      Start 62: application_journey_profile_cli
+62/63 Test #62: application_journey_profile_cli ..............   Passed    0.61 sec
+      Start 63: production_frontend
+63/63 Test #63: production_frontend ..........................   Passed    0.06 sec
+
+100% tests passed, 0 tests failed out of 63
+
+Label Time Summary:
+application     =   3.95 sec*proc (6 tests)
+blight          =   0.04 sec*proc (3 tests)
+contract        =  90.27 sec*proc (13 tests)
+contracts       =   0.01 sec*proc (1 test)
+fields          =   0.01 sec*proc (1 test)
+gpu             =   0.02 sec*proc (2 tests)
+input           =   0.02 sec*proc (2 tests)
+integration     =  10.65 sec*proc (11 tests)
+interactions    =   0.30 sec*proc (3 tests)
+lifetime        =  89.85 sec*proc (6 tests)
+mission         =  10.54 sec*proc (9 tests)
+numeric         =   0.01 sec*proc (1 test)
+pipeline        =   5.82 sec*proc (8 tests)
+presentation    =  93.18 sec*proc (24 tests)
+production      =  90.27 sec*proc (13 tests)
+profile         =   0.73 sec*proc (2 tests)
+pub             =   3.35 sec*proc (2 tests)
+resources       =   2.53 sec*proc (3 tests)
+runtime         =   7.73 sec*proc (14 tests)
+scale           =   3.84 sec*proc (3 tests)
+scheduling      =   0.35 sec*proc (4 tests)
+simulation      =   0.27 sec*proc (1 test)
+spatial         =   0.42 sec*proc (5 tests)
+structural      =   2.17 sec*proc (2 tests)
+swarm           =   0.67 sec*proc (5 tests)
+workflow        =   0.75 sec*proc (2 tests)
+
+Total Test time (real) = 111.64 sec

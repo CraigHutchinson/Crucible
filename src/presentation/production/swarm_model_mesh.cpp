@@ -404,6 +404,7 @@ bool SwarmModelMesh::tryBuild(std::span<const spike::swarm::RenderRow> rows,
             const auto material = cache.vertices_[cache.indices_[triangle]].material_;
             if (material == NaniteMaterial::Housing) continue;
             std::array<NaniteMeshVertex, 3> output{};
+            std::array<Vec, 3> mappedPositions{};
             for (std::size_t corner = 0; corner < output.size(); ++corner)
             {
                 const auto& vertex = cache.vertices_[cache.indices_[triangle + corner]];
@@ -411,6 +412,7 @@ bool SwarmModelMesh::tryBuild(std::span<const spike::swarm::RenderRow> rows,
                 const Vec local = physicalHeart ? add(geometry->centre_, multiply(modelToSource(unpack(vertex.interior_),
                     geometry->orientationCosine_, geometry->orientationSine_), geometry->interiorScale_)) : shellPosition(*geometry, vertex.weights_);
                 const Vec position = add(geometry->origin_, transformVector(geometry->world_, local));
+                mappedPositions[corner] = position;
                 const Vec sourceNormal = physicalHeart ? modelToSource(unpack(vertex.normal_), geometry->orientationCosine_, geometry->orientationSine_)
                     : transformVector(geometry->shellCofactor_, unpack(vertex.normal_));
                 const auto normal = normalize(transformVector(geometry->world_, sourceNormal));
@@ -427,9 +429,22 @@ bool SwarmModelMesh::tryBuild(std::span<const spike::swarm::RenderRow> rows,
             const Vec geometric = cross(subtract(unpack(output[1].position_), unpack(output[0].position_)),
                 subtract(unpack(output[2].position_), unpack(output[0].position_)));
             const auto faceNormal = normalize(geometric);
-            if (!faceNormal || dot(geometric, geometric) <= sliverAreaSquared ||
-                !std::ranges::all_of(output, [&](const auto& vertex) { return dot(*faceNormal, unpack(vertex.normal_)) >= 0.01; }) ||
+            const Vec mappedFace = cross(subtract(mappedPositions[1], mappedPositions[0]),
+                subtract(mappedPositions[2], mappedPositions[0]));
+            if (!faceNormal || dot(geometric, geometric) <= sliverAreaSquared || dot(geometric, mappedFace) <= 0 ||
                 vertices_.size() + 3 > NaniteMeshFrame::maxVertices) return refuse();
+            // Anisotropic docking/stretch can move a smoothed cofactor normal
+            // outside this face's shading hemisphere. Preserve supported normals
+            // and use the emitted face for only the unsupported corner. Winding
+            // is proved above against the double mapped face, before this repair.
+            for (auto& vertex : output)
+            {
+                if (dot(*faceNormal, unpack(vertex.normal_)) < 0.01)
+                    for (std::size_t axis = 0; axis < 3; ++axis)
+                        vertex.normal_[axis] = static_cast<float>((*faceNormal)[axis]);
+            }
+            if (!std::ranges::all_of(output, [&](const auto& vertex) { return dot(*faceNormal, unpack(vertex.normal_)) >= 0.01; }))
+                return refuse();
             vertices_.insert(vertices_.end(), output.begin(), output.end());
         }
         ++stats_.actualRungCounts_[rung];

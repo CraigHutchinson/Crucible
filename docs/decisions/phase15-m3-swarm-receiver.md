@@ -75,3 +75,27 @@ Concept/lab pixels, CPU geometry, actual Vulkan readback, physical scanout, timi
 participant review and final cinematic fidelity remain distinct. Apple/iOS/Linux
 production qualification, DX12, audio, per-part GPU rig, transparent panes and
 native cross-fades remain separate named gates.
+
+## Interactive normal repair, 2026-10-14
+
+PR52's sparse captures and source-only choreography tests missed intermediate
+mesh production. Normal intro playback on main86d151f refused a Frame/Bevel
+packet: actor1070 at speed9.5 had a corner face dot0.004959; another run observed
+actor118 at speed10.5369 with dot-0.007419. These are supported source poses, not
+broken triangle winding or exhaustion of the memory cap. The new every-tick
+receiver reproduces unmodified main's failure at presentation tick439.
+
+An anisotropic docking/stretch map can move an originally smoothed cofactor
+normal outside its emitted face's accepted hemisphere. Retain supported normals;
+replace only an unsupported corner with the actual float-world triangle normal.
+Before that shading correction, independently require the float face to agree
+with its double mapped geometric face. Retain the same .01 shading gate, finite
+unit normals, triangle area, source mapping, winding and complete-frame cap. No
+triangle is discarded and no rendering fallback is added. Scratch is one fixed
+72-byte local position array per triangle; no hot heap allocation is introduced.
+
+Receive every animation tick through settling at1280x864 and1920x1080 in Release.
+Debug/sanitizers sample the complete path every32ticks and run focused actual
+source-pose plus four-variant/intermediate-stretch fixtures. The continuous frame
+borrow is held explicitly and consumed before the next seek. Native uninterrupted
+playback remains a separate required receiving gate; stills alone are insufficient.
